@@ -21,7 +21,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
-
+import { toast } from "sonner";
 const formSchema = z.object({
 	email: z.string().email("Invalid email address"),
 	password: z.string().min(1, "Password is required"),
@@ -45,6 +45,7 @@ export default function LoginPage() {
 			// TODO: Implement your login logic here
 			// For example: await loginUser(values);
 			console.log(values);
+			toast.success("Login successful");
 			// Set a dummy token for demo purposes
 			localStorage.setItem("token", "dummy-token");
 			navigate("/app/dashboard");
