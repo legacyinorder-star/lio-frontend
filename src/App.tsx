@@ -1,21 +1,17 @@
-import { useState } from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import "./App.css";
+import SignUpPage from "@/pages/SignUpPage";
+import LoginPage from "@/pages/LoginPage";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
-function App(): JSX.Element {
-	const [count, setCount] = useState<number>(0);
-
+function App() {
 	return (
-		<div className="app">
-			<h1>Legacy In Order</h1>
-			<div className="card">
-				<button onClick={() => setCount((count) => count + 1)}>
-					Count is {count}
-				</button>
-				<p>
-					Edit <code>src/App.tsx</code> and save to test HMR
-				</p>
-			</div>
-		</div>
+		<Router>
+			<Routes>
+				<Route path="/signup" element={<SignUpPage />} />
+				<Route path="/login" element={<LoginPage />} />
+			</Routes>
+		</Router>
 	);
 }
 
