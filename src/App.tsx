@@ -6,6 +6,7 @@ import LoginPage from "@/pages/LoginPage";
 import DashboardPage from "@/pages/DashboardPage";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { DashboardLayout } from "@/components/layouts/DashboardLayout";
+import OTPVerificationPage from "./pages/OTPVerificationPage";
 
 function App() {
 	return (
@@ -23,6 +24,7 @@ function App() {
 				>
 					<Route index element={<DashboardPage />} />
 				</Route>
+				<Route path="/verify-otp" element={<OTPVerificationPage />} />
 			</Routes>
 			<Toaster />
 		</Router>

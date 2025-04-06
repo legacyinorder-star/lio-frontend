@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import {
 	Form,
 	FormControl,
@@ -21,6 +22,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
+import type { ApiError } from "@/types/api";
 
 const formSchema = z
 	.object({
@@ -59,12 +61,45 @@ export default function SignupPage() {
 	async function onSubmit(values: z.infer<typeof formSchema>) {
 		setIsLoading(true);
 		try {
-			// TODO: Implement your signup logic here
-			// For example: await signupUser(values);
-			console.log(values);
-			navigate("/app/dashboard");
+			const response = await fetch(
+				"https://x8ki-letl-twmt.n7.xano.io/api:XXA97u_a/auth/signup",
+				{
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify({
+						email: values.email,
+						password: values.password,
+						first_name: values.firstName,
+						last_name: values.lastName,
+					}),
+				}
+			);
+
+			const data = await response.json();
+
+			if (!response.ok) {
+				const error = data as ApiError;
+				throw new Error(error.message || "Signup failed");
+			}
+
+			console.log(data);
+
+			if (data.otp_id) {
+				// Navigate to OTP verification with the OTP ID
+				navigate(`/verify-otp?t=${data.otp_id}`);
+			} else {
+				throw new Error("OTP ID not received from server");
+			}
+
+			// Show success message
+			toast.success("Account created successfully!");
 		} catch (error) {
 			console.error("Signup failed:", error);
+			toast.error(
+				error instanceof Error ? error.message : "Failed to create account"
+			);
 		} finally {
 			setIsLoading(false);
 		}
