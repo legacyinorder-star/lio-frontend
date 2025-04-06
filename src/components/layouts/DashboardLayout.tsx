@@ -24,7 +24,6 @@ import {
 	NavigationMenuList,
 } from "@/components/ui/navigation-menu";
 import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
 
 export function DashboardLayout() {
 	const navigate = useNavigate();
