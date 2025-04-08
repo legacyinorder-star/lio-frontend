@@ -7,6 +7,7 @@ import DashboardPage from "@/pages/DashboardPage";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { DashboardLayout } from "@/components/layouts/DashboardLayout";
 import OTPVerificationPage from "./pages/OTPVerificationPage";
+import WillWizard from "@/components/will-wizard/WillWizard";
 
 function App() {
 	return (
@@ -25,6 +26,7 @@ function App() {
 					<Route index element={<DashboardPage />} />
 				</Route>
 				<Route path="/verify-otp" element={<OTPVerificationPage />} />
+				<Route path="/create-will" element={<WillWizard />} />
 			</Routes>
 			<Toaster />
 		</Router>

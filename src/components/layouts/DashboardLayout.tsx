@@ -5,7 +5,7 @@ import {
 	LogOut,
 	Settings,
 	History,
-	FileCheck,
+	Scroll,
 	BookText,
 	Shield,
 } from "lucide-react";
@@ -87,7 +87,7 @@ export function DashboardLayout() {
 											"group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
 										)}
 									>
-										<Shield className="mr-2 h-4 w-4" />
+										<Scroll className="mr-2 h-4 w-4" />
 										Will
 									</Link>
 								</NavigationMenuItem>
@@ -98,7 +98,7 @@ export function DashboardLayout() {
 											"group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
 										)}
 									>
-										<BookText className="mr-2 h-4 w-4" />
+										<Shield className="mr-2 h-4 w-4" />
 										Power of Attorney
 									</Link>
 								</NavigationMenuItem>
@@ -109,7 +109,7 @@ export function DashboardLayout() {
 											"group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
 										)}
 									>
-										<History className="mr-2 h-4 w-4" />
+										<BookText className="mr-2 h-4 w-4" />
 										Letters of Wishes
 									</Link>
 								</NavigationMenuItem>
