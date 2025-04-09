@@ -82,7 +82,7 @@ export default function OTPVerificationPage() {
 						"Content-Type": "application/json",
 					},
 					body: JSON.stringify({
-						otp: values.otp,
+						otp_code: values.otp,
 					}),
 				}
 			);

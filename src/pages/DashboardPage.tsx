@@ -1,15 +1,28 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
-import {
-	Scroll,
-	FileText,
-	Users,
-	Building2,
-	Shield,
-	PlusCircle,
-} from "lucide-react";
+import { Scroll, FileText, Shield } from "lucide-react";
+import { getUserDetails } from "@/utils/auth";
+import { useState, useEffect } from "react";
 
 export default function DashboardPage() {
+	const navigate = useNavigate();
+	const [userName, setUserName] = useState<string>("");
+
+	useEffect(() => {
+		const userDetails = getUserDetails();
+		if (!userDetails) {
+			navigate("/login");
+			return;
+		}
+
+		// Use first_name if available, otherwise use name, otherwise use email
+		const name =
+			userDetails.first_name ||
+			userDetails.name ||
+			userDetails.email.split("@")[0];
+		setUserName(name);
+	}, [navigate]);
+
 	const actions = [
 		{
 			title: "Create New Will",
@@ -65,7 +78,7 @@ export default function DashboardPage() {
 	return (
 		<div className="space-y-8">
 			<div className="flex items-center justify-between">
-				<h1 className="text-3xl font-bold">Welcome back, John!</h1>
+				<h1 className="text-3xl font-bold">Welcome back, {userName}!</h1>
 				<p className="text-muted-foreground">
 					Here's an overview of your legal docs
 				</p>
