@@ -22,10 +22,16 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { toast } from "sonner";
+
 const formSchema = z.object({
 	email: z.string().email("Invalid email address"),
 	password: z.string().min(1, "Password is required"),
 });
+
+interface LoginResponse {
+	otp: string;
+	otp_id: string;
+}
 
 export default function LoginPage() {
 	const navigate = useNavigate();
@@ -42,15 +48,32 @@ export default function LoginPage() {
 	async function onSubmit(values: z.infer<typeof formSchema>) {
 		setIsLoading(true);
 		try {
-			// TODO: Implement your login logic here
-			// For example: await loginUser(values);
-			console.log(values);
-			toast.success("Login successful");
-			// Set a dummy token for demo purposes
-			localStorage.setItem("token", "dummy-token");
-			navigate("/app/dashboard");
+			const response = await fetch(
+				"https://x8ki-letl-twmt.n7.xano.io/api:XXA97u_a/auth/login",
+				{
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify({
+						email: values.email,
+						password: values.password,
+					}),
+				}
+			);
+
+			const data = await response.json();
+
+			if (!response.ok) {
+				throw new Error(data.message || "Login failed");
+			}
+			console.log(data);
+			const { otp_id } = data as LoginResponse;
+			toast.success("Login successful! Please verify your email.");
+			navigate(`/verify-otp?t=${otp_id}`);
 		} catch (error) {
 			console.error("Login failed:", error);
+			toast.error(error instanceof Error ? error.message : "Login failed");
 		} finally {
 			setIsLoading(false);
 		}

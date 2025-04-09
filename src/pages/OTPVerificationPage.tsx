@@ -31,13 +31,12 @@ export default function OTPVerificationPage() {
 	const navigate = useNavigate();
 	const [searchParams] = useSearchParams();
 	const [isLoading, setIsLoading] = useState(false);
-
 	const otpId = searchParams.get("t");
 
 	useEffect(() => {
 		if (!otpId) {
 			toast.error("Invalid verification link");
-			navigate("/signup");
+			navigate("/login");
 		}
 	}, [otpId, navigate]);
 
@@ -54,15 +53,14 @@ export default function OTPVerificationPage() {
 		setIsLoading(true);
 		try {
 			const response = await fetch(
-				`https://x8ki-letl-twmt.n7.xano.io/api:XXA97u_a/auth/verify_otp`,
+				`https://x8ki-letl-twmt.n7.xano.io/api:XXA97u_a/one_time_password/${otpId}/verify`,
 				{
 					method: "POST",
 					headers: {
 						"Content-Type": "application/json",
 					},
 					body: JSON.stringify({
-						otp_id: otpId,
-						otp: values.otp,
+						otp_code: values.otp,
 					}),
 				}
 			);
@@ -76,10 +74,9 @@ export default function OTPVerificationPage() {
 			// Store the auth token from successful verification
 			if (data.authToken) {
 				localStorage.setItem("authToken", data.authToken);
+				toast.success("OTP verification successful!");
+				navigate("/app/dashboard");
 			}
-
-			toast.success("Email verified successfully!");
-			navigate("/app/dashboard");
 		} catch (error) {
 			console.error("Verification failed:", error);
 			toast.error(
@@ -87,38 +84,6 @@ export default function OTPVerificationPage() {
 			);
 		} finally {
 			setIsLoading(false);
-		}
-	}
-
-	async function handleResendOTP() {
-		if (!otpId) return;
-
-		try {
-			const response = await fetch(
-				`https://x8ki-letl-twmt.n7.xano.io/api:XXA97u_a/auth/resend_otp`,
-				{
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify({
-						otp_id: otpId,
-					}),
-				}
-			);
-
-			const data = await response.json();
-
-			if (!response.ok) {
-				throw new Error(data.message || "Failed to resend code");
-			}
-
-			toast.success("Verification code resent!");
-		} catch (error) {
-			console.error("Resend failed:", error);
-			toast.error(
-				error instanceof Error ? error.message : "Failed to resend code"
-			);
 		}
 	}
 
@@ -142,7 +107,7 @@ export default function OTPVerificationPage() {
 			<Card className="w-full max-w-md">
 				<CardHeader className="space-y-1">
 					<CardTitle className="text-2xl font-bold">
-						Verify your email
+						Verify Your Email
 					</CardTitle>
 					<CardDescription>
 						Enter the 6-digit code sent to your email
@@ -178,13 +143,13 @@ export default function OTPVerificationPage() {
 				<CardFooter className="flex flex-col space-y-4">
 					<div className="text-sm text-center text-muted-foreground">
 						Didn't receive the code?{" "}
-						<button
-							type="button"
-							className="text-primary hover:underline"
-							onClick={handleResendOTP}
+						<Button
+							variant="link"
+							className="p-0 h-auto"
+							onClick={() => navigate("/login")}
 						>
-							Resend
-						</button>
+							Try again
+						</Button>
 					</div>
 				</CardFooter>
 			</Card>
