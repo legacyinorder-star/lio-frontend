@@ -4,7 +4,6 @@ import {
 	LayoutDashboard,
 	LogOut,
 	Settings,
-	History,
 	Scroll,
 	BookText,
 	Shield,
@@ -24,16 +23,30 @@ import {
 	NavigationMenuList,
 } from "@/components/ui/navigation-menu";
 import { cn } from "@/lib/utils";
+import { getUserDetails, type UserDetails } from "@/utils/auth";
+import { useEffect, useState } from "react";
 
 export function DashboardLayout() {
 	const navigate = useNavigate();
-	// TODO: Get this from your auth context/state
-	const user = {
-		name: "John Doe",
-		email: "john@example.com",
-	};
+	const [user, setUser] = useState<UserDetails | null>(null);
+
+	useEffect(() => {
+		const userDetails = getUserDetails();
+		if (!userDetails) {
+			navigate("/login");
+			return;
+		}
+		setUser(userDetails);
+	}, [navigate]);
 
 	const getInitials = (name: string) => {
+		console.log(
+			name
+				.split(" ")
+				.map((n) => n[0])
+				.join("")
+				.toUpperCase()
+		);
 		return name
 			.split(" ")
 			.map((n) => n[0])
@@ -42,9 +55,14 @@ export function DashboardLayout() {
 	};
 
 	const handleLogout = () => {
-		localStorage.removeItem("token");
+		localStorage.removeItem("authToken");
+		localStorage.removeItem("userDetails");
 		navigate("/login");
 	};
+
+	if (!user) {
+		return null; // TODO: Add a loading spinner
+	}
 
 	return (
 		<div className="min-h-screen flex flex-col">
@@ -123,7 +141,11 @@ export function DashboardLayout() {
 								className="relative h-8 w-8 rounded-full hover:bg-primary/10"
 							>
 								<Avatar className="h-8 w-8">
-									<AvatarFallback initials={getInitials(user.name)} />
+									<AvatarFallback
+										initials={getInitials(
+											user.first_name + " " + user.last_name
+										)}
+									/>
 								</Avatar>
 							</Button>
 						</DropdownMenuTrigger>
@@ -131,7 +153,7 @@ export function DashboardLayout() {
 							<DropdownMenuLabel className="font-normal">
 								<div className="flex flex-col space-y-1">
 									<p className="text-sm font-medium leading-none">
-										{user.name}
+										{user.first_name + " " + user.last_name}
 									</p>
 									<p className="text-xs leading-none text-muted-foreground">
 										{user.email}
