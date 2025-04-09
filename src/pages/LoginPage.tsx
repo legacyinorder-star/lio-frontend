@@ -22,6 +22,7 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { toast } from "sonner";
+import { getApiUrl } from "@/config/api";
 
 const formSchema = z.object({
 	email: z.string().email("Invalid email address"),
@@ -48,19 +49,16 @@ export default function LoginPage() {
 	async function onSubmit(values: z.infer<typeof formSchema>) {
 		setIsLoading(true);
 		try {
-			const response = await fetch(
-				"https://x8ki-letl-twmt.n7.xano.io/api:XXA97u_a/auth/login",
-				{
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify({
-						email: values.email,
-						password: values.password,
-					}),
-				}
-			);
+			const response = await fetch(getApiUrl("/auth/login"), {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({
+					email: values.email,
+					password: values.password,
+				}),
+			});
 
 			const data = await response.json();
 

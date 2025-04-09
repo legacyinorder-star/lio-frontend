@@ -22,10 +22,18 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { toast } from "sonner";
+import { getApiUrl } from "@/config/api";
 
 const formSchema = z.object({
 	otp: z.string().length(6, "OTP must be 6 digits"),
 });
+
+interface UserDetails {
+	id: string;
+	email: string;
+	name?: string;
+	// Add other user fields as needed
+}
 
 export default function OTPVerificationPage() {
 	const navigate = useNavigate();
@@ -47,20 +55,34 @@ export default function OTPVerificationPage() {
 		},
 	});
 
+	async function fetchUserDetails(token: string): Promise<UserDetails> {
+		const response = await fetch(getApiUrl("/auth/me"), {
+			headers: {
+				Authorization: `Bearer ${token}`,
+			},
+		});
+
+		if (!response.ok) {
+			throw new Error("Failed to fetch user details");
+		}
+
+		return response.json();
+	}
+
 	async function onSubmit(values: z.infer<typeof formSchema>) {
 		if (!otpId) return;
 
 		setIsLoading(true);
 		try {
 			const response = await fetch(
-				`https://x8ki-letl-twmt.n7.xano.io/api:XXA97u_a/one_time_password/${otpId}/verify`,
+				getApiUrl(`/one_time_password/${otpId}/verify`),
 				{
 					method: "POST",
 					headers: {
 						"Content-Type": "application/json",
 					},
 					body: JSON.stringify({
-						otp_code: values.otp,
+						otp: values.otp,
 					}),
 				}
 			);
@@ -74,6 +96,12 @@ export default function OTPVerificationPage() {
 			// Store the auth token from successful verification
 			if (data.authToken) {
 				localStorage.setItem("authToken", data.authToken);
+
+				// Fetch user details
+				const userDetails = await fetchUserDetails(data.authToken);
+				localStorage.setItem("userDetails", JSON.stringify(userDetails));
+				console.log(userDetails);
+
 				toast.success("OTP verification successful!");
 				navigate("/app/dashboard");
 			}
