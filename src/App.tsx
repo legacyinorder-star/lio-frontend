@@ -16,17 +16,17 @@ function App() {
 				<Route path="/signup" element={<SignUpPage />} />
 				<Route path="/login" element={<LoginPage />} />
 				<Route
-					path="/app/dashboard"
+					path="/app"
 					element={
 						<ProtectedRoute>
 							<DashboardLayout />
 						</ProtectedRoute>
 					}
 				>
-					<Route index element={<DashboardPage />} />
+					<Route path="dashboard" element={<DashboardPage />} />
+					<Route path="create-will" element={<WillWizard />} />
 				</Route>
 				<Route path="/verify-otp" element={<OTPVerificationPage />} />
-				<Route path="/create-will" element={<WillWizard />} />
 			</Routes>
 			<Toaster />
 		</Router>
