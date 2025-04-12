@@ -8,6 +8,8 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { DashboardLayout } from "@/components/layouts/DashboardLayout";
 import OTPVerificationPage from "./pages/OTPVerificationPage";
 import WillWizard from "@/components/will-wizard/WillWizard";
+import RequestPasswordResetPage from "@/pages/RequestPasswordResetPage";
+import ResetPasswordPage from "@/pages/ResetPasswordPage";
 
 function App() {
 	return (
@@ -26,6 +28,11 @@ function App() {
 					<Route path="dashboard" element={<DashboardPage />} />
 					<Route path="create-will" element={<WillWizard />} />
 				</Route>
+				<Route
+					path="/request-password-reset"
+					element={<RequestPasswordResetPage />}
+				/>
+				<Route path="/reset-password" element={<ResetPasswordPage />} />
 				<Route path="/verify-otp" element={<OTPVerificationPage />} />
 			</Routes>
 			<Toaster />

@@ -5,6 +5,8 @@ export const API_CONFIG = {
 			login: "/auth/login",
 			verifyOtp: "/one_time_password/{one_time_password_id}/verify",
 			me: "/auth/me",
+			requestPasswordReset: "/password_reset_tokens",
+			resetPassword: "/auth/reset-password",
 		},
 	},
 } as const;

@@ -198,6 +198,15 @@ export default function LoginPage() {
 							Create an account
 						</Link>
 					</div>
+					<div className="text-sm text-center text-muted-foreground">
+						Forgot your password?{" "}
+						<Link
+							to="/request-password-reset"
+							className="text-primary hover:underline"
+						>
+							Reset password
+						</Link>
+					</div>
 				</CardFooter>
 			</Card>
 		</div>
