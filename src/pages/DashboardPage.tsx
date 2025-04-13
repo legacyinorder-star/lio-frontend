@@ -31,13 +31,6 @@ export default function DashboardPage() {
 			href: "/create-will",
 			color: "text-blue-500",
 		},
-		// {
-		// 	title: "Living Trust",
-		// 	description: "Set up a living trust for your assets",
-		// 	icon: <Building2 className="h-6 w-6" />,
-		// 	href: "/create-trust",
-		// 	color: "text-green-500",
-		// },
 		{
 			title: "Power of Attorney",
 			description: "Designate someone to act on your behalf",
@@ -52,27 +45,6 @@ export default function DashboardPage() {
 			href: "/power-of-attorney",
 			color: "text-green-500",
 		},
-		// {
-		// 	title: "Healthcare Directive",
-		// 	description: "Specify your healthcare preferences",
-		// 	icon: <FileText className="h-6 w-6" />,
-		// 	href: "/healthcare-directive",
-		// 	color: "text-red-500",
-		// },
-		// {
-		// 	title: "Beneficiaries",
-		// 	description: "Manage your beneficiaries",
-		// 	icon: <Users className="h-6 w-6" />,
-		// 	href: "/beneficiaries",
-		// 	color: "text-orange-500",
-		// },
-		// {
-		// 	title: "Add Document",
-		// 	description: "Upload additional legal documents",
-		// 	icon: <PlusCircle className="h-6 w-6" />,
-		// 	href: "/add-document",
-		// 	color: "text-teal-500",
-		// },
 	];
 
 	return (

@@ -7,6 +7,7 @@ import {
 	Scroll,
 	BookText,
 	Shield,
+	CircleUser,
 } from "lucide-react";
 import {
 	DropdownMenu,
@@ -154,6 +155,12 @@ export function DashboardLayout() {
 								</div>
 							</DropdownMenuLabel>
 							<DropdownMenuSeparator />
+							<DropdownMenuItem asChild>
+								<Link to="/app/manage-profile" className="flex items-center">
+									<CircleUser className="mr-2 h-4 w-4" />
+									<span>Manage Profile</span>
+								</Link>
+							</DropdownMenuItem>
 							<DropdownMenuItem asChild>
 								<Link to="/app/settings" className="flex items-center">
 									<Settings className="mr-2 h-4 w-4" />
