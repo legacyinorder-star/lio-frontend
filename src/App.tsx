@@ -10,33 +10,38 @@ import OTPVerificationPage from "./pages/OTPVerificationPage";
 import WillWizard from "@/components/will-wizard/WillWizard";
 import RequestPasswordResetPage from "@/pages/RequestPasswordResetPage";
 import ResetPasswordPage from "@/pages/ResetPasswordPage";
+import ProfilePage from "./pages/ProfilePage";
+import { AuthProvider } from "./hooks/useAuth";
 
 function App() {
 	return (
-		<Router>
-			<Routes>
-				<Route path="/signup" element={<SignUpPage />} />
-				<Route path="/login" element={<LoginPage />} />
-				<Route
-					path="/app"
-					element={
-						<ProtectedRoute>
-							<DashboardLayout />
-						</ProtectedRoute>
-					}
-				>
-					<Route path="dashboard" element={<DashboardPage />} />
-					<Route path="create-will" element={<WillWizard />} />
-				</Route>
-				<Route
-					path="/request-password-reset"
-					element={<RequestPasswordResetPage />}
-				/>
-				<Route path="/reset-password" element={<ResetPasswordPage />} />
-				<Route path="/verify-otp" element={<OTPVerificationPage />} />
-			</Routes>
-			<Toaster />
-		</Router>
+		<AuthProvider>
+			<Router>
+				<Routes>
+					<Route path="/signup" element={<SignUpPage />} />
+					<Route path="/login" element={<LoginPage />} />
+					<Route
+						path="/app"
+						element={
+							<ProtectedRoute>
+								<DashboardLayout />
+							</ProtectedRoute>
+						}
+					>
+						<Route path="dashboard" element={<DashboardPage />} />
+						<Route path="create-will" element={<WillWizard />} />
+						<Route path="manage-profile" element={<ProfilePage />} />
+					</Route>
+					<Route
+						path="/request-password-reset"
+						element={<RequestPasswordResetPage />}
+					/>
+					<Route path="/reset-password" element={<ResetPasswordPage />} />
+					<Route path="/verify-otp" element={<OTPVerificationPage />} />
+				</Routes>
+				<Toaster />
+			</Router>
+		</AuthProvider>
 	);
 }
 
