@@ -67,7 +67,7 @@ export default function LoginPage() {
 			}
 			console.log(data);
 			const { otp_id } = data as LoginResponse;
-			toast.success("Login successful! Please verify your email.");
+			toast.success("Welcome back! Please enter your OTP.");
 			navigate(`/verify-otp?t=${otp_id}`);
 		} catch (error) {
 			console.error("Login failed:", error);

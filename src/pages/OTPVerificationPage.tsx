@@ -23,27 +23,23 @@ import {
 } from "@/components/ui/card";
 import { toast } from "sonner";
 import { getApiUrl } from "@/config/api";
+import { useAuth } from "@/hooks/useAuth";
+import { UserDetails } from "@/utils/auth";
 
 const formSchema = z.object({
 	otp: z.string().length(6, "OTP must be 6 digits"),
 });
 
-interface UserDetails {
-	id: string;
-	email: string;
-	name?: string;
-	// Add other user fields as needed
-}
-
 export default function OTPVerificationPage() {
 	const navigate = useNavigate();
 	const [searchParams] = useSearchParams();
 	const [isLoading, setIsLoading] = useState(false);
+	const { setUser } = useAuth();
 	const otpId = searchParams.get("t");
 
 	useEffect(() => {
 		if (!otpId) {
-			toast.error("Invalid verification link");
+			toast.error("Invalid verification token");
 			navigate("/login");
 		}
 	}, [otpId, navigate]);
@@ -54,20 +50,6 @@ export default function OTPVerificationPage() {
 			otp: "",
 		},
 	});
-
-	async function fetchUserDetails(token: string): Promise<UserDetails> {
-		const response = await fetch(getApiUrl("/auth/me"), {
-			headers: {
-				Authorization: `Bearer ${token}`,
-			},
-		});
-
-		if (!response.ok) {
-			throw new Error("Failed to fetch user details");
-		}
-
-		return response.json();
-	}
 
 	async function onSubmit(values: z.infer<typeof formSchema>) {
 		if (!otpId) return;
@@ -90,25 +72,40 @@ export default function OTPVerificationPage() {
 			const data = await response.json();
 
 			if (!response.ok) {
-				throw new Error(data.message || "Verification failed");
+				throw new Error(data.message || "OTP Verification failed");
 			}
 
-			// Store the auth token from successful verification
-			if (data.authToken) {
-				localStorage.setItem("authToken", data.authToken);
+			// Fetch user details
+			const userResponse = await fetch(getApiUrl("/auth/me"), {
+				headers: {
+					Authorization: `Bearer ${data.authToken}`,
+				},
+			});
 
-				// Fetch user details
-				const userDetails = await fetchUserDetails(data.authToken);
-				localStorage.setItem("userDetails", JSON.stringify(userDetails));
-				console.log(userDetails);
-
-				toast.success("OTP verification successful!");
-				navigate("/app/dashboard");
+			if (!userResponse.ok) {
+				throw new Error("Failed to fetch user details");
 			}
+
+			const userDetails: UserDetails = await userResponse.json();
+
+			// Store in localStorage for backward compatibility
+			localStorage.setItem("userDetails", JSON.stringify(userDetails));
+
+			// Convert UserDetails to User type for auth context
+			setUser({
+				id: userDetails.id,
+				email: userDetails.email,
+				first_name: userDetails.first_name || "",
+				last_name: userDetails.last_name || "",
+				token: data.authToken,
+			});
+
+			toast.success("OTP verified successfully!");
+			navigate("/app/dashboard");
 		} catch (error) {
-			console.error("Verification failed:", error);
+			console.error("OTP verification failed:", error);
 			toast.error(
-				error instanceof Error ? error.message : "Verification failed"
+				error instanceof Error ? error.message : "OTP verification failed"
 			);
 		} finally {
 			setIsLoading(false);
@@ -134,9 +131,7 @@ export default function OTPVerificationPage() {
 			</div>
 			<Card className="w-full max-w-md">
 				<CardHeader className="space-y-1">
-					<CardTitle className="text-2xl font-bold">
-						Verify Your Email
-					</CardTitle>
+					<CardTitle className="text-2xl font-bold">Verify OTP</CardTitle>
 					<CardDescription>
 						Enter the 6-digit code sent to your email
 					</CardDescription>
@@ -149,21 +144,16 @@ export default function OTPVerificationPage() {
 								name="otp"
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel>Verification Code</FormLabel>
+										<FormLabel>OTP Code</FormLabel>
 										<FormControl>
-											<Input
-												type="text"
-												placeholder="Enter 6-digit code"
-												maxLength={6}
-												{...field}
-											/>
+											<Input placeholder="Enter 6-digit code" {...field} />
 										</FormControl>
 										<FormMessage />
 									</FormItem>
 								)}
 							/>
 							<Button type="submit" className="w-full" disabled={isLoading}>
-								{isLoading ? "Verifying..." : "Verify"}
+								{isLoading ? "Verifying..." : "Verify OTP"}
 							</Button>
 						</form>
 					</Form>
@@ -171,13 +161,15 @@ export default function OTPVerificationPage() {
 				<CardFooter className="flex flex-col space-y-4">
 					<div className="text-sm text-center text-muted-foreground">
 						Didn't receive the code?{" "}
-						<Button
-							variant="link"
-							className="p-0 h-auto"
-							onClick={() => navigate("/login")}
+						<button
+							className="text-primary hover:underline"
+							onClick={() => {
+								// TODO: Implement resend OTP logic
+								toast.info("Resending OTP...");
+							}}
 						>
-							Try again
-						</Button>
+							Resend
+						</button>
 					</div>
 				</CardFooter>
 			</Card>
