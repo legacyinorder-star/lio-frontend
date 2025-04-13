@@ -6,7 +6,7 @@ export const API_CONFIG = {
 			verifyOtp: "/one_time_password/{one_time_password_id}/verify",
 			me: "/auth/me",
 			requestPasswordReset: "/password_reset_tokens",
-			resetPassword: "/auth/reset-password",
+			resetPassword: "/users/update-password",
 		},
 	},
 } as const;

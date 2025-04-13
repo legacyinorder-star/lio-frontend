@@ -44,13 +44,47 @@ export default function ResetPasswordPage() {
 	const navigate = useNavigate();
 	const [searchParams] = useSearchParams();
 	const [isLoading, setIsLoading] = useState(false);
+	const [userId, setUserId] = useState<string | null>(null);
 	const token = searchParams.get("token");
 
 	useEffect(() => {
 		if (!token) {
 			toast.error("Invalid password reset link");
 			navigate("/login");
+			return;
 		}
+
+		// Verify the token
+		const verifyToken = async () => {
+			try {
+				const response = await fetch(
+					getApiUrl("/password_reset_tokens/verify"),
+					{
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json",
+						},
+						body: JSON.stringify({ token }),
+					}
+				);
+
+				const data = await response.json();
+
+				if (!response.ok) {
+					throw new Error(data.message || "Invalid or expired token");
+				}
+
+				setUserId(data.user_id);
+			} catch (error) {
+				console.error("Token verification failed:", error);
+				toast.error(
+					error instanceof Error ? error.message : "Invalid or expired token"
+				);
+				navigate("/login");
+			}
+		};
+
+		verifyToken();
 	}, [token, navigate]);
 
 	const form = useForm<z.infer<typeof formSchema>>({
@@ -62,25 +96,21 @@ export default function ResetPasswordPage() {
 	});
 
 	async function onSubmit(values: z.infer<typeof formSchema>) {
-		if (!token) return;
+		if (!token || !userId) return;
 
 		setIsLoading(true);
 		try {
-			const response = await fetch(
-				getApiUrl(
-					"https://x8ki-letl-twmt.n7.xano.io/api:XXA97u_a/password_reset_tokens"
-				),
-				{
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify({
-						token,
-						password: values.password,
-					}),
-				}
-			);
+			const response = await fetch(getApiUrl("/users/update-password"), {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({
+					token,
+					new_password: values.password,
+					user_id: userId,
+				}),
+			});
 
 			const data = await response.json();
 
