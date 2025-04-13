@@ -53,8 +53,8 @@ export default function ProfilePage() {
 
 		setIsLoading(true);
 		try {
-			const response = await fetch(getApiUrl("/users/update-profile"), {
-				method: "POST",
+			const response = await fetch(getApiUrl(`/user/${user.id}`), {
+				method: "PATCH",
 				headers: {
 					"Content-Type": "application/json",
 					Authorization: `Bearer ${user.token}`,
@@ -71,11 +71,23 @@ export default function ProfilePage() {
 				throw new Error(data.message || "Failed to update profile");
 			}
 
-			// Update the user in the auth context
+			// After successful update, fetch the latest user details
+			const userResponse = await fetch(getApiUrl("/auth/me"), {
+				headers: {
+					Authorization: `Bearer ${user.token}`,
+				},
+			});
+
+			if (!userResponse.ok) {
+				throw new Error("Failed to fetch updated user details");
+			}
+
+			const updatedUserDetails = await userResponse.json();
+
+			// Update the user in the auth context with complete refreshed details
 			setUser({
-				...user,
-				first_name: values.first_name,
-				last_name: values.last_name,
+				...updatedUserDetails,
+				token: user.token, // Preserve the token from the current user object
 			});
 
 			toast.success("Profile updated successfully!");

@@ -24,21 +24,18 @@ import {
 	NavigationMenuList,
 } from "@/components/ui/navigation-menu";
 import { cn } from "@/lib/utils";
-import { getUserDetails, type UserDetails } from "@/utils/auth";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useAuth } from "@/hooks/useAuth";
 
 export function DashboardLayout() {
 	const navigate = useNavigate();
-	const [user, setUser] = useState<UserDetails | null>(null);
+	const { user, setUser } = useAuth();
 
 	useEffect(() => {
-		const userDetails = getUserDetails();
-		if (!userDetails) {
+		if (!user) {
 			navigate("/login");
-			return;
 		}
-		setUser(userDetails);
-	}, [navigate]);
+	}, [user, navigate]);
 
 	const getInitials = (name: string) => {
 		return name
@@ -51,6 +48,7 @@ export function DashboardLayout() {
 	const handleLogout = () => {
 		localStorage.removeItem("authToken");
 		localStorage.removeItem("userDetails");
+		setUser(null);
 		navigate("/login");
 	};
 
