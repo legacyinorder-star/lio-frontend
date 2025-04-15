@@ -12,6 +12,8 @@ import RequestPasswordResetPage from "@/pages/RequestPasswordResetPage";
 import ResetPasswordPage from "@/pages/ResetPasswordPage";
 import ProfilePage from "./pages/ProfilePage";
 import { AuthProvider } from "./hooks/useAuth";
+import { AdminLayout } from "@/components/layouts/AdminLayout";
+import ManageUsersPage from "./pages/admin/ManageUsersPage";
 
 function App() {
 	return (
@@ -31,6 +33,17 @@ function App() {
 						<Route path="dashboard" element={<DashboardPage />} />
 						<Route path="create-will" element={<WillWizard />} />
 						<Route path="manage-profile" element={<ProfilePage />} />
+					</Route>
+					<Route
+						path="/admin"
+						element={
+							<ProtectedRoute>
+								<AdminLayout />
+							</ProtectedRoute>
+						}
+					>
+						<Route path="users" element={<ManageUsersPage />} />
+						<Route path="dashboard" element={<DashboardPage />} />
 					</Route>
 					<Route
 						path="/request-password-reset"
