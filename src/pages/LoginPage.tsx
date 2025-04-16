@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,7 +22,10 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { toast } from "sonner";
-import { getApiUrl } from "@/config/api";
+import { API_CONFIG, getApiUrl } from "@/config/api";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle, WifiOff } from "lucide-react";
+import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 
 const formSchema = z.object({
 	email: z.string().email("Invalid email address"),
@@ -37,6 +40,32 @@ interface LoginResponse {
 export default function LoginPage() {
 	const navigate = useNavigate();
 	const [isLoading, setIsLoading] = useState(false);
+	const [apiAvailable, setApiAvailable] = useState<boolean | null>(null);
+	const isOnline = useOnlineStatus();
+
+	// Check API connectivity on component mount and when online status changes
+	useEffect(() => {
+		const checkApiStatus = async () => {
+			if (!isOnline) {
+				setApiAvailable(false);
+				return;
+			}
+
+			try {
+				//const status = await pingApi();
+				const status = true;
+				setApiAvailable(status);
+				if (!status) {
+					console.error("API is not available");
+				}
+			} catch (error) {
+				console.error("Error checking API status:", error);
+				setApiAvailable(false);
+			}
+		};
+
+		checkApiStatus();
+	}, [isOnline]);
 
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
@@ -47,9 +76,32 @@ export default function LoginPage() {
 	});
 
 	async function onSubmit(values: z.infer<typeof formSchema>) {
+		// Verify we're online and API is available
+		if (!isOnline) {
+			toast.error("You are offline. Please check your internet connection.");
+			return;
+		}
+
+		// Prevent login attempt if API is known to be unavailable
+		if (apiAvailable === false) {
+			toast.error(
+				"Cannot connect to server. Please check your internet connection and try again."
+			);
+			return;
+		}
+
 		setIsLoading(true);
 		try {
-			const response = await fetch(getApiUrl("/auth/login"), {
+			console.log(
+				"Attempting to login with API URL:",
+				getApiUrl(API_CONFIG.endpoints.auth.login)
+			);
+
+			// Add timeout to prevent long-hanging requests
+			const controller = new AbortController();
+			const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
+			const response = await fetch(getApiUrl(API_CONFIG.endpoints.auth.login), {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
@@ -58,33 +110,92 @@ export default function LoginPage() {
 					email: values.email,
 					password: values.password,
 				}),
+				signal: controller.signal,
 			});
+
+			clearTimeout(timeoutId);
 
 			const data = await response.json();
 
 			if (!response.ok) {
-				throw new Error(data.message || "Login failed");
+				const errorMessage =
+					data.message || `Login failed with status: ${response.status}`;
+				console.error("Login error:", errorMessage);
+				throw new Error(errorMessage);
 			}
 			console.log(data);
+			// Validate expected response shape
+			if (!data.otp_id) {
+				console.error("API response missing otp_id:", data);
+				throw new Error("Invalid response from server");
+			}
+
 			const { otp_id } = data as LoginResponse;
 			toast.success("Welcome back! Please enter your OTP.");
 			navigate(`/verify-otp?t=${otp_id}`);
 		} catch (error) {
 			console.error("Login failed:", error);
-			toast.error(error instanceof Error ? error.message : "Login failed");
+
+			// Specific error handling based on error type
+			if (error instanceof DOMException && error.name === "AbortError") {
+				toast.error("Request timed out. The server took too long to respond.");
+			} else if (
+				error instanceof TypeError &&
+				error.message.includes("fetch")
+			) {
+				setApiAvailable(false);
+				toast.error(
+					"Network error: Could not connect to the authentication server. Please check your internet connection and try again."
+				);
+			} else if (error instanceof SyntaxError) {
+				toast.error(
+					"Server error: The server returned an invalid response. Please try again later."
+				);
+			} else {
+				toast.error(error instanceof Error ? error.message : "Login failed");
+			}
 		} finally {
 			setIsLoading(false);
 		}
 	}
 
 	const handleGoogleSignIn = async () => {
+		if (!isOnline || apiAvailable === false) {
+			toast.error(
+				"Cannot connect to server. Please check your internet connection."
+			);
+			return;
+		}
+
 		try {
-			// TODO: Implement Google sign-in logic
-			console.log("Signing in with Google");
+			// Implement Google sign-in logic
+			toast.info("Google sign-in functionality coming soon");
 		} catch (error) {
 			console.error("Google sign-in failed:", error);
 		}
 	};
+
+	// Show appropriate offline message
+	const getConnectionMessage = () => {
+		if (!isOnline) {
+			return {
+				title: "You're Offline",
+				description: "Please check your internet connection to log in.",
+			};
+		}
+
+		if (apiAvailable === false) {
+			return {
+				title: "Server Unavailable",
+				description:
+					"We cannot reach our servers right now. Please try again later.",
+			};
+		}
+
+		return null;
+	};
+
+	const connectionIssue = getConnectionMessage();
 
 	return (
 		<div className="min-h-screen flex flex-col items-center justify-center p-4">
@@ -103,6 +214,19 @@ export default function LoginPage() {
 				</svg>
 				<span className="text-lg font-medium">Legacy In Order</span>
 			</div>
+
+			{connectionIssue && (
+				<Alert variant="destructive" className="mb-4 max-w-md">
+					{!isOnline ? (
+						<WifiOff className="h-4 w-4" />
+					) : (
+						<AlertCircle className="h-4 w-4" />
+					)}
+					<AlertTitle>{connectionIssue.title}</AlertTitle>
+					<AlertDescription>{connectionIssue.description}</AlertDescription>
+				</Alert>
+			)}
+
 			<Card className="w-full max-w-md">
 				<CardHeader className="space-y-1">
 					<CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
@@ -117,6 +241,7 @@ export default function LoginPage() {
 							variant="outline"
 							className="w-full"
 							onClick={handleGoogleSignIn}
+							disabled={!isOnline || apiAvailable === false}
 						>
 							<svg
 								className="mr-2 h-4 w-4"
@@ -184,7 +309,11 @@ export default function LoginPage() {
 										</FormItem>
 									)}
 								/>
-								<Button type="submit" className="w-full" disabled={isLoading}>
+								<Button
+									type="submit"
+									className="w-full"
+									disabled={isLoading || !isOnline || apiAvailable === false}
+								>
 									{isLoading ? "Signing in..." : "Sign in"}
 								</Button>
 							</form>

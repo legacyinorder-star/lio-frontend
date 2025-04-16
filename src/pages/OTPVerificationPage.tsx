@@ -22,9 +22,9 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { toast } from "sonner";
-import { getApiUrl } from "@/config/api";
+import { API_CONFIG, getApiUrl } from "@/config/api";
 import { useAuth } from "@/hooks/useAuth";
-import { UserDetails } from "@/utils/auth";
+import { UserDetails, setAuthToken, setUserDetails } from "@/utils/auth";
 
 const formSchema = z.object({
 	otp: z.string().length(6, "OTP must be 6 digits"),
@@ -56,18 +56,19 @@ export default function OTPVerificationPage() {
 
 		setIsLoading(true);
 		try {
-			const response = await fetch(
-				getApiUrl(`/one_time_password/${otpId}/verify`),
-				{
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify({
-						otp_code: values.otp,
-					}),
-				}
+			const verifyUrl = API_CONFIG.endpoints.auth.verifyOtp.replace(
+				"{one_time_password_id}",
+				otpId
 			);
+			const response = await fetch(getApiUrl(verifyUrl), {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({
+					otp_code: values.otp,
+				}),
+			});
 
 			const data = await response.json();
 
@@ -75,12 +76,18 @@ export default function OTPVerificationPage() {
 				throw new Error(data.message || "OTP Verification failed");
 			}
 
+			// Store auth token
+			setAuthToken(data.authToken);
+
 			// Fetch user details
-			const userResponse = await fetch(getApiUrl("/auth/me"), {
-				headers: {
-					Authorization: `Bearer ${data.authToken}`,
-				},
-			});
+			const userResponse = await fetch(
+				getApiUrl(API_CONFIG.endpoints.auth.me),
+				{
+					headers: {
+						Authorization: `Bearer ${data.authToken}`,
+					},
+				}
+			);
 
 			if (!userResponse.ok) {
 				throw new Error("Failed to fetch user details");
@@ -88,8 +95,8 @@ export default function OTPVerificationPage() {
 
 			const userDetails: UserDetails = await userResponse.json();
 
-			// Store in localStorage for backward compatibility
-			localStorage.setItem("userDetails", JSON.stringify(userDetails));
+			// Store user details
+			setUserDetails(userDetails);
 
 			// Convert UserDetails to User type for auth context
 			setUser({
@@ -104,6 +111,7 @@ export default function OTPVerificationPage() {
 			navigate("/app/dashboard");
 		} catch (error) {
 			console.error("OTP verification failed:", error);
+			console.log(error);
 			toast.error(
 				error instanceof Error ? error.message : "OTP verification failed"
 			);
@@ -111,6 +119,37 @@ export default function OTPVerificationPage() {
 			setIsLoading(false);
 		}
 	}
+
+	const handleResendOTP = async () => {
+		if (!otpId) return;
+
+		try {
+			// API endpoint for resending OTP
+			const resendUrl = API_CONFIG.endpoints.auth.resendOtp.replace(
+				"{one_time_password_id}",
+				otpId
+			);
+			const response = await fetch(getApiUrl(resendUrl), {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+			});
+
+			const data = await response.json();
+
+			if (!response.ok) {
+				throw new Error(data.message || "Failed to resend OTP");
+			}
+
+			toast.success("OTP resent successfully!");
+		} catch (error) {
+			console.error("Failed to resend OTP:", error);
+			toast.error(
+				error instanceof Error ? error.message : "Failed to resend OTP"
+			);
+		}
+	};
 
 	return (
 		<div className="min-h-screen flex flex-col items-center justify-center p-4">
@@ -163,10 +202,7 @@ export default function OTPVerificationPage() {
 						Didn't receive the code?{" "}
 						<button
 							className="text-primary hover:underline"
-							onClick={() => {
-								// TODO: Implement resend OTP logic
-								toast.info("Resending OTP...");
-							}}
+							onClick={handleResendOTP}
 						>
 							Resend
 						</button>

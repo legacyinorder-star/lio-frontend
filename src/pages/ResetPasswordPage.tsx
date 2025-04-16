@@ -22,7 +22,7 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { toast } from "sonner";
-import { getApiUrl } from "@/config/api";
+import { API_CONFIG, getApiUrl } from "@/config/api";
 
 const formSchema = z
 	.object({
@@ -100,17 +100,20 @@ export default function ResetPasswordPage() {
 
 		setIsLoading(true);
 		try {
-			const response = await fetch(getApiUrl("/users/update-password"), {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify({
-					token,
-					new_password: values.password,
-					user_id: userId,
-				}),
-			});
+			const response = await fetch(
+				getApiUrl(API_CONFIG.endpoints.auth.resetPassword),
+				{
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify({
+						token,
+						new_password: values.password,
+						user_id: userId,
+					}),
+				}
+			);
 
 			const data = await response.json();
 
