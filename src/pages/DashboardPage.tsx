@@ -1,24 +1,27 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Scroll, FileText, Shield } from "lucide-react";
+import { getUserDetails } from "@/utils/auth";
 import { useState, useEffect } from "react";
-import { useAuth } from "@/hooks/useAuth";
 
 export default function DashboardPage() {
 	const navigate = useNavigate();
 	const [userName, setUserName] = useState<string>("");
-	const { user } = useAuth();
 
 	useEffect(() => {
-		if (!user) {
+		const userDetails = getUserDetails();
+		if (!userDetails) {
 			navigate("/login");
 			return;
 		}
 
 		// Use first_name if available, otherwise use name, otherwise use email
-		const name = user.first_name || user.email.split("@")[0];
+		const name =
+			userDetails.first_name ||
+			userDetails.name ||
+			userDetails.email.split("@")[0];
 		setUserName(name);
-	}, [user, navigate]);
+	}, [navigate]);
 
 	const actions = [
 		{

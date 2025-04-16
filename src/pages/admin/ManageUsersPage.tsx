@@ -1,12 +1,4 @@
 import { useState, useEffect } from "react";
-import {
-	Table,
-	TableBody,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
-} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -18,13 +10,7 @@ import {
 import { getApiUrl } from "@/config/api";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import {
-	ChevronDown,
-	Edit,
-	MoreHorizontal,
-	Search,
-	Shield,
-} from "lucide-react";
+import { ChevronDown, Edit, Search, Shield, Power } from "lucide-react";
 import {
 	Card,
 	CardContent,
@@ -38,15 +24,24 @@ interface User {
 	email: string;
 	first_name: string;
 	last_name: string;
-	role: string;
+	_role?: {
+		id: string;
+		created_at: string;
+		role: string;
+	};
+	role?: string;
 	created_at: string;
-	last_login?: string;
+	last_login_at?: string;
+	is_active: boolean;
 }
+
+type FilterType = "all" | "admin" | "user" | "active" | "inactive";
 
 export default function ManageUsersPage() {
 	const [users, setUsers] = useState<User[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
 	const [searchQuery, setSearchQuery] = useState("");
+	const [filter, setFilter] = useState<FilterType>("all");
 	const { user } = useAuth();
 
 	useEffect(() => {
@@ -67,41 +62,46 @@ export default function ManageUsersPage() {
 			}
 
 			const data = await response.json();
-			setUsers(data.users || []);
+			setUsers(data || []);
 		} catch (error) {
 			console.error("Error fetching users:", error);
 			toast.error("Failed to load users");
-			// For demo purposes, let's add some mock data
-			setUsers([
-				{
-					id: "1",
-					email: "john.doe@example.com",
-					first_name: "John",
-					last_name: "Doe",
-					role: "admin",
-					created_at: "2023-10-15T14:48:00",
-					last_login: "2023-11-28T09:15:00",
-				},
-				{
-					id: "2",
-					email: "jane.smith@example.com",
-					first_name: "Jane",
-					last_name: "Smith",
-					role: "user",
-					created_at: "2023-10-20T10:30:00",
-					last_login: "2023-11-25T16:20:00",
-				},
-				{
-					id: "3",
-					email: "bob.johnson@example.com",
-					first_name: "Bob",
-					last_name: "Johnson",
-					role: "user",
-					created_at: "2023-11-05T08:15:00",
-				},
-			]);
+			setUsers([]);
 		} finally {
 			setIsLoading(false);
+		}
+	};
+
+	const toggleUserStatus = async (userId: string, currentStatus: boolean) => {
+		try {
+			const response = await fetch(getApiUrl(`/user/${userId}`), {
+				method: "PATCH",
+				headers: {
+					"Content-Type": "application/json",
+					Authorization: `Bearer ${user?.token}`,
+				},
+				body: JSON.stringify({
+					is_active: !currentStatus,
+				}),
+			});
+
+			if (!response.ok) {
+				throw new Error("Failed to update user status");
+			}
+
+			// Update local state
+			setUsers(
+				users.map((u) =>
+					u.id === userId ? { ...u, is_active: !currentStatus } : u
+				)
+			);
+
+			toast.success(
+				`User ${!currentStatus ? "activated" : "deactivated"} successfully`
+			);
+		} catch (error) {
+			console.error("Error updating user status:", error);
+			toast.error("Failed to update user status");
 		}
 	};
 
@@ -114,7 +114,26 @@ export default function ManageUsersPage() {
 		});
 	};
 
-	const filteredUsers = users.filter(
+	const getUserRole = (user: User): string => {
+		return user._role?.role || user.role || "user";
+	};
+
+	const filterUsers = (users: User[]): User[] => {
+		switch (filter) {
+			case "admin":
+				return users.filter((user) => getUserRole(user) === "admin");
+			case "user":
+				return users.filter((user) => getUserRole(user) === "user");
+			case "active":
+				return users.filter((user) => user.is_active);
+			case "inactive":
+				return users.filter((user) => !user.is_active);
+			default:
+				return users;
+		}
+	};
+
+	const filteredUsers = filterUsers(users).filter(
 		(user) =>
 			user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
 			user.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -130,10 +149,6 @@ export default function ManageUsersPage() {
 						Manage user accounts and permissions
 					</p>
 				</div>
-				{/* <Button>
-					<Plus className="mr-2 h-4 w-4" />
-					Add User
-				</Button> */}
 			</div>
 
 			<Card>
@@ -155,87 +170,147 @@ export default function ManageUsersPage() {
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>
 								<Button variant="outline" className="ml-2">
-									Filter
+									{filter === "all" && "All Users"}
+									{filter === "admin" && "Admins"}
+									{filter === "user" && "Regular Users"}
+									{filter === "active" && "Active Users"}
+									{filter === "inactive" && "Inactive Users"}
 									<ChevronDown className="ml-2 h-4 w-4" />
 								</Button>
 							</DropdownMenuTrigger>
 							<DropdownMenuContent>
-								<DropdownMenuItem>All Users</DropdownMenuItem>
-								<DropdownMenuItem>Admins</DropdownMenuItem>
-								<DropdownMenuItem>Regular Users</DropdownMenuItem>
-								<DropdownMenuItem>Recently Added</DropdownMenuItem>
+								<DropdownMenuItem onClick={() => setFilter("all")}>
+									All Users
+								</DropdownMenuItem>
+								<DropdownMenuItem onClick={() => setFilter("admin")}>
+									Admins
+								</DropdownMenuItem>
+								<DropdownMenuItem onClick={() => setFilter("user")}>
+									Regular Users
+								</DropdownMenuItem>
+								<DropdownMenuItem onClick={() => setFilter("active")}>
+									Active Users
+								</DropdownMenuItem>
+								<DropdownMenuItem onClick={() => setFilter("inactive")}>
+									Inactive Users
+								</DropdownMenuItem>
 							</DropdownMenuContent>
 						</DropdownMenu>
 					</div>
 				</CardHeader>
 				<CardContent>
-					<Table>
-						<TableHeader>
-							<TableRow>
-								<TableHead>Name</TableHead>
-								<TableHead>Email</TableHead>
-								<TableHead>Role</TableHead>
-								<TableHead>Created</TableHead>
-								<TableHead>Last Login</TableHead>
-								<TableHead className="text-right">Actions</TableHead>
-							</TableRow>
-						</TableHeader>
-						<TableBody>
-							{isLoading ? (
-								<TableRow>
-									<TableCell colSpan={6} className="text-center py-6">
-										Loading users...
-									</TableCell>
-								</TableRow>
-							) : filteredUsers.length === 0 ? (
-								<TableRow>
-									<TableCell colSpan={6} className="text-center py-6">
-										No users found matching your search
-									</TableCell>
-								</TableRow>
-							) : (
-								filteredUsers.map((user) => (
-									<TableRow key={user.id}>
-										<TableCell>
-											{user.first_name} {user.last_name}
-										</TableCell>
-										<TableCell>{user.email}</TableCell>
-										<TableCell>
-											<span
-												className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-													user.role === "admin"
-														? "bg-purple-100 text-purple-800"
-														: "bg-gray-100 text-gray-800"
-												}`}
+					<div className="border rounded-md overflow-hidden w-full">
+						<table className="w-full caption-bottom text-sm">
+							<thead className="border-b bg-muted/50">
+								<tr>
+									<th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+										Name
+									</th>
+									<th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+										Email
+									</th>
+									<th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+										Role
+									</th>
+									<th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+										Status
+									</th>
+									<th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+										Created
+									</th>
+									<th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+										Last Login
+									</th>
+									<th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+										Actions
+									</th>
+								</tr>
+							</thead>
+							<tbody>
+								{isLoading ? (
+									<tr>
+										<td colSpan={7} className="text-center p-6">
+											Loading users...
+										</td>
+									</tr>
+								) : filteredUsers.length === 0 ? (
+									<tr>
+										<td colSpan={7} className="text-center p-6">
+											No users found matching your search
+										</td>
+									</tr>
+								) : (
+									filteredUsers.map((user) => {
+										const role = getUserRole(user);
+										return (
+											<tr
+												key={user.id}
+												className="border-b hover:bg-muted/50 transition-colors"
 											>
-												{user.role === "admin" && (
-													<Shield className="mr-1 h-3 w-3" />
-												)}
-												{user.role}
-											</span>
-										</TableCell>
-										<TableCell>{formatDate(user.created_at)}</TableCell>
-										<TableCell>{formatDate(user.last_login)}</TableCell>
-										<TableCell className="text-right">
-											<DropdownMenu>
-												<DropdownMenuTrigger asChild>
-													<Button variant="ghost" className="h-8 w-8 p-0">
-														<MoreHorizontal className="h-4 w-4" />
+												<td className="p-4">
+													{user.first_name} {user.last_name}
+												</td>
+												<td className="p-4">{user.email}</td>
+												<td className="p-4">
+													<span
+														className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+															role === "admin"
+																? "bg-purple-100 text-purple-800"
+																: "bg-gray-100 text-gray-800"
+														}`}
+													>
+														{role === "admin" && (
+															<Shield className="mr-1 h-3 w-3" />
+														)}
+														{role}
+													</span>
+												</td>
+												<td className="p-4">
+													<span
+														className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+															user.is_active
+																? "bg-green-100 text-green-800"
+																: "bg-red-100 text-red-800"
+														}`}
+													>
+														{user.is_active ? "Active" : "Inactive"}
+													</span>
+												</td>
+												<td className="p-4">{formatDate(user.created_at)}</td>
+												<td className="p-4">
+													{formatDate(user.last_login_at)}
+												</td>
+												<td className="p-4 flex gap-2">
+													<Button
+														variant="ghost"
+														size="sm"
+														onClick={() => toast.info(`Edit user ${user.id}`)}
+														className="flex items-center"
+													>
+														<Edit className="h-4 w-4" />
 													</Button>
-												</DropdownMenuTrigger>
-												<DropdownMenuContent align="end">
-													<DropdownMenuItem>
-														<Edit className="mr-2 h-4 w-4" />
-														Edit
-													</DropdownMenuItem>
-												</DropdownMenuContent>
-											</DropdownMenu>
-										</TableCell>
-									</TableRow>
-								))
-							)}
-						</TableBody>
-					</Table>
+													<Button
+														variant="ghost"
+														size="sm"
+														onClick={() =>
+															toggleUserStatus(user.id, user.is_active)
+														}
+														className={`flex items-center ${
+															user.is_active
+																? "text-red-600 hover:text-red-700"
+																: "text-green-600 hover:text-green-700"
+														}`}
+													>
+														<Power className="h-4 w-4" />
+													</Button>
+												</td>
+											</tr>
+										);
+									})
+								)}
+							</tbody>
+						</table>
+					</div>
 				</CardContent>
 			</Card>
 		</div>
