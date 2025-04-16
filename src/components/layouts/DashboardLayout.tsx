@@ -24,21 +24,27 @@ import {
 	NavigationMenuList,
 } from "@/components/ui/navigation-menu";
 import { cn } from "@/lib/utils";
-import { getUserDetails, type UserDetails } from "@/utils/auth";
+import { type UserDetails } from "@/utils/auth";
 import { useEffect, useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
 
 export function DashboardLayout() {
 	const navigate = useNavigate();
-	const [user, setUser] = useState<UserDetails | null>(null);
+	const { user, logout } = useAuth();
+	const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
 
 	useEffect(() => {
-		const userDetails = getUserDetails();
-		if (!userDetails) {
+		if (!user) {
 			navigate("/login");
 			return;
 		}
-		setUser(userDetails);
-	}, [navigate]);
+		setUserDetails({
+			id: user.id,
+			email: user.email,
+			first_name: user.first_name,
+			last_name: user.last_name,
+		});
+	}, [user, navigate]);
 
 	const getInitials = (name: string) => {
 		return name
@@ -49,12 +55,11 @@ export function DashboardLayout() {
 	};
 
 	const handleLogout = () => {
-		localStorage.removeItem("authToken");
-		localStorage.removeItem("userDetails");
+		logout();
 		navigate("/login");
 	};
 
-	if (!user) {
+	if (!userDetails) {
 		return null; // TODO: Add a loading spinner
 	}
 
@@ -137,7 +142,7 @@ export function DashboardLayout() {
 								<Avatar className="h-8 w-8">
 									<AvatarFallback
 										initials={getInitials(
-											user.first_name + " " + user.last_name
+											userDetails.first_name + " " + userDetails.last_name
 										)}
 									/>
 								</Avatar>
@@ -147,10 +152,10 @@ export function DashboardLayout() {
 							<DropdownMenuLabel className="font-normal">
 								<div className="flex flex-col space-y-1">
 									<p className="text-sm font-medium leading-none">
-										{user.first_name + " " + user.last_name}
+										{userDetails.first_name + " " + userDetails.last_name}
 									</p>
 									<p className="text-xs leading-none text-muted-foreground">
-										{user.email}
+										{userDetails.email}
 									</p>
 								</div>
 							</DropdownMenuLabel>

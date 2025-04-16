@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 export function AdminLayout() {
 	const navigate = useNavigate();
 	const location = useLocation();
-	const { user, setUser } = useAuth();
+	const { user, logout } = useAuth();
 
 	// useEffect(() => {
 	// 	if (!user) {
@@ -32,9 +32,7 @@ export function AdminLayout() {
 	};
 
 	const handleLogout = () => {
-		localStorage.removeItem("authToken");
-		localStorage.removeItem("userDetails");
-		setUser(null);
+		logout();
 		navigate("/login");
 	};
 
