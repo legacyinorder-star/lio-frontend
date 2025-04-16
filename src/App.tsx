@@ -4,7 +4,7 @@ import { Toaster } from "sonner";
 import SignUpPage from "@/pages/SignUpPage";
 import LoginPage from "@/pages/LoginPage";
 import DashboardPage from "@/pages/DashboardPage";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import { DashboardLayout } from "@/components/layouts/DashboardLayout";
 import OTPVerificationPage from "./pages/OTPVerificationPage";
 import WillWizard from "@/components/will-wizard/WillWizard";
@@ -14,6 +14,7 @@ import ProfilePage from "./pages/ProfilePage";
 import { AuthProvider } from "./hooks/useAuth";
 import { AdminLayout } from "@/components/layouts/AdminLayout";
 import ManageUsersPage from "./pages/admin/ManageUsersPage";
+import LogoutPage from "./pages/LogoutPage";
 
 function App() {
 	return (
@@ -22,6 +23,7 @@ function App() {
 				<Routes>
 					<Route path="/signup" element={<SignUpPage />} />
 					<Route path="/login" element={<LoginPage />} />
+					<Route path="/logout" element={<LogoutPage />} />
 					<Route
 						path="/app"
 						element={
