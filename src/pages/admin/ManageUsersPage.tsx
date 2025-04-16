@@ -18,6 +18,12 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface User {
 	id: string;
@@ -143,18 +149,18 @@ export default function ManageUsersPage() {
 	return (
 		<div className="space-y-6">
 			<div className="flex justify-between items-center">
-				<div>
-					<h1 className="text-3xl font-bold tracking-tight">Users</h1>
-					<p className="text-muted-foreground">
+				<div className="text-left">
+					<h1 className="text-3xl font-bold tracking-tight text-left">Users</h1>
+					<p className="text-muted-foreground text-left">
 						Manage user accounts and permissions
 					</p>
 				</div>
 			</div>
 
 			<Card>
-				<CardHeader className="pb-3">
-					<CardTitle>User Management</CardTitle>
-					<CardDescription>
+				<CardHeader className="pb-3 text-left">
+					<CardTitle className="text-left">User Management</CardTitle>
+					<CardDescription className="text-left">
 						View and manage all users in the system
 					</CardDescription>
 					<div className="flex items-center mt-4">
@@ -162,14 +168,14 @@ export default function ManageUsersPage() {
 							<Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
 							<Input
 								placeholder="Search users..."
-								className="pl-8"
+								className="pl-8 text-left"
 								value={searchQuery}
 								onChange={(e) => setSearchQuery(e.target.value)}
 							/>
 						</div>
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>
-								<Button variant="outline" className="ml-2">
+								<Button variant="outline" className="ml-2 text-left">
 									{filter === "all" && "All Users"}
 									{filter === "admin" && "Admins"}
 									{filter === "user" && "Regular Users"}
@@ -178,7 +184,7 @@ export default function ManageUsersPage() {
 									<ChevronDown className="ml-2 h-4 w-4" />
 								</Button>
 							</DropdownMenuTrigger>
-							<DropdownMenuContent>
+							<DropdownMenuContent align="end">
 								<DropdownMenuItem onClick={() => setFilter("all")}>
 									All Users
 								</DropdownMenuItem>
@@ -199,117 +205,142 @@ export default function ManageUsersPage() {
 					</div>
 				</CardHeader>
 				<CardContent>
-					<div className="border rounded-md overflow-hidden w-full">
-						<table className="w-full caption-bottom text-sm">
-							<thead className="border-b bg-muted/50">
-								<tr>
-									<th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-										Name
-									</th>
-									<th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-										Email
-									</th>
-									<th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-										Role
-									</th>
-									<th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-										Status
-									</th>
-									<th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-										Created
-									</th>
-									<th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-										Last Login
-									</th>
-									<th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-										Actions
-									</th>
-								</tr>
-							</thead>
-							<tbody>
-								{isLoading ? (
+					<div className="overflow-auto">
+						<div className="border rounded-md w-full min-w-[800px]">
+							<table className="w-full caption-bottom text-sm">
+								<thead className="border-b bg-muted/50">
 									<tr>
-										<td colSpan={7} className="text-center p-6">
-											Loading users...
-										</td>
+										<th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+											Name
+										</th>
+										<th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+											Email
+										</th>
+										<th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+											Role
+										</th>
+										<th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+											Status
+										</th>
+										<th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+											Created
+										</th>
+										<th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+											Last Login
+										</th>
+										<th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+											Actions
+										</th>
 									</tr>
-								) : filteredUsers.length === 0 ? (
-									<tr>
-										<td colSpan={7} className="text-center p-6">
-											No users found matching your search
-										</td>
-									</tr>
-								) : (
-									filteredUsers.map((user) => {
-										const role = getUserRole(user);
-										return (
-											<tr
-												key={user.id}
-												className="border-b hover:bg-muted/50 transition-colors"
-											>
-												<td className="p-4">
-													{user.first_name} {user.last_name}
-												</td>
-												<td className="p-4">{user.email}</td>
-												<td className="p-4">
-													<span
-														className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-															role === "admin"
-																? "bg-purple-100 text-purple-800"
-																: "bg-gray-100 text-gray-800"
-														}`}
-													>
-														{role === "admin" && (
-															<Shield className="mr-1 h-3 w-3" />
-														)}
-														{role}
-													</span>
-												</td>
-												<td className="p-4">
-													<span
-														className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-															user.is_active
-																? "bg-green-100 text-green-800"
-																: "bg-red-100 text-red-800"
-														}`}
-													>
-														{user.is_active ? "Active" : "Inactive"}
-													</span>
-												</td>
-												<td className="p-4">{formatDate(user.created_at)}</td>
-												<td className="p-4">
-													{formatDate(user.last_login_at)}
-												</td>
-												<td className="p-4 flex gap-2">
-													<Button
-														variant="ghost"
-														size="sm"
-														onClick={() => toast.info(`Edit user ${user.id}`)}
-														className="flex items-center"
-													>
-														<Edit className="h-4 w-4" />
-													</Button>
-													<Button
-														variant="ghost"
-														size="sm"
-														onClick={() =>
-															toggleUserStatus(user.id, user.is_active)
-														}
-														className={`flex items-center ${
-															user.is_active
-																? "text-red-600 hover:text-red-700"
-																: "text-green-600 hover:text-green-700"
-														}`}
-													>
-														<Power className="h-4 w-4" />
-													</Button>
-												</td>
-											</tr>
-										);
-									})
-								)}
-							</tbody>
-						</table>
+								</thead>
+								<tbody>
+									{isLoading ? (
+										<tr>
+											<td colSpan={7} className="text-center p-6">
+												Loading users...
+											</td>
+										</tr>
+									) : filteredUsers.length === 0 ? (
+										<tr>
+											<td colSpan={7} className="text-center p-6">
+												No users found matching your search
+											</td>
+										</tr>
+									) : (
+										filteredUsers.map((user) => {
+											const role = getUserRole(user);
+											return (
+												<tr
+													key={user.id}
+													className="border-b hover:bg-muted/50 transition-colors"
+												>
+													<td className="p-4 text-left">
+														{user.first_name} {user.last_name}
+													</td>
+													<td className="p-4 text-left">{user.email}</td>
+													<td className="p-4 text-left">
+														<span
+															className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+																role === "admin"
+																	? "bg-purple-100 text-purple-800"
+																	: "bg-gray-100 text-gray-800"
+															}`}
+														>
+															{role === "admin" && (
+																<Shield className="mr-1 h-3 w-3" />
+															)}
+															{role}
+														</span>
+													</td>
+													<td className="p-4 text-left">
+														<span
+															className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+																user.is_active
+																	? "bg-green-100 text-green-800"
+																	: "bg-red-100 text-red-800"
+															}`}
+														>
+															{user.is_active ? "Active" : "Inactive"}
+														</span>
+													</td>
+													<td className="p-4 text-left">
+														{formatDate(user.created_at)}
+													</td>
+													<td className="p-4 text-left">
+														{formatDate(user.last_login_at)}
+													</td>
+													<td className="p-4 text-left flex gap-2">
+														<TooltipProvider>
+															<Tooltip>
+																<TooltipTrigger asChild>
+																	<Button
+																		variant="ghost"
+																		size="sm"
+																		onClick={() =>
+																			toast.info(`Edit user ${user.id}`)
+																		}
+																		className="flex items-center"
+																	>
+																		<Edit className="h-4 w-4" />
+																	</Button>
+																</TooltipTrigger>
+																<TooltipContent>
+																	<p>Edit user details</p>
+																</TooltipContent>
+															</Tooltip>
+
+															<Tooltip>
+																<TooltipTrigger asChild>
+																	<Button
+																		variant="ghost"
+																		size="sm"
+																		onClick={() =>
+																			toggleUserStatus(user.id, user.is_active)
+																		}
+																		className={`flex items-center ${
+																			user.is_active
+																				? "text-red-600 hover:text-red-700"
+																				: "text-green-600 hover:text-green-700"
+																		}`}
+																	>
+																		<Power className="h-4 w-4" />
+																	</Button>
+																</TooltipTrigger>
+																<TooltipContent>
+																	{user.is_active
+																		? "Deactivate user"
+																		: "Activate user"}
+																</TooltipContent>
+															</Tooltip>
+														</TooltipProvider>
+													</td>
+												</tr>
+											);
+										})
+									)}
+								</tbody>
+							</table>
+						</div>
 					</div>
 				</CardContent>
 			</Card>
