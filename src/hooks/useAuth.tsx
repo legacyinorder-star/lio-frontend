@@ -5,6 +5,7 @@ import {
 	useEffect,
 	ReactNode,
 } from "react";
+import { getUserDetails, setUserDetails, removeAuthData } from "@/utils/auth";
 
 interface User {
 	id: string;
@@ -17,11 +18,13 @@ interface User {
 interface AuthContextType {
 	user: User | null;
 	setUser: (user: User | null) => void;
+	logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
 	user: null,
 	setUser: () => {},
+	logout: () => {},
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -29,23 +32,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 	useEffect(() => {
 		// Load user from localStorage on initial render
-		const storedUser = localStorage.getItem("user");
-		if (storedUser) {
-			setUser(JSON.parse(storedUser));
+		const userDetails = getUserDetails();
+		if (userDetails) {
+			setUser({
+				id: userDetails.id,
+				email: userDetails.email,
+				first_name: userDetails.first_name || "",
+				last_name: userDetails.last_name || "",
+				token: localStorage.getItem("authToken") || "",
+			});
 		}
 	}, []);
+
+	// Logout function to clear auth data
+	const logout = () => {
+		setUser(null);
+		removeAuthData();
+	};
 
 	useEffect(() => {
 		// Save user to localStorage whenever it changes
 		if (user) {
-			localStorage.setItem("user", JSON.stringify(user));
-		} else {
-			localStorage.removeItem("user");
+			setUserDetails({
+				id: user.id,
+				email: user.email,
+				first_name: user.first_name,
+				last_name: user.last_name,
+			});
+			localStorage.setItem("authToken", user.token);
 		}
 	}, [user]);
 
 	return (
-		<AuthContext.Provider value={{ user, setUser }}>
+		<AuthContext.Provider value={{ user, setUser, logout }}>
 			{children}
 		</AuthContext.Provider>
 	);
