@@ -4,6 +4,7 @@ export interface UserDetails {
 	name?: string;
 	first_name?: string;
 	last_name?: string;
+	role?: string;
 }
 
 export const getUserDetails = (): UserDetails | null => {

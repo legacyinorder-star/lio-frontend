@@ -13,6 +13,7 @@ interface User {
 	first_name: string;
 	last_name: string;
 	token: string;
+	role?: string;
 }
 
 interface AuthContextType {
@@ -39,6 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 				email: userDetails.email,
 				first_name: userDetails.first_name || "",
 				last_name: userDetails.last_name || "",
+				role: userDetails.role || "",
 				token: localStorage.getItem("authToken") || "",
 			});
 		}
@@ -58,6 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 				email: user.email,
 				first_name: user.first_name,
 				last_name: user.last_name,
+				role: user.role,
 			});
 			localStorage.setItem("authToken", user.token);
 		}

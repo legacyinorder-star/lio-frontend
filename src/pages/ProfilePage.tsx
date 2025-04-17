@@ -8,6 +8,7 @@ import {
 	FormItem,
 	FormLabel,
 	FormMessage,
+	FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -84,9 +85,13 @@ export default function ProfilePage() {
 
 			const updatedUserDetails = await userResponse.json();
 
+			// Extract the role from the response
+			const userRole = updatedUserDetails._role?.role || "";
+
 			// Update the user in the auth context with complete refreshed details
 			setUser({
 				...updatedUserDetails,
+				role: userRole, // Set the user role
 				token: user.token, // Preserve the token from the current user object
 			});
 
@@ -148,6 +153,22 @@ export default function ProfilePage() {
 									/>
 								</FormControl>
 							</FormItem>
+							{user?.role && (
+								<FormItem>
+									<FormLabel>Role</FormLabel>
+									<FormControl>
+										<Input
+											value={user.role}
+											readOnly
+											disabled
+											className="bg-muted"
+										/>
+									</FormControl>
+									<FormDescription>
+										Your access level within the system
+									</FormDescription>
+								</FormItem>
+							)}
 							<Button type="submit" className="w-full" disabled={isLoading}>
 								{isLoading ? "Updating..." : "Update Profile"}
 							</Button>
