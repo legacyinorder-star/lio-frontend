@@ -10,7 +10,7 @@ import {
 import { getApiUrl } from "@/config/api";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { ChevronDown, Edit, Search, Shield, Power } from "lucide-react";
+import { ChevronDown, Search, Shield, Power } from "lucide-react";
 import {
 	Card,
 	CardContent,
@@ -291,24 +291,6 @@ export default function ManageUsersPage() {
 													</td>
 													<td className="p-4 text-left flex gap-2">
 														<TooltipProvider>
-															<Tooltip>
-																<TooltipTrigger asChild>
-																	<Button
-																		variant="ghost"
-																		size="sm"
-																		onClick={() =>
-																			toast.info(`Edit user ${user.id}`)
-																		}
-																		className="flex items-center"
-																	>
-																		<Edit className="h-4 w-4" />
-																	</Button>
-																</TooltipTrigger>
-																<TooltipContent>
-																	<p>Edit user details</p>
-																</TooltipContent>
-															</Tooltip>
-
 															<Tooltip>
 																<TooltipTrigger asChild>
 																	<Button
