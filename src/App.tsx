@@ -14,6 +14,7 @@ import ProfilePage from "./pages/ProfilePage";
 import { AuthProvider } from "./hooks/useAuth";
 import { AdminLayout } from "@/components/layouts/AdminLayout";
 import ManageUsersPage from "./pages/admin/ManageUsersPage";
+import AdminDashboardPage from "@/pages/admin/AdminDashboardPage";
 import LogoutPage from "./pages/LogoutPage";
 
 function App() {
@@ -45,7 +46,7 @@ function App() {
 						}
 					>
 						<Route path="users" element={<ManageUsersPage />} />
-						<Route path="dashboard" element={<DashboardPage />} />
+						<Route path="dashboard" element={<AdminDashboardPage />} />
 					</Route>
 					<Route
 						path="/request-password-reset"
