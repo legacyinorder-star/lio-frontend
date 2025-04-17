@@ -28,7 +28,8 @@ interface Order {
 
 // Type for row object used in DataTable
 interface DataTableRow {
-	getValue: (key: string) => any;
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	getValue: (key: string) => any; // Using any here is necessary for compatibility
 	getIsSelected: () => boolean;
 }
 
@@ -142,7 +143,7 @@ const revenueSourceData = [
 ];
 
 // Table columns - using type-only imports to avoid TS error with the full module
-type ColumnDef<T> = {
+type ColumnDef<_TData> = {
 	accessorKey: string;
 	header: string;
 	cell?: ({ row }: { row: DataTableRow }) => React.ReactNode;
@@ -347,11 +348,7 @@ export default function AdminDashboardPage() {
 								<CardTitle>Recent Orders</CardTitle>
 							</CardHeader>
 							<CardContent>
-								<DataTable
-									columns={orderColumns}
-									data={recentOrders}
-									pageSize={3}
-								/>
+								<DataTable columns={orderColumns} data={recentOrders} />
 							</CardContent>
 						</Card>
 					</div>

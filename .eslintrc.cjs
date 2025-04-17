@@ -15,5 +15,9 @@ module.exports = {
 			{ allowConstantExport: true },
 		],
 		"no-mixed-spaces-and-tabs": "off",
+		"@typescript-eslint/no-unused-vars": [
+			"error",
+			{ argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+		],
 	},
 };

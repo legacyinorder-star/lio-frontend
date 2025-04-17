@@ -5,31 +5,51 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
-import { ResponsiveLine } from "@nivo/line";
 import { cn } from "@/lib/utils";
+import {
+	LineChart as RechartsLineChart,
+	Line,
+	XAxis,
+	YAxis,
+	CartesianGrid,
+	Tooltip,
+	ResponsiveContainer,
+	Legend,
+} from "recharts";
 
 interface LineChartProps {
 	title: string;
 	description?: string;
 	data: Array<{
-		id: string | number;
-		data: Array<{ x: string | number; y: number }>;
+		label: string;
+		value?: number;
+		[key: string]: string | number | boolean | undefined;
+	}>;
+	lines?: Array<{
+		dataKey: string;
+		stroke?: string;
+		name?: string;
 	}>;
 	className?: string;
 	height?: number;
-	yAxisLabel?: string;
-	hideGrid?: boolean;
+	xAxisKey?: string;
 }
 
 export function LineChart({
 	title,
 	description,
 	data,
+	lines = [{ dataKey: "value", stroke: "#4f46e5", name: "Value" }],
 	className,
 	height = 350,
-	yAxisLabel,
-	hideGrid = false,
+	xAxisKey = "label",
 }: LineChartProps) {
+	// Transform data if needed for recharts format
+	const chartData = data.map((item) => ({
+		...item,
+		[xAxisKey]: item.label,
+	}));
+
 	return (
 		<Card className={cn("overflow-hidden", className)}>
 			<CardHeader>
@@ -37,64 +57,51 @@ export function LineChart({
 				{description && <CardDescription>{description}</CardDescription>}
 			</CardHeader>
 			<CardContent>
-				<div style={{ height }}>
-					<ResponsiveLine
-						data={data}
-						margin={{ top: 20, right: 20, bottom: 60, left: 55 }}
-						xScale={{ type: "point" }}
-						yScale={{
-							type: "linear",
-							min: "auto",
-							max: "auto",
-							stacked: false,
-							reverse: false,
-						}}
-						curve="monotoneX"
-						axisTop={null}
-						axisRight={null}
-						axisBottom={{
-							tickSize: 5,
-							tickPadding: 5,
-							tickRotation: -45,
-							legend: "Time",
-							legendOffset: 50,
-							legendPosition: "middle",
-						}}
-						axisLeft={{
-							tickSize: 5,
-							tickPadding: 5,
-							tickRotation: 0,
-							legend: yAxisLabel || "",
-							legendOffset: -45,
-							legendPosition: "middle",
-						}}
-						colors={{ scheme: "category10" }}
-						enableGridX={!hideGrid}
-						enableGridY={!hideGrid}
-						pointSize={10}
-						pointColor={{ theme: "background" }}
-						pointBorderWidth={2}
-						pointBorderColor={{ from: "serieColor" }}
-						pointLabelYOffset={-12}
-						useMesh={true}
-						legends={[
-							{
-								anchor: "bottom",
-								direction: "row",
-								justify: false,
-								translateX: 0,
-								translateY: 50,
-								itemsSpacing: 0,
-								itemDirection: "left-to-right",
-								itemWidth: 80,
-								itemHeight: 20,
-								itemOpacity: 0.75,
-								symbolSize: 12,
-								symbolShape: "circle",
-								symbolBorderColor: "rgba(0, 0, 0, .5)",
-							},
-						]}
-					/>
+				<div style={{ height, width: "100%" }}>
+					<ResponsiveContainer width="100%" height="100%">
+						<RechartsLineChart
+							data={chartData}
+							margin={{
+								top: 5,
+								right: 30,
+								left: 20,
+								bottom: 5,
+							}}
+						>
+							<CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+							<XAxis
+								dataKey={xAxisKey}
+								tick={{ fontSize: 12 }}
+								tickLine={{ stroke: "#888" }}
+								axisLine={{ stroke: "#888" }}
+							/>
+							<YAxis
+								tick={{ fontSize: 12 }}
+								tickLine={{ stroke: "#888" }}
+								axisLine={{ stroke: "#888" }}
+							/>
+							<Tooltip
+								contentStyle={{
+									backgroundColor: "white",
+									borderRadius: "6px",
+									boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+									border: "1px solid #f0f0f0",
+								}}
+							/>
+							<Legend />
+							{lines.map((lineConfig, index) => (
+								<Line
+									key={index}
+									type="monotone"
+									dataKey={lineConfig.dataKey}
+									stroke={lineConfig.stroke || "#4f46e5"}
+									name={lineConfig.name || lineConfig.dataKey}
+									activeDot={{ r: 6 }}
+									strokeWidth={2}
+								/>
+							))}
+						</RechartsLineChart>
+					</ResponsiveContainer>
 				</div>
 			</CardContent>
 		</Card>

@@ -9,3 +9,6 @@ node_modules/
 
 # Build files
 build/
+
+# ignore compiled directory
+dist/
