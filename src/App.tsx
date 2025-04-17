@@ -16,12 +16,14 @@ import { AdminLayout } from "@/components/layouts/AdminLayout";
 import ManageUsersPage from "./pages/admin/ManageUsersPage";
 import AdminDashboardPage from "@/pages/admin/AdminDashboardPage";
 import LogoutPage from "./pages/LogoutPage";
+import HomePage from "@/pages/HomePage";
 
 function App() {
 	return (
 		<AuthProvider>
 			<Router>
 				<Routes>
+					<Route path="/" element={<HomePage />} />
 					<Route path="/signup" element={<SignUpPage />} />
 					<Route path="/login" element={<LoginPage />} />
 					<Route path="/logout" element={<LogoutPage />} />
