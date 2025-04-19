@@ -1,8 +1,8 @@
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  text-align: left;
 }
 
 .logo {
@@ -39,4 +39,25 @@
 
 .read-the-docs {
   color: #888;
+}
+
+/* Full-width container styles */
+.container {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+/* Dashboard specific styles */
+.dashboard-container {
+  padding: 1.5rem;
+}
+
+/* Table container for proper spacing */
+.table-container {
+  margin-top: 1.5rem;
+  overflow-x: auto;
+  border-radius: 0.5rem;
+  border: 1px solid hsl(var(--border));
 }

@@ -3,9 +3,9 @@ import { Button } from "@/components/ui/button";
 
 export function Header() {
 	return (
-		<header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-			<div className="container flex h-16 items-center justify-between">
-				<div className="mr-4 flex">
+		<header className="w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+			<div className="w-full max-w-[2000px] mx-auto flex h-16 items-center justify-between px-4 md:px-6 lg:px-8">
+				<div className="flex">
 					<Link to="/" className="flex items-center">
 						<span className="text-xl font-semibold">Legacy In Order</span>
 					</Link>
