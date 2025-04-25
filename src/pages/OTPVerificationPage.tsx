@@ -98,16 +98,13 @@ export default function OTPVerificationPage() {
 			// Store user details
 			setUserDetails(userDetails);
 
-			// Get user role from response if available
-			const userRole = data.userDetails?._role?.role || "";
-
 			// Convert UserDetails to User type for auth context
 			setUser({
 				id: userDetails.id,
 				email: userDetails.email,
 				first_name: userDetails.first_name || "",
 				last_name: userDetails.last_name || "",
-				role: userRole,
+				role: userDetails.role,
 				token: data.authToken,
 			});
 
