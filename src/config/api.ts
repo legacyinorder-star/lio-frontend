@@ -10,6 +10,8 @@ export const API_CONFIG = {
 			me: "/auth/me",
 			requestPasswordReset: "/password_reset_tokens",
 			resetPassword: "/users/update-password",
+			users: "/users",
+			toggleUserStatus: "admin/users/{users_id}/status",
 		},
 	},
 } as const;

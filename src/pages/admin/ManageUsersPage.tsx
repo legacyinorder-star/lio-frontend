@@ -10,7 +10,7 @@ import {
 import { getApiUrl } from "@/config/api";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { ChevronDown, Search, Shield, Power } from "lucide-react";
+import { ChevronDown, Search, Shield, Power, User } from "lucide-react";
 import {
 	Card,
 	CardContent,
@@ -80,15 +80,12 @@ export default function ManageUsersPage() {
 
 	const toggleUserStatus = async (userId: string, currentStatus: boolean) => {
 		try {
-			const response = await fetch(getApiUrl(`/user/${userId}`), {
+			const response = await fetch(getApiUrl(`/admin/users/${userId}/status`), {
 				method: "PATCH",
 				headers: {
 					"Content-Type": "application/json",
 					Authorization: `Bearer ${user?.token}`,
 				},
-				body: JSON.stringify({
-					is_active: !currentStatus,
-				}),
 			});
 
 			if (!response.ok) {
@@ -266,10 +263,12 @@ export default function ManageUsersPage() {
 																	: "bg-gray-100 text-gray-800"
 															}`}
 														>
-															{role === "admin" && (
+															{role === "admin" ? (
 																<Shield className="mr-1 h-3 w-3" />
+															) : (
+																<User className="mr-1 h-3 w-3" />
 															)}
-															{role}
+															{role.charAt(0).toUpperCase() + role.slice(1)}
 														</span>
 													</td>
 													<td className="p-4 text-left">
@@ -301,8 +300,8 @@ export default function ManageUsersPage() {
 																		}
 																		className={`flex items-center ${
 																			user.is_active
-																				? "text-red-600 hover:text-red-700"
-																				: "text-green-600 hover:text-green-700"
+																				? "cursor-pointer text-red-600 hover:text-red-700"
+																				: "cursor-pointer text-green-600 hover:text-green-700"
 																		}`}
 																	>
 																		<Power className="h-4 w-4" />
