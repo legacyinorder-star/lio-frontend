@@ -1,27 +1,35 @@
 import { Link, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { LogOut, Users, BookText, LayoutDashboard, Shield } from "lucide-react";
+import {
+	LogOut,
+	Users,
+	BookText,
+	LayoutDashboard,
+	ShoppingCart,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useEffect } from "react";
+import { toast } from "sonner";
 
 export function AdminLayout() {
 	const navigate = useNavigate();
 	const location = useLocation();
 	const { user, logout } = useAuth();
 
-	// useEffect(() => {
-	// 	if (!user) {
-	// 		navigate("/login");
-	// 		return;
-	// 	}
+	useEffect(() => {
+		if (!user) {
+			navigate("/login", { state: { from: location } });
+			return;
+		}
 
-	// 	// Check if user has admin role - this is a simple example
-	// 	// In a real app, you'd have proper role checking
-	// 	if (!user.isAdmin) {
-	// 		navigate("/app/dashboard");
-	// 	}
-	// }, [user, navigate]);
+		// Check if user has admin role
+		if (user.role !== "admin") {
+			toast.error("You need administrator privileges to access this area");
+			navigate("/app/dashboard");
+		}
+	}, [user, navigate, location]);
 
 	const getInitials = (name: string) => {
 		return name
@@ -48,14 +56,14 @@ export function AdminLayout() {
 			href: "/admin/users",
 		},
 		{
-			title: "Purchases",
-			icon: <BookText className="h-5 w-5" />,
-			href: "/admin/settings",
+			title: "Orders",
+			icon: <ShoppingCart className="h-5 w-5" />,
+			href: "/admin/orders",
 		},
 		{
-			title: "Permissions",
-			icon: <Shield className="h-5 w-5" />,
-			href: "/admin/permissions",
+			title: "Transactions",
+			icon: <BookText className="h-5 w-5" />,
+			href: "/admin/transactions",
 		},
 	];
 
