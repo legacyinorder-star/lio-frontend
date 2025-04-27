@@ -30,11 +30,6 @@ interface User {
 	email: string;
 	first_name: string;
 	last_name: string;
-	_role?: {
-		id: string;
-		created_at: string;
-		role: string;
-	};
 	role?: string;
 	created_at: string;
 	last_login_at?: string;
@@ -118,7 +113,7 @@ export default function ManageUsersPage() {
 	};
 
 	const getUserRole = (user: User): string => {
-		return user._role?.role || user.role || "user";
+		return user.role || "user";
 	};
 
 	const filterUsers = (users: User[]): User[] => {
