@@ -16,10 +16,7 @@ export default function DashboardPage() {
 		}
 
 		// Use first_name if available, otherwise use name, otherwise use email
-		const name =
-			userDetails.first_name ||
-			userDetails.name ||
-			userDetails.email.split("@")[0];
+		const name = userDetails.first_name || userDetails.email.split("@")[0];
 		setUserName(name);
 	}, [navigate]);
 
