@@ -86,7 +86,7 @@ export default function ProfilePage() {
 			const updatedUserDetails = await userResponse.json();
 
 			// Extract the role from the response
-			const userRole = updatedUserDetails._role?.role || "";
+			const userRole = updatedUserDetails.role || "";
 
 			// Update the user in the auth context with complete refreshed details
 			setUser({
@@ -153,7 +153,7 @@ export default function ProfilePage() {
 									/>
 								</FormControl>
 							</FormItem>
-							{user?.role && (
+							{/* {user?.role && (
 								<FormItem>
 									<FormLabel>Role</FormLabel>
 									<FormControl>
@@ -168,7 +168,7 @@ export default function ProfilePage() {
 										Your access level within the system
 									</FormDescription>
 								</FormItem>
-							)}
+							)} */}
 							<Button type="submit" className="w-full" disabled={isLoading}>
 								{isLoading ? "Updating..." : "Update Profile"}
 							</Button>
