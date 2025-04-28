@@ -6,6 +6,7 @@ import {
 	BookText,
 	LayoutDashboard,
 	ShoppingCart,
+	ArrowLeft,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -74,6 +75,11 @@ export function AdminLayout() {
 			title: "Transactions",
 			icon: <BookText className="h-5 w-5" />,
 			href: "/admin/transactions",
+		},
+		{
+			title: "Back to User View",
+			icon: <ArrowLeft className="h-5 w-5" />,
+			href: "/app/dashboard",
 		},
 	];
 

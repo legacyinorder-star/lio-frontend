@@ -8,6 +8,7 @@ import {
 	BookText,
 	Shield,
 	CircleUser,
+	UserCog,
 } from "lucide-react";
 import {
 	DropdownMenu,
@@ -27,6 +28,12 @@ import { cn } from "@/lib/utils";
 import { type UserDetails } from "@/utils/auth";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export function DashboardLayout() {
 	const navigate = useNavigate();
@@ -134,54 +141,83 @@ export function DashboardLayout() {
 							</NavigationMenuList>
 						</NavigationMenu>
 					</div>
-					<DropdownMenu>
-						<DropdownMenuTrigger asChild>
-							<Button
-								variant="ghost"
-								className="relative h-8 w-8 rounded-full hover:bg-primary/10"
-							>
-								<Avatar className="h-8 w-8">
-									<AvatarFallback
-										initials={getInitials(
-											userDetails.first_name + " " + userDetails.last_name
-										)}
-									/>
-								</Avatar>
-							</Button>
-						</DropdownMenuTrigger>
-						<DropdownMenuContent className="w-56" align="end" forceMount>
-							<DropdownMenuLabel className="font-normal">
-								<div className="flex flex-col space-y-1">
-									<p className="text-sm font-medium leading-none">
-										{userDetails.first_name + " " + userDetails.last_name}
-									</p>
-									<p className="text-xs leading-none text-muted-foreground">
-										{userDetails.email}
-									</p>
-								</div>
-							</DropdownMenuLabel>
-							<DropdownMenuSeparator />
-							<DropdownMenuItem asChild>
-								<Link to="/app/manage-profile" className="flex items-center">
-									<CircleUser className="mr-2 h-4 w-4" />
-									<span>Manage Profile</span>
-								</Link>
-							</DropdownMenuItem>
-							<DropdownMenuItem asChild>
-								<Link to="/app/settings" className="flex items-center">
-									<Settings className="mr-2 h-4 w-4" />
-									<span>Settings</span>
-								</Link>
-							</DropdownMenuItem>
-							<DropdownMenuItem
-								onClick={handleLogout}
-								className="flex items-center"
-							>
-								<LogOut className="mr-2 h-4 w-4" />
-								<span>Logout</span>
-							</DropdownMenuItem>
-						</DropdownMenuContent>
-					</DropdownMenu>
+					<div className="flex items-center space-x-2">
+						{userDetails.role === "admin" && (
+							<TooltipProvider>
+								<Tooltip>
+									<TooltipTrigger asChild>
+										<Link to="/admin/dashboard">
+											<div className="h-8 w-8 rounded-full bg-primary/10 hover:bg-primary/20 flex items-center justify-center cursor-pointer">
+												<UserCog className="h-4 w-4 text-primary" />
+											</div>
+										</Link>
+									</TooltipTrigger>
+									<TooltipContent>
+										<p>Admin Dashboard</p>
+									</TooltipContent>
+								</Tooltip>
+							</TooltipProvider>
+						)}
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
+								<Button
+									variant="ghost"
+									className="relative h-8 w-8 rounded-full hover:bg-primary/10"
+								>
+									<Avatar className="h-8 w-8">
+										<AvatarFallback
+											initials={getInitials(
+												userDetails.first_name + " " + userDetails.last_name
+											)}
+										/>
+									</Avatar>
+								</Button>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent className="w-56" align="end" forceMount>
+								<DropdownMenuLabel className="font-normal">
+									<div className="flex flex-col space-y-1">
+										<p className="text-sm font-medium leading-none">
+											{userDetails.first_name + " " + userDetails.last_name}
+										</p>
+										<p className="text-xs leading-none text-muted-foreground">
+											{userDetails.email}
+										</p>
+									</div>
+								</DropdownMenuLabel>
+								<DropdownMenuSeparator />
+								{userDetails.role === "admin" && (
+									<>
+										<DropdownMenuItem asChild>
+											<Link to="/admin/dashboard" className="flex items-center">
+												<UserCog className="mr-2 h-4 w-4" />
+												<span>Admin Dashboard</span>
+											</Link>
+										</DropdownMenuItem>
+										<DropdownMenuSeparator />
+									</>
+								)}
+								<DropdownMenuItem asChild>
+									<Link to="/app/manage-profile" className="flex items-center">
+										<CircleUser className="mr-2 h-4 w-4" />
+										<span>Manage Profile</span>
+									</Link>
+								</DropdownMenuItem>
+								<DropdownMenuItem asChild>
+									<Link to="/app/settings" className="flex items-center">
+										<Settings className="mr-2 h-4 w-4" />
+										<span>Settings</span>
+									</Link>
+								</DropdownMenuItem>
+								<DropdownMenuItem
+									onClick={handleLogout}
+									className="flex items-center"
+								>
+									<LogOut className="mr-2 h-4 w-4" />
+									<span>Logout</span>
+								</DropdownMenuItem>
+							</DropdownMenuContent>
+						</DropdownMenu>
+					</div>
 				</div>
 			</header>
 
