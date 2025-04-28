@@ -1,4 +1,4 @@
-import { Link, Outlet, useNavigate } from "react-router-dom";
+import { Link, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
 	LayoutDashboard,
@@ -34,25 +34,37 @@ import {
 	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { toast } from "sonner";
 
 export function DashboardLayout() {
 	const navigate = useNavigate();
+	const location = useLocation();
 	const { user, logout } = useAuth();
 	const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
+	const [isLoading, setIsLoading] = useState(true);
 
 	useEffect(() => {
-		if (!user) {
-			navigate("/login");
-			return;
-		}
-		setUserDetails({
-			id: user.id,
-			email: user.email,
-			first_name: user.first_name,
-			last_name: user.last_name,
-			role: user.role,
-		});
-	}, [user, navigate]);
+		// Set a small delay to ensure auth state is properly loaded
+		const checkAuthTimer = setTimeout(() => {
+			if (!user) {
+				toast.error("Please log in to access this page");
+				navigate("/login", { state: { from: location } });
+				return;
+			}
+
+			setUserDetails({
+				id: user.id,
+				email: user.email,
+				first_name: user.first_name,
+				last_name: user.last_name,
+				role: user.role,
+			});
+
+			setIsLoading(false);
+		}, 500); // Short delay to ensure auth context is fully loaded
+
+		return () => clearTimeout(checkAuthTimer);
+	}, [user, navigate, location]);
 
 	const getInitials = (name: string) => {
 		return name
@@ -67,8 +79,16 @@ export function DashboardLayout() {
 		navigate("/login");
 	};
 
-	if (!userDetails) {
-		return null; // TODO: Add a loading spinner
+	// Show loading state instead of null
+	if (isLoading || !userDetails) {
+		return (
+			<div className="flex items-center justify-center h-screen">
+				<div className="flex flex-col items-center gap-4">
+					<div className="h-8 w-8 animate-spin rounded-full border-t-2 border-b-2 border-primary"></div>
+					<p className="text-muted-foreground">Loading dashboard...</p>
+				</div>
+			</div>
+		);
 	}
 
 	return (
