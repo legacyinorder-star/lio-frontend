@@ -17,6 +17,7 @@ import ManageUsersPage from "./pages/admin/ManageUsersPage";
 import AdminDashboardPage from "@/pages/admin/AdminDashboardPage";
 import LogoutPage from "./pages/LogoutPage";
 import HomePage from "@/pages/HomePage";
+import NotFoundPage from "@/pages/NotFoundPage";
 
 function App() {
 	return (
@@ -56,6 +57,9 @@ function App() {
 					/>
 					<Route path="/reset-password" element={<ResetPasswordPage />} />
 					<Route path="/verify-otp" element={<OTPVerificationPage />} />
+
+					{/* 404 - This must be the last route to catch all unknown URLs */}
+					<Route path="*" element={<NotFoundPage />} />
 				</Routes>
 				<Toaster />
 			</Router>
