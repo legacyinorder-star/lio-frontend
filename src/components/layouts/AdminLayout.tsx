@@ -10,25 +10,35 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 export function AdminLayout() {
 	const navigate = useNavigate();
 	const location = useLocation();
 	const { user, logout } = useAuth();
+	const [isLoading, setIsLoading] = useState(true);
 
 	useEffect(() => {
-		if (!user) {
-			navigate("/login", { state: { from: location } });
-			return;
-		}
+		// Set a small delay to ensure auth state is properly loaded
+		const checkAuthTimer = setTimeout(() => {
+			if (!user) {
+				toast.error("Please log in to access the admin area");
+				navigate("/login", { state: { from: location } });
+				return;
+			}
 
-		// Check if user has admin role
-		if (user.role !== "admin") {
-			toast.error("You need administrator privileges to access this area");
-			navigate("/app/dashboard");
-		}
+			// Check if user has admin role
+			if (user.role !== "admin") {
+				toast.error("You need administrator privileges to access this area");
+				navigate("/app/dashboard");
+				return;
+			}
+
+			setIsLoading(false);
+		}, 500); // Short delay to ensure auth context is fully loaded
+
+		return () => clearTimeout(checkAuthTimer);
 	}, [user, navigate, location]);
 
 	const getInitials = (name: string) => {
@@ -67,9 +77,22 @@ export function AdminLayout() {
 		},
 	];
 
-	if (!user) {
-		return null; // Loading state
+	// Show loading state instead of null
+	if (isLoading || !user) {
+		return (
+			<div className="flex items-center justify-center h-screen">
+				<div className="flex flex-col items-center gap-4">
+					<div className="h-8 w-8 animate-spin rounded-full border-t-2 border-b-2 border-primary"></div>
+					<p className="text-muted-foreground">Loading admin dashboard...</p>
+				</div>
+			</div>
+		);
 	}
+
+	// At this point we know user exists and has admin role
+	const userFirstName = user.first_name || "";
+	const userLastName = user.last_name || "";
+	const fullName = `${userFirstName} ${userLastName}`.trim();
 
 	return (
 		<div className="flex h-screen bg-background">
@@ -116,14 +139,10 @@ export function AdminLayout() {
 				<div className="mt-auto p-4 border-t">
 					<div className="flex items-center gap-3 mb-4">
 						<Avatar className="h-9 w-9">
-							<AvatarFallback
-								initials={getInitials(user.first_name + " " + user.last_name)}
-							/>
+							<AvatarFallback initials={getInitials(fullName)} />
 						</Avatar>
 						<div className="space-y-0.5">
-							<p className="text-sm font-medium leading-none">
-								{user.first_name + " " + user.last_name}
-							</p>
+							<p className="text-sm font-medium leading-none">{fullName}</p>
 							<p className="text-xs text-muted-foreground">Admin</p>
 						</div>
 					</div>
