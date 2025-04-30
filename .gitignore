@@ -12,3 +12,5 @@ build/
 
 # ignore compiled directory
 dist/
+
+.DS_Store
