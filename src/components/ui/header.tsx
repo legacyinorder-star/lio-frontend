@@ -25,9 +25,11 @@ export function Header() {
 				<div className="flex items-center justify-between px-4 md:px-6 lg:px-8 h-16 relative z-10">
 					<div className="flex">
 						<Link to="/" className="flex items-center">
-							<span className="text-xl font-semibold text-white">
-								Legacy In Order
-							</span>
+							<img
+								src="/logos/LIO_Logo_White.svg"
+								alt="Legacy In Order"
+								className="h-10"
+							/>
 						</Link>
 					</div>
 					<nav className="hidden md:flex items-center">
