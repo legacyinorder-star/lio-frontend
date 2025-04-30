@@ -22,7 +22,7 @@ export function Header() {
 			{/* Header Content */}
 			<div className="w-full max-w-[2000px] mx-auto flex flex-col h-full">
 				{/* Navigation Bar */}
-				<div className="flex items-center justify-between px-4 md:px-6 lg:px-8 h-16 relative z-10">
+				<div className="flex items-center justify-between px-4 md:px-6 lg:px-8 h-16 relative z-10 nav-bar">
 					<div className="flex">
 						<Link to="/" className="flex items-center">
 							<img
@@ -54,16 +54,16 @@ export function Header() {
 							</Link>
 						</div>
 					</nav>
-					<div className="flex items-center gap-3">
+					<div className="flex items-center gap-3 nav-right">
 						<Link
 							to="/login"
-							className="flex items-center justify-center h-[41px] w-[90px] bg-white border border-[#3E4029] rounded-md text-[#3E4029] font-medium hover:bg-[#f8f8f8] transition-colors"
+							className="flex items-center justify-center h-[41px] w-[90px] bg-transparent border border-white rounded-sm text-white"
 						>
 							Sign In
 						</Link>
 						<Link
 							to="/schedule"
-							className="flex items-center justify-center h-[41px] w-[150px] bg-white border border-[#3E4029] rounded-md text-[#3E4029] font-medium hover:bg-[#f8f8f8] transition-colors"
+							className="flex items-center justify-center h-[41px] w-[150px] bg-transparent border border-white rounded-sm text-white"
 						>
 							Schedule a Call
 						</Link>
@@ -75,19 +75,36 @@ export function Header() {
 
 				{/* Hero Content */}
 				<div className="flex-1 flex flex-col justify-center px-4 md:px-12 lg:px-20 relative z-10 mt-16">
-					<div className="max-w-3xl">
-						<h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white text-left">
-							Plan your legacy with confidence
+					<div className="max-w-4xl">
+						<h1 className="text-white text-left">
+							Planning for the Future Shouldn't Be Complicated
 						</h1>
-						<p className="text-xl text-white/90 mt-4 text-left max-w-2xl">
-							Professional estate planning services to protect what matters most
+						<p className="text-white/90 mt-4 text-left text-lg">
+							Easily create wills, powers of attorney, and other essential
+							documents in minutes.
 						</p>
-						<div className="mt-8">
+						<div className="mt-8 flex gap-4">
 							<Link
 								to="/get-started"
 								className="flex items-center justify-center h-12 px-8 bg-white border border-[#3E4029] rounded-md text-[#3E4029] font-semibold hover:bg-[#f8f8f8] transition-colors w-fit"
 							>
-								Get Started
+								<img
+									src="/svgs/history_edu.svg"
+									alt="Will Icon"
+									className="w-5 h-5 mr-2"
+								/>
+								Write your Will
+							</Link>
+							<Link
+								to="/get-started"
+								className="flex items-center justify-center h-12 px-8 bg-white border border-[#3E4029] rounded-md text-[#3E4029] font-semibold hover:bg-[#f8f8f8] transition-colors w-fit"
+							>
+								<img
+									src="/svgs/legal_balance.svg"
+									alt="Power of Attorney Icon"
+									className="w-5 h-5 mr-2"
+								/>
+								Write a Power of Attorney
 							</Link>
 						</div>
 					</div>

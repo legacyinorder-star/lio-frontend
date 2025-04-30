@@ -14,6 +14,7 @@ module.exports = {
 			fontFamily: {
 				sans: ["Hedvig Letters Serif", "serif"],
 				serif: ["Hedvig Letters Serif", "serif"],
+				dmsans: ["DM Sans", "sans-serif"],
 			},
 			colors: {
 				border: "hsl(var(--border))",
