@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, FileText, Shield, Users } from "lucide-react";
+import { FileText, Shield, Users } from "lucide-react";
 import { Header } from "@/components/ui/header";
 
 export default function HomePage() {
@@ -11,34 +11,39 @@ export default function HomePage() {
 				{/* Hero Section */}
 				<section className="w-full bg-background py-12 md:py-24 lg:py-32">
 					<div className="w-full max-w-[2000px] mx-auto px-4 md:px-6 lg:px-8">
-						<div className="grid gap-6 lg:grid-cols-2 lg:gap-12 xl:gap-16">
-							<div className="flex flex-col justify-center space-y-4">
-								<div className="space-y-2">
-									<h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl">
-										Secure Your Legacy, Simplify Their Future
-									</h1>
-									<p className="max-w-[600px] text-muted-foreground md:text-xl">
-										Streamline your estate planning with our comprehensive
-										solution that keeps all your important documents and wishes
-										in one secure place.
-									</p>
-								</div>
-								<div className="flex flex-col gap-2 min-[400px]:flex-row">
-									<Button asChild size="lg">
-										<Link to="/signup">
-											Get Started <ArrowRight className="ml-2 h-4 w-4" />
-										</Link>
-									</Button>
-									<Button variant="outline" size="lg">
-										Learn More
-									</Button>
-								</div>
+						<div className="justify-center space-y-4">
+							<div className="space-y-2">
+								<h2 className="text-muted-foreground text-[3.5rem] font-normal leading-[130%] tracking-[-0.07rem] pl-12">
+									Planning for the future should be simple, not stressful.
+									LegacyInOrder is making it effortless for young professionals
+									to create legally sound wills, power of attorney documents,
+									and letters of wishes, without the usual complexity or cost.
+								</h2>
 							</div>
-							<div className="flex items-center justify-center">
-								<div className="w-full h-full bg-muted rounded-lg p-8 flex items-center justify-center">
-									<p className="text-center text-lg font-medium">
-										Hero Image Placeholder
+							<div className="flex justify-end pl-12 mt-[4.3125rem]">
+								<div className="w-1/3">
+									<p className="text-[1.125rem] font-normal leading-[120%] tracking-[-0.0225rem]">
+										Planning for the future should be simple, not stressful.
+										LegacyInOrder is making it effortless for young
+										professionals to create legally sound wills, power of
+										attorney documents, and letters of wishes, without the usual
+										complexity or cost.
 									</p>
+									<div className="flex items-center gap-3 mt-[2rem]">
+										<Button
+											variant="outline"
+											className="flex items-center justify-center bg-transparent border border-black rounded-lg text-black"
+										>
+											<Link to="/login">Sign In</Link>
+										</Button>
+
+										<Button
+											variant="outline"
+											className="flex items-center justify-center bg-light-green border border-light-green rounded-lg text-black"
+										>
+											<Link to="/#">Create a Document</Link>
+										</Button>
+									</div>
 								</div>
 							</div>
 						</div>

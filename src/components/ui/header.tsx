@@ -57,13 +57,13 @@ export function Header() {
 					<div className="flex items-center gap-3 nav-right">
 						<Link
 							to="/login"
-							className="flex items-center justify-center h-[41px] w-[90px] bg-transparent border border-white rounded-sm text-white"
+							className="flex items-center justify-center h-[41px] w-[90px] bg-transparent border border-white rounded-lg text-white"
 						>
 							Sign In
 						</Link>
 						<Link
 							to="/schedule"
-							className="flex items-center justify-center h-[41px] w-[150px] bg-transparent border border-white rounded-sm text-white"
+							className="flex items-center justify-center h-[41px] w-[150px] bg-transparent border border-white rounded-lg text-white"
 						>
 							Schedule a Call
 						</Link>
@@ -86,7 +86,7 @@ export function Header() {
 						<div className="mt-8 flex gap-4">
 							<Link
 								to="/get-started"
-								className="flex items-center justify-center h-12 px-8 bg-white border border-[#3E4029] rounded-md text-[#3E4029] font-semibold hover:bg-[#f8f8f8] transition-colors w-fit"
+								className="flex items-center justify-center h-12 px-8 bg-white border border-[#3E4029] rounded-lg text-[#3E4029] font-semibold hover:bg-[#f8f8f8] transition-colors w-fit"
 							>
 								<img
 									src="/svgs/history_edu.svg"
@@ -97,7 +97,7 @@ export function Header() {
 							</Link>
 							<Link
 								to="/get-started"
-								className="flex items-center justify-center h-12 px-8 bg-white border border-[#3E4029] rounded-md text-[#3E4029] font-semibold hover:bg-[#f8f8f8] transition-colors w-fit"
+								className="flex items-center justify-center h-12 px-8 bg-white border border-[#3E4029] rounded-lg text-[#3E4029] font-semibold hover:bg-[#f8f8f8] transition-colors w-fit"
 							>
 								<img
 									src="/svgs/legal_balance.svg"
