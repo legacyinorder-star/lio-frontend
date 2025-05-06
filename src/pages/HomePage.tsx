@@ -151,6 +151,84 @@ export default function HomePage() {
 					</div>
 				</section>
 
+				{/* Why LegacyInOrder Section */}
+				<section className="w-full bg-[#083203] py-12">
+					<div className="w-full max-w-[2000px] mx-auto px-4 md:px-6 lg:px-8">
+						<div className="grid grid-cols-2 gap-8 items-start">
+							<div className="text-white">
+								<h1 className="text-[5rem] md:text-[4rem] font-normal mb-8">
+									Why LegacyInOrder
+								</h1>
+								<Button className="bg-[#083203] text-white hover:bg-gray-100 border border-white rounded-[4px]">
+									Schedule a Consultation
+								</Button>
+							</div>
+							<div className="text-white py-8 space-y-8">
+								<div className="flex flex-col pt-4">
+									<img
+										src="/svgs/award.svg"
+										alt="Award"
+										className="h-12 w-12 mb-4"
+									/>
+									<h3 className="text-[40px] font-normal mb-2">
+										15+ Years of Experience
+									</h3>
+									<p className="text-[16px] text-gray-300">
+										Our knowledge and expertise, built upon since 1990, allows
+										us to simplify complex processes and guide our clients
+										effectively. Our system is designed to be quick and simple.
+									</p>
+								</div>
+
+								<div className="flex flex-col">
+									<img
+										src="/svgs/shield.svg"
+										alt="Shield"
+										className="h-12 w-12 mb-4"
+									/>
+									<h3 className="text-[40px] font-normal mb-2">
+										Secure Storage & Accessibility
+									</h3>
+									<p className="text-[16px]text-gray-300">
+										Create legally sound documents in minutes, without expensive
+										lawyer fees.
+									</p>
+								</div>
+
+								<div className="flex flex-col">
+									<img
+										src="/svgs/lollipop.svg"
+										alt="Verified"
+										className="h-12 w-12 mb-4"
+									/>
+									<h3 className="text-[40px] font-normal mb-2">
+										Expert-Reviewed Documents
+									</h3>
+									<p className="text-[16px] text-gray-300">
+										All documents are reviewed by legal experts to ensure
+										compliance with current laws.
+									</p>
+								</div>
+
+								<div className="flex flex-col">
+									<img
+										src="/svgs/tag.svg"
+										alt="Tags"
+										className="h-12 w-12 mb-4"
+									/>
+									<h3 className="text-[40px] font-normal mb-2">
+										Affordable and Transparent
+									</h3>
+									<p className="text-[16px] text-gray-300">
+										No hidden fees or costly lawyer consultations—just a
+										straightforward, cost-effective way to plan your future.
+									</p>
+								</div>
+							</div>
+						</div>
+					</div>
+				</section>
+
 				{/* CTA Section */}
 				<section className="w-full bg-primary text-primary-foreground py-12 md:py-24 lg:py-32">
 					<div className="w-full max-w-[2000px] mx-auto px-4 md:px-6 lg:px-8">
