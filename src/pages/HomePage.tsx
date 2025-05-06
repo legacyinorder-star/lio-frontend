@@ -385,39 +385,43 @@ export default function HomePage() {
 						<h2 className="text-[5rem] md:text-[4rem] font-normal text-center mb-16">
 							What People Usually Ask Us
 						</h2>
-						<div className="max-w-3xl mx-auto space-y-4">
-							<div className="border rounded-lg">
+						<div className="max-w-3xl mx-auto space-y-1">
+							<div className="border rounded-lg bg-[#F2F2EF]">
 								<button
-									className="w-full px-6 py-4 text-left flex justify-between items-center"
+									className="w-full px-[35px] py-[25px] text-left flex justify-between items-center"
 									onClick={() => {
 										const content = document.getElementById("faq1-content");
 										const icon = document.getElementById("faq1-icon");
+										// Close all other accordions
+										["faq2-content", "faq3-content", "faq4-content"].forEach(
+											(id) => {
+												const otherContent = document.getElementById(id);
+												const otherIcon = document.getElementById(
+													id.replace("content", "icon")
+												);
+												if (otherContent && otherIcon) {
+													otherContent.classList.add("hidden");
+													otherIcon.textContent = "+";
+												}
+											}
+										);
 										if (content && icon) {
 											content.classList.toggle("hidden");
-											icon.classList.toggle("rotate-180");
+											icon.textContent = content.classList.contains("hidden")
+												? "+"
+												: "-";
 										}
 									}}
 								>
-									<span className="text-xl font-medium">
+									<span className="text-[1.5rem] font-medium font-['Hedvig_Letters_Serif']">
 										What documents can I create with LegacyInOrder?
 									</span>
-									<svg
-										id="faq1-icon"
-										className="w-6 h-6 transform transition-transform duration-200"
-										fill="none"
-										viewBox="0 0 24 24"
-										stroke="currentColor"
-									>
-										<path
-											strokeLinecap="round"
-											strokeLinejoin="round"
-											strokeWidth={2}
-											d="M19 9l-7 7-7-7"
-										/>
-									</svg>
+									<span id="faq1-icon" className="text-2xl font-light">
+										+
+									</span>
 								</button>
-								<div id="faq1-content" className="hidden px-6 pb-4">
-									<p className="text-gray-600">
+								<div id="faq1-content" className="hidden px-[35px] pb-[25px]">
+									<p className="text-[1rem] text-gray-600 font-['DM_Sans']">
 										You can create legally binding wills, power of attorney
 										documents, and letters of wishes. Our platform guides you
 										through each document creation process with clear,
@@ -426,38 +430,42 @@ export default function HomePage() {
 								</div>
 							</div>
 
-							<div className="border rounded-lg">
+							<div className="border rounded-lg bg-[#F2F2EF]">
 								<button
-									className="w-full px-6 py-4 text-left flex justify-between items-center"
+									className="w-full px-[35px] py-[25px] text-left flex justify-between items-center"
 									onClick={() => {
 										const content = document.getElementById("faq2-content");
 										const icon = document.getElementById("faq2-icon");
+										// Close all other accordions
+										["faq1-content", "faq3-content", "faq4-content"].forEach(
+											(id) => {
+												const otherContent = document.getElementById(id);
+												const otherIcon = document.getElementById(
+													id.replace("content", "icon")
+												);
+												if (otherContent && otherIcon) {
+													otherContent.classList.add("hidden");
+													otherIcon.textContent = "+";
+												}
+											}
+										);
 										if (content && icon) {
 											content.classList.toggle("hidden");
-											icon.classList.toggle("rotate-180");
+											icon.textContent = content.classList.contains("hidden")
+												? "+"
+												: "-";
 										}
 									}}
 								>
-									<span className="text-xl font-medium">
+									<span className="text-[1.5rem] font-medium font-['Hedvig_Letters_Serif']">
 										How secure is my information?
 									</span>
-									<svg
-										id="faq2-icon"
-										className="w-6 h-6 transform transition-transform duration-200"
-										fill="none"
-										viewBox="0 0 24 24"
-										stroke="currentColor"
-									>
-										<path
-											strokeLinecap="round"
-											strokeLinejoin="round"
-											strokeWidth={2}
-											d="M19 9l-7 7-7-7"
-										/>
-									</svg>
+									<span id="faq2-icon" className="text-2xl font-light">
+										+
+									</span>
 								</button>
-								<div id="faq2-content" className="hidden px-6 pb-4">
-									<p className="text-gray-600">
+								<div id="faq2-content" className="hidden px-[35px] pb-[25px]">
+									<p className="text-[1rem] text-gray-600 font-['DM_Sans']">
 										We use bank-level encryption to protect your data. All
 										documents are stored securely and can only be accessed by
 										you. We never share your information with third parties
@@ -466,38 +474,42 @@ export default function HomePage() {
 								</div>
 							</div>
 
-							<div className="border rounded-lg">
+							<div className="border rounded-lg bg-[#F2F2EF]">
 								<button
-									className="w-full px-6 py-4 text-left flex justify-between items-center"
+									className="w-full px-[35px] py-[25px] text-left flex justify-between items-center"
 									onClick={() => {
 										const content = document.getElementById("faq3-content");
 										const icon = document.getElementById("faq3-icon");
+										// Close all other accordions
+										["faq1-content", "faq2-content", "faq4-content"].forEach(
+											(id) => {
+												const otherContent = document.getElementById(id);
+												const otherIcon = document.getElementById(
+													id.replace("content", "icon")
+												);
+												if (otherContent && otherIcon) {
+													otherContent.classList.add("hidden");
+													otherIcon.textContent = "+";
+												}
+											}
+										);
 										if (content && icon) {
 											content.classList.toggle("hidden");
-											icon.classList.toggle("rotate-180");
+											icon.textContent = content.classList.contains("hidden")
+												? "+"
+												: "-";
 										}
 									}}
 								>
-									<span className="text-xl font-medium">
+									<span className="text-[1.5rem] font-medium font-['Hedvig_Letters_Serif']">
 										Can I update my documents later?
 									</span>
-									<svg
-										id="faq3-icon"
-										className="w-6 h-6 transform transition-transform duration-200"
-										fill="none"
-										viewBox="0 0 24 24"
-										stroke="currentColor"
-									>
-										<path
-											strokeLinecap="round"
-											strokeLinejoin="round"
-											strokeWidth={2}
-											d="M19 9l-7 7-7-7"
-										/>
-									</svg>
+									<span id="faq3-icon" className="text-2xl font-light">
+										+
+									</span>
 								</button>
-								<div id="faq3-content" className="hidden px-6 pb-4">
-									<p className="text-gray-600">
+								<div id="faq3-content" className="hidden px-[35px] pb-[25px]">
+									<p className="text-[1rem] text-gray-600 font-['DM_Sans']">
 										Yes, you can update your documents at any time. We recommend
 										reviewing and updating your documents annually or when
 										significant life changes occur. All updates are tracked and
@@ -506,38 +518,42 @@ export default function HomePage() {
 								</div>
 							</div>
 
-							<div className="border rounded-lg">
+							<div className="border rounded-lg bg-[#F2F2EF]">
 								<button
-									className="w-full px-6 py-4 text-left flex justify-between items-center"
+									className="w-full px-[35px] py-[25px] text-left flex justify-between items-center"
 									onClick={() => {
 										const content = document.getElementById("faq4-content");
 										const icon = document.getElementById("faq4-icon");
+										// Close all other accordions
+										["faq1-content", "faq2-content", "faq3-content"].forEach(
+											(id) => {
+												const otherContent = document.getElementById(id);
+												const otherIcon = document.getElementById(
+													id.replace("content", "icon")
+												);
+												if (otherContent && otherIcon) {
+													otherContent.classList.add("hidden");
+													otherIcon.textContent = "+";
+												}
+											}
+										);
 										if (content && icon) {
 											content.classList.toggle("hidden");
-											icon.classList.toggle("rotate-180");
+											icon.textContent = content.classList.contains("hidden")
+												? "+"
+												: "-";
 										}
 									}}
 								>
-									<span className="text-xl font-medium">
+									<span className="text-[1.5rem] font-medium font-['Hedvig_Letters_Serif']">
 										Do I need a lawyer to use LegacyInOrder?
 									</span>
-									<svg
-										id="faq4-icon"
-										className="w-6 h-6 transform transition-transform duration-200"
-										fill="none"
-										viewBox="0 0 24 24"
-										stroke="currentColor"
-									>
-										<path
-											strokeLinecap="round"
-											strokeLinejoin="round"
-											strokeWidth={2}
-											d="M19 9l-7 7-7-7"
-										/>
-									</svg>
+									<span id="faq4-icon" className="text-2xl font-light">
+										+
+									</span>
 								</button>
-								<div id="faq4-content" className="hidden px-6 pb-4">
-									<p className="text-gray-600">
+								<div id="faq4-content" className="hidden px-[35px] pb-[25px]">
+									<p className="text-[1rem] text-gray-600 font-['DM_Sans']">
 										While our documents are legally sound and reviewed by
 										experts, we recommend consulting with a lawyer for complex
 										situations or if you have specific legal concerns. Our
