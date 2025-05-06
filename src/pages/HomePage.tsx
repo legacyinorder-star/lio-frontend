@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { FileText, Shield, Users } from "lucide-react";
 import { Header } from "@/components/ui/header";
 
 export default function HomePage() {
@@ -9,7 +8,7 @@ export default function HomePage() {
 			<Header />
 			<main className="flex-1">
 				{/* Hero Section */}
-				<section className="w-full bg-background py-12 md:py-24 lg:py-32">
+				<section className="w-full bg-background py-6 md:py-12 lg:py-24">
 					<div className="w-full max-w-[2000px] mx-auto px-4 md:px-6 lg:px-8">
 						<div className="justify-center space-y-4">
 							<div className="space-y-2">
@@ -52,49 +51,101 @@ export default function HomePage() {
 
 				{/* Features Section */}
 				<section
-					className="w-full bg-muted/50 py-12 md:py-24 lg:py-32"
+					className="w-full bg-light-gray py-6 md:py-12 lg:py-24"
 					id="features"
 				>
 					<div className="w-full max-w-[2000px] mx-auto px-4 md:px-6 lg:px-8">
-						<div className="mx-auto flex max-w-[58rem] flex-col items-center space-y-4 text-center">
-							<h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
-								Key Features
-							</h2>
-							<p className="max-w-[85%] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-								Everything you need to organize your estate planning in one
-								secure platform
-							</p>
+						<div className="mx-auto flex max-w-full flex-col items-start space-y-4 text-left">
+							<div className="grid grid-cols-[40%_20%_40%] w-full items-end">
+								<div>
+									<h1 className="text-3xl font-normal tracking-tight sm:text-4xl md:text-5xl">
+										What Document Do You Need?
+									</h1>
+									<p className="max-w-[85%] mt-6 text-muted-foreground">
+										Answer a few guided questions, generate your document
+										instantly, and securely store or download it for future use.
+									</p>
+								</div>
+								<div></div>
+								<div className="relative mb-1 flex justify-end">
+									<input
+										type="search"
+										placeholder="Will, letter of attorney e.t.c."
+										className="w-full px-4 py-2 pl-10 border border-black rounded-full focus:outline-none focus:ring-2 focus:ring-light-green"
+									/>
+									<svg
+										className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400"
+										xmlns="http://www.w3.org/2000/svg"
+										fill="none"
+										viewBox="0 0 24 24"
+										stroke="currentColor"
+									>
+										<path
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											strokeWidth={2}
+											d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+										/>
+									</svg>
+								</div>
+							</div>
 						</div>
-						<div className="mx-auto grid gap-4 md:gap-8 sm:grid-cols-2 lg:grid-cols-3 mt-16 max-w-[1300px]">
-							<div className="flex flex-col items-center justify-center space-y-2 border bg-background p-6 rounded-lg">
-								<div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-									<FileText className="h-8 w-8" />
-								</div>
-								<h3 className="text-xl font-bold">Document Storage</h3>
-								<p className="text-sm text-muted-foreground text-center">
-									Securely store and organize all your important documents in
-									one place.
+						<div
+							id="document-types"
+							className="mx-auto grid gap-4 md:gap-8 sm:grid-cols-2 lg:grid-cols-3 mt-16"
+						>
+							<div className="flex flex-col items-center bg-white p-8 rounded-xl shadow-sm">
+								<img
+									src="/svgs/double_files.svg"
+									alt="Will"
+									className="h-48 w-48 mb-6"
+								/>
+								<h2 className="text-[40px] font-normal mb-4 w-full text-left">
+									Wills
+								</h2>
+								<p className="text-black mb-8 w-full text-left">
+									Create a legally binding will to ensure your assets are
+									distributed according to your wishes.
 								</p>
+								<Button className="w-full bg-light-green text-lg">
+									Create Will
+								</Button>
 							</div>
-							<div className="flex flex-col items-center justify-center space-y-2 border bg-background p-6 rounded-lg">
-								<div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-									<Users className="h-8 w-8" />
-								</div>
-								<h3 className="text-xl font-bold">Beneficiary Management</h3>
-								<p className="text-sm text-muted-foreground text-center">
-									Easily designate and manage beneficiaries for your assets and
-									important documents.
+
+							<div className="flex flex-col items-center bg-white p-8 rounded-xl shadow-sm">
+								<img
+									src="/svgs/double_files.svg"
+									alt="Power of Attorney"
+									className="h-48 w-48 mb-6"
+								/>
+								<h2 className="text-[40px] font-normal mb-4 w-full text-left">
+									Power of Attorney
+								</h2>
+								<p className="text-black mb-8 w-full text-left">
+									Designate someone to make important decisions on your behalf
+									if you become unable to do so.
 								</p>
+								<Button className="w-full bg-light-green text-lg">
+									Create POA
+								</Button>
 							</div>
-							<div className="flex flex-col items-center justify-center space-y-2 border bg-background p-6 rounded-lg">
-								<div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-									<Shield className="h-8 w-8" />
-								</div>
-								<h3 className="text-xl font-bold">Advanced Security</h3>
-								<p className="text-sm text-muted-foreground text-center">
-									Bank-level encryption and security protocols to protect your
-									sensitive information.
+
+							<div className="flex flex-col items-center bg-white p-8 rounded-xl shadow-sm">
+								<img
+									src="/svgs/double_files.svg"
+									alt="Letter of Wishes"
+									className="h-48 w-48 mb-6"
+								/>
+								<h2 className="text-[40px] font-normal mb-4 w-full text-left">
+									Letter of Wishes
+								</h2>
+								<p className="text-muted-foreground mb-8 w-full text-left">
+									Document your personal wishes and preferences for your loved
+									ones to follow.
 								</p>
+								<Button className="w-full bg-light-green text-lg">
+									Create Letter of Wishes
+								</Button>
 							</div>
 						</div>
 					</div>
