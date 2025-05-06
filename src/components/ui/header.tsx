@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 
 export function Header() {
 	return (
-		<header className="w-full border-b relative overflow-hidden h-[600px]">
+		<header className="w-full border-b relative overflow-hidden h-[800px]">
 			{/* Video Background */}
 			<div className="absolute inset-0 w-full h-full z-0">
 				<video
