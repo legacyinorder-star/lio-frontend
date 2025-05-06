@@ -157,7 +157,8 @@ export default function HomePage() {
 						<div className="grid grid-cols-2 gap-8 items-start">
 							<div className="text-white">
 								<h1 className="text-[5rem] md:text-[4rem] font-normal mb-8">
-									Why LegacyInOrder
+									Why <br />
+									LegacyInOrder
 								</h1>
 								<Button className="bg-[#083203] text-white hover:bg-gray-100 border border-white rounded-[4px]">
 									Schedule a Consultation
@@ -229,20 +230,357 @@ export default function HomePage() {
 					</div>
 				</section>
 
+				{/* Testimonials Section */}
+				<section className="w-full bg-white py-12">
+					<div className="w-full max-w-[2000px] mx-auto px-4 md:px-6 lg:px-8">
+						<div className="relative flex flex-col items-center justify-center">
+							{/* <div className="absolute -top-8 -left-8">
+								<img
+									src="/avatars/user1.png"
+									alt="User avatar"
+									className="h-20 w-20 rounded-full"
+								/>
+							</div>
+							<div className="absolute -top-12 right-12">
+								<img
+									src="/avatars/user2.png"
+									alt="User avatar"
+									className="h-24 w-24 rounded-full"
+								/>
+							</div>
+							<div className="absolute bottom-0 -left-12">
+								<img
+									src="/avatars/user3.png"
+									alt="User avatar"
+									className="h-28 w-28 rounded-full"
+								/>
+							</div>
+							<div className="absolute -bottom-8 right-8">
+								<img
+									src="/avatars/user4.png"
+									alt="User avatar"
+									className="h-16 w-16 rounded-full"
+								/>
+							</div>
+							<div className="absolute -top-4 left-1/4">
+								<img
+									src="/avatars/user5.png"
+									alt="User avatar"
+									className="h-32 w-32 rounded-full"
+								/>
+							</div>
+							<div className="absolute -bottom-4 right-1/4">
+								<img
+									src="/avatars/user6.png"
+									alt="User avatar"
+									className="h-20 w-20 rounded-full"
+								/>
+							</div> */}
+							<h1 className="text-[5rem] md:text-[4rem] font-normal text-center">
+								Join over 400,000 People Who Trust LegacyInOrder
+							</h1>
+							<div className="grid grid-cols-3 gap-8 mt-16 w-full">
+								<div className="bg-[#F5F5F5] p-8 rounded-lg">
+									<div className="flex gap-1 mb-6">
+										{[...Array(5)].map((_, i) => (
+											<svg
+												key={i}
+												className="w-6 h-6 text-black"
+												fill="currentColor"
+												viewBox="0 0 20 20"
+											>
+												<path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+											</svg>
+										))}
+									</div>
+									<p className="text-black text-[1.5rem] mb-6">
+										LegacyInOrder made creating my will so simple. The guided
+										process was clear and straightforward, and I feel confident
+										knowing my affairs are in order.
+									</p>
+									<div className="flex items-center gap-4">
+										<img
+											src="/avatars/user1.png"
+											alt="Sarah J."
+											className="h-12 w-12 rounded-full"
+										/>
+										<div>
+											<h3 className="font-semibold">Sarah J.</h3>
+											<p className="text-sm text-gray-600">Business Owner</p>
+										</div>
+									</div>
+								</div>
+
+								<div className="bg-[#F5F5F5] p-8 rounded-lg">
+									<div className="flex gap-1 mb-6">
+										{[...Array(5)].map((_, i) => (
+											<svg
+												key={i}
+												className="w-6 h-6 text-black"
+												fill="currentColor"
+												viewBox="0 0 20 20"
+											>
+												<path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+											</svg>
+										))}
+									</div>
+									<p className="text-black text-[1.5rem] mb-6">
+										The platform's security features give me peace of mind. I
+										can update my documents anytime, and the legal verification
+										process is thorough yet efficient.
+									</p>
+									<div className="flex items-center gap-4">
+										<img
+											src="/avatars/user2.png"
+											alt="Michael C."
+											className="h-12 w-12 rounded-full"
+										/>
+										<div>
+											<h3 className="font-semibold">Michael C.</h3>
+											<p className="text-sm text-gray-600">Software Engineer</p>
+										</div>
+									</div>
+								</div>
+
+								<div className="bg-[#F5F5F5] p-8 rounded-lg">
+									<div className="flex gap-1 mb-6">
+										{[...Array(5)].map((_, i) => (
+											<svg
+												key={i}
+												className="w-6 h-6 text-black"
+												fill="currentColor"
+												viewBox="0 0 20 20"
+											>
+												<path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+											</svg>
+										))}
+									</div>
+									<p className="text-black text-[1.5rem] mb-6">
+										As someone who's seen the importance of proper estate
+										planning, I appreciate how LegacyInOrder makes it accessible
+										to everyone. The support team is exceptional.
+									</p>
+									<div className="flex items-center gap-4">
+										<img
+											src="/avatars/user3.png"
+											alt="Emily R."
+											className="h-12 w-12 rounded-full"
+										/>
+										<div>
+											<h3 className="font-semibold">Emily R.</h3>
+											<p className="text-sm text-gray-600">
+												Healthcare Professional
+											</p>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</section>
+
+				{/* FAQ Section */}
+				<section className="w-full bg-white py-12">
+					<div className="w-full max-w-[2000px] mx-auto px-4 md:px-6 lg:px-8">
+						<h2 className="text-[5rem] md:text-[4rem] font-normal text-center mb-16">
+							What People Usually Ask Us
+						</h2>
+						<div className="max-w-3xl mx-auto space-y-4">
+							<div className="border rounded-lg">
+								<button
+									className="w-full px-6 py-4 text-left flex justify-between items-center"
+									onClick={() => {
+										const content = document.getElementById("faq1-content");
+										const icon = document.getElementById("faq1-icon");
+										if (content && icon) {
+											content.classList.toggle("hidden");
+											icon.classList.toggle("rotate-180");
+										}
+									}}
+								>
+									<span className="text-xl font-medium">
+										What documents can I create with LegacyInOrder?
+									</span>
+									<svg
+										id="faq1-icon"
+										className="w-6 h-6 transform transition-transform duration-200"
+										fill="none"
+										viewBox="0 0 24 24"
+										stroke="currentColor"
+									>
+										<path
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											strokeWidth={2}
+											d="M19 9l-7 7-7-7"
+										/>
+									</svg>
+								</button>
+								<div id="faq1-content" className="hidden px-6 pb-4">
+									<p className="text-gray-600">
+										You can create legally binding wills, power of attorney
+										documents, and letters of wishes. Our platform guides you
+										through each document creation process with clear,
+										step-by-step instructions.
+									</p>
+								</div>
+							</div>
+
+							<div className="border rounded-lg">
+								<button
+									className="w-full px-6 py-4 text-left flex justify-between items-center"
+									onClick={() => {
+										const content = document.getElementById("faq2-content");
+										const icon = document.getElementById("faq2-icon");
+										if (content && icon) {
+											content.classList.toggle("hidden");
+											icon.classList.toggle("rotate-180");
+										}
+									}}
+								>
+									<span className="text-xl font-medium">
+										How secure is my information?
+									</span>
+									<svg
+										id="faq2-icon"
+										className="w-6 h-6 transform transition-transform duration-200"
+										fill="none"
+										viewBox="0 0 24 24"
+										stroke="currentColor"
+									>
+										<path
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											strokeWidth={2}
+											d="M19 9l-7 7-7-7"
+										/>
+									</svg>
+								</button>
+								<div id="faq2-content" className="hidden px-6 pb-4">
+									<p className="text-gray-600">
+										We use bank-level encryption to protect your data. All
+										documents are stored securely and can only be accessed by
+										you. We never share your information with third parties
+										without your explicit consent.
+									</p>
+								</div>
+							</div>
+
+							<div className="border rounded-lg">
+								<button
+									className="w-full px-6 py-4 text-left flex justify-between items-center"
+									onClick={() => {
+										const content = document.getElementById("faq3-content");
+										const icon = document.getElementById("faq3-icon");
+										if (content && icon) {
+											content.classList.toggle("hidden");
+											icon.classList.toggle("rotate-180");
+										}
+									}}
+								>
+									<span className="text-xl font-medium">
+										Can I update my documents later?
+									</span>
+									<svg
+										id="faq3-icon"
+										className="w-6 h-6 transform transition-transform duration-200"
+										fill="none"
+										viewBox="0 0 24 24"
+										stroke="currentColor"
+									>
+										<path
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											strokeWidth={2}
+											d="M19 9l-7 7-7-7"
+										/>
+									</svg>
+								</button>
+								<div id="faq3-content" className="hidden px-6 pb-4">
+									<p className="text-gray-600">
+										Yes, you can update your documents at any time. We recommend
+										reviewing and updating your documents annually or when
+										significant life changes occur. All updates are tracked and
+										versioned for your reference.
+									</p>
+								</div>
+							</div>
+
+							<div className="border rounded-lg">
+								<button
+									className="w-full px-6 py-4 text-left flex justify-between items-center"
+									onClick={() => {
+										const content = document.getElementById("faq4-content");
+										const icon = document.getElementById("faq4-icon");
+										if (content && icon) {
+											content.classList.toggle("hidden");
+											icon.classList.toggle("rotate-180");
+										}
+									}}
+								>
+									<span className="text-xl font-medium">
+										Do I need a lawyer to use LegacyInOrder?
+									</span>
+									<svg
+										id="faq4-icon"
+										className="w-6 h-6 transform transition-transform duration-200"
+										fill="none"
+										viewBox="0 0 24 24"
+										stroke="currentColor"
+									>
+										<path
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											strokeWidth={2}
+											d="M19 9l-7 7-7-7"
+										/>
+									</svg>
+								</button>
+								<div id="faq4-content" className="hidden px-6 pb-4">
+									<p className="text-gray-600">
+										While our documents are legally sound and reviewed by
+										experts, we recommend consulting with a lawyer for complex
+										situations or if you have specific legal concerns. Our
+										platform is designed to be user-friendly while maintaining
+										legal validity.
+									</p>
+								</div>
+							</div>
+						</div>
+					</div>
+				</section>
+
 				{/* CTA Section */}
 				<section className="w-full bg-primary text-primary-foreground py-12 md:py-24 lg:py-32">
 					<div className="w-full max-w-[2000px] mx-auto px-4 md:px-6 lg:px-8">
 						<div className="flex flex-col items-center justify-center space-y-4 text-center">
 							<h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
-								Ready to Get Started?
+								Ready to Put Your Legacy in Order?
 							</h2>
-							<p className="max-w-[600px] md:text-xl">
-								Join thousands of users who've already simplified their estate
-								planning process.
-							</p>
-							<Button size="lg" variant="secondary" asChild>
-								<Link to="/signup">Sign Up Now</Link>
-							</Button>
+							<div className="mt-8 flex gap-4">
+								<Link
+									to="/get-started"
+									className="flex items-center justify-center h-12 px-8 bg-white border border-[#3E4029] rounded-lg text-[#3E4029] font-semibold hover:bg-[#f8f8f8] transition-colors w-fit"
+								>
+									<img
+										src="/svgs/history_edu.svg"
+										alt="Will Icon"
+										className="w-5 h-5 mr-2"
+									/>
+									Write your Will
+								</Link>
+								<Link
+									to="/get-started"
+									className="flex items-center justify-center h-12 px-8 bg-white border border-[#3E4029] rounded-lg text-[#3E4029] font-semibold hover:bg-[#f8f8f8] transition-colors w-fit"
+								>
+									<img
+										src="/svgs/legal_balance.svg"
+										alt="Power of Attorney Icon"
+										className="w-5 h-5 mr-2"
+									/>
+									Write a Power of Attorney
+								</Link>
+							</div>
 						</div>
 					</div>
 				</section>
