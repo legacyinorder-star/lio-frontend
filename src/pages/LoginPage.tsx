@@ -24,7 +24,7 @@ import {
 import { toast } from "sonner";
 import { API_CONFIG, getApiUrl } from "@/config/api";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, WifiOff } from "lucide-react";
+import { AlertCircle, WifiOff, Eye, EyeOff } from "lucide-react";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 
 const formSchema = z.object({
@@ -42,6 +42,7 @@ export default function LoginPage() {
 	const [isLoading, setIsLoading] = useState(false);
 	const [apiAvailable, setApiAvailable] = useState<boolean | null>(null);
 	const isOnline = useOnlineStatus();
+	const [showPassword, setShowPassword] = useState(false);
 
 	// Check API connectivity on component mount and when online status changes
 	useEffect(() => {
@@ -198,22 +199,24 @@ export default function LoginPage() {
 	const connectionIssue = getConnectionMessage();
 
 	return (
-		<div className="min-h-screen flex flex-col items-center justify-center p-4">
-			<div className="mb-8 flex items-center justify-center">
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					strokeWidth="2"
-					strokeLinecap="round"
-					strokeLinejoin="round"
-					className="mr-2 h-6 w-6"
-				>
-					<path d="M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3" />
-				</svg>
-				<span className="text-lg font-medium">Legacy In Order</span>
-			</div>
+		<div className="min-h-screen flex flex-col">
+			<header className="w-full relative overflow-hidden">
+				<div className="w-full max-w-[2000px] mx-auto flex flex-col h-full">
+					{/* Navigation Bar */}
+					<div className="flex pt-10 px-4 md:px-6 lg:px-8 h-16">
+						<div className="flex">
+							<Link to="/" className="flex items-center">
+								<img
+									src="/logos/LIO_Logo_Color.svg"
+									alt="Legacy In Order"
+									className="h-10"
+								/>
+							</Link>
+						</div>
+					</div>
+					<hr className="my-5 border-t border-[#CCCCCC]" />
+				</div>
+			</header>
 
 			{connectionIssue && (
 				<Alert variant="destructive" className="mb-4 max-w-md">
@@ -227,117 +230,129 @@ export default function LoginPage() {
 				</Alert>
 			)}
 
-			<Card className="w-full max-w-md">
-				<CardHeader className="space-y-1">
-					<CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
-					<CardDescription>
-						Enter your credentials to access your account
-					</CardDescription>
-				</CardHeader>
-				<CardContent>
-					<div className="space-y-4">
-						<Button
-							type="button"
-							variant="outline"
-							className="w-full"
-							onClick={handleGoogleSignIn}
-							disabled={!isOnline || apiAvailable === false}
-						>
-							<svg
-								className="mr-2 h-4 w-4"
-								aria-hidden="true"
-								focusable="false"
-								data-prefix="fab"
-								data-icon="google"
-								role="img"
-								xmlns="http://www.w3.org/2000/svg"
-								viewBox="0 0 488 512"
-							>
-								<path
-									fill="currentColor"
-									d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"
-								></path>
-							</svg>
-							Sign in with Google
-						</Button>
-						<div className="relative">
-							<div className="absolute inset-0 flex items-center">
-								<span className="w-full border-t" />
+			<div
+				id="login-card-container"
+				className="flex flex-col justify-center items-center pt-12"
+			>
+				<div className="flex flex-col items-center mb-6">
+					<h2 className="text-2xl font-bold">Log into your account</h2>
+				</div>
+				<Card className="w-full max-w-md border-none rounded-none shadow-none">
+					<CardContent>
+						<div className="space-y-4">
+							<div className="relative">
+								<div className="absolute inset-0 flex items-center">
+									<span className="w-full border-t" />
+								</div>
 							</div>
-							<div className="relative flex justify-center text-xs uppercase">
-								<span className="bg-background px-2 text-muted-foreground">
-									Or continue with
-								</span>
+							<Form {...form}>
+								<form
+									onSubmit={form.handleSubmit(onSubmit)}
+									className="space-y-4"
+								>
+									<FormField
+										control={form.control}
+										name="email"
+										render={({ field }) => (
+											<FormItem>
+												<FormLabel className="text-[#000000] font-[14px]">
+													Email
+												</FormLabel>
+												<FormControl>
+													<Input
+														type="email"
+														placeholder="john.doe@example.com"
+														className="border-[#CCCCCC] py-[10px] px-[16px] rounded-lg mt-2"
+														{...field}
+													/>
+												</FormControl>
+												<FormMessage />
+											</FormItem>
+										)}
+									/>
+									<FormField
+										control={form.control}
+										name="password"
+										render={({ field }) => (
+											<FormItem>
+												<FormLabel className="text-[#000000] font-[14px]">
+													Password
+												</FormLabel>
+												<FormControl>
+													<div className="relative">
+														<Input
+															type={showPassword ? "text" : "password"}
+															placeholder="Enter your password"
+															className="border-[#CCCCCC] py-[10px] px-[16px] rounded-lg pr-10 mt-2"
+															{...field}
+														/>
+														<button
+															type="button"
+															onClick={() => setShowPassword(!showPassword)}
+															className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+														>
+															{showPassword ? (
+																<div className="text-[#818181] flex items-center gap-2">
+																	Hide <EyeOff className="h-4 w-4" />
+																</div>
+															) : (
+																<div className="text-[#818181] flex items-center gap-2">
+																	Show <Eye className="h-4 w-4" />
+																</div>
+															)}
+														</button>
+													</div>
+												</FormControl>
+												<FormMessage />
+											</FormItem>
+										)}
+									/>
+									<Button
+										type="submit"
+										className="w-full py-[12px] px-[12px] rounded-lg bg-light-green font-[1rem] font-[600]"
+										disabled={isLoading || !isOnline || apiAvailable === false}
+									>
+										{isLoading ? "Signing in..." : "Continue"}
+									</Button>
+								</form>
+							</Form>
+						</div>
+						<div className="mt-2">
+							<p className="text-sm text-[#000000]">
+								Don't have an account?{" "}
+								<Link
+									to="/signup"
+									className="text-black font-bold hover:underline"
+								>
+									Create an account
+								</Link>
+							</p>
+							<p className="text-sm text-[#000000]">
+								Forgot your password?{" "}
+								<Link
+									to="/request-password-reset"
+									className="text-black font-bold hover:underline"
+								>
+									Reset password
+								</Link>
+							</p>
+							<div className="mt-12 flex flex-col justify-left items-left">
+								<div className="flex items-center gap-2">
+									<img src="svgs/green_shield.svg" alt="green shield" />
+									<h2 className="text-[#000000] text-bold font-[0.875rem]">
+										Privacy guaranteed
+									</h2>
+								</div>
+								<p className="text-[#5E5D5D] font-[14px]">
+									We take your privacy seriously. We will never sell your data,
+									and our world-class security ensures your will is completely
+									confidential.
+								</p>
 							</div>
 						</div>
-						<Form {...form}>
-							<form
-								onSubmit={form.handleSubmit(onSubmit)}
-								className="space-y-4"
-							>
-								<FormField
-									control={form.control}
-									name="email"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>Email</FormLabel>
-											<FormControl>
-												<Input
-													type="email"
-													placeholder="john.doe@example.com"
-													{...field}
-												/>
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-								<FormField
-									control={form.control}
-									name="password"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>Password</FormLabel>
-											<FormControl>
-												<Input
-													type="password"
-													placeholder="Enter your password"
-													{...field}
-												/>
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-								<Button
-									type="submit"
-									className="w-full"
-									disabled={isLoading || !isOnline || apiAvailable === false}
-								>
-									{isLoading ? "Signing in..." : "Sign in"}
-								</Button>
-							</form>
-						</Form>
-					</div>
-				</CardContent>
-				<CardFooter className="flex flex-col space-y-4">
-					<div className="text-sm text-center text-muted-foreground">
-						Don't have an account?{" "}
-						<Link to="/signup" className="text-primary hover:underline">
-							Create an account
-						</Link>
-					</div>
-					<div className="text-sm text-center text-muted-foreground">
-						Forgot your password?{" "}
-						<Link
-							to="/request-password-reset"
-							className="text-primary hover:underline"
-						>
-							Reset password
-						</Link>
-					</div>
-				</CardFooter>
-			</Card>
+					</CardContent>
+				</Card>
+			</div>
 		</div>
 	);
 }
