@@ -13,19 +13,13 @@ import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardFooter,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { API_CONFIG, getApiUrl } from "@/config/api";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, WifiOff, Eye, EyeOff } from "lucide-react";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
+import { AuthPageHeader } from "@/components/auth/auth-page-header";
 
 const formSchema = z.object({
 	email: z.string().email("Invalid email address"),
@@ -160,22 +154,6 @@ export default function LoginPage() {
 		}
 	}
 
-	const handleGoogleSignIn = async () => {
-		if (!isOnline || apiAvailable === false) {
-			toast.error(
-				"Cannot connect to server. Please check your internet connection."
-			);
-			return;
-		}
-
-		try {
-			// Implement Google sign-in logic
-			toast.info("Google sign-in functionality coming soon");
-		} catch (error) {
-			console.error("Google sign-in failed:", error);
-		}
-	};
-
 	// Show appropriate offline message
 	const getConnectionMessage = () => {
 		if (!isOnline) {
@@ -200,24 +178,7 @@ export default function LoginPage() {
 
 	return (
 		<div className="min-h-screen flex flex-col">
-			<header className="w-full relative overflow-hidden">
-				<div className="w-full max-w-[2000px] mx-auto flex flex-col h-full">
-					{/* Navigation Bar */}
-					<div className="flex pt-10 px-4 md:px-6 lg:px-8 h-16">
-						<div className="flex">
-							<Link to="/" className="flex items-center">
-								<img
-									src="/logos/LIO_Logo_Color.svg"
-									alt="Legacy In Order"
-									className="h-10"
-								/>
-							</Link>
-						</div>
-					</div>
-					<hr className="my-5 border-t border-[#CCCCCC]" />
-				</div>
-			</header>
-
+			<AuthPageHeader />
 			{connectionIssue && (
 				<Alert variant="destructive" className="mb-4 max-w-md">
 					{!isOnline ? (

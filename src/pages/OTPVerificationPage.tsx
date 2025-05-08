@@ -13,18 +13,12 @@ import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardFooter,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { API_CONFIG, getApiUrl } from "@/config/api";
 import { useAuth } from "@/hooks/useAuth";
 import { UserDetails, setAuthToken, setUserDetails } from "@/utils/auth";
+import { AuthPageHeader } from "@/components/auth/auth-page-header";
 
 const formSchema = z.object({
 	otp: z.string().length(6, "OTP must be 6 digits"),
@@ -153,63 +147,82 @@ export default function OTPVerificationPage() {
 	};
 
 	return (
-		<div className="min-h-screen flex flex-col items-center justify-center p-4">
-			<div className="mb-8 flex items-center justify-center">
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					strokeWidth="2"
-					strokeLinecap="round"
-					strokeLinejoin="round"
-					className="mr-2 h-6 w-6"
-				>
-					<path d="M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3" />
-				</svg>
-				<span className="text-lg font-medium">Legacy In Order</span>
-			</div>
-			<Card className="w-full max-w-md">
-				<CardHeader className="space-y-1">
-					<CardTitle className="text-2xl font-bold">Verify OTP</CardTitle>
-					<CardDescription>
-						Enter the 6-digit code sent to your email
-					</CardDescription>
-				</CardHeader>
-				<CardContent>
-					<Form {...form}>
-						<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-							<FormField
-								control={form.control}
-								name="otp"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>OTP Code</FormLabel>
-										<FormControl>
-											<Input placeholder="Enter 6-digit code" {...field} />
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-							<Button type="submit" className="w-full" disabled={isLoading}>
-								{isLoading ? "Verifying..." : "Verify OTP"}
-							</Button>
-						</form>
-					</Form>
-				</CardContent>
-				<CardFooter className="flex flex-col space-y-4">
-					<div className="text-sm text-center text-muted-foreground">
-						Didn't receive the code?{" "}
-						<button
-							className="text-primary hover:underline"
-							onClick={handleResendOTP}
-						>
-							Resend
-						</button>
+		<div className="min-h-screen flex flex-col">
+			<AuthPageHeader />
+			<div
+				id="otp-card-container"
+				className="flex flex-col justify-center items-center pt-12"
+			>
+				<Card className="w-full max-w-md border-none rounded-none shadow-none">
+					<div className="flex flex-col items-center mb-6">
+						<h2 className="text-2xl font-bold">Verify OTP</h2>
 					</div>
-				</CardFooter>
-			</Card>
+					<CardContent>
+						<div className="space-y-4">
+							<div className="relative">
+								<div className="absolute inset-0 flex items-center">
+									<span className="w-full border-t" />
+								</div>
+							</div>
+							<Form {...form}>
+								<form
+									onSubmit={form.handleSubmit(onSubmit)}
+									className="space-y-4"
+								>
+									<FormField
+										control={form.control}
+										name="otp"
+										render={({ field }) => (
+											<FormItem>
+												<FormLabel>
+													Enter the 6-digit code sent to your email
+												</FormLabel>
+												<FormControl>
+													<Input
+														placeholder="OTP code"
+														className="border-[#CCCCCC] py-[10px] px-[16px] rounded-lg mt-2"
+														{...field}
+													/>
+												</FormControl>
+												<FormMessage />
+											</FormItem>
+										)}
+									/>
+									<Button
+										type="submit"
+										className="w-full py-[12px] px-[12px] rounded-lg bg-light-green font-[1rem] font-[600]"
+										disabled={isLoading}
+									>
+										{isLoading ? "Verifying..." : "Verify OTP"}
+									</Button>
+								</form>
+							</Form>
+						</div>
+						<div className="mt-2">
+							<p className="text-sm text-[#000000]">
+								Didn't receive the code?{" "}
+								<button
+									className="text-black font-bold cursor-pointer hover:underline"
+									onClick={handleResendOTP}
+								>
+									Resend
+								</button>
+							</p>
+						</div>
+					</CardContent>
+					{/* <CardFooter className="flex flex-col space-y-4">
+						<div className="text-sm text-center text-muted-foreground">
+							Didn't receive the code?{" "}
+							<button
+								className="text-primary hover:underline"
+								onClick={handleResendOTP}
+							>
+								Resend
+							</button>
+						</div>
+					</CardFooter> */}
+				</Card>
+			</div>
 		</div>
 	);
 }
