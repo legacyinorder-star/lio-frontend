@@ -14,14 +14,7 @@ import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardFooter,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import type { ApiError } from "@/types/api";
 import { AuthPageHeader } from "@/components/auth/auth-page-header";
 import { Eye, EyeOff } from "lucide-react";
