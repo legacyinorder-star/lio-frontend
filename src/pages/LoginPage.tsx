@@ -283,7 +283,7 @@ export default function LoginPage() {
 								Don't have an account?{" "}
 								<Link
 									to="/signup"
-									className="text-black font-bold hover:underline"
+									className="text-black font-bold cursor-pointer hover:underline"
 								>
 									Create an account
 								</Link>
@@ -292,7 +292,7 @@ export default function LoginPage() {
 								Forgot your password?{" "}
 								<Link
 									to="/request-password-reset"
-									className="text-black font-bold hover:underline"
+									className="text-black font-bold cursor-pointer hover:underline"
 								>
 									Reset password
 								</Link>

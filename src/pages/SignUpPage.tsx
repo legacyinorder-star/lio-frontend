@@ -23,6 +23,8 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import type { ApiError } from "@/types/api";
+import { AuthPageHeader } from "@/components/auth/auth-page-header";
+import { Eye, EyeOff } from "lucide-react";
 
 const formSchema = z
 	.object({
@@ -46,6 +48,8 @@ const formSchema = z
 export default function SignupPage() {
 	const navigate = useNavigate();
 	const [isLoading, setIsLoading] = useState(false);
+	const [showPassword, setShowPassword] = useState(false);
+	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
@@ -106,139 +110,195 @@ export default function SignupPage() {
 	}
 
 	return (
-		<div className="min-h-screen flex flex-col items-center justify-center p-4">
-			<div className="mb-8 flex items-center justify-center">
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					strokeWidth="2"
-					strokeLinecap="round"
-					strokeLinejoin="round"
-					className="mr-2 h-6 w-6"
-				>
-					<path d="M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3" />
-				</svg>
-				<span className="text-lg font-medium">Legacy In Order</span>
-			</div>
-			<Card className="w-full max-w-md">
-				<CardHeader className="space-y-1">
-					<CardTitle className="text-2xl font-bold">
-						Create an account
-					</CardTitle>
-					<CardDescription>
-						Enter your details below to create your account
-					</CardDescription>
-				</CardHeader>
-				<CardContent>
-					<Form {...form}>
-						<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-							<div className="grid grid-cols-2 gap-4">
-								<FormField
-									control={form.control}
-									name="firstName"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>First name</FormLabel>
-											<FormControl>
-												<Input placeholder="John" {...field} />
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-								<FormField
-									control={form.control}
-									name="lastName"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>Last name</FormLabel>
-											<FormControl>
-												<Input placeholder="Doe" {...field} />
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-							</div>
-							<FormField
-								control={form.control}
-								name="email"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Email</FormLabel>
-										<FormControl>
-											<Input
-												type="email"
-												placeholder="john.doe@example.com"
-												{...field}
-											/>
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-							<FormField
-								control={form.control}
-								name="password"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Password</FormLabel>
-										<FormControl>
-											<Input
-												type="password"
-												placeholder="Enter your password"
-												{...field}
-											/>
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-							<FormField
-								control={form.control}
-								name="confirmPassword"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Confirm password</FormLabel>
-										<FormControl>
-											<Input
-												type="password"
-												placeholder="Confirm your password"
-												{...field}
-											/>
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-							<p className="text-sm text-muted-foreground text-center">
-								By clicking "Create account", you agree to our{" "}
-								<Link to="/terms" className="text-primary hover:underline">
-									terms of service
-								</Link>{" "}
-								and acknowledge you have read our{" "}
-								<Link to="/privacy" className="text-primary hover:underline">
-									privacy policy
-								</Link>
-								.
-							</p>
-							<Button type="submit" className="w-full" disabled={isLoading}>
-								{isLoading ? "Creating account..." : "Create account"}
-							</Button>
-						</form>
-					</Form>
-				</CardContent>
-				<CardFooter className="flex flex-col space-y-4">
-					<div className="text-sm text-center text-muted-foreground">
-						Already have an account?{" "}
-						<Link to="/login" className="text-primary hover:underline">
-							Sign in
-						</Link>
+		<div className="min-h-screen flex flex-col">
+			<AuthPageHeader />
+			<div
+				id="signup-card-container"
+				className="flex flex-col justify-center items-center pt-12"
+			>
+				<Card className="w-full max-w-md border-none rounded-none shadow-none">
+					<div className="flex flex-col items-center mb-6">
+						<h2 className="text-2xl font-bold">Create an account</h2>
 					</div>
-				</CardFooter>
-			</Card>
+					<CardContent>
+						<div className="space-y-4">
+							<div className="relative">
+								<div className="absolute inset-0 flex items-center">
+									<span className="w-full border-t" />
+								</div>
+							</div>
+							<Form {...form}>
+								<form
+									onSubmit={form.handleSubmit(onSubmit)}
+									className="space-y-4"
+								>
+									<div className="grid grid-cols-2 gap-4">
+										<FormField
+											control={form.control}
+											name="firstName"
+											render={({ field }) => (
+												<FormItem>
+													<FormLabel>First name</FormLabel>
+													<FormControl>
+														<Input
+															placeholder="John"
+															{...field}
+															className="border-[#CCCCCC] py-[10px] px-[16px] rounded-lg mt-2"
+														/>
+													</FormControl>
+													<FormMessage />
+												</FormItem>
+											)}
+										/>
+										<FormField
+											control={form.control}
+											name="lastName"
+											render={({ field }) => (
+												<FormItem>
+													<FormLabel>Last name</FormLabel>
+													<FormControl>
+														<Input
+															placeholder="Doe"
+															{...field}
+															className="border-[#CCCCCC] py-[10px] px-[16px] rounded-lg mt-2"
+														/>
+													</FormControl>
+													<FormMessage />
+												</FormItem>
+											)}
+										/>
+									</div>
+									<FormField
+										control={form.control}
+										name="email"
+										render={({ field }) => (
+											<FormItem>
+												<FormLabel>Email</FormLabel>
+												<FormControl>
+													<Input
+														type="email"
+														placeholder="john.doe@example.com"
+														className="border-[#CCCCCC] py-[10px] px-[16px] rounded-lg mt-2"
+														{...field}
+													/>
+												</FormControl>
+												<FormMessage />
+											</FormItem>
+										)}
+									/>
+									<FormField
+										control={form.control}
+										name="password"
+										render={({ field }) => (
+											<FormItem>
+												<FormLabel>Password</FormLabel>
+												<FormControl>
+													<div className="relative">
+														<Input
+															type={showPassword ? "text" : "password"}
+															placeholder="Enter your password"
+															className="border-[#CCCCCC] py-[10px] px-[16px] rounded-lg pr-10 mt-2"
+															{...field}
+														/>
+														<button
+															type="button"
+															onClick={() => setShowPassword(!showPassword)}
+															className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+														>
+															{showPassword ? (
+																<div className="text-[#818181] flex items-center gap-2">
+																	Hide <EyeOff className="h-4 w-4" />
+																</div>
+															) : (
+																<div className="text-[#818181] flex items-center gap-2">
+																	Show <Eye className="h-4 w-4" />
+																</div>
+															)}
+														</button>
+													</div>
+												</FormControl>
+												<FormMessage />
+											</FormItem>
+										)}
+									/>
+									<FormField
+										control={form.control}
+										name="confirmPassword"
+										render={({ field }) => (
+											<FormItem>
+												<FormLabel>Confirm password</FormLabel>
+												<FormControl>
+													<div className="relative">
+														<Input
+															type={showConfirmPassword ? "text" : "password"}
+															placeholder="Confirm your password"
+															className="border-[#CCCCCC] py-[10px] px-[16px] rounded-lg pr-10 mt-2"
+															{...field}
+														/>
+														<button
+															type="button"
+															onClick={() =>
+																setShowConfirmPassword(!showConfirmPassword)
+															}
+															className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+														>
+															{showConfirmPassword ? (
+																<div className="text-[#818181] flex items-center gap-2">
+																	Hide <EyeOff className="h-4 w-4" />
+																</div>
+															) : (
+																<div className="text-[#818181] flex items-center gap-2">
+																	Show <Eye className="h-4 w-4" />
+																</div>
+															)}
+														</button>
+													</div>
+												</FormControl>
+												<FormMessage />
+											</FormItem>
+										)}
+									/>
+									<p className="text-sm text-[#000000]">
+										By clicking "Create account", you agree to our{" "}
+										<Link
+											to="/terms"
+											className="text-black font-bold cursor-pointer hover:underline"
+										>
+											terms of service
+										</Link>{" "}
+										and acknowledge you have read our{" "}
+										<Link
+											to="/privacy"
+											className="text-black font-bold cursor-pointer hover:underline"
+										>
+											privacy policy
+										</Link>
+										.
+									</p>
+									<Button
+										type="submit"
+										className="w-full py-[12px] px-[12px] rounded-lg bg-light-green font-[1rem] font-[600]"
+										disabled={isLoading}
+									>
+										{isLoading ? "Creating account..." : "Create account"}
+									</Button>
+								</form>
+							</Form>
+						</div>
+						<div className="mt-2">
+							<p className="text-sm text-[#000000]">
+								Already have an account?{" "}
+								<Link
+									to="/login"
+									className="text-black font-bold cursor-pointer hover:underline"
+								>
+									Sign in
+								</Link>
+							</p>
+						</div>
+					</CardContent>
+				</Card>
+			</div>
 		</div>
 	);
 }
