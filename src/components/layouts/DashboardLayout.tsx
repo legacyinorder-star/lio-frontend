@@ -8,6 +8,14 @@ import {
 	Home,
 	FileText,
 	HelpCircle,
+	MessageCircleQuestion,
+	Bell,
+	Plus,
+	Scroll,
+	Shield,
+	BookText,
+	ChevronDown,
+	User,
 } from "lucide-react";
 import {
 	DropdownMenu,
@@ -17,7 +25,7 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { type UserDetails } from "@/utils/auth";
 import { useEffect, useState } from "react";
@@ -60,14 +68,6 @@ export function DashboardLayout() {
 		return () => clearTimeout(checkAuthTimer);
 	}, [user, navigate, location]);
 
-	const getInitials = (name: string) => {
-		return name
-			.split(" ")
-			.map((n) => n[0])
-			.join("")
-			.toUpperCase();
-	};
-
 	const sidebarLinks = [
 		{
 			title: "Home",
@@ -96,6 +96,27 @@ export function DashboardLayout() {
 		},
 	];
 
+	const documentTypes = [
+		{
+			title: "Will",
+			href: "/app/create-will",
+			icon: Scroll,
+			description: "Create a will",
+		},
+		{
+			title: "Power of Attorney",
+			href: "/app/policies",
+			icon: Shield,
+			description: "Create a power of attorney",
+		},
+		{
+			title: "Letters of Wishes",
+			href: "/app/transaction-history",
+			icon: BookText,
+			description: "Create a letter of wishes",
+		},
+	];
+
 	// Show loading state instead of null
 	if (isLoading || !userDetails) {
 		return (
@@ -119,7 +140,7 @@ export function DashboardLayout() {
 							<img
 								src="/logos/LIO_Logo_Black.svg"
 								alt="Legacy In Order"
-								className="h-8"
+								className="h-12"
 							/>
 						</Link>
 					</div>
@@ -150,40 +171,85 @@ export function DashboardLayout() {
 			<div className="flex-1 flex flex-col">
 				{/* Header */}
 				<header className="sticky top-0 z-40 border-b bg-background">
-					<div className="flex h-16 items-center justify-end px-6">
-						<div className="flex items-center space-x-2">
-							{userDetails.role === "admin" && (
-								<TooltipProvider>
-									<Tooltip>
-										<TooltipTrigger asChild>
-											<Link to="/admin/dashboard">
-												<div className="h-8 w-8 rounded-full bg-primary/10 hover:bg-primary/20 flex items-center justify-center cursor-pointer">
-													<UserCog className="h-4 w-4 text-primary" />
+					<div className="flex h-16 items-center justify-between px-6">
+						<div className="flex items-center space-x-4"></div>
+
+						<div className="flex items-center space-x-4">
+							<Button
+								variant="ghost"
+								size="icon"
+								className="relative"
+								aria-label="Help & Support"
+							>
+								<MessageCircleQuestion className="h-5 w-5" />
+							</Button>
+							<Button
+								variant="ghost"
+								size="icon"
+								className="relative"
+								aria-label="Notifications"
+							>
+								<Bell className="h-5 w-5" />
+								<span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500"></span>
+							</Button>
+							<DropdownMenu>
+								<DropdownMenuTrigger asChild>
+									<Button
+										variant="default"
+										className="bg-light-green hover:bg-light-green/90 text-black"
+									>
+										<Plus className="mr-2 h-4 w-4" />
+										Create
+									</Button>
+								</DropdownMenuTrigger>
+								<DropdownMenuContent
+									className="w-56 bg-white border border-[#ECECEC] shadow-md"
+									align="start"
+								>
+									<DropdownMenuLabel className="font-medium">
+										Create New Document
+									</DropdownMenuLabel>
+									<DropdownMenuSeparator />
+									{documentTypes.map((doc) => (
+										<DropdownMenuItem
+											key={doc.href}
+											asChild
+											className="cursor-pointer hover:bg-[#F5F5F5]"
+										>
+											<Link to={doc.href} className="flex items-center">
+												<doc.icon className="mr-2 h-4 w-4" />
+												<div className="flex flex-col">
+													<span>{doc.title}</span>
+													<span className="text-xs text-muted-foreground">
+														{doc.description}
+													</span>
 												</div>
 											</Link>
-										</TooltipTrigger>
-										<TooltipContent>
-											<p>Admin Dashboard</p>
-										</TooltipContent>
-									</Tooltip>
-								</TooltipProvider>
-							)}
+										</DropdownMenuItem>
+									))}
+								</DropdownMenuContent>
+							</DropdownMenu>
+
 							<DropdownMenu>
 								<DropdownMenuTrigger asChild>
 									<Button
 										variant="ghost"
-										className="relative h-8 w-8 rounded-full hover:bg-primary/10"
+										className="flex items-center space-x-2 px-2 hover:bg-transparent"
 									>
-										<Avatar className="h-8 w-8">
-											<AvatarFallback
-												initials={getInitials(
-													userDetails.first_name + " " + userDetails.last_name
-												)}
-											/>
+										<Avatar className="h-4 w-4 bg-black/10">
+											<User className="h-4 w-4 text-black" />
 										</Avatar>
+										<span className="text-sm font-[400]">
+											{userDetails.first_name + " " + userDetails.last_name}
+										</span>
+										<ChevronDown className="h-4 w-4 text-muted-foreground" />
 									</Button>
 								</DropdownMenuTrigger>
-								<DropdownMenuContent className="w-56" align="end" forceMount>
+								<DropdownMenuContent
+									className="w-56 bg-white border border-[#ECECEC] shadow-md"
+									align="end"
+									forceMount
+								>
 									<DropdownMenuLabel className="font-normal">
 										<div className="flex flex-col space-y-1">
 											<p className="text-sm font-medium leading-none">
@@ -197,7 +263,10 @@ export function DashboardLayout() {
 									<DropdownMenuSeparator />
 									{userDetails.role === "admin" && (
 										<>
-											<DropdownMenuItem asChild>
+											<DropdownMenuItem
+												asChild
+												className="cursor-pointer hover:bg-[#F5F5F5]"
+											>
 												<Link
 													to="/admin/dashboard"
 													className="flex items-center"
@@ -209,7 +278,10 @@ export function DashboardLayout() {
 											<DropdownMenuSeparator />
 										</>
 									)}
-									<DropdownMenuItem asChild>
+									<DropdownMenuItem
+										asChild
+										className="cursor-pointer hover:bg-[#F5F5F5]"
+									>
 										<Link to="/app/settings" className="flex items-center">
 											<Settings className="mr-2 h-4 w-4" />
 											<span>Settings</span>
