@@ -71,9 +71,9 @@ export default function SpouseDialog({
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="sm:max-w-[425px]">
+			<DialogContent className="sm:max-w-[425px] bg-white">
 				<DialogHeader>
-					<DialogTitle>Add Spouse Details</DialogTitle>
+					<DialogTitle>Add Partner Details</DialogTitle>
 				</DialogHeader>
 				<Form {...form}>
 					<form
@@ -85,7 +85,7 @@ export default function SpouseDialog({
 							name="fullName"
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel>Spouse Name</FormLabel>
+									<FormLabel>Partner Name</FormLabel>
 									<FormControl>
 										<Input placeholder="Jane Doe" {...field} autoFocus />
 									</FormControl>
