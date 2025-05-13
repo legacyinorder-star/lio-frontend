@@ -287,6 +287,15 @@ export function DashboardLayout() {
 											<span>Settings</span>
 										</Link>
 									</DropdownMenuItem>
+									<DropdownMenuItem
+										asChild
+										className="cursor-pointer hover:bg-[#F5F5F5]"
+									>
+										<Link to="/logout" className="flex items-center">
+											<LogOut className="mr-2 h-4 w-4" />
+											<span>Logout</span>
+										</Link>
+									</DropdownMenuItem>
 								</DropdownMenuContent>
 							</DropdownMenu>
 						</div>
