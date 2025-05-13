@@ -46,9 +46,15 @@ export default function DashboardPage() {
 
 	return (
 		<div className="space-y-8">
-			<div className="flex items-center justify-between">
-				<h1 className="text-3xl font-bold">Welcome back, {userName}!</h1>
-				<p className="text-muted-foreground">
+			<div
+				id="dashboard-header"
+				className="flex flex-col items-start justify-between p-8 rounded-lg bg-cover bg-center bg-no-repeat"
+				style={{ backgroundImage: "url('/images/bg_grass.png')" }}
+			>
+				<h1 className="text-3xl font-bold text-white">
+					Welcome back, {userName}!
+				</h1>
+				<p className="text-white/90 mt-2">
 					Here's an overview of your legal docs
 				</p>
 			</div>
