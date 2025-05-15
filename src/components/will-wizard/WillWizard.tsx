@@ -23,13 +23,6 @@ import {
 	Briefcase,
 	Package,
 } from "lucide-react";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
 
 // Define the different question types
 type QuestionType =
@@ -40,6 +33,7 @@ type QuestionType =
 	| "guardians"
 	| "hasAssets"
 	| "gifts"
+	| "executors"
 	| "finished";
 
 // Define the address type
@@ -111,6 +105,23 @@ interface Gift {
 	beneficiaryId: string;
 }
 
+// Add this type after the other type definitions
+interface Executor {
+	id: string;
+	type: "individual" | "corporate";
+	// Individual executor fields
+	firstName?: string;
+	lastName?: string;
+	relationship?: string;
+	// Corporate executor fields
+	companyName?: string;
+	registrationNumber?: string;
+	contactPerson?: string;
+	// Common fields
+	isPrimary: boolean;
+	address: Address;
+}
+
 // Define the form data structure
 interface WillFormData {
 	firstName: string;
@@ -124,6 +135,7 @@ interface WillFormData {
 	assets: Asset[];
 	otherBeneficiaries?: NewBeneficiary[];
 	gifts: Gift[];
+	executors: Executor[]; // Add this line
 }
 
 // Add these types and constants after the other type definitions
@@ -263,6 +275,7 @@ export default function WillWizard() {
 		assets: [],
 		otherBeneficiaries: [],
 		gifts: [],
+		executors: [], // Add this line
 	});
 
 	// For the spouse dialog
@@ -330,6 +343,28 @@ export default function WillWizard() {
 		description: "",
 		value: undefined,
 		beneficiaryId: "",
+	});
+
+	// Add executor dialog state
+	const [executorDialogOpen, setExecutorDialogOpen] = useState(false);
+	const [editingExecutor, setEditingExecutor] = useState<Executor | null>(null);
+	const [executorForm, setExecutorForm] = useState<Executor>({
+		id: "",
+		type: "individual",
+		firstName: "",
+		lastName: "",
+		relationship: "",
+		companyName: "",
+		registrationNumber: "",
+		contactPerson: "",
+		isPrimary: false,
+		address: {
+			street: "",
+			city: "",
+			province: "",
+			zipCode: "",
+			country: "",
+		},
 	});
 
 	// Ensure we're mounted before rendering any dialogs
@@ -577,18 +612,20 @@ export default function WillWizard() {
 			}
 		} else if (currentQuestion === "hasAssets") {
 			setCurrentQuestion("gifts");
+		} else if (currentQuestion === "gifts") {
+			setCurrentQuestion("executors");
 		}
 	};
 
 	// Helper function to check if address is valid
-	const isAddressValid = () => {
-		const { street, city, province, zipCode, country } = formData.address;
+	const isAddressValid = (address?: Address) => {
+		const addr = address || formData.address;
 		return (
-			street.trim().length >= 3 &&
-			city.trim().length >= 2 &&
-			province.trim().length >= 2 &&
-			zipCode.trim().length >= 3 &&
-			country.trim().length >= 2
+			addr.street.trim().length > 0 &&
+			addr.city.trim().length > 0 &&
+			addr.province.trim().length > 0 &&
+			addr.zipCode.trim().length > 0 &&
+			addr.country.trim().length > 0
 		);
 	};
 
@@ -618,8 +655,11 @@ export default function WillWizard() {
 			case "gifts":
 				setCurrentQuestion("hasAssets");
 				break;
-			case "finished":
+			case "executors":
 				setCurrentQuestion("gifts");
+				break;
+			case "finished":
+				setCurrentQuestion("executors");
 				break;
 			default:
 				break;
@@ -852,6 +892,104 @@ export default function WillWizard() {
 		setFormData((prev) => ({
 			...prev,
 			gifts: prev.gifts.filter((gift) => gift.id !== giftId),
+		}));
+	};
+
+	// Add executor form handlers
+	const handleExecutorFormChange = (field: keyof Executor) => {
+		return (e: React.ChangeEvent<HTMLInputElement>) => {
+			setExecutorForm((prev) => ({
+				...prev,
+				[field]: e.target.value,
+			}));
+		};
+	};
+
+	const handleExecutorAddressChange = (field: keyof Address) => {
+		return (e: React.ChangeEvent<HTMLInputElement>) => {
+			setExecutorForm((prev) => ({
+				...prev,
+				address: {
+					...prev.address,
+					[field]: e.target.value,
+				},
+			}));
+		};
+	};
+
+	const handleSaveExecutor = () => {
+		if (
+			!executorForm.firstName ||
+			!executorForm.lastName ||
+			!executorForm.relationship ||
+			!isAddressValid(executorForm.address)
+		) {
+			return;
+		}
+
+		// If this is a primary executor, ensure no other primary exists
+		if (executorForm.isPrimary) {
+			setFormData((prev) => ({
+				...prev,
+				executors: prev.executors.map((e) => ({
+					...e,
+					isPrimary: false,
+				})),
+			}));
+		}
+
+		if (editingExecutor) {
+			setFormData((prev) => ({
+				...prev,
+				executors: prev.executors.map((executor) =>
+					executor.id === editingExecutor.id ? executorForm : executor
+				),
+			}));
+		} else {
+			setFormData((prev) => ({
+				...prev,
+				executors: [
+					...prev.executors,
+					{ ...executorForm, id: crypto.randomUUID() },
+				],
+			}));
+		}
+
+		// Reset form and close dialog
+		setExecutorForm({
+			id: "",
+			type: "individual",
+			firstName: "",
+			lastName: "",
+			relationship: "",
+			companyName: "",
+			registrationNumber: "",
+			contactPerson: "",
+			isPrimary: false,
+			address: {
+				street: "",
+				city: "",
+				province: "",
+				zipCode: "",
+				country: "",
+			},
+		});
+		setEditingExecutor(null);
+		setExecutorDialogOpen(false);
+	};
+
+	const handleEditExecutor = (executor: Executor) => {
+		setExecutorForm(executor);
+		setEditingExecutor(executor);
+		setExecutorDialogOpen(true);
+	};
+
+	const handleRemoveExecutor = (executorId: string) => {
+		setFormData((prev) => ({
+			...prev,
+			executors: prev.executors.filter(
+				(executor) => executor.id !== executorId
+			),
 		}));
 	};
 
@@ -2216,7 +2354,391 @@ export default function WillWizard() {
 									<ArrowLeft className="mr-2 h-4 w-4" /> Back
 								</Button>
 								<Button
+									onClick={() => setCurrentQuestion("executors")}
+									className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
+								>
+									Next <ArrowRight className="ml-2 h-4 w-4" />
+								</Button>
+							</div>
+						</div>
+					</div>
+				);
+
+			case "executors":
+				return (
+					<div className="space-y-4">
+						<div className="text-2xl font-semibold">
+							Appoint Executors for Your Estate
+						</div>
+						<div className="text-muted-foreground">
+							Executors are responsible for carrying out the terms of your will.
+							You should appoint at least one executor, and it's recommended to
+							have a backup executor in case the primary executor is unable to
+							serve.
+						</div>
+						<div className="space-y-6 mt-6">
+							<div className="flex justify-between items-center">
+								<h3 className="text-lg font-medium">Appointed Executors</h3>
+								<Dialog
+									open={executorDialogOpen}
+									onOpenChange={setExecutorDialogOpen}
+								>
+									<DialogTrigger asChild>
+										<Button
+											variant="outline"
+											onClick={() => {
+												setExecutorForm({
+													id: "",
+													type: "individual",
+													firstName: "",
+													lastName: "",
+													relationship: "",
+													companyName: "",
+													registrationNumber: "",
+													contactPerson: "",
+													isPrimary: false,
+													address: {
+														street: "",
+														city: "",
+														province: "",
+														zipCode: "",
+														country: "",
+													},
+												});
+												setEditingExecutor(null);
+											}}
+											className="cursor-pointer"
+										>
+											<Plus className="mr-2 h-4 w-4" />
+											Add Executor
+										</Button>
+									</DialogTrigger>
+									<DialogContent className="bg-white max-w-2xl">
+										<DialogHeader>
+											<DialogTitle>
+												{editingExecutor ? "Edit Executor" : "Add Executor"}
+											</DialogTitle>
+											<DialogDescription>
+												Add an executor who will be responsible for carrying out
+												the terms of your will. You can appoint either an
+												individual or a corporate executor.
+											</DialogDescription>
+										</DialogHeader>
+										<div className="space-y-4 py-4">
+											<div className="flex space-x-4 mb-4">
+												<Button
+													variant={
+														executorForm.type === "individual"
+															? "default"
+															: "outline"
+													}
+													onClick={() =>
+														setExecutorForm((prev) => ({
+															...prev,
+															type: "individual",
+														}))
+													}
+													className={`cursor-pointer ${
+														executorForm.type === "individual"
+															? "bg-light-green text-black"
+															: ""
+													}`}
+												>
+													Individual Executor
+												</Button>
+												<Button
+													variant={
+														executorForm.type === "corporate"
+															? "default"
+															: "outline"
+													}
+													onClick={() =>
+														setExecutorForm((prev) => ({
+															...prev,
+															type: "corporate",
+														}))
+													}
+													className={`cursor-pointer ${
+														executorForm.type === "corporate"
+															? "bg-light-green text-black"
+															: ""
+													}`}
+												>
+													Corporate Executor
+												</Button>
+											</div>
+
+											{executorForm.type === "individual" ? (
+												<>
+													<div className="grid grid-cols-2 gap-4">
+														<div className="space-y-2">
+															<Label htmlFor="executorFirstName">
+																First Name
+															</Label>
+															<Input
+																id="executorFirstName"
+																value={executorForm.firstName}
+																onChange={handleExecutorFormChange("firstName")}
+																placeholder="John"
+															/>
+														</div>
+														<div className="space-y-2">
+															<Label htmlFor="executorLastName">
+																Last Name
+															</Label>
+															<Input
+																id="executorLastName"
+																value={executorForm.lastName}
+																onChange={handleExecutorFormChange("lastName")}
+																placeholder="Doe"
+															/>
+														</div>
+													</div>
+													<div className="space-y-2">
+														<Label htmlFor="executorRelationship">
+															Relationship to You
+														</Label>
+														<Input
+															id="executorRelationship"
+															value={executorForm.relationship}
+															onChange={handleExecutorFormChange(
+																"relationship"
+															)}
+															placeholder="e.g., Brother, Sister, Close Friend"
+														/>
+													</div>
+												</>
+											) : (
+												<>
+													<div className="space-y-2">
+														<Label htmlFor="companyName">Company Name</Label>
+														<Input
+															id="companyName"
+															value={executorForm.companyName}
+															onChange={handleExecutorFormChange("companyName")}
+															placeholder="Enter company name"
+														/>
+													</div>
+													<div className="grid grid-cols-2 gap-4">
+														<div className="space-y-2">
+															<Label htmlFor="registrationNumber">
+																Registration Number
+															</Label>
+															<Input
+																id="registrationNumber"
+																value={executorForm.registrationNumber}
+																onChange={handleExecutorFormChange(
+																	"registrationNumber"
+																)}
+																placeholder="Enter company registration number"
+															/>
+														</div>
+														<div className="space-y-2">
+															<Label htmlFor="contactPerson">
+																Contact Person
+															</Label>
+															<Input
+																id="contactPerson"
+																value={executorForm.contactPerson}
+																onChange={handleExecutorFormChange(
+																	"contactPerson"
+																)}
+																placeholder="Name of primary contact"
+															/>
+														</div>
+													</div>
+												</>
+											)}
+
+											<div className="space-y-2">
+												<Label>Address</Label>
+												<div className="space-y-4">
+													<div className="space-y-2">
+														<Label htmlFor="executorStreet">
+															Street Address
+														</Label>
+														<Input
+															id="executorStreet"
+															value={executorForm.address.street}
+															onChange={handleExecutorAddressChange("street")}
+															placeholder="123 Main Street"
+														/>
+													</div>
+													<div className="grid grid-cols-2 gap-4">
+														<div className="space-y-2">
+															<Label htmlFor="executorCity">City</Label>
+															<Input
+																id="executorCity"
+																value={executorForm.address.city}
+																onChange={handleExecutorAddressChange("city")}
+																placeholder="Toronto"
+															/>
+														</div>
+														<div className="space-y-2">
+															<Label htmlFor="executorZipCode">
+																Postal/ZIP Code
+															</Label>
+															<Input
+																id="executorZipCode"
+																value={executorForm.address.zipCode}
+																onChange={handleExecutorAddressChange(
+																	"zipCode"
+																)}
+																placeholder="M5V 2H1"
+															/>
+														</div>
+													</div>
+													<div className="grid grid-cols-2 gap-4">
+														<div className="space-y-2">
+															<Label htmlFor="executorProvince">
+																Province/State
+															</Label>
+															<Input
+																id="executorProvince"
+																value={executorForm.address.province}
+																onChange={handleExecutorAddressChange(
+																	"province"
+																)}
+																placeholder="Ontario"
+															/>
+														</div>
+														<div className="space-y-2">
+															<Label htmlFor="executorCountry">Country</Label>
+															<Input
+																id="executorCountry"
+																value={executorForm.address.country}
+																onChange={handleExecutorAddressChange(
+																	"country"
+																)}
+																placeholder="Canada"
+															/>
+														</div>
+													</div>
+												</div>
+											</div>
+											<div className="flex items-center space-x-2">
+												<Checkbox
+													id="isPrimaryExecutor"
+													checked={executorForm.isPrimary}
+													onCheckedChange={(checked: boolean) =>
+														setExecutorForm((prev) => ({
+															...prev,
+															isPrimary: checked,
+														}))
+													}
+												/>
+												<Label htmlFor="isPrimaryExecutor" className="text-sm">
+													Appoint as Primary Executor
+												</Label>
+											</div>
+											<div className="flex justify-end space-x-2">
+												<Button
+													variant="outline"
+													onClick={() => setExecutorDialogOpen(false)}
+													className="cursor-pointer"
+												>
+													Cancel
+												</Button>
+												<Button
+													onClick={handleSaveExecutor}
+													disabled={
+														(executorForm.type === "individual" &&
+															(!executorForm.firstName ||
+																!executorForm.lastName ||
+																!executorForm.relationship)) ||
+														(executorForm.type === "corporate" &&
+															(!executorForm.companyName ||
+																!executorForm.registrationNumber ||
+																!executorForm.contactPerson)) ||
+														!isAddressValid(executorForm.address)
+													}
+													className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
+												>
+													Save
+												</Button>
+											</div>
+										</div>
+									</DialogContent>
+								</Dialog>
+							</div>
+
+							{formData.executors.length === 0 ? (
+								<p className="text-muted-foreground text-center py-4">
+									No executors added yet. Click "Add Executor" to appoint
+									executors for your estate.
+								</p>
+							) : (
+								<div className="space-y-4">
+									{formData.executors.map((executor) => (
+										<Card key={executor.id}>
+											<CardContent className="p-4">
+												<div className="flex justify-between items-start">
+													<div className="space-y-1">
+														<p className="font-medium">
+															{executor.type === "individual" ? (
+																<>
+																	{executor.firstName} {executor.lastName}
+																	<span className="text-sm text-muted-foreground ml-2">
+																		({executor.relationship})
+																	</span>
+																</>
+															) : (
+																<>
+																	{executor.companyName}
+																	<span className="text-sm text-muted-foreground ml-2">
+																		(Corporate Executor)
+																	</span>
+																	<div className="text-sm text-muted-foreground">
+																		Contact: {executor.contactPerson}
+																	</div>
+																</>
+															)}
+															{executor.isPrimary && (
+																<span className="ml-2 text-sm text-primary">
+																	(Primary Executor)
+																</span>
+															)}
+														</p>
+														<p className="text-sm text-muted-foreground">
+															{formatAddress(executor.address)}
+														</p>
+													</div>
+													<div className="flex space-x-2">
+														<Button
+															variant="ghost"
+															size="icon"
+															onClick={() => handleEditExecutor(executor)}
+															className="cursor-pointer"
+														>
+															<Edit2 className="h-4 w-4" />
+														</Button>
+														<Button
+															variant="ghost"
+															size="icon"
+															onClick={() => handleRemoveExecutor(executor.id)}
+															className="cursor-pointer"
+														>
+															<Trash2 className="h-4 w-4" />
+														</Button>
+													</div>
+												</div>
+											</CardContent>
+										</Card>
+									))}
+								</div>
+							)}
+
+							<div className="flex justify-between pt-4">
+								<Button
+									variant="outline"
+									onClick={handleBack}
+									className="cursor-pointer"
+								>
+									<ArrowLeft className="mr-2 h-4 w-4" /> Back
+								</Button>
+								<Button
 									onClick={() => setCurrentQuestion("finished")}
+									disabled={formData.executors.length === 0}
 									className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
 								>
 									Next <ArrowRight className="ml-2 h-4 w-4" />
@@ -2351,6 +2873,36 @@ export default function WillWizard() {
 										</ul>
 									</li>
 								)}
+								{formData.executors.length > 0 && (
+									<li>
+										<strong>Appointed Executors:</strong>
+										<ul className="mt-2 space-y-2 list-disc list-inside">
+											{formData.executors.map((executor) => (
+												<li key={executor.id} className="text-sm">
+													{executor.type === "individual" ? (
+														<>
+															{executor.firstName} {executor.lastName} (
+															{executor.relationship})
+														</>
+													) : (
+														<>
+															{executor.companyName} (Corporate Executor)
+															<div className="text-muted-foreground ml-4">
+																Contact: {executor.contactPerson}
+																<br />
+																Registration: {executor.registrationNumber}
+															</div>
+														</>
+													)}
+													{executor.isPrimary && " - Primary"}
+													<div className="text-muted-foreground ml-4">
+														{formatAddress(executor.address)}
+													</div>
+												</li>
+											))}
+										</ul>
+									</li>
+								)}
 							</ul>
 						</div>
 						<div className="flex justify-start pt-4">
@@ -2387,6 +2939,8 @@ export default function WillWizard() {
 			case "hasAssets":
 				return 6;
 			case "gifts":
+				return 7;
+			case "executors":
 				return 7;
 			case "finished":
 				return 7;
