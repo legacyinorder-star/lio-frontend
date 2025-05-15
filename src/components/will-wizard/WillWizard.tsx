@@ -171,7 +171,7 @@ const AssetTypePill = ({
 				whitespace-nowrap overflow-hidden
 				${
 					selected
-						? "bg-primary text-primary-foreground border-primary"
+						? "bg-light-green text-black border-light-green"
 						: "bg-background hover:bg-muted border-input"
 				}
 				${onClick ? "cursor-pointer" : ""}
@@ -799,7 +799,7 @@ export default function WillWizard() {
 									formData.firstName.trim().length < 2 ||
 									formData.lastName.trim().length < 2
 								}
-								className="cursor-pointer"
+								className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
 							>
 								Next <ArrowRight className="ml-2 h-4 w-4" />
 							</Button>
@@ -884,7 +884,7 @@ export default function WillWizard() {
 							<Button
 								onClick={handleNext}
 								disabled={!isAddressValid()}
-								className="cursor-pointer"
+								className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
 							>
 								Next <ArrowRight className="ml-2 h-4 w-4" />
 							</Button>
@@ -910,9 +910,11 @@ export default function WillWizard() {
 								No
 							</Button>
 							<Button
-								variant="default"
+								variant={formData.hasSpouse ? "default" : "outline"}
 								onClick={() => handleHasSpouse(true)}
-								className="cursor-pointer"
+								className={`cursor-pointer ${
+									formData.hasSpouse ? "bg-light-green text-black" : ""
+								}`}
 							>
 								Yes
 							</Button>
@@ -954,9 +956,11 @@ export default function WillWizard() {
 										No
 									</Button>
 									<Button
-										variant="default"
+										variant={formData.hasChildren ? "default" : "outline"}
 										onClick={() => handleHasChildren(true)}
-										className="cursor-pointer"
+										className={`cursor-pointer ${
+											formData.hasChildren ? "bg-light-green text-black" : ""
+										}`}
 									>
 										Yes
 									</Button>
@@ -1353,7 +1357,7 @@ export default function WillWizard() {
 								<Button
 									onClick={() => setCurrentQuestion("hasAssets")}
 									disabled={!areGuardiansValid()}
-									className="cursor-pointer"
+									className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
 								>
 									Next <ArrowRight className="ml-2 h-4 w-4" />
 								</Button>
@@ -1449,26 +1453,34 @@ export default function WillWizard() {
 													<Button
 														variant={
 															assetForm.distributionType === "equal"
-																? "outline"
-																: "default"
+																? "default"
+																: "outline"
 														}
 														onClick={() =>
 															handleDistributionTypeChange("equal")
 														}
-														className="cursor-pointer"
+														className={`cursor-pointer ${
+															assetForm.distributionType === "equal"
+																? "bg-light-green text-black"
+																: ""
+														}`}
 													>
 														Equal Distribution
 													</Button>
 													<Button
 														variant={
 															assetForm.distributionType === "percentage"
-																? "outline"
-																: "default"
+																? "default"
+																: "outline"
 														}
 														onClick={() =>
 															handleDistributionTypeChange("percentage")
 														}
-														className="cursor-pointer"
+														className={`cursor-pointer ${
+															assetForm.distributionType === "percentage"
+																? "bg-light-green text-black"
+																: ""
+														}`}
 													>
 														Percentage Distribution
 													</Button>
@@ -1579,7 +1591,7 @@ export default function WillWizard() {
 																) - 100
 															) > 0.01)
 													}
-													className="cursor-pointer"
+													className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
 												>
 													Save
 												</Button>
@@ -1678,7 +1690,7 @@ export default function WillWizard() {
 								</Button>
 								<Button
 									onClick={() => setCurrentQuestion("finished")}
-									className="cursor-pointer"
+									className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
 								>
 									Next <ArrowRight className="ml-2 h-4 w-4" />
 								</Button>
@@ -1864,16 +1876,22 @@ export default function WillWizard() {
 					<div className="space-y-4 py-4">
 						<div className="flex space-x-4 mb-4">
 							<Button
-								variant={beneficiaryType === "existing" ? "outline" : "default"}
+								variant={beneficiaryType === "existing" ? "default" : "outline"}
 								onClick={() => setBeneficiaryType("existing")}
-								className="cursor-pointer"
+								className={`cursor-pointer ${
+									beneficiaryType === "existing"
+										? "bg-light-green text-black"
+										: ""
+								}`}
 							>
 								Select Existing Beneficiary
 							</Button>
 							<Button
-								variant={beneficiaryType === "new" ? "outline" : "default"}
+								variant={beneficiaryType === "new" ? "default" : "outline"}
 								onClick={() => setBeneficiaryType("new")}
-								className="cursor-pointer"
+								className={`cursor-pointer ${
+									beneficiaryType === "new" ? "bg-light-green text-black" : ""
+								}`}
 							>
 								Add New Beneficiary
 							</Button>
@@ -2040,7 +2058,7 @@ export default function WillWizard() {
 										!newBeneficiaryForm.lastName ||
 										!newBeneficiaryForm.relationship
 									}
-									className="cursor-pointer"
+									className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
 								>
 									Add Beneficiary
 								</Button>
