@@ -659,6 +659,7 @@ export default function WillWizard() {
 
 	// Handle editing asset
 	const handleEditAsset = (asset: Asset) => {
+		// When editing, we want to keep the existing beneficiaries
 		setAssetForm(asset);
 		setEditingAsset(asset);
 		setAssetDialogOpen(true);
@@ -1390,17 +1391,29 @@ export default function WillWizard() {
 										<Button
 											variant="outline"
 											onClick={() => {
-												// Initialize beneficiaries based on current family members
+												// Initialize beneficiaries with all existing beneficiaries
 												const beneficiaries = [];
+
+												// Add spouse if exists
 												if (formData.hasSpouse && formData.spouse) {
 													beneficiaries.push({
 														id: "spouse",
 														percentage: undefined,
 													});
 												}
+
+												// Add all children
 												formData.children.forEach((child) => {
 													beneficiaries.push({
 														id: child.id,
+														percentage: undefined,
+													});
+												});
+
+												// Add all other beneficiaries
+												formData.otherBeneficiaries?.forEach((beneficiary) => {
+													beneficiaries.push({
+														id: beneficiary.id,
 														percentage: undefined,
 													});
 												});
