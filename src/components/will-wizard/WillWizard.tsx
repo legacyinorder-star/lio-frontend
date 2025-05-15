@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import SpouseDialog, { SpouseData } from "./SpouseDialog";
 import { ArrowRight, Plus, Trash2, Edit2, ArrowLeft } from "lucide-react";
 import {
@@ -22,6 +23,13 @@ import {
 	Briefcase,
 	Package,
 } from "lucide-react";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 
 // Define the different question types
 type QuestionType =
@@ -31,6 +39,7 @@ type QuestionType =
 	| "hasChildren"
 	| "guardians"
 	| "hasAssets"
+	| "gifts"
 	| "finished";
 
 // Define the address type
@@ -86,6 +95,20 @@ interface NewBeneficiary {
 	firstName: string;
 	lastName: string;
 	relationship: string;
+	type: BeneficiaryType;
+	organizationName?: string; // For charitable organizations
+	registrationNumber?: string; // For charitable organizations
+}
+
+// Add new type for gifts after the other type definitions
+type GiftType = "Cash" | "Item" | "Other";
+
+interface Gift {
+	id: string;
+	type: GiftType;
+	description: string;
+	value?: number;
+	beneficiaryId: string;
 }
 
 // Define the form data structure
@@ -100,6 +123,7 @@ interface WillFormData {
 	guardians: Guardian[];
 	assets: Asset[];
 	otherBeneficiaries?: NewBeneficiary[];
+	gifts: Gift[];
 }
 
 // Add these types and constants after the other type definitions
@@ -214,6 +238,9 @@ const AssetTypeSelector = ({
 	);
 };
 
+// Add this type definition after the other type definitions
+type BeneficiaryType = "spouse" | "child" | "guardian" | "other" | "charity";
+
 export default function WillWizard() {
 	// Track the current question being shown
 	const [currentQuestion, setCurrentQuestion] = useState<QuestionType>("name");
@@ -235,6 +262,7 @@ export default function WillWizard() {
 		guardians: [],
 		assets: [],
 		otherBeneficiaries: [],
+		gifts: [],
 	});
 
 	// For the spouse dialog
@@ -282,13 +310,27 @@ export default function WillWizard() {
 	const [beneficiaryDialogOpen, setBeneficiaryDialogOpen] = useState(false);
 	const [newBeneficiaryForm, setNewBeneficiaryForm] = useState<NewBeneficiary>({
 		id: "",
+		type: "other",
 		firstName: "",
 		lastName: "",
 		relationship: "",
+		organizationName: "",
+		registrationNumber: "",
 	});
 	const [beneficiaryType, setBeneficiaryType] = useState<"existing" | "new">(
 		"existing"
 	);
+
+	// Add state for gift dialog
+	const [giftDialogOpen, setGiftDialogOpen] = useState(false);
+	const [editingGift, setEditingGift] = useState<Gift | null>(null);
+	const [giftForm, setGiftForm] = useState<Gift>({
+		id: "",
+		type: "Cash",
+		description: "",
+		value: undefined,
+		beneficiaryId: "",
+	});
 
 	// Ensure we're mounted before rendering any dialogs
 	useEffect(() => {
@@ -533,6 +575,8 @@ export default function WillWizard() {
 			} else {
 				setCurrentQuestion("hasAssets");
 			}
+		} else if (currentQuestion === "hasAssets") {
+			setCurrentQuestion("gifts");
 		}
 	};
 
@@ -570,6 +614,12 @@ export default function WillWizard() {
 				break;
 			case "hasAssets":
 				setCurrentQuestion(needsGuardians() ? "guardians" : "hasChildren");
+				break;
+			case "gifts":
+				setCurrentQuestion("hasAssets");
+				break;
+			case "finished":
+				setCurrentQuestion("gifts");
 				break;
 			default:
 				break;
@@ -673,66 +723,46 @@ export default function WillWizard() {
 		}));
 	};
 
-	// Add these handlers after the other handlers
-	const handleNewBeneficiaryFormChange =
-		(field: keyof NewBeneficiary) =>
-		(e: React.ChangeEvent<HTMLInputElement>) => {
-			setNewBeneficiaryForm((prev) => ({
-				...prev,
-				[field]: e.target.value,
-			}));
-		};
-
 	const handleAddBeneficiary = () => {
 		setBeneficiaryType("existing");
 		setBeneficiaryDialogOpen(true);
 	};
 
 	const handleSaveNewBeneficiary = () => {
-		if (
-			!newBeneficiaryForm.firstName ||
-			!newBeneficiaryForm.lastName ||
-			!newBeneficiaryForm.relationship
-		) {
-			return;
-		}
+		const newBeneficiary: NewBeneficiary = {
+			id: crypto.randomUUID(),
+			type: newBeneficiaryForm.type,
+			firstName: newBeneficiaryForm.firstName,
+			lastName: newBeneficiaryForm.lastName,
+			relationship: newBeneficiaryForm.relationship,
+			organizationName: newBeneficiaryForm.organizationName,
+			registrationNumber: newBeneficiaryForm.registrationNumber,
+		};
 
-		const newId = crypto.randomUUID();
-		setAssetForm((prev) => ({
-			...prev,
-			beneficiaries: [
-				...prev.beneficiaries,
-				{
-					id: newId,
-					percentage: prev.distributionType === "percentage" ? 0 : undefined,
-				},
-			],
-		}));
-
-		// Add the new beneficiary to a separate list in formData
 		setFormData((prev) => ({
 			...prev,
-			otherBeneficiaries: [
-				...(prev.otherBeneficiaries || []),
-				{ ...newBeneficiaryForm, id: newId },
-			],
+			otherBeneficiaries: [...(prev.otherBeneficiaries || []), newBeneficiary],
 		}));
 
-		// Reset form and close dialog
 		setNewBeneficiaryForm({
 			id: "",
+			type: "other",
 			firstName: "",
 			lastName: "",
 			relationship: "",
+			organizationName: "",
+			registrationNumber: "",
 		});
-		setBeneficiaryDialogOpen(false);
+
+		setBeneficiaryType("existing");
 	};
 
-	// Update the getBeneficiaryName function to include other beneficiaries
+	// Update the getBeneficiaryName function to include guardians and charities
 	const getBeneficiaryName = (
 		beneficiaryId: string,
 		spouse: SpouseData | undefined,
 		children: Child[],
+		guardians: Guardian[],
 		otherBeneficiaries?: NewBeneficiary[]
 	) => {
 		if (beneficiaryId === "spouse" && spouse) {
@@ -742,10 +772,17 @@ export default function WillWizard() {
 		if (child) {
 			return `${child.firstName} ${child.lastName}`;
 		}
+		const guardian = guardians.find((g) => g.id === beneficiaryId);
+		if (guardian) {
+			return `${guardian.firstName} ${guardian.lastName} (Guardian)`;
+		}
 		const otherBeneficiary = otherBeneficiaries?.find(
 			(b) => b.id === beneficiaryId
 		);
 		if (otherBeneficiary) {
+			if (otherBeneficiary.type === "charity") {
+				return `${otherBeneficiary.organizationName} (Charity)`;
+			}
 			return `${otherBeneficiary.firstName} ${otherBeneficiary.lastName} (${otherBeneficiary.relationship})`;
 		}
 		return "";
@@ -756,6 +793,65 @@ export default function WillWizard() {
 		setAssetForm((prev) => ({
 			...prev,
 			beneficiaries: prev.beneficiaries.filter((b) => b.id !== beneficiaryId),
+		}));
+	};
+
+	// Handle gift form changes
+	const handleGiftFormChange =
+		(field: keyof Gift) =>
+		(
+			e: React.ChangeEvent<
+				HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+			>
+		) => {
+			setGiftForm((prev) => ({
+				...prev,
+				[field]: field === "value" ? Number(e.target.value) : e.target.value,
+			}));
+		};
+
+	// Handle adding/editing gift
+	const handleSaveGift = () => {
+		if (!giftForm.description || !giftForm.beneficiaryId) {
+			return;
+		}
+
+		if (editingGift) {
+			setFormData((prev) => ({
+				...prev,
+				gifts: prev.gifts.map((gift) =>
+					gift.id === editingGift.id ? giftForm : gift
+				),
+			}));
+		} else {
+			setFormData((prev) => ({
+				...prev,
+				gifts: [...prev.gifts, { ...giftForm, id: crypto.randomUUID() }],
+			}));
+		}
+
+		// Reset form and close dialog
+		setGiftForm({
+			id: "",
+			type: "Cash",
+			description: "",
+			value: undefined,
+			beneficiaryId: "",
+		});
+		setEditingGift(null);
+		setGiftDialogOpen(false);
+	};
+
+	const handleEditGift = (gift: Gift) => {
+		setGiftForm(gift);
+		setEditingGift(gift);
+		setGiftDialogOpen(true);
+	};
+
+	const handleRemoveGift = (giftId: string) => {
+		setFormData((prev) => ({
+			...prev,
+			gifts: prev.gifts.filter((gift) => gift.id !== giftId),
 		}));
 	};
 
@@ -906,15 +1002,21 @@ export default function WillWizard() {
 							<Button
 								variant="outline"
 								onClick={() => handleHasSpouse(false)}
-								className="cursor-pointer"
+								className={`cursor-pointer ${
+									!formData.hasSpouse
+										? "bg-light-green text-black border-light-green"
+										: ""
+								}`}
 							>
 								No
 							</Button>
 							<Button
-								variant={formData.hasSpouse ? "default" : "outline"}
+								variant="outline"
 								onClick={() => handleHasSpouse(true)}
 								className={`cursor-pointer ${
-									formData.hasSpouse ? "bg-light-green text-black" : ""
+									formData.hasSpouse
+										? "bg-light-green text-black border-light-green"
+										: ""
 								}`}
 							>
 								Yes
@@ -930,7 +1032,7 @@ export default function WillWizard() {
 							</Button>
 							<Button
 								onClick={() => setCurrentQuestion("hasChildren")}
-								className="cursor-pointer"
+								className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
 							>
 								Next <ArrowRight className="ml-2 h-4 w-4" />
 							</Button>
@@ -952,15 +1054,21 @@ export default function WillWizard() {
 									<Button
 										variant="outline"
 										onClick={() => handleHasChildren(false)}
-										className="cursor-pointer"
+										className={`cursor-pointer ${
+											!formData.hasChildren
+												? "bg-light-green text-black border-light-green"
+												: ""
+										}`}
 									>
 										No
 									</Button>
 									<Button
-										variant={formData.hasChildren ? "default" : "outline"}
+										variant="outline"
 										onClick={() => handleHasChildren(true)}
 										className={`cursor-pointer ${
-											formData.hasChildren ? "bg-light-green text-black" : ""
+											formData.hasChildren
+												? "bg-light-green text-black border-light-green"
+												: ""
 										}`}
 									>
 										Yes
@@ -1031,17 +1139,15 @@ export default function WillWizard() {
 												</div>
 												<div className="space-y-2">
 													<div className="flex items-center space-x-2">
-														<input
-															type="checkbox"
+														<Checkbox
 															id="requiresGuardian"
 															checked={childForm.requiresGuardian}
-															onChange={(e) =>
+															onCheckedChange={(checked: boolean) =>
 																setChildForm((prev) => ({
 																	...prev,
-																	requiresGuardian: e.target.checked,
+																	requiresGuardian: checked,
 																}))
 															}
-															className="h-4 w-4 rounded border-gray-300"
 														/>
 														<Label
 															htmlFor="requiresGuardian"
@@ -1065,7 +1171,7 @@ export default function WillWizard() {
 													</Button>
 													<Button
 														onClick={handleSaveChild}
-														className="cursor-pointer"
+														className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
 													>
 														Save
 													</Button>
@@ -1140,7 +1246,7 @@ export default function WillWizard() {
 										<Button
 											onClick={handleNext}
 											disabled={formData.children.length === 0}
-											className="cursor-pointer"
+											className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
 										>
 											Next <ArrowRight className="ml-2 h-4 w-4" />
 										</Button>
@@ -1228,6 +1334,10 @@ export default function WillWizard() {
 											<DialogTitle>
 												{editingGuardian ? "Edit Guardian" : "Add Guardian"}
 											</DialogTitle>
+											<DialogDescription>
+												Add a legal guardian who will be responsible for your
+												minor children in the event of your passing.
+											</DialogDescription>
 										</DialogHeader>
 										<div className="space-y-4 py-4">
 											<div className="grid grid-cols-2 gap-4">
@@ -1262,17 +1372,15 @@ export default function WillWizard() {
 												/>
 											</div>
 											<div className="flex items-center space-x-2">
-												<input
-													type="checkbox"
+												<Checkbox
 													id="isPrimary"
 													checked={guardianForm.isPrimary}
-													onChange={(e) =>
+													onCheckedChange={(checked: boolean) =>
 														setGuardianForm((prev) => ({
 															...prev,
-															isPrimary: e.target.checked,
+															isPrimary: checked,
 														}))
 													}
-													className="h-4 w-4 rounded border-gray-300"
 												/>
 												<Label htmlFor="isPrimary" className="text-sm">
 													Appoint as Primary Guardian
@@ -1288,7 +1396,7 @@ export default function WillWizard() {
 												</Button>
 												<Button
 													onClick={handleSaveGuardian}
-													className="cursor-pointer"
+													className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
 												>
 													Save
 												</Button>
@@ -1518,6 +1626,7 @@ export default function WillWizard() {
 															beneficiary.id,
 															formData.spouse,
 															formData.children,
+															formData.guardians,
 															formData.otherBeneficiaries
 														);
 														const isSpouse = beneficiary.id === "spouse";
@@ -1651,6 +1760,7 @@ export default function WillWizard() {
 																		beneficiary.id,
 																		formData.spouse,
 																		formData.children,
+																		formData.guardians,
 																		formData.otherBeneficiaries
 																	);
 
@@ -1681,6 +1791,410 @@ export default function WillWizard() {
 															variant="ghost"
 															size="icon"
 															onClick={() => handleRemoveAsset(asset.id)}
+															className="cursor-pointer"
+														>
+															<Trash2 className="h-4 w-4" />
+														</Button>
+													</div>
+												</div>
+											</CardContent>
+										</Card>
+									))}
+								</div>
+							)}
+
+							<div className="flex justify-between pt-4">
+								<Button
+									variant="outline"
+									onClick={handleBack}
+									className="cursor-pointer"
+								>
+									<ArrowLeft className="mr-2 h-4 w-4" /> Back
+								</Button>
+								<Button
+									onClick={() => setCurrentQuestion("gifts")}
+									className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
+								>
+									Next <ArrowRight className="ml-2 h-4 w-4" />
+								</Button>
+							</div>
+						</div>
+					</div>
+				);
+
+			case "gifts":
+				return (
+					<div className="space-y-4">
+						<div className="text-2xl font-semibold">
+							Specify any one-off gifts
+						</div>
+						<div className="text-muted-foreground">
+							Add any specific gifts you'd like to leave to particular
+							individuals. This could include cash gifts, personal items, or
+							other specific bequests.
+						</div>
+						<div className="space-y-6 mt-6">
+							<div className="flex justify-between items-center">
+								<h3 className="text-lg font-medium">Your Gifts</h3>
+								<Dialog open={giftDialogOpen} onOpenChange={setGiftDialogOpen}>
+									<DialogTrigger asChild>
+										<Button
+											variant="outline"
+											onClick={() => {
+												setGiftForm({
+													id: "",
+													type: "Cash",
+													description: "",
+													value: undefined,
+													beneficiaryId: "",
+												});
+												setEditingGift(null);
+											}}
+											className="cursor-pointer"
+										>
+											<Plus className="mr-2 h-4 w-4" />
+											Add Gift
+										</Button>
+									</DialogTrigger>
+									<DialogContent className="bg-white">
+										<DialogHeader>
+											<DialogTitle>
+												{editingGift ? "Edit Gift" : "Add Gift"}
+											</DialogTitle>
+										</DialogHeader>
+										<div className="space-y-4 py-4">
+											<div className="space-y-2">
+												<Label>Gift Type</Label>
+												<select
+													value={giftForm.type}
+													onChange={handleGiftFormChange("type")}
+													className="w-full p-2 border rounded-md"
+												>
+													<option value="Cash">Cash Gift</option>
+													<option value="Item">Specific Item</option>
+													<option value="Other">Other</option>
+												</select>
+											</div>
+											<div className="space-y-2">
+												<Label>Description</Label>
+												{giftForm.type === "Cash" ? (
+													<div className="space-y-2">
+														<Input
+															type="number"
+															value={giftForm.value || ""}
+															onChange={handleGiftFormChange("value")}
+															placeholder="Amount"
+															className="w-full"
+														/>
+														<textarea
+															value={giftForm.description}
+															onChange={handleGiftFormChange("description")}
+															placeholder="Add any specific instructions or conditions for this gift"
+															className="w-full min-h-[100px] p-2 border rounded-md"
+														/>
+													</div>
+												) : (
+													<textarea
+														value={giftForm.description}
+														onChange={handleGiftFormChange("description")}
+														placeholder="Describe the item or gift in detail"
+														className="w-full min-h-[100px] p-2 border rounded-md"
+													/>
+												)}
+											</div>
+											<div className="space-y-2">
+												<Label>Beneficiary</Label>
+												<div className="flex justify-between items-center mb-4">
+													<div className="flex space-x-4">
+														<Button
+															variant={
+																beneficiaryType === "existing"
+																	? "default"
+																	: "outline"
+															}
+															onClick={() => setBeneficiaryType("existing")}
+															className={`cursor-pointer ${
+																beneficiaryType === "existing"
+																	? "bg-light-green text-black"
+																	: ""
+															}`}
+														>
+															Select Existing Beneficiary
+														</Button>
+														<Button
+															variant={
+																beneficiaryType === "new"
+																	? "default"
+																	: "outline"
+															}
+															onClick={() => setBeneficiaryType("new")}
+															className={`cursor-pointer ${
+																beneficiaryType === "new"
+																	? "bg-light-green text-black"
+																	: ""
+															}`}
+														>
+															Add New Beneficiary
+														</Button>
+													</div>
+												</div>
+
+												{beneficiaryType === "existing" ? (
+													<select
+														value={giftForm.beneficiaryId}
+														onChange={(e) =>
+															setGiftForm((prev) => ({
+																...prev,
+																beneficiaryId: e.target.value,
+															}))
+														}
+														className="w-full p-2 border rounded-md"
+													>
+														<option value="">Select a beneficiary</option>
+														{formData.hasSpouse && formData.spouse && (
+															<option value="spouse">
+																{formData.spouse.fullName} (Spouse)
+															</option>
+														)}
+														{formData.children.map((child) => (
+															<option key={child.id} value={child.id}>
+																{child.firstName} {child.lastName} (Child)
+															</option>
+														))}
+														{formData.otherBeneficiaries?.map((beneficiary) => (
+															<option
+																key={beneficiary.id}
+																value={beneficiary.id}
+															>
+																{beneficiary.type === "charity"
+																	? `${beneficiary.organizationName} (Charity)`
+																	: `${beneficiary.firstName} ${beneficiary.lastName} (${beneficiary.relationship})`}
+															</option>
+														))}
+													</select>
+												) : (
+													<div className="space-y-4">
+														<div className="flex space-x-4 mb-4">
+															<Button
+																variant={
+																	newBeneficiaryForm.type === "other"
+																		? "default"
+																		: "outline"
+																}
+																onClick={() =>
+																	setNewBeneficiaryForm((prev) => ({
+																		...prev,
+																		type: "other",
+																	}))
+																}
+																className={`cursor-pointer ${
+																	newBeneficiaryForm.type === "other"
+																		? "bg-light-green text-black"
+																		: ""
+																}`}
+															>
+																Add Person
+															</Button>
+															<Button
+																variant={
+																	newBeneficiaryForm.type === "charity"
+																		? "default"
+																		: "outline"
+																}
+																onClick={() =>
+																	setNewBeneficiaryForm((prev) => ({
+																		...prev,
+																		type: "charity",
+																	}))
+																}
+																className={`cursor-pointer ${
+																	newBeneficiaryForm.type === "charity"
+																		? "bg-light-green text-black"
+																		: ""
+																}`}
+															>
+																Add Charity
+															</Button>
+														</div>
+
+														{newBeneficiaryForm.type === "charity" ? (
+															<>
+																<div className="space-y-2">
+																	<Label htmlFor="organizationName">
+																		Organization Name
+																	</Label>
+																	<Input
+																		id="organizationName"
+																		value={newBeneficiaryForm.organizationName}
+																		onChange={(e) =>
+																			setNewBeneficiaryForm((prev) => ({
+																				...prev,
+																				organizationName: e.target.value,
+																			}))
+																		}
+																		placeholder="Enter charity name"
+																	/>
+																</div>
+																<div className="space-y-2">
+																	<Label htmlFor="registrationNumber">
+																		Charity Registration Number (Optional)
+																	</Label>
+																	<Input
+																		id="registrationNumber"
+																		value={
+																			newBeneficiaryForm.registrationNumber
+																		}
+																		onChange={(e) =>
+																			setNewBeneficiaryForm((prev) => ({
+																				...prev,
+																				registrationNumber: e.target.value,
+																			}))
+																		}
+																		placeholder="Enter registration number if available"
+																	/>
+																</div>
+															</>
+														) : (
+															<>
+																<div className="grid grid-cols-2 gap-4">
+																	<div className="space-y-2">
+																		<Label htmlFor="beneficiaryFirstName">
+																			First Name
+																		</Label>
+																		<Input
+																			id="beneficiaryFirstName"
+																			value={newBeneficiaryForm.firstName}
+																			onChange={(e) =>
+																				setNewBeneficiaryForm((prev) => ({
+																					...prev,
+																					firstName: e.target.value,
+																				}))
+																			}
+																			placeholder="John"
+																		/>
+																	</div>
+																	<div className="space-y-2">
+																		<Label htmlFor="beneficiaryLastName">
+																			Last Name
+																		</Label>
+																		<Input
+																			id="beneficiaryLastName"
+																			value={newBeneficiaryForm.lastName}
+																			onChange={(e) =>
+																				setNewBeneficiaryForm((prev) => ({
+																					...prev,
+																					lastName: e.target.value,
+																				}))
+																			}
+																			placeholder="Doe"
+																		/>
+																	</div>
+																</div>
+																<div className="space-y-2">
+																	<Label htmlFor="beneficiaryRelationship">
+																		Relationship
+																	</Label>
+																	<Input
+																		id="beneficiaryRelationship"
+																		value={newBeneficiaryForm.relationship}
+																		onChange={(e) =>
+																			setNewBeneficiaryForm((prev) => ({
+																				...prev,
+																				relationship: e.target.value,
+																			}))
+																		}
+																		placeholder="e.g., Niece, Nephew, Friend"
+																	/>
+																</div>
+															</>
+														)}
+														<div className="flex justify-end">
+															<Button
+																onClick={handleSaveNewBeneficiary}
+																disabled={
+																	(newBeneficiaryForm.type === "charity" &&
+																		!newBeneficiaryForm.organizationName) ||
+																	(newBeneficiaryForm.type === "other" &&
+																		(!newBeneficiaryForm.firstName ||
+																			!newBeneficiaryForm.lastName ||
+																			!newBeneficiaryForm.relationship))
+																}
+																className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
+															>
+																Add Beneficiary
+															</Button>
+														</div>
+													</div>
+												)}
+											</div>
+											<div className="flex justify-end space-x-2">
+												<Button
+													variant="outline"
+													onClick={() => setGiftDialogOpen(false)}
+													className="cursor-pointer"
+												>
+													Cancel
+												</Button>
+												<Button
+													onClick={handleSaveGift}
+													disabled={
+														!giftForm.description || !giftForm.beneficiaryId
+													}
+													className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
+												>
+													Save
+												</Button>
+											</div>
+										</div>
+									</DialogContent>
+								</Dialog>
+							</div>
+
+							{formData.gifts.length === 0 ? (
+								<p className="text-muted-foreground text-center py-4">
+									No gifts added yet. Click "Add Gift" to specify gifts for your
+									beneficiaries.
+								</p>
+							) : (
+								<div className="space-y-4">
+									{formData.gifts.map((gift) => (
+										<Card key={gift.id}>
+											<CardContent className="p-4">
+												<div className="flex justify-between items-start">
+													<div className="space-y-1">
+														<div className="flex items-center space-x-2">
+															<p className="font-medium">{gift.type}</p>
+															{gift.type === "Cash" && gift.value && (
+																<span className="text-sm text-muted-foreground">
+																	${gift.value.toLocaleString()}
+																</span>
+															)}
+														</div>
+														<p className="text-sm">{gift.description}</p>
+														<p className="text-sm text-muted-foreground">
+															To:{" "}
+															{getBeneficiaryName(
+																gift.beneficiaryId,
+																formData.spouse,
+																formData.children,
+																formData.guardians,
+																formData.otherBeneficiaries
+															)}
+														</p>
+													</div>
+													<div className="flex space-x-2">
+														<Button
+															variant="ghost"
+															size="icon"
+															onClick={() => handleEditGift(gift)}
+															className="cursor-pointer"
+														>
+															<Edit2 className="h-4 w-4" />
+														</Button>
+														<Button
+															variant="ghost"
+															size="icon"
+															onClick={() => handleRemoveGift(gift.id)}
 															className="cursor-pointer"
 														>
 															<Trash2 className="h-4 w-4" />
@@ -1794,6 +2308,7 @@ export default function WillWizard() {
 																	beneficiary.id,
 																	formData.spouse,
 																	formData.children,
+																	formData.guardians,
 																	formData.otherBeneficiaries
 																);
 
@@ -1814,7 +2329,38 @@ export default function WillWizard() {
 										</ul>
 									</li>
 								)}
+								{formData.gifts.length > 0 && (
+									<li>
+										<strong>Specific Gifts:</strong>
+										<ul className="mt-2 space-y-2 list-disc list-inside">
+											{formData.gifts.map((gift) => (
+												<li key={gift.id} className="text-sm">
+													{gift.type === "Cash" && gift.value
+														? `$${gift.value.toLocaleString()}`
+														: gift.description}{" "}
+													to{" "}
+													{getBeneficiaryName(
+														gift.beneficiaryId,
+														formData.spouse,
+														formData.children,
+														formData.guardians,
+														formData.otherBeneficiaries
+													)}
+												</li>
+											))}
+										</ul>
+									</li>
+								)}
 							</ul>
+						</div>
+						<div className="flex justify-start pt-4">
+							<Button
+								variant="outline"
+								onClick={handleBack}
+								className="cursor-pointer"
+							>
+								<ArrowLeft className="mr-2 h-4 w-4" /> Back
+							</Button>
 						</div>
 					</div>
 				);
@@ -1825,7 +2371,7 @@ export default function WillWizard() {
 	};
 
 	// Track progress
-	const totalQuestions = 6;
+	const totalQuestions = 7;
 	const progress = (() => {
 		switch (currentQuestion) {
 			case "name":
@@ -1840,8 +2386,10 @@ export default function WillWizard() {
 				return 5;
 			case "hasAssets":
 				return 6;
+			case "gifts":
+				return 7;
 			case "finished":
-				return 6;
+				return 7;
 			default:
 				return 1;
 		}
@@ -1914,6 +2462,7 @@ export default function WillWizard() {
 							<div className="space-y-2">
 								<Label>Select Beneficiary</Label>
 								<div className="space-y-2 max-h-[300px] overflow-y-auto">
+									{/* Spouse */}
 									{formData.hasSpouse &&
 										formData.spouse &&
 										!assetForm.beneficiaries.some((b) => b.id === "spouse") && (
@@ -1946,6 +2495,8 @@ export default function WillWizard() {
 												</div>
 											</div>
 										)}
+
+									{/* Children */}
 									{formData.children
 										.filter(
 											(child) =>
@@ -1982,6 +2533,48 @@ export default function WillWizard() {
 												</div>
 											</div>
 										))}
+
+									{/* Guardians */}
+									{formData.guardians
+										.filter(
+											(guardian) =>
+												!assetForm.beneficiaries.some(
+													(b) => b.id === guardian.id
+												)
+										)
+										.map((guardian) => (
+											<div
+												key={guardian.id}
+												className="flex items-center justify-between p-2 border rounded-md hover:bg-muted cursor-pointer"
+												onClick={() => {
+													setAssetForm((prev) => ({
+														...prev,
+														beneficiaries: [
+															...prev.beneficiaries,
+															{
+																id: guardian.id,
+																percentage:
+																	prev.distributionType === "percentage"
+																		? 0
+																		: undefined,
+															},
+														],
+													}));
+													setBeneficiaryDialogOpen(false);
+												}}
+											>
+												<div>
+													<span className="font-medium">
+														{guardian.firstName} {guardian.lastName}
+													</span>
+													<span className="text-sm text-muted-foreground ml-2">
+														(Guardian{guardian.isPrimary ? " - Primary" : ""})
+													</span>
+												</div>
+											</div>
+										))}
+
+									{/* Other Beneficiaries */}
 									{formData.otherBeneficiaries
 										?.filter(
 											(beneficiary) =>
@@ -2012,10 +2605,16 @@ export default function WillWizard() {
 											>
 												<div>
 													<span className="font-medium">
-														{beneficiary.firstName} {beneficiary.lastName}
+														{beneficiary.type === "charity"
+															? beneficiary.organizationName
+															: `${beneficiary.firstName} ${beneficiary.lastName}`}
 													</span>
 													<span className="text-sm text-muted-foreground ml-2">
-														({beneficiary.relationship})
+														(
+														{beneficiary.type === "charity"
+															? "Charity"
+															: beneficiary.relationship}
+														)
 													</span>
 												</div>
 											</div>
@@ -2024,35 +2623,134 @@ export default function WillWizard() {
 							</div>
 						) : (
 							<div className="space-y-4">
-								<div className="grid grid-cols-2 gap-4">
-									<div className="space-y-2">
-										<Label htmlFor="beneficiaryFirstName">First Name</Label>
-										<Input
-											id="beneficiaryFirstName"
-											value={newBeneficiaryForm.firstName}
-											onChange={handleNewBeneficiaryFormChange("firstName")}
-											placeholder="John"
-										/>
-									</div>
-									<div className="space-y-2">
-										<Label htmlFor="beneficiaryLastName">Last Name</Label>
-										<Input
-											id="beneficiaryLastName"
-											value={newBeneficiaryForm.lastName}
-											onChange={handleNewBeneficiaryFormChange("lastName")}
-											placeholder="Doe"
-										/>
-									</div>
+								<div className="flex space-x-4 mb-4">
+									<Button
+										variant={
+											newBeneficiaryForm.type === "other"
+												? "default"
+												: "outline"
+										}
+										onClick={() =>
+											setNewBeneficiaryForm((prev) => ({
+												...prev,
+												type: "other",
+											}))
+										}
+										className={`cursor-pointer ${
+											newBeneficiaryForm.type === "other"
+												? "bg-light-green text-black"
+												: ""
+										}`}
+									>
+										Add Person
+									</Button>
+									<Button
+										variant={
+											newBeneficiaryForm.type === "charity"
+												? "default"
+												: "outline"
+										}
+										onClick={() =>
+											setNewBeneficiaryForm((prev) => ({
+												...prev,
+												type: "charity",
+											}))
+										}
+										className={`cursor-pointer ${
+											newBeneficiaryForm.type === "charity"
+												? "bg-light-green text-black"
+												: ""
+										}`}
+									>
+										Add Charity
+									</Button>
 								</div>
-								<div className="space-y-2">
-									<Label htmlFor="beneficiaryRelationship">Relationship</Label>
-									<Input
-										id="beneficiaryRelationship"
-										value={newBeneficiaryForm.relationship}
-										onChange={handleNewBeneficiaryFormChange("relationship")}
-										placeholder="e.g., Niece, Nephew, Friend"
-									/>
-								</div>
+
+								{newBeneficiaryForm.type === "charity" ? (
+									<>
+										<div className="space-y-2">
+											<Label htmlFor="organizationName">
+												Organization Name
+											</Label>
+											<Input
+												id="organizationName"
+												value={newBeneficiaryForm.organizationName}
+												onChange={(e) =>
+													setNewBeneficiaryForm((prev) => ({
+														...prev,
+														organizationName: e.target.value,
+													}))
+												}
+												placeholder="Enter charity name"
+											/>
+										</div>
+										<div className="space-y-2">
+											<Label htmlFor="registrationNumber">
+												Charity Registration Number (Optional)
+											</Label>
+											<Input
+												id="registrationNumber"
+												value={newBeneficiaryForm.registrationNumber}
+												onChange={(e) =>
+													setNewBeneficiaryForm((prev) => ({
+														...prev,
+														registrationNumber: e.target.value,
+													}))
+												}
+												placeholder="Enter registration number if available"
+											/>
+										</div>
+									</>
+								) : (
+									<>
+										<div className="grid grid-cols-2 gap-4">
+											<div className="space-y-2">
+												<Label htmlFor="beneficiaryFirstName">First Name</Label>
+												<Input
+													id="beneficiaryFirstName"
+													value={newBeneficiaryForm.firstName}
+													onChange={(e) =>
+														setNewBeneficiaryForm((prev) => ({
+															...prev,
+															firstName: e.target.value,
+														}))
+													}
+													placeholder="John"
+												/>
+											</div>
+											<div className="space-y-2">
+												<Label htmlFor="beneficiaryLastName">Last Name</Label>
+												<Input
+													id="beneficiaryLastName"
+													value={newBeneficiaryForm.lastName}
+													onChange={(e) =>
+														setNewBeneficiaryForm((prev) => ({
+															...prev,
+															lastName: e.target.value,
+														}))
+													}
+													placeholder="Doe"
+												/>
+											</div>
+										</div>
+										<div className="space-y-2">
+											<Label htmlFor="beneficiaryRelationship">
+												Relationship
+											</Label>
+											<Input
+												id="beneficiaryRelationship"
+												value={newBeneficiaryForm.relationship}
+												onChange={(e) =>
+													setNewBeneficiaryForm((prev) => ({
+														...prev,
+														relationship: e.target.value,
+													}))
+												}
+												placeholder="e.g., Niece, Nephew, Friend"
+											/>
+										</div>
+									</>
+								)}
 							</div>
 						)}
 						<div className="flex justify-end space-x-2">
@@ -2067,9 +2765,12 @@ export default function WillWizard() {
 								<Button
 									onClick={handleSaveNewBeneficiary}
 									disabled={
-										!newBeneficiaryForm.firstName ||
-										!newBeneficiaryForm.lastName ||
-										!newBeneficiaryForm.relationship
+										(newBeneficiaryForm.type === "charity" &&
+											!newBeneficiaryForm.organizationName) ||
+										(newBeneficiaryForm.type === "other" &&
+											(!newBeneficiaryForm.firstName ||
+												!newBeneficiaryForm.lastName ||
+												!newBeneficiaryForm.relationship))
 									}
 									className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
 								>
