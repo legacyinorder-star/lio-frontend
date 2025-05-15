@@ -14,6 +14,14 @@ import {
 	DialogDescription,
 	DialogFooter,
 } from "@/components/ui/dialog";
+import {
+	Home,
+	Building2,
+	Car,
+	TrendingUp,
+	Briefcase,
+	Package,
+} from "lucide-react";
 
 // Define the different question types
 type QuestionType =
@@ -51,6 +59,35 @@ interface Guardian {
 	isPrimary: boolean;
 }
 
+// Add this type after the other type definitions
+type AssetType =
+	| "Property"
+	| "Investment Property"
+	| "Vehicle"
+	| "Shares & Stocks"
+	| "Business Interest"
+	| "Other Assets";
+
+// Update the Asset interface
+interface Asset {
+	id: string;
+	type: AssetType;
+	description: string;
+	distributionType: "equal" | "percentage";
+	beneficiaries: {
+		id: string;
+		percentage?: number;
+	}[];
+}
+
+// Add these interfaces after the other interfaces
+interface NewBeneficiary {
+	id: string;
+	firstName: string;
+	lastName: string;
+	relationship: string;
+}
+
 // Define the form data structure
 interface WillFormData {
 	firstName: string;
@@ -61,7 +98,121 @@ interface WillFormData {
 	children: Child[];
 	hasChildren: boolean;
 	guardians: Guardian[];
+	assets: Asset[];
+	otherBeneficiaries?: NewBeneficiary[];
 }
+
+// Add these types and constants after the other type definitions
+type AssetTypeOption = {
+	value: AssetType;
+	label: string;
+	icon: React.ComponentType<{ className?: string }>;
+	description: string;
+};
+
+const ASSET_TYPES: AssetTypeOption[] = [
+	{
+		value: "Property",
+		label: "Property",
+		icon: Home,
+		description: "Primary residence or vacation home",
+	},
+	{
+		value: "Investment Property",
+		label: "Investment Property",
+		icon: Building2,
+		description: "Rental or commercial property",
+	},
+	{
+		value: "Vehicle",
+		label: "Vehicle",
+		icon: Car,
+		description: "Cars, boats, or other vehicles",
+	},
+	{
+		value: "Shares & Stocks",
+		label: "Shares & Stocks",
+		icon: TrendingUp,
+		description: "Investment portfolio or stock holdings",
+	},
+	{
+		value: "Business Interest",
+		label: "Business Interest",
+		icon: Briefcase,
+		description: "Business ownership or partnership",
+	},
+	{
+		value: "Other Assets",
+		label: "Other Assets",
+		icon: Package,
+		description: "Other valuable assets",
+	},
+];
+
+// Update the AssetTypePill component styling
+const AssetTypePill = ({
+	type,
+	selected,
+	onClick,
+	className = "",
+}: {
+	type: AssetTypeOption;
+	selected?: boolean;
+	onClick?: () => void;
+	className?: string;
+}) => {
+	const Icon = type.icon;
+	return (
+		<button
+			type="button"
+			onClick={onClick}
+			className={`
+				flex items-center space-x-2 px-4 py-2 rounded-full border h-10
+				whitespace-nowrap overflow-hidden
+				${
+					selected
+						? "bg-primary text-primary-foreground border-primary"
+						: "bg-background hover:bg-muted border-input"
+				}
+				${onClick ? "cursor-pointer" : ""}
+				${className}
+			`}
+		>
+			<Icon className="h-4 w-4 flex-shrink-0" />
+			<span className="truncate">{type.label}</span>
+		</button>
+	);
+};
+
+// Update the AssetTypeSelector grid layout
+const AssetTypeSelector = ({
+	selectedType,
+	onSelect,
+	className = "",
+}: {
+	selectedType: AssetType;
+	onSelect: (type: AssetType) => void;
+	className?: string;
+}) => {
+	return (
+		<div className={`space-y-4 ${className}`}>
+			<Label>Asset Type</Label>
+			<div className="grid grid-cols-2 md:grid-cols-3 gap-2 min-w-0">
+				{ASSET_TYPES.map((type) => (
+					<AssetTypePill
+						key={type.value}
+						type={type}
+						selected={selectedType === type.value}
+						onClick={() => onSelect(type.value)}
+					/>
+				))}
+			</div>
+			<div className="text-sm text-muted-foreground">
+				{ASSET_TYPES.find((t) => t.value === selectedType)?.description}
+			</div>
+		</div>
+	);
+};
 
 export default function WillWizard() {
 	// Track the current question being shown
@@ -82,6 +233,8 @@ export default function WillWizard() {
 		children: [],
 		hasChildren: false,
 		guardians: [],
+		assets: [],
+		otherBeneficiaries: [],
 	});
 
 	// For the spouse dialog
@@ -113,6 +266,29 @@ export default function WillWizard() {
 
 	// Confirmation dialog state
 	const [confirmNoChildrenOpen, setConfirmNoChildrenOpen] = useState(false);
+
+	// Asset dialog state
+	const [assetDialogOpen, setAssetDialogOpen] = useState(false);
+	const [editingAsset, setEditingAsset] = useState<Asset | null>(null);
+	const [assetForm, setAssetForm] = useState<Asset>({
+		id: "",
+		type: "Property" as AssetType,
+		description: "",
+		distributionType: "equal",
+		beneficiaries: [],
+	});
+
+	// Add these state variables after the other state declarations
+	const [beneficiaryDialogOpen, setBeneficiaryDialogOpen] = useState(false);
+	const [newBeneficiaryForm, setNewBeneficiaryForm] = useState<NewBeneficiary>({
+		id: "",
+		firstName: "",
+		lastName: "",
+		relationship: "",
+	});
+	const [beneficiaryType, setBeneficiaryType] = useState<"existing" | "new">(
+		"existing"
+	);
 
 	// Ensure we're mounted before rendering any dialogs
 	useEffect(() => {
@@ -398,6 +574,188 @@ export default function WillWizard() {
 			default:
 				break;
 		}
+	};
+
+	// Handle asset form changes
+	const handleAssetFormChange =
+		(field: keyof Asset) =>
+		(
+			e: React.ChangeEvent<
+				HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+			>
+		) => {
+			setAssetForm((prev) => ({
+				...prev,
+				[field]: e.target.value,
+			}));
+		};
+
+	// Handle distribution type change
+	const handleDistributionTypeChange = (type: "equal" | "percentage") => {
+		setAssetForm((prev) => ({
+			...prev,
+			distributionType: type,
+			beneficiaries: prev.beneficiaries.map((b) => ({
+				...b,
+				percentage: type === "equal" ? undefined : 0,
+			})),
+		}));
+	};
+
+	// Handle beneficiary percentage change
+	const handleBeneficiaryPercentageChange = (
+		beneficiaryId: string,
+		percentage: number
+	) => {
+		setAssetForm((prev) => ({
+			...prev,
+			beneficiaries: prev.beneficiaries.map((b) =>
+				b.id === beneficiaryId ? { ...b, percentage } : b
+			),
+		}));
+	};
+
+	// Handle adding/editing asset
+	const handleSaveAsset = () => {
+		if (
+			!assetForm.description ||
+			assetForm.beneficiaries.length === 0 ||
+			(assetForm.distributionType === "percentage" &&
+				Math.abs(
+					assetForm.beneficiaries.reduce(
+						(sum, b) => sum + (b.percentage || 0),
+						0
+					) - 100
+				) > 0.01)
+		) {
+			return;
+		}
+
+		if (editingAsset) {
+			setFormData((prev) => ({
+				...prev,
+				assets: prev.assets.map((asset) =>
+					asset.id === editingAsset.id ? assetForm : asset
+				),
+			}));
+		} else {
+			setFormData((prev) => ({
+				...prev,
+				assets: [...prev.assets, { ...assetForm, id: crypto.randomUUID() }],
+			}));
+		}
+
+		// Reset form and close dialog
+		setAssetForm({
+			id: "",
+			type: "Property" as AssetType,
+			description: "",
+			distributionType: "equal",
+			beneficiaries: [],
+		});
+		setEditingAsset(null);
+		setAssetDialogOpen(false);
+	};
+
+	// Handle editing asset
+	const handleEditAsset = (asset: Asset) => {
+		setAssetForm(asset);
+		setEditingAsset(asset);
+		setAssetDialogOpen(true);
+	};
+
+	// Handle removing asset
+	const handleRemoveAsset = (assetId: string) => {
+		setFormData((prev) => ({
+			...prev,
+			assets: prev.assets.filter((asset) => asset.id !== assetId),
+		}));
+	};
+
+	// Add these handlers after the other handlers
+	const handleNewBeneficiaryFormChange =
+		(field: keyof NewBeneficiary) =>
+		(e: React.ChangeEvent<HTMLInputElement>) => {
+			setNewBeneficiaryForm((prev) => ({
+				...prev,
+				[field]: e.target.value,
+			}));
+		};
+
+	const handleAddBeneficiary = () => {
+		setBeneficiaryType("existing");
+		setBeneficiaryDialogOpen(true);
+	};
+
+	const handleSaveNewBeneficiary = () => {
+		if (
+			!newBeneficiaryForm.firstName ||
+			!newBeneficiaryForm.lastName ||
+			!newBeneficiaryForm.relationship
+		) {
+			return;
+		}
+
+		const newId = crypto.randomUUID();
+		setAssetForm((prev) => ({
+			...prev,
+			beneficiaries: [
+				...prev.beneficiaries,
+				{
+					id: newId,
+					percentage: prev.distributionType === "percentage" ? 0 : undefined,
+				},
+			],
+		}));
+
+		// Add the new beneficiary to a separate list in formData
+		setFormData((prev) => ({
+			...prev,
+			otherBeneficiaries: [
+				...(prev.otherBeneficiaries || []),
+				{ ...newBeneficiaryForm, id: newId },
+			],
+		}));
+
+		// Reset form and close dialog
+		setNewBeneficiaryForm({
+			id: "",
+			firstName: "",
+			lastName: "",
+			relationship: "",
+		});
+		setBeneficiaryDialogOpen(false);
+	};
+
+	// Update the getBeneficiaryName function to include other beneficiaries
+	const getBeneficiaryName = (
+		beneficiaryId: string,
+		spouse: SpouseData | undefined,
+		children: Child[],
+		otherBeneficiaries?: NewBeneficiary[]
+	) => {
+		if (beneficiaryId === "spouse" && spouse) {
+			return spouse.fullName;
+		}
+		const child = children.find((c) => c.id === beneficiaryId);
+		if (child) {
+			return `${child.firstName} ${child.lastName}`;
+		}
+		const otherBeneficiary = otherBeneficiaries?.find(
+			(b) => b.id === beneficiaryId
+		);
+		if (otherBeneficiary) {
+			return `${otherBeneficiary.firstName} ${otherBeneficiary.lastName} (${otherBeneficiary.relationship})`;
+		}
+		return "";
+	};
+
+	// Handle removing beneficiary
+	const handleRemoveBeneficiary = (beneficiaryId: string) => {
+		setAssetForm((prev) => ({
+			...prev,
+			beneficiaries: prev.beneficiaries.filter((b) => b.id !== beneficiaryId),
+		}));
 	};
 
 	// Render different content based on current question
@@ -830,8 +1188,8 @@ export default function WillWizard() {
 						</div>
 						<div className="text-muted-foreground">
 							Since you have children who require guardians, please specify who
-							you would like to appoint as guardians in your will. We recommend
-							appointing at least two guardians (a primary and a backup) in case
+							you would like to appoint as guardians in your will. You have to
+							appoint at least two guardians (a primary and a backup) in case
 							the primary guardian is unable to serve.
 						</div>
 						<div className="space-y-6 mt-6">
@@ -889,7 +1247,7 @@ export default function WillWizard() {
 											</div>
 											<div className="space-y-2">
 												<Label htmlFor="guardianRelationship">
-													Relationship to Children
+													Relationship to You
 												</Label>
 												<Input
 													id="guardianRelationship"
@@ -1011,12 +1369,306 @@ export default function WillWizard() {
 							Share your assets among your loved ones
 						</div>
 						<div className="text-muted-foreground">
-							This includes property, investments, or valuable possessions.
+							Add your assets and specify how you'd like them to be distributed
+							among your beneficiaries.
 						</div>
-						{/* This would be expanded in the next iteration */}
-						<div className="mt-4">
-							<p>Do not include cash gifts in this section.</p>
-							<div className="flex justify-between mt-4">
+						<div className="text-muted-foreground">
+							Do not include cash gifts in this section.
+						</div>
+						<div className="space-y-6 mt-6">
+							<div className="flex justify-between items-center">
+								<h3 className="text-lg font-medium">Your Assets</h3>
+								<Dialog
+									open={assetDialogOpen}
+									onOpenChange={setAssetDialogOpen}
+								>
+									<DialogTrigger asChild>
+										<Button
+											variant="outline"
+											onClick={() => {
+												// Initialize beneficiaries based on current family members
+												const beneficiaries = [];
+												if (formData.hasSpouse && formData.spouse) {
+													beneficiaries.push({
+														id: "spouse",
+														percentage: undefined,
+													});
+												}
+												formData.children.forEach((child) => {
+													beneficiaries.push({
+														id: child.id,
+														percentage: undefined,
+													});
+												});
+
+												setAssetForm({
+													id: "",
+													type: "Property" as AssetType,
+													description: "",
+													distributionType: "equal",
+													beneficiaries,
+												});
+												setEditingAsset(null);
+											}}
+											className="cursor-pointer"
+										>
+											<Plus className="mr-2 h-4 w-4" />
+											Add Asset
+										</Button>
+									</DialogTrigger>
+									<DialogContent className="bg-white max-w-2xl">
+										<DialogHeader>
+											<DialogTitle>
+												{editingAsset ? "Edit Asset" : "Add Asset"}
+											</DialogTitle>
+										</DialogHeader>
+										<div className="space-y-4 py-4">
+											<AssetTypeSelector
+												selectedType={assetForm.type}
+												onSelect={(type: AssetType) => {
+													setAssetForm((prev) => ({
+														...prev,
+														type,
+													}));
+												}}
+												className="mb-4"
+											/>
+											<div className="space-y-2">
+												<Label htmlFor="assetDescription">Description</Label>
+												<textarea
+													id="assetDescription"
+													value={assetForm.description}
+													onChange={handleAssetFormChange("description")}
+													placeholder="Describe the asset, its location and any details that may be relevant to its distribution"
+													className="w-full min-h-[100px] p-2 border rounded-md"
+												/>
+											</div>
+											<div className="space-y-2">
+												<Label>Distribution Method</Label>
+												<div className="flex space-x-4">
+													<Button
+														variant={
+															assetForm.distributionType === "equal"
+																? "outline"
+																: "default"
+														}
+														onClick={() =>
+															handleDistributionTypeChange("equal")
+														}
+														className="cursor-pointer"
+													>
+														Equal Distribution
+													</Button>
+													<Button
+														variant={
+															assetForm.distributionType === "percentage"
+																? "outline"
+																: "default"
+														}
+														onClick={() =>
+															handleDistributionTypeChange("percentage")
+														}
+														className="cursor-pointer"
+													>
+														Percentage Distribution
+													</Button>
+												</div>
+											</div>
+											<div className="space-y-2">
+												<div className="flex justify-between items-center">
+													<Label>Beneficiaries</Label>
+													<Button
+														variant="outline"
+														size="sm"
+														onClick={handleAddBeneficiary}
+														className="cursor-pointer"
+													>
+														<Plus className="h-4 w-4 mr-1" />
+														Add Beneficiary
+													</Button>
+												</div>
+												<div className="space-y-2">
+													{assetForm.beneficiaries.map((beneficiary) => {
+														const name = getBeneficiaryName(
+															beneficiary.id,
+															formData.spouse,
+															formData.children,
+															formData.otherBeneficiaries
+														);
+														const isSpouse = beneficiary.id === "spouse";
+
+														if (!name) return null;
+
+														return (
+															<div
+																key={beneficiary.id}
+																className="flex items-center justify-between p-2 border rounded-md"
+															>
+																<div className="flex items-center space-x-2">
+																	<span className="font-medium">{name}</span>
+																	{isSpouse && (
+																		<span className="text-sm text-muted-foreground">
+																			(Spouse)
+																		</span>
+																	)}
+																</div>
+																<div className="flex items-center space-x-2">
+																	{assetForm.distributionType ===
+																		"percentage" && (
+																		<div className="flex items-center space-x-2">
+																			<Input
+																				type="number"
+																				value={beneficiary.percentage || 0}
+																				onChange={(e) =>
+																					handleBeneficiaryPercentageChange(
+																						beneficiary.id,
+																						Number(e.target.value)
+																					)
+																				}
+																				className="w-24"
+																				min="0"
+																				max="100"
+																			/>
+																			<span>%</span>
+																		</div>
+																	)}
+																	<Button
+																		variant="ghost"
+																		size="icon"
+																		onClick={() =>
+																			handleRemoveBeneficiary(beneficiary.id)
+																		}
+																		className="cursor-pointer"
+																	>
+																		<Trash2 className="h-4 w-4" />
+																	</Button>
+																</div>
+															</div>
+														);
+													})}
+												</div>
+												{assetForm.distributionType === "percentage" && (
+													<div className="text-sm text-muted-foreground mt-2">
+														Total:{" "}
+														{assetForm.beneficiaries.reduce(
+															(sum, b) => sum + (b.percentage || 0),
+															0
+														)}
+														%
+													</div>
+												)}
+											</div>
+											<div className="flex justify-end space-x-2">
+												<Button
+													variant="outline"
+													onClick={() => setAssetDialogOpen(false)}
+													className="cursor-pointer"
+												>
+													Cancel
+												</Button>
+												<Button
+													onClick={handleSaveAsset}
+													disabled={
+														!assetForm.description ||
+														assetForm.beneficiaries.length === 0 ||
+														(assetForm.distributionType === "percentage" &&
+															Math.abs(
+																assetForm.beneficiaries.reduce(
+																	(sum, b) => sum + (b.percentage || 0),
+																	0
+																) - 100
+															) > 0.01)
+													}
+													className="cursor-pointer"
+												>
+													Save
+												</Button>
+											</div>
+										</div>
+									</DialogContent>
+								</Dialog>
+							</div>
+
+							{formData.assets.length === 0 ? (
+								<p className="text-muted-foreground text-center py-4">
+									No assets added yet. Click "Add Asset" to add your assets.
+								</p>
+							) : (
+								<div className="space-y-4">
+									{formData.assets.map((asset) => (
+										<Card key={asset.id}>
+											<CardContent className="p-4">
+												<div className="flex justify-between items-start">
+													<div className="space-y-1">
+														<div className="flex items-center space-x-2">
+															{(() => {
+																const assetType = ASSET_TYPES.find(
+																	(t) => t.value === asset.type
+																);
+																if (!assetType) return null;
+																const Icon = assetType.icon;
+																return (
+																	<>
+																		<Icon className="h-4 w-4 text-muted-foreground" />
+																		<p className="font-medium">{asset.type}</p>
+																	</>
+																);
+															})()}
+														</div>
+														<p className="text-sm">{asset.description}</p>
+														<div className="mt-2">
+															<p className="text-sm font-medium">
+																Distribution:
+															</p>
+															<ul className="text-sm text-muted-foreground list-disc list-inside">
+																{asset.beneficiaries.map((beneficiary) => {
+																	const name = getBeneficiaryName(
+																		beneficiary.id,
+																		formData.spouse,
+																		formData.children,
+																		formData.otherBeneficiaries
+																	);
+
+																	if (!name) return null;
+
+																	return (
+																		<li key={beneficiary.id}>
+																			{name}
+																			{asset.distributionType ===
+																				"percentage" &&
+																				` (${beneficiary.percentage}%)`}
+																		</li>
+																	);
+																})}
+															</ul>
+														</div>
+													</div>
+													<div className="flex space-x-2">
+														<Button
+															variant="ghost"
+															size="icon"
+															onClick={() => handleEditAsset(asset)}
+															className="cursor-pointer"
+														>
+															<Edit2 className="h-4 w-4" />
+														</Button>
+														<Button
+															variant="ghost"
+															size="icon"
+															onClick={() => handleRemoveAsset(asset.id)}
+															className="cursor-pointer"
+														>
+															<Trash2 className="h-4 w-4" />
+														</Button>
+													</div>
+												</div>
+											</CardContent>
+										</Card>
+									))}
+								</div>
+							)}
+
+							<div className="flex justify-between pt-4">
 								<Button
 									variant="outline"
 									onClick={handleBack}
@@ -1095,6 +1747,48 @@ export default function WillWizard() {
 											.join(", ")}
 									</li>
 								)}
+								{formData.assets.length > 0 && (
+									<li>
+										<strong>Assets:</strong>
+										<ul className="mt-2 space-y-2 list-disc list-inside">
+											{formData.assets.map((asset) => {
+												const assetType = ASSET_TYPES.find(
+													(t) => t.value === asset.type
+												);
+												return (
+													<li key={asset.id} className="text-sm">
+														<div className="flex items-center space-x-2">
+															{assetType && (
+																<assetType.icon className="h-4 w-4 text-muted-foreground" />
+															)}
+															<span>{asset.type}</span>
+														</div>
+														<ul className="ml-4 list-disc list-inside text-muted-foreground">
+															{asset.beneficiaries.map((beneficiary) => {
+																const name = getBeneficiaryName(
+																	beneficiary.id,
+																	formData.spouse,
+																	formData.children,
+																	formData.otherBeneficiaries
+																);
+
+																if (!name) return null;
+
+																return (
+																	<li key={beneficiary.id}>
+																		{name}
+																		{asset.distributionType === "percentage" &&
+																			` (${beneficiary.percentage}%)`}
+																	</li>
+																);
+															})}
+														</ul>
+													</li>
+												);
+											})}
+										</ul>
+									</li>
+								)}
 							</ul>
 						</div>
 					</div>
@@ -1157,6 +1851,204 @@ export default function WillWizard() {
 					onSave={handleSpouseData}
 				/>
 			)}
+
+			{/* Add the beneficiary selection dialog after the asset dialog */}
+			<Dialog
+				open={beneficiaryDialogOpen}
+				onOpenChange={setBeneficiaryDialogOpen}
+			>
+				<DialogContent className="bg-white">
+					<DialogHeader>
+						<DialogTitle>Add Beneficiary</DialogTitle>
+					</DialogHeader>
+					<div className="space-y-4 py-4">
+						<div className="flex space-x-4 mb-4">
+							<Button
+								variant={beneficiaryType === "existing" ? "outline" : "default"}
+								onClick={() => setBeneficiaryType("existing")}
+								className="cursor-pointer"
+							>
+								Select Existing Beneficiary
+							</Button>
+							<Button
+								variant={beneficiaryType === "new" ? "outline" : "default"}
+								onClick={() => setBeneficiaryType("new")}
+								className="cursor-pointer"
+							>
+								Add New Beneficiary
+							</Button>
+						</div>
+
+						{beneficiaryType === "existing" ? (
+							<div className="space-y-2">
+								<Label>Select Beneficiary</Label>
+								<div className="space-y-2 max-h-[300px] overflow-y-auto">
+									{formData.hasSpouse &&
+										formData.spouse &&
+										!assetForm.beneficiaries.some((b) => b.id === "spouse") && (
+											<div
+												className="flex items-center justify-between p-2 border rounded-md hover:bg-muted cursor-pointer"
+												onClick={() => {
+													setAssetForm((prev) => ({
+														...prev,
+														beneficiaries: [
+															...prev.beneficiaries,
+															{
+																id: "spouse",
+																percentage:
+																	prev.distributionType === "percentage"
+																		? 0
+																		: undefined,
+															},
+														],
+													}));
+													setBeneficiaryDialogOpen(false);
+												}}
+											>
+												<div>
+													<span className="font-medium">
+														{formData.spouse.fullName}
+													</span>
+													<span className="text-sm text-muted-foreground ml-2">
+														(Spouse)
+													</span>
+												</div>
+											</div>
+										)}
+									{formData.children
+										.filter(
+											(child) =>
+												!assetForm.beneficiaries.some((b) => b.id === child.id)
+										)
+										.map((child) => (
+											<div
+												key={child.id}
+												className="flex items-center justify-between p-2 border rounded-md hover:bg-muted cursor-pointer"
+												onClick={() => {
+													setAssetForm((prev) => ({
+														...prev,
+														beneficiaries: [
+															...prev.beneficiaries,
+															{
+																id: child.id,
+																percentage:
+																	prev.distributionType === "percentage"
+																		? 0
+																		: undefined,
+															},
+														],
+													}));
+													setBeneficiaryDialogOpen(false);
+												}}
+											>
+												<div>
+													<span className="font-medium">
+														{child.firstName} {child.lastName}
+													</span>
+													<span className="text-sm text-muted-foreground ml-2">
+														(Child)
+													</span>
+												</div>
+											</div>
+										))}
+									{formData.otherBeneficiaries
+										?.filter(
+											(beneficiary) =>
+												!assetForm.beneficiaries.some(
+													(b) => b.id === beneficiary.id
+												)
+										)
+										.map((beneficiary) => (
+											<div
+												key={beneficiary.id}
+												className="flex items-center justify-between p-2 border rounded-md hover:bg-muted cursor-pointer"
+												onClick={() => {
+													setAssetForm((prev) => ({
+														...prev,
+														beneficiaries: [
+															...prev.beneficiaries,
+															{
+																id: beneficiary.id,
+																percentage:
+																	prev.distributionType === "percentage"
+																		? 0
+																		: undefined,
+															},
+														],
+													}));
+													setBeneficiaryDialogOpen(false);
+												}}
+											>
+												<div>
+													<span className="font-medium">
+														{beneficiary.firstName} {beneficiary.lastName}
+													</span>
+													<span className="text-sm text-muted-foreground ml-2">
+														({beneficiary.relationship})
+													</span>
+												</div>
+											</div>
+										))}
+								</div>
+							</div>
+						) : (
+							<div className="space-y-4">
+								<div className="grid grid-cols-2 gap-4">
+									<div className="space-y-2">
+										<Label htmlFor="beneficiaryFirstName">First Name</Label>
+										<Input
+											id="beneficiaryFirstName"
+											value={newBeneficiaryForm.firstName}
+											onChange={handleNewBeneficiaryFormChange("firstName")}
+											placeholder="John"
+										/>
+									</div>
+									<div className="space-y-2">
+										<Label htmlFor="beneficiaryLastName">Last Name</Label>
+										<Input
+											id="beneficiaryLastName"
+											value={newBeneficiaryForm.lastName}
+											onChange={handleNewBeneficiaryFormChange("lastName")}
+											placeholder="Doe"
+										/>
+									</div>
+								</div>
+								<div className="space-y-2">
+									<Label htmlFor="beneficiaryRelationship">Relationship</Label>
+									<Input
+										id="beneficiaryRelationship"
+										value={newBeneficiaryForm.relationship}
+										onChange={handleNewBeneficiaryFormChange("relationship")}
+										placeholder="e.g., Niece, Nephew, Friend"
+									/>
+								</div>
+							</div>
+						)}
+						<div className="flex justify-end space-x-2">
+							<Button
+								variant="outline"
+								onClick={() => setBeneficiaryDialogOpen(false)}
+								className="cursor-pointer"
+							>
+								Cancel
+							</Button>
+							{beneficiaryType === "new" && (
+								<Button
+									onClick={handleSaveNewBeneficiary}
+									disabled={
+										!newBeneficiaryForm.firstName ||
+										!newBeneficiaryForm.lastName ||
+										!newBeneficiaryForm.relationship
+									}
+									className="cursor-pointer"
+								>
+									Add Beneficiary
+								</Button>
+							)}
+						</div>
+					</div>
+				</DialogContent>
+			</Dialog>
 		</div>
 	);
 }
