@@ -1,123 +1,384 @@
-import type { PersonalInfoData } from "./PersonalInfoStep";
-import type { Asset } from "./AssetsStep";
-import type { Beneficiary } from "./BeneficiariesStep";
-import type { ExecutorData } from "./ExecutorStep";
+import { forwardRef, useImperativeHandle, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { pdf } from "@react-pdf/renderer";
+import WillPDF from "../WillPDF";
 
-interface ReviewStepProps {
+export interface ReviewStepProps {
 	data: {
-		personal: Partial<PersonalInfoData>;
-		assets: Asset[];
-		beneficiaries: Beneficiary[];
-		executor: Partial<ExecutorData>;
+		personal: {
+			fullName: string;
+			dateOfBirth: string;
+			address: string;
+			phone: string;
+			maritalStatus: string;
+		};
+		assets: Array<{
+			type: string;
+			description: string;
+			value: string;
+		}>;
+		beneficiaries: Array<{
+			fullName: string;
+			relationship: string;
+			email?: string;
+			phone?: string;
+			allocation: number;
+		}>;
+		executors: Array<{
+			fullName?: string;
+			companyName?: string;
+			relationship?: string;
+			email?: string;
+			phone?: string;
+			address: string;
+			isPrimary: boolean;
+			type: "individual" | "corporate";
+			contactPerson?: string;
+		}>;
+		witnesses: Array<{
+			fullName: string;
+			address: string;
+		}>;
 	};
 }
 
-export default function ReviewStep({ data }: ReviewStepProps) {
-	const totalAllocation = data.beneficiaries.reduce(
-		(sum, b) => sum + Number(b.allocation),
-		0
-	);
-
-	return (
-		<div className="space-y-8">
-			<div>
-				<h3 className="text-lg font-medium">Personal Information</h3>
-				<div className="mt-2 space-y-2">
-					<p>
-						<span className="font-medium">Full Name:</span>{" "}
-						{data.personal.fullName}
-					</p>
-					<p>
-						<span className="font-medium">Date of Birth:</span>{" "}
-						{data.personal.dateOfBirth}
-					</p>
-					<p>
-						<span className="font-medium">Address:</span>{" "}
-						{data.personal.address}
-					</p>
-					<p>
-						<span className="font-medium">Phone:</span> {data.personal.phone}
-					</p>
-					<p>
-						<span className="font-medium">Marital Status:</span>{" "}
-						{data.personal.maritalStatus}
-					</p>
-				</div>
-			</div>
-
-			<div>
-				<h3 className="text-lg font-medium">Assets</h3>
-				<div className="mt-2 space-y-2">
-					{data.assets.map((asset, index) => (
-						<div key={index} className="p-3 border rounded-md">
-							<p>
-								<span className="font-medium">Type:</span> {asset.type}
-							</p>
-							<p>
-								<span className="font-medium">Description:</span>{" "}
-								{asset.description}
-							</p>
-							<p>
-								<span className="font-medium">Value:</span> {asset.value}
-							</p>
-						</div>
-					))}
-				</div>
-			</div>
-
-			<div>
-				<h3 className="text-lg font-medium">Beneficiaries</h3>
-				<p className="text-sm text-muted-foreground mb-2">
-					Total Allocation: {totalAllocation}%
-				</p>
-				<div className="mt-2 space-y-2">
-					{data.beneficiaries.map((beneficiary, index) => (
-						<div key={index} className="p-3 border rounded-md">
-							<p>
-								<span className="font-medium">Name:</span>{" "}
-								{beneficiary.fullName}
-							</p>
-							<p>
-								<span className="font-medium">Relationship:</span>{" "}
-								{beneficiary.relationship}
-							</p>
-							<p>
-								<span className="font-medium">Email:</span> {beneficiary.email}
-							</p>
-							<p>
-								<span className="font-medium">Phone:</span> {beneficiary.phone}
-							</p>
-							<p>
-								<span className="font-medium">Allocation:</span>{" "}
-								{beneficiary.allocation}%
-							</p>
-						</div>
-					))}
-				</div>
-			</div>
-
-			<div>
-				<h3 className="text-lg font-medium">Executor</h3>
-				<div className="mt-2 space-y-2">
-					<p>
-						<span className="font-medium">Name:</span> {data.executor.fullName}
-					</p>
-					<p>
-						<span className="font-medium">Relationship:</span>{" "}
-						{data.executor.relationship}
-					</p>
-					<p>
-						<span className="font-medium">Email:</span> {data.executor.email}
-					</p>
-					<p>
-						<span className="font-medium">Phone:</span> {data.executor.phone}
-					</p>
-					<p>
-						<span className="font-medium">Address:</span>{" "}
-						{data.executor.address}
-					</p>
-				</div>
-			</div>
-		</div>
-	);
+export interface ReviewStepHandle {
+	handleSaveAndDownload: () => Promise<void>;
+	isSaving: boolean;
 }
+
+const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
+	({ data }, ref) => {
+		const [isSaving, setIsSaving] = useState(false);
+		const navigate = useNavigate();
+
+		const generatePDF = async (): Promise<Blob> => {
+			// Create the PDF document
+			const pdfDoc = pdf(
+				<WillPDF
+					data={data}
+					additionalText="This is a sample additional text that can be customized based on the user's input."
+				/>
+			);
+
+			try {
+				// First try to get the blob directly
+				return await pdfDoc.toBlob();
+			} catch (error) {
+				console.error("Direct blob generation failed, trying buffer:", error);
+				try {
+					// If direct blob generation fails, try using buffer
+					const buffer = await pdfDoc.toBuffer();
+					return new Blob([buffer], { type: "application/pdf" });
+				} catch (bufferError) {
+					console.error("Buffer generation failed:", bufferError);
+					throw new Error("Failed to generate PDF document");
+				}
+			}
+		};
+
+		const saveWillToLocalStorage = () => {
+			try {
+				// Get existing wills or initialize empty array
+				const existingWills = JSON.parse(localStorage.getItem("wills") || "[]");
+
+				// Create will object with metadata
+				const will = {
+					id: crypto.randomUUID(),
+					createdAt: new Date().toISOString(),
+					updatedAt: new Date().toISOString(),
+					data: data,
+					status: "draft",
+				};
+
+				// Add new will to array
+				existingWills.push(will);
+
+				// Save back to localStorage
+				localStorage.setItem("wills", JSON.stringify(existingWills));
+
+				return will.id;
+			} catch (error) {
+				console.error("Error saving will to localStorage:", error);
+				throw new Error("Failed to save will data");
+			}
+		};
+
+		const handleSaveAndDownload = async () => {
+			if (isSaving) return;
+
+			try {
+				setIsSaving(true);
+
+				// Save will data to localStorage first
+				const willId = saveWillToLocalStorage();
+
+				// Generate PDF blob
+				const blob = await generatePDF();
+
+				// Verify blob is valid
+				if (!(blob instanceof Blob) || blob.size === 0) {
+					throw new Error("Generated PDF is invalid");
+				}
+
+				// Create download link
+				const url = URL.createObjectURL(blob);
+				const link = document.createElement("a");
+				link.href = url;
+				link.download = `will-${data.personal.fullName
+					.toLowerCase()
+					.replace(/\s+/g, "-")}-${new Date().toISOString().split("T")[0]}.pdf`;
+
+				// Trigger download
+				document.body.appendChild(link);
+				link.click();
+				document.body.removeChild(link);
+
+				// Clean up
+				setTimeout(() => {
+					URL.revokeObjectURL(url);
+				}, 100);
+
+				toast.success("Will saved and downloaded successfully");
+				navigate("/app/dashboard");
+			} catch (error) {
+				console.error("Error saving will:", error);
+				toast.error(
+					error instanceof Error && error.message === "Failed to save will data"
+						? "Failed to save will data. Please try again."
+						: "Failed to generate PDF. Please try again or contact support if the issue persists."
+				);
+			} finally {
+				setIsSaving(false);
+			}
+		};
+
+		useImperativeHandle(ref, () => ({
+			handleSaveAndDownload,
+			isSaving,
+		}));
+
+		return (
+			<div data-review-step className="space-y-6">
+				{/* Personal Information */}
+				<div className="space-y-4">
+					<h3 className="text-lg font-semibold">Personal Information</h3>
+					<div className="grid grid-cols-2 gap-4">
+						<div>
+							<label className="block text-sm font-medium text-gray-700">
+								Full Name
+							</label>
+							<p className="mt-1">{data.personal.fullName}</p>
+						</div>
+						<div>
+							<label className="block text-sm font-medium text-gray-700">
+								Date of Birth
+							</label>
+							<p className="mt-1">{data.personal.dateOfBirth}</p>
+						</div>
+						<div>
+							<label className="block text-sm font-medium text-gray-700">
+								Address
+							</label>
+							<p className="mt-1">{data.personal.address}</p>
+						</div>
+						<div>
+							<label className="block text-sm font-medium text-gray-700">
+								Phone
+							</label>
+							<p className="mt-1">{data.personal.phone}</p>
+						</div>
+						<div>
+							<label className="block text-sm font-medium text-gray-700">
+								Marital Status
+							</label>
+							<p className="mt-1">{data.personal.maritalStatus}</p>
+						</div>
+					</div>
+				</div>
+
+				{/* Assets */}
+				<div className="space-y-4">
+					<h3 className="text-lg font-semibold">Assets</h3>
+					<div className="grid gap-4">
+						{data.assets.map((asset, index) => (
+							<div
+								key={index}
+								className="rounded-lg border border-gray-200 p-4"
+							>
+								<div className="grid grid-cols-2 gap-4">
+									<div>
+										<label className="block text-sm font-medium text-gray-700">
+											Type
+										</label>
+										<p className="mt-1">{asset.type}</p>
+									</div>
+									<div>
+										<label className="block text-sm font-medium text-gray-700">
+											Value
+										</label>
+										<p className="mt-1">{asset.value}</p>
+									</div>
+									<div className="col-span-2">
+										<label className="block text-sm font-medium text-gray-700">
+											Description
+										</label>
+										<p className="mt-1">{asset.description}</p>
+									</div>
+								</div>
+							</div>
+						))}
+					</div>
+				</div>
+
+				{/* Beneficiaries */}
+				<div className="space-y-4">
+					<h3 className="text-lg font-semibold">Beneficiaries</h3>
+					<div className="grid gap-4">
+						{data.beneficiaries.map((beneficiary, index) => (
+							<div
+								key={index}
+								className="rounded-lg border border-gray-200 p-4"
+							>
+								<div className="grid grid-cols-2 gap-4">
+									<div>
+										<label className="block text-sm font-medium text-gray-700">
+											Name
+										</label>
+										<p className="mt-1">{beneficiary.fullName}</p>
+									</div>
+									<div>
+										<label className="block text-sm font-medium text-gray-700">
+											Relationship
+										</label>
+										<p className="mt-1">{beneficiary.relationship}</p>
+									</div>
+									{beneficiary.email && (
+										<div>
+											<label className="block text-sm font-medium text-gray-700">
+												Email
+											</label>
+											<p className="mt-1">{beneficiary.email}</p>
+										</div>
+									)}
+									{beneficiary.phone && (
+										<div>
+											<label className="block text-sm font-medium text-gray-700">
+												Phone
+											</label>
+											<p className="mt-1">{beneficiary.phone}</p>
+										</div>
+									)}
+									<div>
+										<label className="block text-sm font-medium text-gray-700">
+											Allocation
+										</label>
+										<p className="mt-1">{beneficiary.allocation}%</p>
+									</div>
+								</div>
+							</div>
+						))}
+					</div>
+				</div>
+
+				{/* Executors */}
+				<div className="space-y-4">
+					<h3 className="text-lg font-semibold">Executors</h3>
+					<div className="grid gap-4">
+						{data.executors.map((executor, index) => (
+							<div
+								key={index}
+								className="rounded-lg border border-gray-200 p-4"
+							>
+								<div className="grid grid-cols-2 gap-4">
+									<div>
+										<label className="block text-sm font-medium text-gray-700">
+											Name
+										</label>
+										<p className="mt-1">
+											{executor.type === "individual"
+												? executor.fullName
+												: executor.companyName}
+											{executor.isPrimary && " (Primary Executor)"}
+										</p>
+									</div>
+									{executor.type === "individual" && executor.relationship && (
+										<div>
+											<label className="block text-sm font-medium text-gray-700">
+												Relationship
+											</label>
+											<p className="mt-1">{executor.relationship}</p>
+										</div>
+									)}
+									{executor.type === "corporate" && executor.contactPerson && (
+										<div>
+											<label className="block text-sm font-medium text-gray-700">
+												Contact Person
+											</label>
+											<p className="mt-1">{executor.contactPerson}</p>
+										</div>
+									)}
+									{executor.email && (
+										<div>
+											<label className="block text-sm font-medium text-gray-700">
+												Email
+											</label>
+											<p className="mt-1">{executor.email}</p>
+										</div>
+									)}
+									{executor.phone && (
+										<div>
+											<label className="block text-sm font-medium text-gray-700">
+												Phone
+											</label>
+											<p className="mt-1">{executor.phone}</p>
+										</div>
+									)}
+									<div className="col-span-2">
+										<label className="block text-sm font-medium text-gray-700">
+											Address
+										</label>
+										<p className="mt-1">{executor.address}</p>
+									</div>
+								</div>
+							</div>
+						))}
+					</div>
+				</div>
+
+				{/* Witnesses */}
+				<div className="space-y-4">
+					<h3 className="text-lg font-semibold">Witnesses</h3>
+					<div className="grid gap-4">
+						{data.witnesses.map((witness, index) => (
+							<div
+								key={index}
+								className="rounded-lg border border-gray-200 p-4"
+							>
+								<div className="grid grid-cols-2 gap-4">
+									<div>
+										<label className="block text-sm font-medium text-gray-700">
+											Name
+										</label>
+										<p className="mt-1">{witness.fullName}</p>
+									</div>
+									<div>
+										<label className="block text-sm font-medium text-gray-700">
+											Address
+										</label>
+										<p className="mt-1">{witness.address}</p>
+									</div>
+								</div>
+							</div>
+						))}
+					</div>
+				</div>
+			</div>
+		);
+	}
+);
+
+ReviewStep.displayName = "ReviewStep";
+
+export default ReviewStep;

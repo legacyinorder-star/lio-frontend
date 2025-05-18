@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import SpouseDialog, { SpouseData } from "./SpouseDialog";
-import { ArrowRight, Plus, Trash2, Edit2, ArrowLeft } from "lucide-react";
+import { ArrowRight, Plus, Trash2, Edit2, ArrowLeft, Save } from "lucide-react";
 import {
 	Dialog,
 	DialogContent,
@@ -23,6 +23,7 @@ import {
 	Briefcase,
 	Package,
 } from "lucide-react";
+import ReviewStep, { ReviewStepHandle } from "./steps/ReviewStep";
 
 // Define the different question types
 type QuestionType =
@@ -34,23 +35,33 @@ type QuestionType =
 	| "hasAssets"
 	| "gifts"
 	| "executors"
-	| "finished";
+	| "witnesses"
+	| "review";
 
 // Define the address type
 interface Address {
 	street: string;
 	city: string;
-	province: string;
+	state: string;
 	zipCode: string;
 	country: string;
 }
 
 // Define child type
 interface Child {
-	id: string;
+	id: `${string}-${string}-${string}-${string}-${string}`;
 	firstName: string;
 	lastName: string;
+	dateOfBirth: string;
 	requiresGuardian: boolean;
+	guardian?: {
+		firstName: string;
+		lastName: string;
+		relationship: string;
+		phone: string;
+		email: string;
+		address: Address;
+	};
 }
 
 // Define guardian type
@@ -81,6 +92,7 @@ interface Asset {
 		id: string;
 		percentage?: number;
 	}[];
+	value: string;
 }
 
 // Add these interfaces after the other interfaces
@@ -90,8 +102,11 @@ interface NewBeneficiary {
 	lastName: string;
 	relationship: string;
 	type: BeneficiaryType;
-	organizationName?: string; // For charitable organizations
-	registrationNumber?: string; // For charitable organizations
+	organizationName?: string;
+	registrationNumber?: string;
+	email: string;
+	phone: string;
+	allocation: string;
 }
 
 // Add new type for gifts after the other type definitions
@@ -109,16 +124,23 @@ interface Gift {
 interface Executor {
 	id: string;
 	type: "individual" | "corporate";
-	// Individual executor fields
 	firstName?: string;
 	lastName?: string;
 	relationship?: string;
-	// Corporate executor fields
 	companyName?: string;
 	registrationNumber?: string;
 	contactPerson?: string;
-	// Common fields
 	isPrimary: boolean;
+	address: Address;
+	email: string;
+	phone: string;
+}
+
+// Add Witness interface
+interface Witness {
+	id: string;
+	firstName: string;
+	lastName: string;
 	address: Address;
 }
 
@@ -126,16 +148,20 @@ interface Executor {
 interface WillFormData {
 	firstName: string;
 	lastName: string;
+	dateOfBirth: string;
+	phone: string;
 	address: Address;
 	hasSpouse: boolean;
 	spouse?: SpouseData;
-	children: Child[];
 	hasChildren: boolean;
+	children: Child[];
 	guardians: Guardian[];
+	hasAssets: boolean;
 	assets: Asset[];
-	otherBeneficiaries?: NewBeneficiary[];
+	otherBeneficiaries: NewBeneficiary[];
 	gifts: Gift[];
-	executors: Executor[]; // Add this line
+	executors: Executor[];
+	witnesses: Witness[];
 }
 
 // Add these types and constants after the other type definitions
@@ -251,7 +277,13 @@ const AssetTypeSelector = ({
 };
 
 // Add this type definition after the other type definitions
-type BeneficiaryType = "spouse" | "child" | "guardian" | "other" | "charity";
+type BeneficiaryType =
+	| "spouse"
+	| "child"
+	| "guardian"
+	| "other"
+	| "charity"
+	| "individual";
 
 export default function WillWizard() {
 	// Track the current question being shown
@@ -261,21 +293,26 @@ export default function WillWizard() {
 	const [formData, setFormData] = useState<WillFormData>({
 		firstName: "",
 		lastName: "",
+		dateOfBirth: "",
+		phone: "",
 		address: {
 			street: "",
 			city: "",
-			province: "",
+			state: "",
 			zipCode: "",
 			country: "",
 		},
 		hasSpouse: false,
-		children: [],
+		spouse: undefined,
 		hasChildren: false,
+		children: [],
 		guardians: [],
+		hasAssets: false,
 		assets: [],
 		otherBeneficiaries: [],
 		gifts: [],
-		executors: [], // Add this line
+		executors: [],
+		witnesses: [],
 	});
 
 	// For the spouse dialog
@@ -284,10 +321,10 @@ export default function WillWizard() {
 	// Child dialog state
 	const [childDialogOpen, setChildDialogOpen] = useState(false);
 	const [editingChild, setEditingChild] = useState<Child | null>(null);
-	const [childForm, setChildForm] = useState<Child>({
-		id: "",
+	const [childForm, setChildForm] = useState<Omit<Child, "id">>({
 		firstName: "",
 		lastName: "",
+		dateOfBirth: "",
 		requiresGuardian: false,
 	});
 
@@ -317,6 +354,7 @@ export default function WillWizard() {
 		description: "",
 		distributionType: "equal",
 		beneficiaries: [],
+		value: "",
 	});
 
 	// Add these state variables after the other state declarations
@@ -329,6 +367,9 @@ export default function WillWizard() {
 		relationship: "",
 		organizationName: "",
 		registrationNumber: "",
+		email: "",
+		phone: "",
+		allocation: "",
 	});
 	const [beneficiaryType, setBeneficiaryType] = useState<"existing" | "new">(
 		"existing"
@@ -361,11 +402,37 @@ export default function WillWizard() {
 		address: {
 			street: "",
 			city: "",
-			province: "",
+			state: "",
+			zipCode: "",
+			country: "",
+		},
+		email: "",
+		phone: "",
+	});
+
+	// Add witness dialog state
+	const [witnessDialogOpen, setWitnessDialogOpen] = useState(false);
+	const [editingWitness, setEditingWitness] = useState<Witness | null>(null);
+	const [witnessForm, setWitnessForm] = useState<Witness>({
+		id: "",
+		firstName: "",
+		lastName: "",
+		address: {
+			street: "",
+			city: "",
+			state: "",
 			zipCode: "",
 			country: "",
 		},
 	});
+
+	// Add witness conflict confirmation dialog state
+	const [witnessConflictDialogOpen, setWitnessConflictDialogOpen] =
+		useState(false);
+	const [potentialConflict, setPotentialConflict] = useState<{
+		witness: Witness;
+		beneficiary: string;
+	} | null>(null);
 
 	// Ensure we're mounted before rendering any dialogs
 	useEffect(() => {
@@ -416,7 +483,8 @@ export default function WillWizard() {
 
 	// Handle child form changes
 	const handleChildFormChange =
-		(field: keyof Child) => (e: React.ChangeEvent<HTMLInputElement>) => {
+		(field: keyof Omit<Child, "id">) =>
+		(e: React.ChangeEvent<HTMLInputElement>) => {
 			setChildForm((prev) => ({
 				...prev,
 				[field]: e.target.value,
@@ -424,43 +492,33 @@ export default function WillWizard() {
 		};
 
 	// Handle adding/editing child
-	const handleSaveChild = () => {
-		if (!childForm.firstName || !childForm.lastName) {
-			return;
-		}
-
-		if (editingChild) {
-			// Update existing child
-			setFormData((prev) => ({
-				...prev,
-				children: prev.children.map((child) =>
-					child.id === editingChild.id ? childForm : child
-				),
-			}));
-		} else {
-			// Add new child
-			setFormData((prev) => ({
-				...prev,
-				children: [...prev.children, { ...childForm, id: crypto.randomUUID() }],
-			}));
-		}
-
-		// Reset form and close dialog
+	const _addChild = () => {
+		const newChild: Child = {
+			id: crypto.randomUUID() as `${string}-${string}-${string}-${string}-${string}`,
+			...childForm,
+		};
+		setFormData((prev) => ({
+			...prev,
+			children: [...prev.children, newChild],
+		}));
 		setChildForm({
-			id: "",
 			firstName: "",
 			lastName: "",
+			dateOfBirth: "",
 			requiresGuardian: false,
 		});
-		setEditingChild(null);
-		setChildDialogOpen(false);
 	};
 
 	// Handle editing child
-	const handleEditChild = (child: Child) => {
-		setChildForm(child);
+	const editChild = (child: Child) => {
 		setEditingChild(child);
-		setChildDialogOpen(true);
+		setChildForm({
+			firstName: child.firstName,
+			lastName: child.lastName,
+			dateOfBirth: child.dateOfBirth,
+			requiresGuardian: child.requiresGuardian,
+			guardian: child.guardian,
+		});
 	};
 
 	// Handle removing child
@@ -614,6 +672,10 @@ export default function WillWizard() {
 			setCurrentQuestion("gifts");
 		} else if (currentQuestion === "gifts") {
 			setCurrentQuestion("executors");
+		} else if (currentQuestion === "executors") {
+			setCurrentQuestion("witnesses");
+		} else if (currentQuestion === "witnesses") {
+			setCurrentQuestion("review");
 		}
 	};
 
@@ -623,15 +685,14 @@ export default function WillWizard() {
 		return (
 			addr.street.trim().length > 0 &&
 			addr.city.trim().length > 0 &&
-			addr.province.trim().length > 0 &&
-			addr.zipCode.trim().length > 0 &&
-			addr.country.trim().length > 0
+			addr.state.trim().length > 0 &&
+			addr.zipCode.trim().length > 0
 		);
 	};
 
 	// Helper function to format address
 	const formatAddress = (address: Address): string => {
-		return `${address.street}, ${address.city}, ${address.province} ${address.zipCode}, ${address.country}`;
+		return `${address.street}, ${address.city}, ${address.state} ${address.zipCode}`;
 	};
 
 	// Add handler for going back
@@ -658,8 +719,11 @@ export default function WillWizard() {
 			case "executors":
 				setCurrentQuestion("gifts");
 				break;
-			case "finished":
+			case "witnesses":
 				setCurrentQuestion("executors");
+				break;
+			case "review":
+				setCurrentQuestion("witnesses");
 				break;
 			default:
 				break;
@@ -742,6 +806,7 @@ export default function WillWizard() {
 			description: "",
 			distributionType: "equal",
 			beneficiaries: [],
+			value: "",
 		});
 		setEditingAsset(null);
 		setAssetDialogOpen(false);
@@ -777,6 +842,9 @@ export default function WillWizard() {
 			relationship: newBeneficiaryForm.relationship,
 			organizationName: newBeneficiaryForm.organizationName,
 			registrationNumber: newBeneficiaryForm.registrationNumber,
+			email: newBeneficiaryForm.email,
+			phone: newBeneficiaryForm.phone,
+			allocation: newBeneficiaryForm.allocation,
 		};
 
 		setFormData((prev) => ({
@@ -792,6 +860,9 @@ export default function WillWizard() {
 			relationship: "",
 			organizationName: "",
 			registrationNumber: "",
+			email: "",
+			phone: "",
+			allocation: "",
 		});
 
 		setBeneficiaryType("existing");
@@ -969,10 +1040,12 @@ export default function WillWizard() {
 			address: {
 				street: "",
 				city: "",
-				province: "",
+				state: "",
 				zipCode: "",
 				country: "",
 			},
+			email: "",
+			phone: "",
 		});
 		setEditingExecutor(null);
 		setExecutorDialogOpen(false);
@@ -990,6 +1063,145 @@ export default function WillWizard() {
 			executors: prev.executors.filter(
 				(executor) => executor.id !== executorId
 			),
+		}));
+	};
+
+	// Add witness form handlers
+	const handleWitnessFormChange = (field: keyof Witness) => {
+		return (e: React.ChangeEvent<HTMLInputElement>) => {
+			setWitnessForm((prev) => ({
+				...prev,
+				[field]: e.target.value,
+			}));
+		};
+	};
+
+	const handleWitnessAddressChange = (field: keyof Address) => {
+		return (e: React.ChangeEvent<HTMLInputElement>) => {
+			setWitnessForm((prev) => ({
+				...prev,
+				address: {
+					...prev.address,
+					[field]: e.target.value,
+				},
+			}));
+		};
+	};
+
+	// Add function to check for beneficiary conflicts
+	const checkWitnessConflict = (
+		witness: Witness
+	): { hasConflict: boolean; beneficiary: string } => {
+		// Check spouse
+		if (formData.hasSpouse && formData.spouse) {
+			const spouseName = formData.spouse.fullName.toLowerCase();
+			const witnessName =
+				`${witness.firstName} ${witness.lastName}`.toLowerCase();
+			if (spouseName === witnessName) {
+				return { hasConflict: true, beneficiary: formData.spouse.fullName };
+			}
+		}
+
+		// Check children
+		for (const child of formData.children) {
+			const childName = `${child.firstName} ${child.lastName}`.toLowerCase();
+			const witnessName =
+				`${witness.firstName} ${witness.lastName}`.toLowerCase();
+			if (childName === witnessName) {
+				return {
+					hasConflict: true,
+					beneficiary: `${child.firstName} ${child.lastName}`,
+				};
+			}
+		}
+
+		// Check other beneficiaries
+		if (formData.otherBeneficiaries) {
+			for (const beneficiary of formData.otherBeneficiaries) {
+				if (beneficiary.type === "other") {
+					const beneficiaryName =
+						`${beneficiary.firstName} ${beneficiary.lastName}`.toLowerCase();
+					const witnessName =
+						`${witness.firstName} ${witness.lastName}`.toLowerCase();
+					if (beneficiaryName === witnessName) {
+						return {
+							hasConflict: true,
+							beneficiary: `${beneficiary.firstName} ${beneficiary.lastName}`,
+						};
+					}
+				}
+			}
+		}
+
+		return { hasConflict: false, beneficiary: "" };
+	};
+
+	// Add witness save handler
+	const handleSaveWitness = () => {
+		if (
+			!witnessForm.firstName ||
+			!witnessForm.lastName ||
+			!isAddressValid(witnessForm.address)
+		) {
+			return;
+		}
+
+		const conflict = checkWitnessConflict(witnessForm);
+		if (conflict.hasConflict) {
+			setPotentialConflict({
+				witness: witnessForm,
+				beneficiary: conflict.beneficiary,
+			});
+			setWitnessConflictDialogOpen(true);
+			return;
+		}
+
+		if (editingWitness) {
+			setFormData((prev) => ({
+				...prev,
+				witnesses: prev.witnesses.map((witness) =>
+					witness.id === editingWitness.id ? witnessForm : witness
+				),
+			}));
+		} else {
+			setFormData((prev) => ({
+				...prev,
+				witnesses: [
+					...prev.witnesses,
+					{ ...witnessForm, id: crypto.randomUUID() },
+				],
+			}));
+		}
+
+		// Reset form and close dialog
+		setWitnessForm({
+			id: "",
+			firstName: "",
+			lastName: "",
+			address: {
+				street: "",
+				city: "",
+				state: "",
+				zipCode: "",
+				country: "",
+			},
+		});
+		setEditingWitness(null);
+		setWitnessDialogOpen(false);
+	};
+
+	// Add witness edit handler
+	const handleEditWitness = (witness: Witness) => {
+		setWitnessForm(witness);
+		setEditingWitness(witness);
+		setWitnessDialogOpen(true);
+	};
+
+	// Add witness remove handler
+	const handleRemoveWitness = (witnessId: string) => {
+		setFormData((prev) => ({
+			...prev,
+			witnesses: prev.witnesses.filter((witness) => witness.id !== witnessId),
 		}));
 	};
 
@@ -1087,11 +1299,11 @@ export default function WillWizard() {
 							</div>
 							<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 								<div className="space-y-2">
-									<Label htmlFor="province">Province/State</Label>
+									<Label htmlFor="state">State/Province</Label>
 									<Input
-										id="province"
-										value={formData.address.province}
-										onChange={handleAddressChange("province")}
+										id="state"
+										value={formData.address.state}
+										onChange={handleAddressChange("state")}
 										placeholder="Ontario"
 										className="w-full"
 									/>
@@ -1235,14 +1447,15 @@ export default function WillWizard() {
 												variant="outline"
 												onClick={() => {
 													setChildForm({
-														id: "",
 														firstName: "",
 														lastName: "",
+														dateOfBirth: "",
 														requiresGuardian: false,
 													});
 													setEditingChild(null);
 												}}
 												className="cursor-pointer"
+												disabled={formData.children.length >= 5}
 											>
 												<Plus className="mr-2 h-4 w-4" />
 												Add Child
@@ -1308,7 +1521,7 @@ export default function WillWizard() {
 														Cancel
 													</Button>
 													<Button
-														onClick={handleSaveChild}
+														onClick={saveChild}
 														className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
 													>
 														Save
@@ -1344,7 +1557,7 @@ export default function WillWizard() {
 															<Button
 																variant="ghost"
 																size="icon"
-																onClick={() => handleEditChild(child)}
+																onClick={() => editChild(child)}
 																className="cursor-pointer"
 															>
 																<Edit2 className="h-4 w-4" />
@@ -1670,6 +1883,7 @@ export default function WillWizard() {
 													description: "",
 													distributionType: "equal",
 													beneficiaries,
+													value: "",
 												});
 												setEditingAsset(null);
 											}}
@@ -2400,10 +2614,12 @@ export default function WillWizard() {
 													address: {
 														street: "",
 														city: "",
-														province: "",
+														state: "",
 														zipCode: "",
 														country: "",
 													},
+													email: "",
+													phone: "",
 												});
 												setEditingExecutor(null);
 											}}
@@ -2590,15 +2806,13 @@ export default function WillWizard() {
 													</div>
 													<div className="grid grid-cols-2 gap-4">
 														<div className="space-y-2">
-															<Label htmlFor="executorProvince">
-																Province/State
+															<Label htmlFor="executorState">
+																State/Province
 															</Label>
 															<Input
-																id="executorProvince"
-																value={executorForm.address.province}
-																onChange={handleExecutorAddressChange(
-																	"province"
-																)}
+																id="executorState"
+																value={executorForm.address.state}
+																onChange={handleExecutorAddressChange("state")}
 																placeholder="Ontario"
 															/>
 														</div>
@@ -2737,8 +2951,7 @@ export default function WillWizard() {
 									<ArrowLeft className="mr-2 h-4 w-4" /> Back
 								</Button>
 								<Button
-									onClick={() => setCurrentQuestion("finished")}
-									disabled={formData.executors.length === 0}
+									onClick={() => setCurrentQuestion("witnesses")}
 									className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
 								>
 									Next <ArrowRight className="ml-2 h-4 w-4" />
@@ -2748,170 +2961,361 @@ export default function WillWizard() {
 					</div>
 				);
 
-			case "finished":
+			case "witnesses":
 				return (
 					<div className="space-y-4">
-						<div className="text-2xl font-semibold text-green-600">
-							Thank you!
+						<div className="text-2xl font-semibold">
+							Add Witnesses to Your Will
 						</div>
-						<div className="text-lg">
-							We've collected the initial information for your will.
+						<div className="text-muted-foreground">
+							Your will requires two witnesses who are not beneficiaries of the
+							will. Witnesses must be present when you sign your will and must
+							also sign it.
 						</div>
-						<div>
-							<p className="text-muted-foreground">
-								Summary of your information:
-							</p>
-							<ul className="mt-2 space-y-2">
-								<li>
-									<strong>Name:</strong> {formData.firstName}{" "}
-									{formData.lastName}
-								</li>
-								<li>
-									<strong>Address:</strong> {formatAddress(formData.address)}
-								</li>
-								<li>
-									<strong>Marital Status:</strong>{" "}
-									{formData.hasSpouse ? "Married" : "Not Married"}
-								</li>
-								{formData.spouse && (
-									<li>
-										<strong>Spouse:</strong> {formData.spouse.fullName}
-									</li>
-								)}
-								<li>
-									<strong>Children:</strong>{" "}
-									{formData.hasChildren
-										? formData.children.length > 0
-											? formData.children
-													.map(
-														(child) =>
-															`${child.firstName} ${child.lastName} (${
-																child.requiresGuardian
-																	? "requires guardian"
-																	: "adult"
-															})`
-													)
-													.join(", ")
-											: "None added"
-										: "None"}
-								</li>
-								{needsGuardians() && formData.guardians.length > 0 && (
-									<li>
-										<strong>Appointed Guardians:</strong>{" "}
-										{formData.guardians
-											.map(
-												(guardian) =>
-													`${guardian.firstName} ${guardian.lastName} (${
-														guardian.relationship
-													})${guardian.isPrimary ? " - Primary" : ""}`
-											)
-											.join(", ")}
-									</li>
-								)}
-								{formData.assets.length > 0 && (
-									<li>
-										<strong>Assets:</strong>
-										<ul className="mt-2 space-y-2 list-disc list-inside">
-											{formData.assets.map((asset) => {
-												const assetType = ASSET_TYPES.find(
-													(t) => t.value === asset.type
-												);
-												return (
-													<li key={asset.id} className="text-sm">
-														<div className="flex items-center space-x-2">
-															{assetType && (
-																<assetType.icon className="h-4 w-4 text-muted-foreground" />
-															)}
-															<span>{asset.type}</span>
-														</div>
-														<ul className="ml-4 list-disc list-inside text-muted-foreground">
-															{asset.beneficiaries.map((beneficiary) => {
-																const name = getBeneficiaryName(
-																	beneficiary.id,
-																	formData.spouse,
-																	formData.children,
-																	formData.guardians,
-																	formData.otherBeneficiaries
-																);
-
-																if (!name) return null;
-
-																return (
-																	<li key={beneficiary.id}>
-																		{name}
-																		{asset.distributionType === "percentage" &&
-																			` (${beneficiary.percentage}%)`}
-																	</li>
-																);
-															})}
-														</ul>
-													</li>
-												);
-											})}
-										</ul>
-									</li>
-								)}
-								{formData.gifts.length > 0 && (
-									<li>
-										<strong>Specific Gifts:</strong>
-										<ul className="mt-2 space-y-2 list-disc list-inside">
-											{formData.gifts.map((gift) => (
-												<li key={gift.id} className="text-sm">
-													{gift.type === "Cash" && gift.value
-														? `$${gift.value.toLocaleString()}`
-														: gift.description}{" "}
-													to{" "}
-													{getBeneficiaryName(
-														gift.beneficiaryId,
-														formData.spouse,
-														formData.children,
-														formData.guardians,
-														formData.otherBeneficiaries
-													)}
-												</li>
-											))}
-										</ul>
-									</li>
-								)}
-								{formData.executors.length > 0 && (
-									<li>
-										<strong>Appointed Executors:</strong>
-										<ul className="mt-2 space-y-2 list-disc list-inside">
-											{formData.executors.map((executor) => (
-												<li key={executor.id} className="text-sm">
-													{executor.type === "individual" ? (
-														<>
-															{executor.firstName} {executor.lastName} (
-															{executor.relationship})
-														</>
-													) : (
-														<>
-															{executor.companyName} (Corporate Executor)
-															<div className="text-muted-foreground ml-4">
-																Contact: {executor.contactPerson}
-																<br />
-																Registration: {executor.registrationNumber}
-															</div>
-														</>
-													)}
-													{executor.isPrimary && " - Primary"}
-													<div className="text-muted-foreground ml-4">
-														{formatAddress(executor.address)}
+						<div className="space-y-6 mt-6">
+							<div className="flex justify-between items-center">
+								<h3 className="text-lg font-medium">Witnesses</h3>
+								<Dialog
+									open={witnessDialogOpen}
+									onOpenChange={setWitnessDialogOpen}
+								>
+									<DialogTrigger asChild>
+										<Button
+											variant="outline"
+											onClick={() => {
+												setWitnessForm({
+													id: "",
+													firstName: "",
+													lastName: "",
+													address: {
+														street: "",
+														city: "",
+														state: "",
+														zipCode: "",
+														country: "",
+													},
+												});
+												setEditingWitness(null);
+											}}
+											className="cursor-pointer"
+										>
+											<Plus className="mr-2 h-4 w-4" />
+											Add Witness
+										</Button>
+									</DialogTrigger>
+									<DialogContent className="bg-white max-w-2xl">
+										<DialogHeader>
+											<DialogTitle>
+												{editingWitness ? "Edit Witness" : "Add Witness"}
+											</DialogTitle>
+											<DialogDescription>
+												Add a witness who will be present when you sign your
+												will. The witness must not be a beneficiary of the will.
+											</DialogDescription>
+										</DialogHeader>
+										<div className="space-y-4 py-4">
+											<div className="grid grid-cols-2 gap-4">
+												<div className="space-y-2">
+													<Label htmlFor="witnessFirstName">First Name</Label>
+													<Input
+														id="witnessFirstName"
+														value={witnessForm.firstName}
+														onChange={handleWitnessFormChange("firstName")}
+														placeholder="John"
+													/>
+												</div>
+												<div className="space-y-2">
+													<Label htmlFor="witnessLastName">Last Name</Label>
+													<Input
+														id="witnessLastName"
+														value={witnessForm.lastName}
+														onChange={handleWitnessFormChange("lastName")}
+														placeholder="Doe"
+													/>
+												</div>
+											</div>
+											<div className="space-y-2">
+												<Label>Address</Label>
+												<div className="space-y-4">
+													<div className="space-y-2">
+														<Label htmlFor="witnessStreet">
+															Street Address
+														</Label>
+														<Input
+															id="witnessStreet"
+															value={witnessForm.address.street}
+															onChange={handleWitnessAddressChange("street")}
+															placeholder="123 Main Street"
+														/>
 													</div>
-												</li>
-											))}
-										</ul>
-									</li>
-								)}
-							</ul>
+													<div className="grid grid-cols-2 gap-4">
+														<div className="space-y-2">
+															<Label htmlFor="witnessCity">City</Label>
+															<Input
+																id="witnessCity"
+																value={witnessForm.address.city}
+																onChange={handleWitnessAddressChange("city")}
+																placeholder="Toronto"
+															/>
+														</div>
+														<div className="space-y-2">
+															<Label htmlFor="witnessZipCode">
+																Postal/ZIP Code
+															</Label>
+															<Input
+																id="witnessZipCode"
+																value={witnessForm.address.zipCode}
+																onChange={handleWitnessAddressChange("zipCode")}
+																placeholder="M5V 2H1"
+															/>
+														</div>
+													</div>
+													<div className="grid grid-cols-2 gap-4">
+														<div className="space-y-2">
+															<Label htmlFor="witnessState">
+																State/Province
+															</Label>
+															<Input
+																id="witnessState"
+																value={witnessForm.address.state}
+																onChange={handleWitnessAddressChange("state")}
+																placeholder="Ontario"
+															/>
+														</div>
+														<div className="space-y-2">
+															<Label htmlFor="witnessCountry">Country</Label>
+															<Input
+																id="witnessCountry"
+																value={witnessForm.address.country}
+																onChange={handleWitnessAddressChange("country")}
+																placeholder="Canada"
+															/>
+														</div>
+													</div>
+												</div>
+											</div>
+											<div className="flex justify-end space-x-2">
+												<Button
+													variant="outline"
+													onClick={() => setWitnessDialogOpen(false)}
+													className="cursor-pointer"
+												>
+													Cancel
+												</Button>
+												<Button
+													onClick={handleSaveWitness}
+													disabled={
+														!witnessForm.firstName ||
+														!witnessForm.lastName ||
+														!isAddressValid(witnessForm.address)
+													}
+													className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
+												>
+													Save
+												</Button>
+											</div>
+										</div>
+									</DialogContent>
+								</Dialog>
+							</div>
+
+							{formData.witnesses.length === 0 ? (
+								<p className="text-muted-foreground text-center py-4">
+									No witnesses added yet. Click "Add Witness" to add witnesses
+									to your will.
+								</p>
+							) : (
+								<div className="space-y-4">
+									{formData.witnesses.map((witness) => (
+										<Card key={witness.id}>
+											<CardContent className="p-4">
+												<div className="flex justify-between items-start">
+													<div className="space-y-1">
+														<p className="font-medium">
+															{witness.firstName} {witness.lastName}
+														</p>
+														<p className="text-sm text-muted-foreground">
+															{formatAddress(witness.address)}
+														</p>
+													</div>
+													<div className="flex space-x-2">
+														<Button
+															variant="ghost"
+															size="icon"
+															onClick={() => handleEditWitness(witness)}
+															className="cursor-pointer"
+														>
+															<Edit2 className="h-4 w-4" />
+														</Button>
+														<Button
+															variant="ghost"
+															size="icon"
+															onClick={() => handleRemoveWitness(witness.id)}
+															className="cursor-pointer"
+														>
+															<Trash2 className="h-4 w-4" />
+														</Button>
+													</div>
+												</div>
+											</CardContent>
+										</Card>
+									))}
+								</div>
+							)}
+
+							<div className="flex justify-between pt-4">
+								<Button
+									variant="outline"
+									onClick={handleBack}
+									className="cursor-pointer"
+								>
+									<ArrowLeft className="mr-2 h-4 w-4" /> Back
+								</Button>
+								<Button
+									onClick={handleNext}
+									disabled={formData.witnesses.length !== 2}
+									className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
+								>
+									Next <ArrowRight className="ml-2 h-4 w-4" />
+								</Button>
+							</div>
 						</div>
-						<div className="flex justify-start pt-4">
+
+						{/* Add witness conflict confirmation dialog */}
+						<Dialog
+							open={witnessConflictDialogOpen}
+							onOpenChange={setWitnessConflictDialogOpen}
+						>
+							<DialogContent className="bg-white">
+								<DialogHeader>
+									<DialogTitle>Potential Beneficiary Conflict</DialogTitle>
+									<DialogDescription>
+										The witness you're trying to add has the same name as a
+										beneficiary in your will ({potentialConflict?.beneficiary}).
+										A witness cannot be a beneficiary of the will.
+									</DialogDescription>
+								</DialogHeader>
+								<DialogFooter className="flex space-x-2 justify-end mt-4">
+									<Button
+										variant="outline"
+										onClick={() => {
+											setWitnessConflictDialogOpen(false);
+											setPotentialConflict(null);
+										}}
+										className="cursor-pointer"
+									>
+										Cancel
+									</Button>
+									<Button
+										onClick={() => {
+											if (potentialConflict) {
+												setWitnessForm(potentialConflict.witness);
+												setWitnessConflictDialogOpen(false);
+												setPotentialConflict(null);
+												setWitnessDialogOpen(true);
+											}
+										}}
+										className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
+									>
+										Edit Witness
+									</Button>
+								</DialogFooter>
+							</DialogContent>
+						</Dialog>
+					</div>
+				);
+
+			case "review":
+				return (
+					<div className="space-y-4">
+						<div className="text-2xl font-semibold">Review Your Will</div>
+						<div className="text-muted-foreground">
+							Please review all the information below carefully. You can save
+							your will and download a PDF copy for your records.
+						</div>
+						<ReviewStep
+							ref={reviewStepRef}
+							data={{
+								personal: {
+									fullName: `${formData.firstName} ${formData.lastName}`,
+									dateOfBirth: formData.dateOfBirth,
+									address: formatAddress(formData.address),
+									phone: formData.phone,
+									maritalStatus: formData.hasSpouse ? "Married" : "Single",
+								},
+								assets: formData.assets.map((asset) => ({
+									value: asset.value,
+									type: asset.type,
+									description: asset.description,
+								})),
+								beneficiaries: [
+									...(formData.spouse
+										? [
+												{
+													fullName: formData.spouse.fullName,
+													relationship: "Spouse",
+													email: formData.spouse.email || "",
+													phone: formData.spouse.phone || "",
+													allocation: "100",
+												},
+										  ]
+										: []),
+									...formData.children.map((child) => ({
+										fullName: `${child.firstName} ${child.lastName}`,
+										relationship: "Child",
+										email: "",
+										phone: "",
+										allocation: "100",
+									})),
+									...(formData.otherBeneficiaries || []).map((beneficiary) => ({
+										fullName:
+											beneficiary.type === "charity"
+												? beneficiary.organizationName || ""
+												: `${beneficiary.firstName} ${beneficiary.lastName}`,
+										relationship: beneficiary.relationship,
+										email: beneficiary.email,
+										phone: beneficiary.phone,
+										allocation: beneficiary.allocation,
+									})),
+								],
+								executors: formData.executors.map((executor) => ({
+									fullName:
+										executor.type === "individual"
+											? `${executor.firstName} ${executor.lastName}`
+											: executor.companyName || "",
+									relationship: executor.relationship,
+									email: executor.email,
+									phone: executor.phone,
+									address: formatAddress(executor.address),
+									isPrimary: executor.isPrimary,
+									type: executor.type,
+									companyName: executor.companyName,
+									contactPerson: executor.contactPerson,
+								})),
+								witnesses: formData.witnesses.map((witness) => ({
+									fullName: `${witness.firstName} ${witness.lastName}`,
+									address: formatAddress(witness.address),
+								})),
+							}}
+						/>
+						<div className="flex justify-between pt-4">
 							<Button
 								variant="outline"
 								onClick={handleBack}
 								className="cursor-pointer"
+								disabled={reviewStepRef.current?.isSaving}
 							>
 								<ArrowLeft className="mr-2 h-4 w-4" /> Back
+							</Button>
+							<Button
+								onClick={() => reviewStepRef.current?.handleSaveAndDownload()}
+								className="bg-light-green hover:bg-light-green/90 text-black cursor-pointer"
+								disabled={reviewStepRef.current?.isSaving}
+							>
+								<Save className="mr-2 h-4 w-4" />
+								{reviewStepRef.current?.isSaving
+									? "Saving..."
+									: "Save & Download"}
 							</Button>
 						</div>
 					</div>
@@ -2923,7 +3327,7 @@ export default function WillWizard() {
 	};
 
 	// Track progress
-	const totalQuestions = 7;
+	const totalQuestions = 8; // Updated to remove finished step
 	const progress = (() => {
 		switch (currentQuestion) {
 			case "name":
@@ -2942,14 +3346,47 @@ export default function WillWizard() {
 				return 7;
 			case "executors":
 				return 7;
-			case "finished":
-				return 7;
+			case "witnesses":
+				return 8;
+			case "review":
+				return 8;
 			default:
 				return 1;
 		}
 	})();
 
 	const progressPercent = (progress / totalQuestions) * 100;
+
+	// Add the saveChild function
+	const saveChild = () => {
+		if (editingChild) {
+			setFormData((prev) => ({
+				...prev,
+				children: prev.children.map((child) =>
+					child.id === editingChild.id ? { ...childForm, id: child.id } : child
+				),
+			}));
+		} else {
+			const newChild: Child = {
+				id: crypto.randomUUID() as `${string}-${string}-${string}-${string}-${string}`,
+				...childForm,
+			};
+			setFormData((prev) => ({
+				...prev,
+				children: [...prev.children, newChild],
+			}));
+		}
+		setChildForm({
+			firstName: "",
+			lastName: "",
+			dateOfBirth: "",
+			requiresGuardian: false,
+		});
+		setEditingChild(null);
+		setChildDialogOpen(false);
+	};
+
+	const reviewStepRef = useRef<ReviewStepHandle>(null);
 
 	return (
 		<div className="container mx-auto py-8">
