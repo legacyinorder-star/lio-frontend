@@ -62,7 +62,13 @@ export interface ReviewStepProps {
 			beneficiaryId: string;
 			beneficiaryName: string;
 		}>;
+		residuaryBeneficiaries: Array<{
+			id: string;
+			beneficiaryId: string;
+			percentage: number;
+		}>;
 	};
+	onSave?: () => void;
 }
 
 export interface ReviewStepHandle {
@@ -199,21 +205,9 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 						</div>
 						<div>
 							<label className="block text-sm font-medium text-gray-700">
-								Date of Birth
-							</label>
-							<p className="mt-1">{data.personal.dateOfBirth}</p>
-						</div>
-						<div>
-							<label className="block text-sm font-medium text-gray-700">
 								Address
 							</label>
 							<p className="mt-1">{data.personal.address}</p>
-						</div>
-						<div>
-							<label className="block text-sm font-medium text-gray-700">
-								Phone
-							</label>
-							<p className="mt-1">{data.personal.phone}</p>
 						</div>
 						<div>
 							<label className="block text-sm font-medium text-gray-700">
@@ -239,12 +233,6 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 											Type
 										</label>
 										<p className="mt-1">{asset.type}</p>
-									</div>
-									<div>
-										<label className="block text-sm font-medium text-gray-700">
-											Value
-										</label>
-										<p className="mt-1">{asset.value}</p>
 									</div>
 									<div className="col-span-2">
 										<label className="block text-sm font-medium text-gray-700">
@@ -280,22 +268,6 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 										</label>
 										<p className="mt-1">{beneficiary.relationship}</p>
 									</div>
-									{beneficiary.email && (
-										<div>
-											<label className="block text-sm font-medium text-gray-700">
-												Email
-											</label>
-											<p className="mt-1">{beneficiary.email}</p>
-										</div>
-									)}
-									{beneficiary.phone && (
-										<div>
-											<label className="block text-sm font-medium text-gray-700">
-												Phone
-											</label>
-											<p className="mt-1">{beneficiary.phone}</p>
-										</div>
-									)}
 									<div>
 										<label className="block text-sm font-medium text-gray-700">
 											Allocation

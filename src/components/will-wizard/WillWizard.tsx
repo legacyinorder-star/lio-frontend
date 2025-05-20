@@ -5,7 +5,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import SpouseDialog, { SpouseData } from "./SpouseDialog";
-import { ArrowRight, Plus, Trash2, Edit2, ArrowLeft, Save } from "lucide-react";
+import {
+	ArrowRight,
+	Plus,
+	Trash2,
+	Edit2,
+	ArrowLeft,
+	Save,
+	X,
+} from "lucide-react";
 import {
 	Dialog,
 	DialogContent,
@@ -34,6 +42,7 @@ type QuestionType =
 	| "guardians"
 	| "hasAssets"
 	| "gifts"
+	| "residuary"
 	| "executors"
 	| "witnesses"
 	| "review";
@@ -160,6 +169,11 @@ interface WillFormData {
 	assets: Asset[];
 	otherBeneficiaries: NewBeneficiary[];
 	gifts: Gift[];
+	residuaryBeneficiaries: Array<{
+		id: string;
+		beneficiaryId: string;
+		percentage: number;
+	}>;
 	executors: Executor[];
 	witnesses: Witness[];
 }
@@ -311,6 +325,7 @@ export default function WillWizard() {
 		assets: [],
 		otherBeneficiaries: [],
 		gifts: [],
+		residuaryBeneficiaries: [],
 		executors: [],
 		witnesses: [],
 	});
@@ -671,6 +686,8 @@ export default function WillWizard() {
 		} else if (currentQuestion === "hasAssets") {
 			setCurrentQuestion("gifts");
 		} else if (currentQuestion === "gifts") {
+			setCurrentQuestion("residuary");
+		} else if (currentQuestion === "residuary") {
 			setCurrentQuestion("executors");
 		} else if (currentQuestion === "executors") {
 			setCurrentQuestion("witnesses");
@@ -716,8 +733,11 @@ export default function WillWizard() {
 			case "gifts":
 				setCurrentQuestion("hasAssets");
 				break;
-			case "executors":
+			case "residuary":
 				setCurrentQuestion("gifts");
+				break;
+			case "executors":
+				setCurrentQuestion("residuary");
 				break;
 			case "witnesses":
 				setCurrentQuestion("executors");
@@ -2568,10 +2588,150 @@ export default function WillWizard() {
 									<ArrowLeft className="mr-2 h-4 w-4" /> Back
 								</Button>
 								<Button
-									onClick={() => setCurrentQuestion("executors")}
+									onClick={() => setCurrentQuestion("residuary")}
 									className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
 								>
 									Next <ArrowRight className="ml-2 h-4 w-4" />
+								</Button>
+							</div>
+						</div>
+					</div>
+				);
+
+			case "residuary":
+				return (
+					<div className="space-y-6">
+						<div className="space-y-2">
+							<h2 className="text-2xl font-semibold">
+								Distribution of Residuary Estate
+							</h2>
+							<p className="text-muted-foreground">
+								Specify how you would like to distribute any remaining assets
+								not specifically mentioned in your will.
+							</p>
+						</div>
+
+						<div className="space-y-4">
+							{/* List of available beneficiaries */}
+							<div className="space-y-2">
+								<h3 className="text-lg font-medium">Available Beneficiaries</h3>
+								<div className="grid gap-4">
+									{[
+										...(formData.hasSpouse && formData.spouse
+											? [
+													{
+														id: "spouse",
+														fullName: formData.spouse.fullName,
+														relationship: "Spouse",
+													},
+											  ]
+											: []),
+										...formData.children.map((child) => ({
+											id: child.id,
+											fullName: `${child.firstName} ${child.lastName}`,
+											relationship: "Child",
+										})),
+										...formData.guardians.map((guardian) => ({
+											id: guardian.id,
+											fullName: `${guardian.firstName} ${guardian.lastName}`,
+											relationship: guardian.relationship,
+										})),
+										...formData.otherBeneficiaries.map((ben) => ({
+											id: ben.id,
+											fullName: `${ben.firstName} ${ben.lastName}`,
+											relationship: ben.relationship,
+										})),
+									].map((beneficiary) => {
+										const existingAllocation =
+											formData.residuaryBeneficiaries.find(
+												(b) => b.beneficiaryId === beneficiary.id
+											)?.percentage || 0;
+
+										return (
+											<div
+												key={beneficiary.id}
+												className="flex items-center justify-between p-4 border rounded-lg"
+											>
+												<div>
+													<p className="font-medium">{beneficiary.fullName}</p>
+													<p className="text-sm text-muted-foreground">
+														{beneficiary.relationship}
+													</p>
+												</div>
+												<div className="flex items-center gap-4">
+													<Input
+														type="number"
+														value={existingAllocation}
+														onChange={(e) =>
+															handleResiduaryBeneficiaryChange(
+																beneficiary.id,
+																Number(e.target.value)
+															)
+														}
+														className="w-24"
+														min="0"
+														max="100"
+													/>
+													<span className="text-sm">%</span>
+													{existingAllocation > 0 && (
+														<Button
+															variant="ghost"
+															size="icon"
+															onClick={() =>
+																handleRemoveResiduaryBeneficiary(beneficiary.id)
+															}
+														>
+															<X className="h-4 w-4" />
+														</Button>
+													)}
+												</div>
+											</div>
+										);
+									})}
+								</div>
+							</div>
+
+							{/* Total allocation warning */}
+							{(() => {
+								const total = formData.residuaryBeneficiaries.reduce(
+									(sum, b) => sum + b.percentage,
+									0
+								);
+								if (total !== 100) {
+									return (
+										<div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+											<p className="text-sm text-yellow-800">
+												Total allocation must equal 100%. Current total: {total}
+												%
+											</p>
+										</div>
+									);
+								}
+								return null;
+							})()}
+
+							{/* Navigation buttons */}
+							<div className="flex justify-between pt-6">
+								<Button
+									variant="outline"
+									onClick={() => setCurrentQuestion("gifts")}
+									className="flex items-center gap-2 cursor-pointer"
+								>
+									<ArrowLeft className="h-4 w-4" />
+									Back
+								</Button>
+								<Button
+									onClick={() => setCurrentQuestion("executors")}
+									className="flex items-center gap-2 bg-light-green hover:bg-light-green/90 text-black cursor-pointer"
+									disabled={
+										formData.residuaryBeneficiaries.reduce(
+											(sum, b) => sum + b.percentage,
+											0
+										) !== 100
+									}
+								>
+									Next
+									<ArrowRight className="h-4 w-4" />
 								</Button>
 							</div>
 						</div>
@@ -3244,23 +3404,20 @@ export default function WillWizard() {
 									maritalStatus: formData.hasSpouse ? "Married" : "Single",
 								},
 								assets: formData.assets.map((asset) => ({
-									value: asset.value,
 									type: asset.type,
 									description: asset.description,
+									value: asset.value,
 									distributionType: asset.distributionType,
-									beneficiaries: asset.beneficiaries.map((b) => ({
-										id: b.id,
-										percentage: b.percentage,
-									})),
+									beneficiaries: asset.beneficiaries,
 								})),
 								beneficiaries: [
-									...(formData.spouse
+									...(formData.hasSpouse && formData.spouse
 										? [
 												{
 													id: "spouse",
 													fullName: formData.spouse.fullName,
 													relationship: "Spouse",
-													allocation: 100,
+													allocation: 0,
 												},
 										  ]
 										: []),
@@ -3268,48 +3425,44 @@ export default function WillWizard() {
 										id: child.id,
 										fullName: `${child.firstName} ${child.lastName}`,
 										relationship: "Child",
+										allocation: 0,
 										dateOfBirth: child.dateOfBirth,
 										requiresGuardian: child.requiresGuardian,
-										email: "",
-										phone: "",
-										allocation: 100,
 									})),
 									...formData.guardians.map((guardian) => ({
 										id: guardian.id,
 										fullName: `${guardian.firstName} ${guardian.lastName}`,
-										relationship: `${guardian.relationship} (Guardian${
-											guardian.isPrimary ? " - Primary" : ""
-										})`,
-										email: "",
-										phone: "",
-										allocation: 100,
+										relationship: guardian.relationship,
+										allocation: 0,
 									})),
-									...(formData.otherBeneficiaries || []).map((beneficiary) => ({
-										id: beneficiary.id,
-										fullName:
-											beneficiary.type === "charity"
-												? beneficiary.organizationName || ""
-												: `${beneficiary.firstName} ${beneficiary.lastName}`,
-										relationship: beneficiary.relationship,
-										email: beneficiary.email,
-										phone: beneficiary.phone,
-										allocation: Number(beneficiary.allocation) || 0,
+									...formData.otherBeneficiaries.map((ben) => ({
+										id: ben.id,
+										fullName: `${ben.firstName} ${ben.lastName}`,
+										relationship: ben.relationship,
+										allocation: Number(ben.allocation),
+										email: ben.email,
+										phone: ben.phone,
 									})),
 								],
-								executors: formData.executors.map((executor) => ({
+								executors: formData.executors.map((exec) => ({
 									fullName:
-										executor.type === "individual"
-											? `${executor.firstName} ${executor.lastName}`
-											: executor.companyName || "",
-									relationship: executor.relationship,
-									email: executor.email,
-									phone: executor.phone,
-									address: formatAddress(executor.address),
-									isPrimary: executor.isPrimary,
-									type: executor.type,
-									companyName: executor.companyName,
-									contactPerson: executor.contactPerson,
-									registrationNumber: executor.registrationNumber,
+										exec.type === "individual"
+											? `${exec.firstName} ${exec.lastName}`
+											: undefined,
+									companyName:
+										exec.type === "corporate" ? exec.companyName : undefined,
+									relationship: exec.relationship,
+									email: exec.email,
+									phone: exec.phone,
+									address: formatAddress(exec.address),
+									isPrimary: exec.isPrimary,
+									type: exec.type,
+									contactPerson:
+										exec.type === "corporate" ? exec.contactPerson : undefined,
+									registrationNumber:
+										exec.type === "corporate"
+											? exec.registrationNumber
+											: undefined,
 								})),
 								witnesses: formData.witnesses.map((witness) => ({
 									fullName: `${witness.firstName} ${witness.lastName}`,
@@ -3333,7 +3486,15 @@ export default function WillWizard() {
 										formData.otherBeneficiaries
 									),
 								})),
+								residuaryBeneficiaries: formData.residuaryBeneficiaries.map(
+									(ben) => ({
+										id: ben.id,
+										beneficiaryId: ben.beneficiaryId,
+										percentage: ben.percentage,
+									})
+								),
 							}}
+							onSave={handleSaveWill}
 						/>
 						<div className="flex justify-between pt-4">
 							<Button
@@ -3364,7 +3525,7 @@ export default function WillWizard() {
 	};
 
 	// Track progress
-	const totalQuestions = 8; // Updated to remove finished step
+	const totalQuestions = 11; // Updated to remove finished step
 	const progress = (() => {
 		switch (currentQuestion) {
 			case "name":
@@ -3381,12 +3542,14 @@ export default function WillWizard() {
 				return 6;
 			case "gifts":
 				return 7;
+			case "residuary":
+				return 8;
 			case "executors":
-				return 7;
+				return 9;
 			case "witnesses":
-				return 8;
+				return 10;
 			case "review":
-				return 8;
+				return 11;
 			default:
 				return 1;
 		}
@@ -3424,6 +3587,53 @@ export default function WillWizard() {
 	};
 
 	const reviewStepRef = useRef<ReviewStepHandle>(null);
+
+	const handleResiduaryBeneficiaryChange = (
+		beneficiaryId: string,
+		percentage: number
+	) => {
+		setFormData((prev) => {
+			const existingIndex = prev.residuaryBeneficiaries.findIndex(
+				(b) => b.beneficiaryId === beneficiaryId
+			);
+
+			if (existingIndex >= 0) {
+				const updated = [...prev.residuaryBeneficiaries];
+				updated[existingIndex] = {
+					...updated[existingIndex],
+					percentage,
+				};
+				return { ...prev, residuaryBeneficiaries: updated };
+			}
+
+			return {
+				...prev,
+				residuaryBeneficiaries: [
+					...prev.residuaryBeneficiaries,
+					{
+						id: crypto.randomUUID(),
+						beneficiaryId,
+						percentage,
+					},
+				],
+			};
+		});
+	};
+
+	const handleRemoveResiduaryBeneficiary = (beneficiaryId: string) => {
+		setFormData((prev) => ({
+			...prev,
+			residuaryBeneficiaries: prev.residuaryBeneficiaries.filter(
+				(b) => b.beneficiaryId !== beneficiaryId
+			),
+		}));
+	};
+
+	const handleSaveWill = async () => {
+		if (reviewStepRef.current) {
+			await reviewStepRef.current.handleSaveAndDownload();
+		}
+	};
 
 	return (
 		<div className="container mx-auto py-8">
