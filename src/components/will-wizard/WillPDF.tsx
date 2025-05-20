@@ -67,12 +67,12 @@ const styles = StyleSheet.create({
 		marginBottom: 20,
 	},
 	section: {
-		marginBottom: 20,
+		marginBottom: 10,
 	},
 	sectionTitle: {
 		fontSize: 24,
 		fontWeight: "bold",
-		marginBottom: 20,
+		marginBottom: 10,
 		textAlign: "left",
 	},
 	row: {
@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
 		marginBottom: 15,
 	},
 	executorSection: {
-		marginTop: 40,
+		marginTop: 30,
 		marginBottom: 20,
 	},
 	executorTitle: {
@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
 		paddingLeft: 20,
 	},
 	distributionSection: {
-		marginTop: 40,
+		marginTop: 30,
 		marginBottom: 20,
 	},
 	distributionTitle: {
@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
 		paddingLeft: 20,
 	},
 	guardianSection: {
-		marginTop: 40,
+		marginTop: 30,
 		marginBottom: 20,
 	},
 	guardianTitle: {
@@ -188,7 +188,7 @@ const styles = StyleSheet.create({
 		paddingLeft: 20,
 	},
 	giftSection: {
-		marginTop: 40,
+		marginTop: 30,
 		marginBottom: 20,
 	},
 	giftTitle: {
@@ -210,6 +210,44 @@ const styles = StyleSheet.create({
 		fontSize: 14,
 		marginBottom: 10,
 		paddingLeft: 20,
+	},
+	witnessSection: {
+		marginTop: 40,
+		marginBottom: 20,
+	},
+	witnessTitle: {
+		fontSize: 24,
+		fontWeight: "bold",
+		marginBottom: 20,
+		textAlign: "left",
+	},
+	witnessText: {
+		textAlign: "justify",
+		fontSize: 14,
+		marginBottom: 15,
+	},
+	witnessSignature: {
+		marginTop: 40,
+		marginBottom: 10,
+	},
+	witnessName: {
+		fontSize: 14,
+		marginBottom: 5,
+	},
+	witnessAddress: {
+		fontSize: 12,
+		color: "#666666",
+		marginBottom: 20,
+	},
+	witnessDate: {
+		fontSize: 12,
+		color: "#666666",
+		marginTop: 20,
+	},
+	signatureLine: {
+		borderBottom: "1px solid #000000",
+		width: "60%",
+		marginBottom: 5,
 	},
 });
 
@@ -270,6 +308,11 @@ interface WillPDFProps {
 			value?: string;
 			beneficiaryId: string;
 			beneficiaryName: string;
+		}>;
+		residuaryBeneficiaries: Array<{
+			id: string;
+			beneficiaryId: string;
+			percentage: number;
 		}>;
 	};
 	additionalText?: string;
@@ -531,136 +574,187 @@ const WillPDF = ({ data }: WillPDFProps) => {
 					</View>
 				)}
 
-				<View>
+				{/* Estate Administration Section */}
+				<View style={styles.distributionSection}>
+					<Text style={styles.distributionTitle}>Administration of Estate</Text>
 					<Text style={styles.distributionText}>
-						I direct that my executors shall distribute my estate in accordance
-						with the following provisions:
+						All the assets that I can dispose of by will are my Estate. My
+						executors may sell all or any of the assets in my Estate as they
+						consider appropriate. From my Estate they must pay:
+					</Text>
+
+					<Text style={styles.distributionText}>1. my debts;</Text>
+
+					<Text style={styles.distributionText}>
+						2. my funeral and testamentary expenses; and
 					</Text>
 
 					<Text style={styles.distributionText}>
-						1. All my debts, funeral expenses, and testamentary expenses shall
-						be paid out of my estate.
+						3. all the previous gifts in this will.
 					</Text>
 
 					<Text style={styles.distributionText}>
-						2. Any assets not specifically mentioned above shall form part of my
-						residuary estate and be distributed as follows:
-					</Text>
-
-					{data.beneficiaries.map((beneficiary, index) => (
-						<View key={index} style={styles.assetItem}>
-							<Text style={styles.assetDescription}>
-								{beneficiary.fullName}
-								{beneficiary.relationship
-									? ` (${beneficiary.relationship})`
-									: ""}
-							</Text>
-						</View>
-					))}
-
-					<Text style={styles.distributionText}>
-						I declare that if any of my beneficiaries predecease me, their share
-						shall be distributed equally among the surviving beneficiaries.
+						My Residuary Estate is whatever remains when these payments have
+						been made. The term Residuary Estate also includes the assets
+						representing the remainder, and any added income.
 					</Text>
 				</View>
 
-				{/* Personal Information */}
-				<View style={styles.section}>
-					<Text style={styles.sectionTitle}>Personal Information</Text>
-					<View style={styles.row}>
-						<Text style={styles.label}>Full Name:</Text>
-						<Text style={styles.value}>{data.personal.fullName}</Text>
-					</View>
-					<View style={styles.row}>
-						<Text style={styles.label}>Date of Birth:</Text>
-						<Text style={styles.value}>{data.personal.dateOfBirth}</Text>
-					</View>
-					<View style={styles.row}>
-						<Text style={styles.label}>Address:</Text>
-						<Text style={styles.value}>{data.personal.address}</Text>
-					</View>
-					<View style={styles.row}>
-						<Text style={styles.label}>Phone:</Text>
-						<Text style={styles.value}>{data.personal.phone}</Text>
-					</View>
-					<View style={styles.row}>
-						<Text style={styles.label}>Marital Status:</Text>
-						<Text style={styles.value}>{data.personal.maritalStatus}</Text>
-					</View>
-				</View>
+				{/* Residuary Estate Section */}
+				<View style={styles.distributionSection}>
+					<Text style={styles.distributionTitle}>
+						Gifts of my Residuary Estate
+					</Text>
 
-				{/* Assets */}
-				<View style={styles.section}>
-					<Text style={styles.sectionTitle}>Assets</Text>
-					{data.assets.map((asset, index) => (
-						<View key={index} style={styles.item}>
-							<View style={styles.row}>
-								<Text style={styles.label}>Type:</Text>
-								<Text style={styles.value}>{asset.type}</Text>
-							</View>
-							<View style={styles.row}>
-								<Text style={styles.label}>Description:</Text>
-								<Text style={styles.value}>{asset.description}</Text>
-							</View>
-							<View style={styles.row}>
-								<Text style={styles.label}>Value:</Text>
-								<Text style={styles.value}>{asset.value}</Text>
-							</View>
-						</View>
-					))}
-				</View>
+					<Text style={styles.distributionText}>
+						I direct that my executors shall distribute my residuary estate in
+						accordance with the following provisions:
+					</Text>
+					{data.residuaryBeneficiaries.map((beneficiary, index) => {
+						const beneficiaryDetails = data.beneficiaries.find(
+							(b) => b.id === beneficiary.beneficiaryId
+						);
+						if (!beneficiaryDetails) return null;
 
-				{/* Beneficiaries */}
-				<View style={styles.section}>
-					<Text style={styles.sectionTitle}>Beneficiaries</Text>
-					{data.beneficiaries.map((beneficiary, index) => (
-						<View key={index} style={styles.item}>
-							<View style={styles.row}>
-								<Text style={styles.label}>Name:</Text>
-								<Text style={styles.value}>{beneficiary.fullName}</Text>
-							</View>
-							<View style={styles.row}>
-								<Text style={styles.label}>Relationship:</Text>
-								<Text style={styles.value}>{beneficiary.relationship}</Text>
-							</View>
-							{beneficiary.email && (
-								<View style={styles.row}>
-									<Text style={styles.label}>Email:</Text>
-									<Text style={styles.value}>{beneficiary.email}</Text>
-								</View>
-							)}
-							{beneficiary.phone && (
-								<View style={styles.row}>
-									<Text style={styles.label}>Phone:</Text>
-									<Text style={styles.value}>{beneficiary.phone}</Text>
-								</View>
-							)}
-							<View style={styles.row}>
-								<Text style={styles.label}>Allocation:</Text>
-								<Text style={styles.value}>
-									<Text>{beneficiary.allocation}</Text>
-									<Text>%</Text>
+						return (
+							<View key={index} style={styles.assetItem}>
+								<Text style={styles.assetDescription}>
+									{beneficiaryDetails.fullName} - {beneficiary.percentage}%
+									{beneficiaryDetails.relationship
+										? ` (${beneficiaryDetails.relationship})`
+										: ""}
 								</Text>
 							</View>
-						</View>
-					))}
+						);
+					})}
+
+					<Text style={styles.distributionText}>
+						I declare that if any of my residuary beneficiaries predecease me,
+						their share shall be distributed equally among the surviving
+						residuary beneficiaries.
+					</Text>
 				</View>
 
-				{/* Witnesses */}
-				<View style={styles.section}>
-					<Text style={styles.sectionTitle}>Witnesses</Text>
+				<View style={styles.distributionSection}>
+					<Text style={styles.distributionTitle}>
+						Power for beneficiaries to disclaim gifts
+					</Text>
+					<Text style={styles.distributionText}>
+						Any beneficiary of this will may disclaim any interest in my Estate
+						in whole or in part.
+					</Text>
+				</View>
+
+				<View style={styles.distributionSection}>
+					<Text style={styles.distributionTitle}>Powers for my executors</Text>
+					<Text style={styles.distributionText}>
+						My executors may transfer assets in kind from my Estate or from my
+						Residuary Estate to any beneficiary to satisfy (wholly or partly)
+						the beneficiary's interest in my Estate or my Residuary Estate.
+					</Text>
+					<Text style={styles.distributionText}>
+						My executors may borrow cash or other assets for any purpose and may
+						mortgage or charge assets in my Estate as security for any borrowing
+					</Text>
+				</View>
+
+				<View style={styles.distributionSection}>
+					<Text style={styles.distributionTitle}>
+						Paying and protecting my executors
+					</Text>
+					<Text style={styles.distributionText}>
+						Anyone who is acting as one of my executors in the course of a
+						business or profession (Professional Executor) is entitled to charge
+						and be paid reasonable remuneration for any services that they or
+						their firm provides.
+					</Text>
+					<Text style={styles.distributionText}>
+						None of my executors, other than a Professional Executor, is liable
+						for any loss to my Estate or my Residuary Estate unless it results
+						from the executor in question:
+					</Text>
+					<Text style={styles.distributionText}>
+						1. acting in a way they know to be contrary to the interests of the
+						beneficiaries of this will; or{" "}
+					</Text>
+
+					<Text style={styles.distributionText}>
+						2. being recklessly indifferent about whether an action is contrary
+						to the beneficiaries' interests.
+					</Text>
+				</View>
+
+				<View style={styles.distributionSection}>
+					<Text style={styles.distributionTitle}>
+						Meaning of words used in this will
+					</Text>
+					<Text style={styles.distributionText}>
+						The rules of interpretation in this clause apply in this will.
+					</Text>
+					<Text style={styles.distributionText}>
+						Express and implied references to an individual's children [do not
+						include the individual's children who are illegitimate] [but do]
+						include the individual's stepchildren, even if the individual has
+						not adopted them
+					</Text>
+					<Text style={styles.distributionText}>
+						References to testamentary expenses include all the expenses
+						incurred in obtaining a grant of probate for my Estate, such as:
+					</Text>
+					<Text style={styles.distributionText}>
+						any fees for the preparation of the will;
+					</Text>
+					<Text style={styles.distributionText}>
+						1. the costs of any action that my executors need to take, including
+						necessary legal proceedings;
+					</Text>
+					<Text style={styles.distributionText}>
+						2. the costs of collecting in, preserving and selling assets in my
+						Estate;
+					</Text>
+					<Text style={styles.distributionText}>
+						3. the costs of administering my Estate, including the professional
+						charges of solicitors, valuers and other advisers; and{" "}
+					</Text>
+					<Text style={styles.distributionText}>
+						4. inheritance tax for which my executors are liable under this will
+						and which is treated as part of the general testamentary and
+						administration expenses of my Estate
+					</Text>
+				</View>
+
+				{/* Witness Signatures Section */}
+				<View style={styles.witnessSection}>
+					<Text style={styles.witnessTitle}>Witness Signatures</Text>
+					<Text style={styles.witnessText}>
+						I declare that this is my last will and testament, and I sign it in
+						the presence of the following witnesses, who in my presence and in
+						the presence of each other, sign as witnesses:
+					</Text>
+
+					{/* Testator Signature */}
+					<View style={styles.witnessSignature}>
+						<View style={styles.signatureLine} />
+						<Text style={styles.witnessName}>
+							Signed by {data.personal.fullName}
+						</Text>
+						<Text style={styles.witnessDate}>Date: _________________</Text>
+					</View>
+
+					{/* Witness Signatures */}
 					{data.witnesses.map((witness, index) => (
-						<View key={index} style={styles.item}>
-							<View style={styles.row}>
-								<Text style={styles.label}>Name:</Text>
-								<Text style={styles.value}>{witness.fullName}</Text>
-							</View>
-							<View style={styles.row}>
-								<Text style={styles.label}>Address:</Text>
-								<Text style={styles.value}>{witness.address}</Text>
-							</View>
+						<View key={index} style={styles.witnessSignature}>
+							<View style={styles.signatureLine} />
+							<Text style={styles.witnessName}>{witness.fullName}</Text>
+							<Text style={styles.witnessAddress}>{witness.address}</Text>
+							<Text style={styles.witnessDate}>Date: _________________</Text>
 						</View>
 					))}
+
+					<Text style={styles.witnessText}>
+						Signed by the testator in our presence and then by us in the
+						presence of the testator and each other on the date shown above.
+					</Text>
 				</View>
 			</Page>
 		</Document>
