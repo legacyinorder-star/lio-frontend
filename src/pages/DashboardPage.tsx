@@ -249,7 +249,7 @@ export default function DashboardPage() {
 											variant="outline"
 											size="sm"
 											onClick={() => handleEditWill(will.id)}
-											className="hover:bg-blue-100 text-blue-600"
+											className="hover:bg-blue-100 text-blue-600 cursor-pointer"
 										>
 											<Edit className="h-4 w-4 mr-2" />
 											Edit
@@ -258,7 +258,7 @@ export default function DashboardPage() {
 											variant="outline"
 											size="sm"
 											onClick={() => handleDownloadPDF(will)}
-											className="hover:bg-light-green/10"
+											className="hover:bg-light-green/10 cursor-pointer"
 										>
 											<Download className="h-4 w-4 mr-2" />
 											Download
@@ -267,7 +267,7 @@ export default function DashboardPage() {
 											variant="outline"
 											size="sm"
 											onClick={() => handleDeleteWill(will.id)}
-											className="hover:bg-red-100 text-red-600"
+											className="hover:bg-red-100 text-red-600 cursor-pointer"
 										>
 											<Trash2 className="h-4 w-4 mr-2" />
 											Delete

@@ -3247,27 +3247,45 @@ export default function WillWizard() {
 									value: asset.value,
 									type: asset.type,
 									description: asset.description,
+									distributionType: asset.distributionType,
+									beneficiaries: asset.beneficiaries.map((b) => ({
+										id: b.id,
+										percentage: b.percentage,
+									})),
 								})),
 								beneficiaries: [
 									...(formData.spouse
 										? [
 												{
+													id: "spouse",
 													fullName: formData.spouse.fullName,
 													relationship: "Spouse",
-													email: formData.spouse.email || "",
-													phone: formData.spouse.phone || "",
-													allocation: "100",
+													allocation: 100,
 												},
 										  ]
 										: []),
 									...formData.children.map((child) => ({
+										id: child.id,
 										fullName: `${child.firstName} ${child.lastName}`,
 										relationship: "Child",
+										dateOfBirth: child.dateOfBirth,
+										requiresGuardian: child.requiresGuardian,
 										email: "",
 										phone: "",
-										allocation: "100",
+										allocation: 100,
+									})),
+									...formData.guardians.map((guardian) => ({
+										id: guardian.id,
+										fullName: `${guardian.firstName} ${guardian.lastName}`,
+										relationship: `${guardian.relationship} (Guardian${
+											guardian.isPrimary ? " - Primary" : ""
+										})`,
+										email: "",
+										phone: "",
+										allocation: 100,
 									})),
 									...(formData.otherBeneficiaries || []).map((beneficiary) => ({
+										id: beneficiary.id,
 										fullName:
 											beneficiary.type === "charity"
 												? beneficiary.organizationName || ""
@@ -3275,7 +3293,7 @@ export default function WillWizard() {
 										relationship: beneficiary.relationship,
 										email: beneficiary.email,
 										phone: beneficiary.phone,
-										allocation: beneficiary.allocation,
+										allocation: Number(beneficiary.allocation) || 0,
 									})),
 								],
 								executors: formData.executors.map((executor) => ({
@@ -3291,10 +3309,29 @@ export default function WillWizard() {
 									type: executor.type,
 									companyName: executor.companyName,
 									contactPerson: executor.contactPerson,
+									registrationNumber: executor.registrationNumber,
 								})),
 								witnesses: formData.witnesses.map((witness) => ({
 									fullName: `${witness.firstName} ${witness.lastName}`,
 									address: formatAddress(witness.address),
+								})),
+								guardians: formData.guardians.map((guardian) => ({
+									fullName: `${guardian.firstName} ${guardian.lastName}`,
+									relationship: guardian.relationship,
+									isPrimary: guardian.isPrimary,
+								})),
+								gifts: formData.gifts.map((gift) => ({
+									type: gift.type,
+									description: gift.description,
+									value: gift.value?.toString(),
+									beneficiaryId: gift.beneficiaryId,
+									beneficiaryName: getBeneficiaryName(
+										gift.beneficiaryId,
+										formData.spouse,
+										formData.children,
+										formData.guardians,
+										formData.otherBeneficiaries
+									),
 								})),
 							}}
 						/>

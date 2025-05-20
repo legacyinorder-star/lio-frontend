@@ -17,13 +17,21 @@ export interface ReviewStepProps {
 			type: string;
 			description: string;
 			value: string;
+			distributionType: "equal" | "percentage";
+			beneficiaries: Array<{
+				id: string;
+				percentage?: number;
+			}>;
 		}>;
 		beneficiaries: Array<{
+			id: string;
 			fullName: string;
 			relationship: string;
 			email?: string;
 			phone?: string;
 			allocation: number;
+			dateOfBirth?: string;
+			requiresGuardian?: boolean;
 		}>;
 		executors: Array<{
 			fullName?: string;
@@ -35,10 +43,24 @@ export interface ReviewStepProps {
 			isPrimary: boolean;
 			type: "individual" | "corporate";
 			contactPerson?: string;
+			registrationNumber?: string;
 		}>;
 		witnesses: Array<{
 			fullName: string;
 			address: string;
+		}>;
+		guardians: Array<{
+			fullName: string;
+			relationship: string;
+			isPrimary: boolean;
+			address?: string;
+		}>;
+		gifts: Array<{
+			type: string;
+			description: string;
+			value?: string;
+			beneficiaryId: string;
+			beneficiaryName: string;
 		}>;
 	};
 }
@@ -52,6 +74,7 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 	({ data }, ref) => {
 		const [isSaving, setIsSaving] = useState(false);
 		const navigate = useNavigate();
+		const [_willId, setWillId] = useState<string>("");
 
 		const generatePDF = async (): Promise<Blob> => {
 			// Create the PDF document
@@ -85,7 +108,7 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 
 				// Create will object with metadata
 				const will = {
-					id: crypto.randomUUID(),
+					id: _willId,
 					createdAt: new Date().toISOString(),
 					updatedAt: new Date().toISOString(),
 					data: data,
@@ -98,7 +121,7 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 				// Save back to localStorage
 				localStorage.setItem("wills", JSON.stringify(existingWills));
 
-				return will.id;
+				return _willId;
 			} catch (error) {
 				console.error("Error saving will to localStorage:", error);
 				throw new Error("Failed to save will data");
@@ -111,8 +134,11 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 			try {
 				setIsSaving(true);
 
+				// Generate a unique ID for the will
+				setWillId(crypto.randomUUID());
+
 				// Save will data to localStorage first
-				const willId = saveWillToLocalStorage();
+				saveWillToLocalStorage();
 
 				// Generate PDF blob
 				const blob = await generatePDF();
