@@ -187,6 +187,30 @@ const styles = StyleSheet.create({
 		marginBottom: 10,
 		paddingLeft: 20,
 	},
+	giftSection: {
+		marginTop: 40,
+		marginBottom: 20,
+	},
+	giftTitle: {
+		fontSize: 24,
+		fontWeight: "bold",
+		marginBottom: 20,
+		textAlign: "left",
+	},
+	giftText: {
+		textAlign: "justify",
+		fontSize: 14,
+		marginBottom: 15,
+	},
+	giftItem: {
+		marginBottom: 20,
+	},
+	giftDescription: {
+		textAlign: "justify",
+		fontSize: 14,
+		marginBottom: 10,
+		paddingLeft: 20,
+	},
 });
 
 interface WillPDFProps {
@@ -476,7 +500,38 @@ const WillPDF = ({ data }: WillPDFProps) => {
 							</Text>
 						</View>
 					))}
+				</View>
 
+				{/* Specific Bequests Section */}
+				{data.gifts.length > 0 && (
+					<View style={styles.giftSection}>
+						<Text style={styles.giftTitle}>Specific Bequests</Text>
+						<Text style={styles.giftText}>
+							I hereby make the following specific bequests:
+						</Text>
+
+						{data.gifts.map((gift, index) => (
+							<View key={index} style={styles.giftItem}>
+								<Text style={styles.giftDescription}>
+									{index + 1}. I give and bequeath{" "}
+									{gift.type === "Cash" && gift.value
+										? `the sum of $${Number(gift.value).toLocaleString()}`
+										: gift.description}{" "}
+									to {gift.beneficiaryName}.
+								</Text>
+							</View>
+						))}
+
+						<Text style={styles.giftText}>
+							I direct that these specific bequests shall be paid or delivered
+							as soon as practicable after my death, and that any interest
+							accruing on cash bequests shall be paid to the respective
+							beneficiaries.
+						</Text>
+					</View>
+				)}
+
+				<View>
 					<Text style={styles.distributionText}>
 						I direct that my executors shall distribute my estate in accordance
 						with the following provisions:
@@ -495,7 +550,7 @@ const WillPDF = ({ data }: WillPDFProps) => {
 					{data.beneficiaries.map((beneficiary, index) => (
 						<View key={index} style={styles.assetItem}>
 							<Text style={styles.assetDescription}>
-								{beneficiary.fullName} - {beneficiary.allocation}%
+								{beneficiary.fullName}
 								{beneficiary.relationship
 									? ` (${beneficiary.relationship})`
 									: ""}
