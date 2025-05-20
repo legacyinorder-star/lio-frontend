@@ -67,6 +67,7 @@ export interface ReviewStepProps {
 			beneficiaryId: string;
 			percentage: number;
 		}>;
+		additionalInstructions?: string;
 	};
 	onSave?: () => void;
 }
@@ -372,6 +373,18 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 						))}
 					</div>
 				</div>
+
+				{/* Additional Instructions */}
+				{data.additionalInstructions && (
+					<div className="space-y-4">
+						<h3 className="text-lg font-semibold">Additional Instructions</h3>
+						<div className="rounded-lg border border-gray-200 p-4">
+							<div className="whitespace-pre-wrap">
+								{data.additionalInstructions}
+							</div>
+						</div>
+					</div>
+				)}
 			</div>
 		);
 	}

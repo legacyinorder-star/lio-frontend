@@ -45,6 +45,7 @@ type QuestionType =
 	| "residuary"
 	| "executors"
 	| "witnesses"
+	| "additionalInstructions"
 	| "review";
 
 // Define the address type
@@ -176,6 +177,7 @@ interface WillFormData {
 	}>;
 	executors: Executor[];
 	witnesses: Witness[];
+	additionalInstructions: string;
 }
 
 // Add these types and constants after the other type definitions
@@ -328,6 +330,7 @@ export default function WillWizard() {
 		residuaryBeneficiaries: [],
 		executors: [],
 		witnesses: [],
+		additionalInstructions: "",
 	});
 
 	// For the spouse dialog
@@ -692,6 +695,8 @@ export default function WillWizard() {
 		} else if (currentQuestion === "executors") {
 			setCurrentQuestion("witnesses");
 		} else if (currentQuestion === "witnesses") {
+			setCurrentQuestion("additionalInstructions");
+		} else if (currentQuestion === "additionalInstructions") {
 			setCurrentQuestion("review");
 		}
 	};
@@ -742,8 +747,11 @@ export default function WillWizard() {
 			case "witnesses":
 				setCurrentQuestion("executors");
 				break;
-			case "review":
+			case "additionalInstructions":
 				setCurrentQuestion("witnesses");
+				break;
+			case "review":
+				setCurrentQuestion("additionalInstructions");
 				break;
 			default:
 				break;
@@ -1222,6 +1230,16 @@ export default function WillWizard() {
 		setFormData((prev) => ({
 			...prev,
 			witnesses: prev.witnesses.filter((witness) => witness.id !== witnessId),
+		}));
+	};
+
+	// Add handler for additional instructions
+	const handleAdditionalInstructionsChange = (
+		e: React.ChangeEvent<HTMLTextAreaElement>
+	) => {
+		setFormData((prev) => ({
+			...prev,
+			additionalInstructions: e.target.value,
 		}));
 	};
 
@@ -3385,6 +3403,50 @@ export default function WillWizard() {
 					</div>
 				);
 
+			case "additionalInstructions":
+				return (
+					<div className="space-y-4">
+						<div className="text-2xl font-semibold">
+							Additional Instructions or Information
+						</div>
+						<div className="text-muted-foreground">
+							You can provide any additional instructions, wishes, or
+							information that you would like to include in your will. This
+							could include funeral arrangements, specific bequests of personal
+							items, or any other matters you want to address.
+						</div>
+						<div className="space-y-4 mt-6">
+							<div className="space-y-2">
+								<Label htmlFor="additionalInstructions">
+									Additional Instructions
+								</Label>
+								<textarea
+									id="additionalInstructions"
+									value={formData.additionalInstructions}
+									onChange={handleAdditionalInstructionsChange}
+									placeholder="Enter any additional instructions or information you would like to include in your will..."
+									className="w-full min-h-[200px] p-2 border rounded-md"
+								/>
+							</div>
+						</div>
+						<div className="flex justify-between pt-4">
+							<Button
+								variant="outline"
+								onClick={handleBack}
+								className="cursor-pointer"
+							>
+								<ArrowLeft className="mr-2 h-4 w-4" /> Back
+							</Button>
+							<Button
+								onClick={handleNext}
+								className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
+							>
+								Next <ArrowRight className="ml-2 h-4 w-4" />
+							</Button>
+						</div>
+					</div>
+				);
+
 			case "review":
 				return (
 					<div className="space-y-4">
@@ -3493,6 +3555,7 @@ export default function WillWizard() {
 										percentage: ben.percentage,
 									})
 								),
+								additionalInstructions: formData.additionalInstructions,
 							}}
 							onSave={handleSaveWill}
 						/>
@@ -3525,7 +3588,7 @@ export default function WillWizard() {
 	};
 
 	// Track progress
-	const totalQuestions = 11; // Updated to remove finished step
+	const totalQuestions = 12; // Updated to include additional instructions
 	const progress = (() => {
 		switch (currentQuestion) {
 			case "name":
@@ -3548,8 +3611,10 @@ export default function WillWizard() {
 				return 9;
 			case "witnesses":
 				return 10;
-			case "review":
+			case "additionalInstructions":
 				return 11;
+			case "review":
+				return 12;
 			default:
 				return 1;
 		}

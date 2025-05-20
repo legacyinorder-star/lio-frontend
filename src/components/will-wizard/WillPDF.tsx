@@ -249,6 +249,20 @@ const styles = StyleSheet.create({
 		width: "60%",
 		marginBottom: 5,
 	},
+	additionalInstructionsSection: {
+		marginTop: 20,
+		marginBottom: 20,
+	},
+	additionalInstructionsTitle: {
+		fontSize: 14,
+		fontWeight: "bold",
+		marginBottom: 10,
+	},
+	additionalInstructionsText: {
+		fontSize: 12,
+		lineHeight: 1.5,
+		marginBottom: 10,
+	},
 });
 
 interface WillPDFProps {
@@ -314,6 +328,7 @@ interface WillPDFProps {
 			beneficiaryId: string;
 			percentage: number;
 		}>;
+		additionalInstructions?: string;
 	};
 	additionalText?: string;
 }
@@ -635,6 +650,18 @@ const WillPDF = ({ data }: WillPDFProps) => {
 					</Text>
 				</View>
 
+				{/* Add Additional Instructions section */}
+				{data.additionalInstructions && (
+					<View style={styles.additionalInstructionsSection}>
+						<Text style={styles.additionalInstructionsTitle}>
+							Additional Instructions and Information
+						</Text>
+						<Text style={styles.additionalInstructionsText}>
+							{data.additionalInstructions}
+						</Text>
+					</View>
+				)}
+
 				<View style={styles.distributionSection}>
 					<Text style={styles.distributionTitle}>
 						Power for beneficiaries to disclaim gifts
@@ -736,7 +763,7 @@ const WillPDF = ({ data }: WillPDFProps) => {
 					<View style={styles.witnessSignature}>
 						<View style={styles.signatureLine} />
 						<Text style={styles.witnessName}>
-							Signed by {data.personal.fullName}
+							Signed by {data.personal.fullName} (Testator)
 						</Text>
 						<Text style={styles.witnessDate}>Date: _________________</Text>
 					</View>
@@ -745,7 +772,9 @@ const WillPDF = ({ data }: WillPDFProps) => {
 					{data.witnesses.map((witness, index) => (
 						<View key={index} style={styles.witnessSignature}>
 							<View style={styles.signatureLine} />
-							<Text style={styles.witnessName}>{witness.fullName}</Text>
+							<Text style={styles.witnessName}>
+								{witness.fullName} (Witness)
+							</Text>
 							<Text style={styles.witnessAddress}>{witness.address}</Text>
 							<Text style={styles.witnessDate}>Date: _________________</Text>
 						</View>
