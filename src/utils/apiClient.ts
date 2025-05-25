@@ -1,5 +1,5 @@
 import { getApiUrl } from "@/config/api";
-import { getAuthToken } from "./auth";
+import { getAuthToken, removeAuthData } from "./auth";
 import { toast } from "sonner";
 
 interface ApiOptions extends RequestInit {
@@ -32,6 +32,8 @@ export async function apiClient<T = unknown>(
 			headers.set("Authorization", `Bearer ${token}`);
 		} else if (authenticated) {
 			// If authentication is required but no token is available
+			removeAuthData(); // Clear auth data
+			window.location.href = "/login"; // Redirect to login page
 			return {
 				data: null,
 				error: "Authentication required",
@@ -66,6 +68,8 @@ export async function apiClient<T = unknown>(
 			// Show toast for common error codes
 			if (response.status === 401) {
 				toast.error("Session expired. Please log in again.");
+				removeAuthData(); // Clear auth data
+				window.location.href = "/login"; // Redirect to login page
 			} else if (response.status === 403) {
 				toast.error("You don't have permission to perform this action.");
 			} else if (response.status >= 500) {
