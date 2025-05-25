@@ -278,14 +278,14 @@ interface WillPDFProps {
 			type: string;
 			description: string;
 			value: string;
-			distributionType: "equal" | "percentage";
-			beneficiaries: Array<{
-				id: string;
+			distributionType?: "equal" | "percentage";
+			beneficiaries?: Array<{
+				id?: string;
 				percentage?: number;
 			}>;
 		}>;
 		beneficiaries: Array<{
-			id: string;
+			id?: string;
 			fullName: string;
 			relationship: string;
 			email?: string;
@@ -310,20 +310,20 @@ interface WillPDFProps {
 			fullName: string;
 			address: string;
 		}>;
-		guardians: Array<{
+		guardians?: Array<{
 			fullName: string;
 			relationship: string;
 			isPrimary: boolean;
 			address?: string;
 		}>;
-		gifts: Array<{
+		gifts?: Array<{
 			type: string;
 			description: string;
 			value?: string;
 			beneficiaryId: string;
 			beneficiaryName: string;
 		}>;
-		residuaryBeneficiaries: Array<{
+		residuaryBeneficiaries?: Array<{
 			id: string;
 			beneficiaryId: string;
 			percentage: number;
@@ -333,7 +333,7 @@ interface WillPDFProps {
 	additionalText?: string;
 }
 
-const WillPDF = ({ data }: WillPDFProps) => {
+const WillPDF: React.FC<WillPDFProps> = ({ data, additionalText }) => {
 	// Find primary executor
 	const primaryExecutor = data.executors.find((exec) => exec.isPrimary);
 	// Get additional executors (excluding primary)
@@ -354,11 +354,11 @@ const WillPDF = ({ data }: WillPDFProps) => {
 		type: string;
 		description: string;
 		value: string;
-		distributionType: "equal" | "percentage";
-		beneficiaries: { id: string; percentage?: number }[];
+		distributionType?: "equal" | "percentage";
+		beneficiaries?: { id?: string; percentage?: number }[];
 	}) => {
 		// Get beneficiaries with non-zero allocation for this asset
-		const relevantBeneficiaries = _asset.beneficiaries;
+		const relevantBeneficiaries = _asset.beneficiaries || [];
 
 		if (relevantBeneficiaries.length === 0) {
 			return "No beneficiaries specified";
@@ -367,13 +367,17 @@ const WillPDF = ({ data }: WillPDFProps) => {
 		// Handle single beneficiary case
 		if (relevantBeneficiaries.length === 1) {
 			const beneficiary = data.beneficiaries.find(
-				(ben) => ben.id === relevantBeneficiaries[0].id
+				(ben) =>
+					ben.id === relevantBeneficiaries[0].id ||
+					ben.fullName === relevantBeneficiaries[0].id
 			) || { fullName: "Unknown Beneficiary" };
 
 			if (_asset.distributionType === "equal") {
 				return `to ${beneficiary.fullName}`;
-			} else {
+			} else if (_asset.distributionType === "percentage") {
 				return `to ${beneficiary.fullName} (${relevantBeneficiaries[0].percentage}%)`;
+			} else {
+				return `to ${beneficiary.fullName}`;
 			}
 		}
 
@@ -384,15 +388,17 @@ const WillPDF = ({ data }: WillPDFProps) => {
 				const prefix = idx === 0 ? "" : isSecondLast ? " and " : ", ";
 				// Find the beneficiary in the data to get their name
 				const beneficiary = data.beneficiaries.find(
-					(ben) => ben.id === b.id
+					(ben) => ben.id === b.id || ben.fullName === b.id
 				) || { fullName: "Unknown Beneficiary" }; // Fallback if not found
 
 				if (_asset.distributionType === "equal") {
 					// For equal distribution, just show the name
 					return `${prefix}${beneficiary.fullName}`;
-				} else {
+				} else if (_asset.distributionType === "percentage") {
 					// For percentage distribution, show the percentage
 					return `${prefix}${beneficiary.fullName} (${b.percentage}%)`;
+				} else {
+					return `${prefix}${beneficiary.fullName}`;
 				}
 			})
 			.join("");
@@ -561,7 +567,7 @@ const WillPDF = ({ data }: WillPDFProps) => {
 				</View>
 
 				{/* Specific Bequests Section */}
-				{data.gifts.length > 0 && (
+				{data.gifts && data.gifts.length > 0 && (
 					<View style={styles.giftSection}>
 						<Text style={styles.giftTitle}>Specific Bequests</Text>
 						<Text style={styles.giftText}>
@@ -616,49 +622,59 @@ const WillPDF = ({ data }: WillPDFProps) => {
 				</View>
 
 				{/* Residuary Estate Section */}
-				<View style={styles.distributionSection}>
-					<Text style={styles.distributionTitle}>
-						Gifts of my Residuary Estate
-					</Text>
+				{data.residuaryBeneficiaries &&
+					data.residuaryBeneficiaries.length > 0 && (
+						<View style={styles.distributionSection}>
+							<Text style={styles.distributionTitle}>
+								Gifts of my Residuary Estate
+							</Text>
 
-					<Text style={styles.distributionText}>
-						I direct that my executors shall distribute my residuary estate in
-						accordance with the following provisions:
-					</Text>
-					{data.residuaryBeneficiaries.map((beneficiary, index) => {
-						const beneficiaryDetails = data.beneficiaries.find(
-							(b) => b.id === beneficiary.beneficiaryId
-						);
-						if (!beneficiaryDetails) return null;
+							<Text style={styles.distributionText}>
+								I direct that my executors shall distribute my residuary estate
+								in accordance with the following provisions:
+							</Text>
+							{data.residuaryBeneficiaries.map((beneficiary, index) => {
+								const beneficiaryDetails = data.beneficiaries.find(
+									(b) => b.id === beneficiary.beneficiaryId
+								);
+								if (!beneficiaryDetails) return null;
 
-						return (
-							<View key={index} style={styles.assetItem}>
-								<Text style={styles.assetDescription}>
-									{beneficiaryDetails.fullName} - {beneficiary.percentage}%
-									{beneficiaryDetails.relationship
-										? ` (${beneficiaryDetails.relationship})`
-										: ""}
-								</Text>
-							</View>
-						);
-					})}
+								return (
+									<View key={index} style={styles.assetItem}>
+										<Text style={styles.assetDescription}>
+											{beneficiaryDetails.fullName} - {beneficiary.percentage}%
+											{beneficiaryDetails.relationship
+												? ` (${beneficiaryDetails.relationship})`
+												: ""}
+										</Text>
+									</View>
+								);
+							})}
 
-					<Text style={styles.distributionText}>
-						I declare that if any of my residuary beneficiaries predecease me,
-						their share shall be distributed equally among the surviving
-						residuary beneficiaries.
-					</Text>
-				</View>
+							<Text style={styles.distributionText}>
+								I declare that if any of my residuary beneficiaries predecease
+								me, their share shall be distributed equally among the surviving
+								residuary beneficiaries.
+							</Text>
+						</View>
+					)}
 
 				{/* Add Additional Instructions section */}
-				{data.additionalInstructions && (
+				{(data.additionalInstructions || additionalText) && (
 					<View style={styles.additionalInstructionsSection}>
 						<Text style={styles.additionalInstructionsTitle}>
 							Additional Instructions and Information
 						</Text>
-						<Text style={styles.additionalInstructionsText}>
-							{data.additionalInstructions}
-						</Text>
+						{data.additionalInstructions && (
+							<Text style={styles.additionalInstructionsText}>
+								{data.additionalInstructions}
+							</Text>
+						)}
+						{additionalText && (
+							<Text style={styles.additionalInstructionsText}>
+								{additionalText}
+							</Text>
+						)}
 					</View>
 				)}
 

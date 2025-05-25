@@ -510,22 +510,22 @@ export default function WillWizard() {
 		};
 
 	// Handle adding/editing child
-	const _addChild = () => {
-		const newChild: Child = {
-			id: crypto.randomUUID() as `${string}-${string}-${string}-${string}-${string}`,
-			...childForm,
-		};
-		setFormData((prev) => ({
-			...prev,
-			children: [...prev.children, newChild],
-		}));
-		setChildForm({
-			firstName: "",
-			lastName: "",
-			dateOfBirth: "",
-			requiresGuardian: false,
-		});
-	};
+	// const _addChild = () => {
+	// 	const newChild: Child = {
+	// 		id: crypto.randomUUID() as `${string}-${string}-${string}-${string}-${string}`,
+	// 		...childForm,
+	// 	};
+	// 	setFormData((prev) => ({
+	// 		...prev,
+	// 		children: [...prev.children, newChild],
+	// 	}));
+	// 	setChildForm({
+	// 		firstName: "",
+	// 		lastName: "",
+	// 		dateOfBirth: "",
+	// 		requiresGuardian: false,
+	// 	});
+	// };
 
 	// Handle editing child
 	const editChild = (child: Child) => {

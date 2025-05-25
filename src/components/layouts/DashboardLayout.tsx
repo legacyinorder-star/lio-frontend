@@ -30,12 +30,6 @@ import { cn } from "@/lib/utils";
 import { type UserDetails } from "@/utils/auth";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipProvider,
-	TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { toast } from "sonner";
 
 export function DashboardLayout() {
