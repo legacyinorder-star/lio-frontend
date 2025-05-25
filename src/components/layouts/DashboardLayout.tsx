@@ -16,6 +16,7 @@ import {
 	BookText,
 	ChevronDown,
 	User,
+	X,
 } from "lucide-react";
 import {
 	DropdownMenu,
@@ -30,13 +31,23 @@ import { cn } from "@/lib/utils";
 import { type UserDetails } from "@/utils/auth";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipProvider,
-	TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { toast } from "sonner";
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import axios from "axios";
+
+interface ActiveWill {
+	id: string;
+	updatedAt: string;
+	status: string;
+}
 
 export function DashboardLayout() {
 	const navigate = useNavigate();
@@ -44,6 +55,9 @@ export function DashboardLayout() {
 	const { user } = useAuth();
 	const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
+	const [showWillDialog, setShowWillDialog] = useState(false);
+	const [activeWill, setActiveWill] = useState<ActiveWill | null>(null);
+	const [isLoadingWill, setIsLoadingWill] = useState(false);
 
 	useEffect(() => {
 		// Set a small delay to ensure auth state is properly loaded
@@ -116,6 +130,43 @@ export function DashboardLayout() {
 			description: "Create a letter of wishes",
 		},
 	];
+
+	const checkActiveWill = async () => {
+		try {
+			setIsLoadingWill(true);
+			const response = await axios.get("/wills/get-user-active-will");
+			// Handle both array and single object responses
+			const willData = Array.isArray(response.data)
+				? response.data[0]
+				: response.data;
+			if (willData) {
+				setActiveWill(willData);
+				setShowWillDialog(true);
+			} else {
+				// If no will data found, proceed to create new will
+				navigate("/app/create-will");
+			}
+		} catch (error) {
+			console.error("Error checking active will:", error);
+			// If there's an error, just proceed to create new will
+			navigate("/app/create-will");
+		} finally {
+			setIsLoadingWill(false);
+		}
+	};
+
+	const handleCreateWill = () => {
+		setShowWillDialog(false);
+		setActiveWill(null);
+		navigate("/app/create-will");
+	};
+
+	const handleContinueWill = () => {
+		setShowWillDialog(false);
+		if (activeWill?.id) {
+			navigate(`/app/edit-will/${activeWill.id}`);
+		}
+	};
 
 	// Show loading state instead of null
 	if (isLoading || !userDetails) {
@@ -197,9 +248,23 @@ export function DashboardLayout() {
 									<Button
 										variant="default"
 										className="bg-light-green hover:bg-light-green/90 text-black"
+										onClick={(e) => {
+											e.preventDefault();
+											checkActiveWill();
+										}}
+										disabled={isLoadingWill}
 									>
-										<Plus className="mr-2 h-4 w-4" />
-										Create
+										{isLoadingWill ? (
+											<>
+												<div className="h-4 w-4 animate-spin rounded-full border-t-2 border-b-2 border-black mr-2"></div>
+												Loading...
+											</>
+										) : (
+											<>
+												<Plus className="mr-2 h-4 w-4" />
+												Create
+											</>
+										)}
 									</Button>
 								</DropdownMenuTrigger>
 								<DropdownMenuContent
@@ -216,7 +281,16 @@ export function DashboardLayout() {
 											asChild
 											className="cursor-pointer hover:bg-[#F5F5F5]"
 										>
-											<Link to={doc.href} className="flex items-center">
+											<Link
+												to={doc.href}
+												className="flex items-center"
+												onClick={(e) => {
+													if (doc.title === "Will") {
+														e.preventDefault();
+														checkActiveWill();
+													}
+												}}
+											>
 												<doc.icon className="mr-2 h-4 w-4" />
 												<div className="flex flex-col">
 													<span>{doc.title}</span>
@@ -306,6 +380,50 @@ export function DashboardLayout() {
 				<main className="flex-1 p-6 overflow-auto">
 					<Outlet />
 				</main>
+
+				{/* Will Creation Dialog */}
+				<AlertDialog open={showWillDialog} onOpenChange={setShowWillDialog}>
+					<AlertDialogContent className="bg-white">
+						<button
+							onClick={() => setShowWillDialog(false)}
+							className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground"
+						>
+							<X className="h-4 w-4" />
+							<span className="sr-only">Close</span>
+						</button>
+						<AlertDialogHeader>
+							<AlertDialogTitle>Active Will Found</AlertDialogTitle>
+							<AlertDialogDescription>
+								{activeWill ? (
+									<>
+										You already have an active will that was last updated on{" "}
+										{new Date(activeWill.updatedAt).toLocaleDateString()}. Would
+										you like to continue editing your existing will or create a
+										new one?
+									</>
+								) : (
+									"Would you like to create a new will?"
+								)}
+							</AlertDialogDescription>
+						</AlertDialogHeader>
+						<AlertDialogFooter>
+							{activeWill && (
+								<AlertDialogAction
+									onClick={handleContinueWill}
+									className="bg-light-green hover:bg-light-green/90 text-black cursor-pointer"
+								>
+									Continue Existing Will
+								</AlertDialogAction>
+							)}
+							<AlertDialogAction
+								onClick={handleCreateWill}
+								className="bg-primary hover:bg-primary/90 cursor-pointer"
+							>
+								Create New Will
+							</AlertDialogAction>
+						</AlertDialogFooter>
+					</AlertDialogContent>
+				</AlertDialog>
 			</div>
 		</div>
 	);
