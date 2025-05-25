@@ -24,8 +24,7 @@ import {
 	DropdownMenuItem,
 	DropdownMenuLabel,
 	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@/components/ui/custom-dropdown-menu";
 import { Avatar } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { type UserDetails } from "@/utils/auth";
@@ -238,53 +237,85 @@ export function DashboardLayout() {
 								<Bell className="h-5 w-5" />
 								<span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500"></span>
 							</Button>
-							<DropdownMenu>
-								<DropdownMenuTrigger asChild>
-									<Button
-										variant="default"
-										className="bg-light-green hover:bg-light-green/90 text-black"
-										onClick={(e) => {
-											e.preventDefault();
+							<DropdownMenu
+								onOpenChange={(open) => {
+									if (!open) {
+										const triggerButton = document.querySelector(
+											"[data-create-button]"
+										);
+										if (triggerButton instanceof HTMLElement) {
+											triggerButton.focus();
+										}
+									}
+								}}
+							>
+								<Button
+									variant="default"
+									className="bg-light-green hover:bg-light-green/90 text-black cursor-pointer"
+									onClick={(e) => {
+										e.preventDefault();
+										e.stopPropagation();
+										if (!e.currentTarget.getAttribute("data-state")) {
 											checkActiveWill();
-										}}
-										disabled={isLoadingWill}
-									>
-										{isLoadingWill ? (
-											<>
-												<div className="h-4 w-4 animate-spin rounded-full border-t-2 border-b-2 border-black mr-2"></div>
-												Loading...
-											</>
-										) : (
-											<>
-												<Plus className="mr-2 h-4 w-4" />
-												Create
-											</>
-										)}
-									</Button>
-								</DropdownMenuTrigger>
+										}
+									}}
+									disabled={isLoadingWill}
+									data-create-button
+									aria-expanded={isLoadingWill ? undefined : showWillDialog}
+									aria-haspopup="dialog"
+									aria-controls="create-document-menu"
+								>
+									{isLoadingWill ? (
+										<>
+											<div className="h-4 w-4 animate-spin rounded-full border-t-2 border-b-2 border-black mr-2" />
+											Loading...
+										</>
+									) : (
+										<>
+											<Plus className="mr-2 h-4 w-4" />
+											Create Will
+										</>
+									)}
+								</Button>
 								<DropdownMenuContent
+									id="create-document-menu"
 									className="w-56 bg-white border border-[#ECECEC] shadow-md"
-									align="start"
 								>
 									<DropdownMenuLabel className="font-medium">
 										Create New Document
 									</DropdownMenuLabel>
 									<DropdownMenuSeparator />
-									{documentTypes.map((doc) => (
+									{documentTypes.map((doc, index) => (
 										<DropdownMenuItem
 											key={doc.href}
 											asChild
 											className="cursor-pointer hover:bg-[#F5F5F5]"
+											onSelect={(e) => {
+												e.preventDefault();
+												e.stopPropagation();
+												if (doc.title === "Will") {
+													// Close the dropdown first
+													const trigger = document.querySelector(
+														"[data-create-button]"
+													);
+													if (trigger instanceof HTMLElement) {
+														trigger.click();
+													}
+													// Then check will after a small delay
+													setTimeout(() => {
+														checkActiveWill();
+													}, 0);
+												} else {
+													navigate(doc.href);
+												}
+											}}
 										>
 											<Link
 												to={doc.href}
-												className="flex items-center"
-												onClick={(e) => {
-													if (doc.title === "Will") {
-														e.preventDefault();
-														checkActiveWill();
-													}
-												}}
+												className="flex items-center cursor-pointer"
+												role="menuitem"
+												tabIndex={0}
+												id={`menu-item-${index}`}
 											>
 												<doc.icon className="mr-2 h-4 w-4" />
 												<div className="flex flex-col">
@@ -299,25 +330,36 @@ export function DashboardLayout() {
 								</DropdownMenuContent>
 							</DropdownMenu>
 
-							<DropdownMenu>
-								<DropdownMenuTrigger asChild>
-									<Button
-										variant="ghost"
-										className="flex items-center space-x-2 px-2 hover:bg-transparent"
-									>
-										<Avatar className="h-4 w-4 bg-black/10">
-											<User className="h-4 w-4 text-black" />
-										</Avatar>
-										<span className="text-sm font-[400]">
-											{userDetails.first_name + " " + userDetails.last_name}
-										</span>
-										<ChevronDown className="h-4 w-4 text-muted-foreground" />
-									</Button>
-								</DropdownMenuTrigger>
+							<DropdownMenu
+								align="end"
+								onOpenChange={(open) => {
+									if (!open) {
+										const triggerButton = document.querySelector(
+											"[data-user-menu-trigger]"
+										);
+										if (triggerButton instanceof HTMLElement) {
+											triggerButton.focus();
+										}
+									}
+								}}
+							>
+								<Button
+									variant="ghost"
+									className="flex items-center space-x-2 px-2 hover:bg-transparent"
+									data-user-menu-trigger
+									aria-haspopup="menu"
+								>
+									<Avatar className="h-4 w-4 bg-black/10">
+										<User className="h-4 w-4 text-black" />
+									</Avatar>
+									<span className="text-sm font-[400]">
+										{userDetails.first_name + " " + userDetails.last_name}
+									</span>
+									<ChevronDown className="h-4 w-4 text-muted-foreground" />
+								</Button>
 								<DropdownMenuContent
+									id="user-menu"
 									className="w-56 bg-white border border-[#ECECEC] shadow-md"
-									align="end"
-									forceMount
 								>
 									<DropdownMenuLabel className="font-normal">
 										<div className="flex flex-col space-y-1">
@@ -377,14 +419,42 @@ export function DashboardLayout() {
 				</main>
 
 				{/* Will Creation Dialog */}
-				<AlertDialog open={showWillDialog} onOpenChange={setShowWillDialog}>
-					<AlertDialogContent className="bg-white">
+				<AlertDialog
+					open={showWillDialog}
+					onOpenChange={(open) => {
+						setShowWillDialog(open);
+						if (!open) {
+							// Reset focus to the Create button when dialog closes
+							const createButton = document.querySelector(
+								"[data-create-button]"
+							);
+							if (createButton instanceof HTMLElement) {
+								createButton.focus();
+							}
+						}
+					}}
+				>
+					<AlertDialogContent
+						className="bg-white"
+						onOpenAutoFocus={(e) => {
+							// Prevent default focus behavior
+							e.preventDefault();
+							// Focus the first action button
+							const dialogContent = e.currentTarget as HTMLElement;
+							const firstButton = dialogContent.querySelector(
+								"[data-first-button]"
+							);
+							if (firstButton instanceof HTMLElement) {
+								firstButton.focus();
+							}
+						}}
+					>
 						<button
 							onClick={() => setShowWillDialog(false)}
 							className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground"
+							aria-label="Close dialog"
 						>
 							<X className="h-4 w-4" />
-							<span className="sr-only">Close</span>
 						</button>
 						<AlertDialogHeader>
 							<AlertDialogTitle>Active Will Found</AlertDialogTitle>
@@ -404,6 +474,7 @@ export function DashboardLayout() {
 						<AlertDialogFooter>
 							{activeWill && (
 								<AlertDialogAction
+									data-first-button
 									onClick={handleContinueWill}
 									className="bg-light-green hover:bg-light-green/90 text-black cursor-pointer"
 								>
