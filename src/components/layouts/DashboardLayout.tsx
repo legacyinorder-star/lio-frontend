@@ -40,8 +40,9 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import axios from "axios";
+import { apiClient } from "@/utils/apiClient";
 import { useWill } from "@/context/WillContext";
+import { type WillData } from "@/context/WillContext";
 
 export function DashboardLayout() {
 	const navigate = useNavigate();
@@ -128,11 +129,17 @@ export function DashboardLayout() {
 	const checkActiveWill = async () => {
 		try {
 			setIsLoadingWill(true);
-			const response = await axios.get("/wills/get-user-active-will");
+			const { data, error } = await apiClient("/wills/get-user-active-will");
+
+			if (error) {
+				console.error("Error checking active will:", error);
+				// If there's an error, just proceed to create new will
+				navigate("/app/create-will");
+				return;
+			}
+
 			// Handle both array and single object responses
-			const willData = Array.isArray(response.data)
-				? response.data[0]
-				: response.data;
+			const willData = Array.isArray(data) ? data[0] : data;
 			if (willData) {
 				setActiveWill(willData); // Set in context
 				setShowWillDialog(true);
@@ -149,16 +156,35 @@ export function DashboardLayout() {
 		}
 	};
 
-	const handleCreateWill = () => {
+	const handleCreateWill = async () => {
 		setShowWillDialog(false);
-		setActiveWill(null);
-		navigate("/app/create-will");
+		try {
+			const { data, error } = await apiClient<WillData>("/wills/create", {
+				method: "POST",
+			});
+
+			if (error) {
+				console.error("Error creating new will:", error);
+				toast.error("Failed to create new will. Please try again.");
+				return;
+			}
+
+			// Set the newly created will in context
+			setActiveWill(data);
+			// Navigate to create will page
+			navigate("/app/create-will");
+		} catch (error) {
+			console.error("Error creating new will:", error);
+			toast.error("Failed to create new will. Please try again.");
+		}
 	};
 
 	const handleContinueWill = () => {
 		setShowWillDialog(false);
 		if (activeWill?.id) {
-			navigate(`/app/edit-will/${activeWill.id}`);
+			// The will context is already populated with activeWill from checkActiveWill
+			// Just navigate to the edit page
+			navigate(`/app/create-will`);
 		}
 	};
 
