@@ -18,51 +18,54 @@ import AdminDashboardPage from "@/pages/admin/AdminDashboardPage";
 import LogoutPage from "./pages/LogoutPage";
 import HomePage from "@/pages/HomePage";
 import NotFoundPage from "@/pages/NotFoundPage";
+import { WillProvider } from "@/context/WillContext";
 
 function App() {
 	return (
 		<AuthProvider>
-			<Router>
-				<Routes>
-					<Route path="/" element={<HomePage />} />
-					<Route path="/signup" element={<SignUpPage />} />
-					<Route path="/login" element={<LoginPage />} />
-					<Route path="/logout" element={<LogoutPage />} />
-					<Route
-						path="/app"
-						element={
-							<ProtectedRoute>
-								<DashboardLayout />
-							</ProtectedRoute>
-						}
-					>
-						<Route path="dashboard" element={<DashboardPage />} />
-						<Route path="create-will" element={<WillWizard />} />
-						<Route path="manage-profile" element={<ProfilePage />} />
-					</Route>
-					<Route
-						path="/admin"
-						element={
-							<ProtectedRoute requiredRole="admin">
-								<AdminLayout />
-							</ProtectedRoute>
-						}
-					>
-						<Route path="users" element={<ManageUsersPage />} />
-						<Route path="dashboard" element={<AdminDashboardPage />} />
-					</Route>
-					<Route
-						path="/request-password-reset"
-						element={<RequestPasswordResetPage />}
-					/>
-					<Route path="/reset-password" element={<ResetPasswordPage />} />
-					<Route path="/verify-otp" element={<OTPVerificationPage />} />
+			<WillProvider>
+				<Router>
+					<Routes>
+						<Route path="/" element={<HomePage />} />
+						<Route path="/signup" element={<SignUpPage />} />
+						<Route path="/login" element={<LoginPage />} />
+						<Route path="/logout" element={<LogoutPage />} />
+						<Route
+							path="/app"
+							element={
+								<ProtectedRoute>
+									<DashboardLayout />
+								</ProtectedRoute>
+							}
+						>
+							<Route path="dashboard" element={<DashboardPage />} />
+							<Route path="create-will" element={<WillWizard />} />
+							<Route path="manage-profile" element={<ProfilePage />} />
+						</Route>
+						<Route
+							path="/admin"
+							element={
+								<ProtectedRoute requiredRole="admin">
+									<AdminLayout />
+								</ProtectedRoute>
+							}
+						>
+							<Route path="users" element={<ManageUsersPage />} />
+							<Route path="dashboard" element={<AdminDashboardPage />} />
+						</Route>
+						<Route
+							path="/request-password-reset"
+							element={<RequestPasswordResetPage />}
+						/>
+						<Route path="/reset-password" element={<ResetPasswordPage />} />
+						<Route path="/verify-otp" element={<OTPVerificationPage />} />
 
-					{/* 404 - This must be the last route to catch all unknown URLs */}
-					<Route path="*" element={<NotFoundPage />} />
-				</Routes>
-				<Toaster />
-			</Router>
+						{/* 404 - This must be the last route to catch all unknown URLs */}
+						<Route path="*" element={<NotFoundPage />} />
+					</Routes>
+					<Toaster />
+				</Router>
+			</WillProvider>
 		</AuthProvider>
 	);
 }

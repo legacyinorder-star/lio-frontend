@@ -42,12 +42,7 @@ import {
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import axios from "axios";
-
-interface ActiveWill {
-	id: string;
-	updatedAt: string;
-	status: string;
-}
+import { useWill } from "@/context/WillContext";
 
 export function DashboardLayout() {
 	const navigate = useNavigate();
@@ -56,8 +51,8 @@ export function DashboardLayout() {
 	const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 	const [showWillDialog, setShowWillDialog] = useState(false);
-	const [activeWill, setActiveWill] = useState<ActiveWill | null>(null);
 	const [isLoadingWill, setIsLoadingWill] = useState(false);
+	const { activeWill, setActiveWill } = useWill();
 
 	useEffect(() => {
 		// Set a small delay to ensure auth state is properly loaded
@@ -140,7 +135,7 @@ export function DashboardLayout() {
 				? response.data[0]
 				: response.data;
 			if (willData) {
-				setActiveWill(willData);
+				setActiveWill(willData); // Set in context
 				setShowWillDialog(true);
 			} else {
 				// If no will data found, proceed to create new will

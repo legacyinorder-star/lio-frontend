@@ -32,6 +32,7 @@ import {
 	Package,
 } from "lucide-react";
 import ReviewStep, { ReviewStepHandle } from "./steps/ReviewStep";
+import { useWill } from "@/context/WillContext";
 
 // Define the different question types
 type QuestionType =
@@ -456,6 +457,18 @@ export default function WillWizard() {
 	useEffect(() => {
 		setMounted(true);
 	}, []);
+
+	const { activeWill } = useWill();
+
+	useEffect(() => {
+		if (activeWill && activeWill.data && activeWill.data.owner) {
+			setFormData((prev) => ({
+				...prev,
+				firstName: activeWill.data.owner.firstName,
+				lastName: activeWill.data.owner.lastName,
+			}));
+		}
+	}, [activeWill]);
 
 	// Handle name inputs
 	const handleFirstNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
