@@ -74,23 +74,30 @@ export default function DashboardPage() {
 
 	const handleDownloadPDF = async (will: WillData) => {
 		try {
+			if (!will.owner) {
+				toast.error("Cannot generate PDF: Will data is incomplete");
+				return;
+			}
+
 			// Transform the will data into the format expected by WillPDF
 			const pdfData = {
 				personal: {
-					fullName: `${will.data.owner.firstName} ${will.data.owner.lastName}`,
+					fullName: `${will.owner.firstName} ${will.owner.lastName}`,
 					dateOfBirth: "", // Not available in WillData
-					address: `${will.data.owner.address}, ${will.data.owner.city}, ${will.data.owner.state} ${will.data.owner.postCode}, ${will.data.owner.country}`,
+					address: `${will.owner.address}, ${will.owner.city}, ${
+						will.owner.state
+					} ${will.owner.postCode || ""}, ${will.owner.country}`,
 					phone: "", // Not available in WillData
-					maritalStatus: will.data.owner.maritalStatus,
+					maritalStatus: will.owner.maritalStatus,
 				},
-				assets: will.data.assets.map((asset) => ({
+				assets: (will.assets || []).map((asset) => ({
 					type: asset.type,
 					description: asset.description,
 					value: asset.value,
 					distributionType: "equal" as const, // Default to equal distribution
 					beneficiaries: [], // Not available in WillData
 				})),
-				beneficiaries: will.data.beneficiaries.map((beneficiary) => ({
+				beneficiaries: (will.beneficiaries || []).map((beneficiary) => ({
 					id: "", // Not available in WillBeneficiary
 					fullName: `${beneficiary.firstName} ${beneficiary.lastName}`,
 					relationship: beneficiary.relationship,
@@ -100,7 +107,7 @@ export default function DashboardPage() {
 					dateOfBirth: "", // Not available in WillBeneficiary
 					requiresGuardian: false, // Not available in WillBeneficiary
 				})),
-				executors: will.data.executors.map((executor) => ({
+				executors: (will.executors || []).map((executor) => ({
 					fullName:
 						executor.type === "individual"
 							? `${executor.firstName} ${executor.lastName}`
@@ -110,16 +117,20 @@ export default function DashboardPage() {
 					relationship: executor.relationship,
 					email: "", // Not available in WillExecutor
 					phone: "", // Not available in WillExecutor
-					address: `${executor.address.address}, ${executor.address.city}, ${executor.address.state} ${executor.address.postCode}, ${executor.address.country}`,
+					address: `${executor.address.address}, ${executor.address.city}, ${
+						executor.address.state
+					} ${executor.address.postCode || ""}, ${executor.address.country}`,
 					isPrimary: executor.isPrimary,
 					type: executor.type,
 					contactPerson:
 						executor.type === "corporate" ? executor.contactPerson : undefined,
 					registrationNumber: "", // Not available in WillExecutor
 				})),
-				witnesses: will.data.witnesses.map((witness) => ({
+				witnesses: (will.witnesses || []).map((witness) => ({
 					fullName: `${witness.firstName} ${witness.lastName}`,
-					address: `${witness.address.address}, ${witness.address.city}, ${witness.address.state} ${witness.address.postCode}, ${witness.address.country}`,
+					address: `${witness.address.address}, ${witness.address.city}, ${
+						witness.address.state
+					} ${witness.address.postCode || ""}, ${witness.address.country}`,
 				})),
 				guardians: [], // Not available in WillData
 				gifts: [], // Not available in WillData
@@ -141,7 +152,7 @@ export default function DashboardPage() {
 				const url = URL.createObjectURL(blob);
 				const link = document.createElement("a");
 				link.href = url;
-				link.download = `will-${will.data.owner.firstName
+				link.download = `will-${will.owner.firstName
 					.toLowerCase()
 					.replace(/\s+/g, "-")}-${new Date().toISOString().split("T")[0]}.pdf`;
 
@@ -165,7 +176,7 @@ export default function DashboardPage() {
 					const url = URL.createObjectURL(blob);
 					const link = document.createElement("a");
 					link.href = url;
-					link.download = `will-${will.data.owner.firstName
+					link.download = `will-${will.owner.firstName
 						.toLowerCase()
 						.replace(/\s+/g, "-")}-${
 						new Date().toISOString().split("T")[0]
@@ -283,8 +294,8 @@ export default function DashboardPage() {
 								<div className="flex justify-between items-start">
 									<div className="space-y-2">
 										<h3 className="font-medium">
-											Will for {will.data.owner.firstName}{" "}
-											{will.data.owner.lastName}
+											Will for {will.owner?.firstName || "Unknown"}{" "}
+											{will.owner?.lastName || ""}
 										</h3>
 										<p className="text-sm text-muted-foreground">
 											Created on {new Date(will.createdAt).toLocaleDateString()}
@@ -308,19 +319,19 @@ export default function DashboardPage() {
 											</p>
 											<p>
 												<span className="font-medium">Assets:</span>{" "}
-												{will.data.assets.length}
+												{will.assets?.length || 0}
 											</p>
 											<p>
 												<span className="font-medium">Beneficiaries:</span>{" "}
-												{will.data.beneficiaries.length}
+												{will.beneficiaries?.length || 0}
 											</p>
 											<p>
 												<span className="font-medium">Executors:</span>{" "}
-												{will.data.executors.length}
+												{will.executors?.length || 0}
 											</p>
 											<p>
 												<span className="font-medium">Witnesses:</span>{" "}
-												{will.data.witnesses.length}
+												{will.witnesses?.length || 0}
 											</p>
 										</div>
 									</div>
@@ -339,6 +350,7 @@ export default function DashboardPage() {
 											size="sm"
 											onClick={() => handleDownloadPDF(will)}
 											className="hover:bg-light-green/10 cursor-pointer"
+											disabled={!will.owner}
 										>
 											<Download className="h-4 w-4 mr-2" />
 											Download

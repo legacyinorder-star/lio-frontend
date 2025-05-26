@@ -56,13 +56,13 @@ export interface WillData {
 	createdAt: string;
 	status: string;
 	userId: string;
-	data: {
-		owner: WillPersonalData;
-		assets: WillAsset[];
-		beneficiaries: WillBeneficiary[];
-		executors: WillExecutor[];
-		witnesses: WillWitness[];
-	};
+	// Owner data
+	owner: WillPersonalData;
+	// Arrays
+	assets: WillAsset[];
+	beneficiaries: WillBeneficiary[];
+	executors: WillExecutor[];
+	witnesses: WillWitness[];
 }
 
 interface WillContextType {
