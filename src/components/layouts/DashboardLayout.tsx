@@ -127,6 +127,7 @@ export function DashboardLayout() {
 	];
 
 	const checkActiveWill = async () => {
+		console.log("Checking active will");
 		try {
 			setIsLoadingWill(true);
 			const { data, error } = await apiClient("/wills/get-user-active-will");
@@ -134,7 +135,9 @@ export function DashboardLayout() {
 			if (error) {
 				console.error("Error checking active will:", error);
 				// If there's an error, just proceed to create new will
-				navigate("/app/create-will");
+				// handleCreateWill();
+				// navigate("/app/create-will");
+				toast.error("Error checking active will. Please try again.");
 				return;
 			}
 
@@ -145,12 +148,15 @@ export function DashboardLayout() {
 				setShowWillDialog(true);
 			} else {
 				// If no will data found, proceed to create new will
+				handleCreateWill();
 				navigate("/app/create-will");
 			}
 		} catch (error) {
 			console.error("Error checking active will:", error);
+			toast.error("Error checking active will. Please try again.");
 			// If there's an error, just proceed to create new will
-			navigate("/app/create-will");
+			// handleCreateWill();
+			// navigate("/app/create-will");
 		} finally {
 			setIsLoadingWill(false);
 		}
@@ -159,9 +165,30 @@ export function DashboardLayout() {
 	const handleCreateWill = async () => {
 		setShowWillDialog(false);
 		try {
+			// If there's an active will, delete it first
+			if (activeWill?.id) {
+				const { error: deleteError } = await apiClient(
+					`/wills/${activeWill.id}`,
+					{
+						method: "DELETE",
+					}
+				);
+
+				if (deleteError) {
+					console.error("Error deleting existing will:", deleteError);
+					toast.error("Failed to delete existing will. Please try again.");
+					return;
+				}
+
+				// Clear the active will from context
+				setActiveWill(null);
+			}
+
+			// Create new will
 			const { data, error } = await apiClient<WillData>("/wills/create", {
 				method: "POST",
 			});
+			console.log(data);
 
 			if (error) {
 				console.error("Error creating new will:", error);
@@ -174,7 +201,7 @@ export function DashboardLayout() {
 			// Navigate to create will page
 			navigate("/app/create-will");
 		} catch (error) {
-			console.error("Error creating new will:", error);
+			console.error("Error in will creation process:", error);
 			toast.error("Failed to create new will. Please try again.");
 		}
 	};
@@ -488,9 +515,9 @@ export function DashboardLayout() {
 								{activeWill ? (
 									<>
 										You already have an active will that was last updated on{" "}
-										{new Date(activeWill.updatedAt).toLocaleDateString()}. Would
-										you like to continue editing your existing will or create a
-										new one?
+										{new Date(activeWill.lastUpdatedAt).toLocaleDateString()}.
+										Would you like to continue editing your existing will or
+										create a new one?
 									</>
 								) : (
 									"Would you like to create a new will?"

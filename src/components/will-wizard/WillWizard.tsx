@@ -33,6 +33,8 @@ import {
 } from "lucide-react";
 import ReviewStep, { ReviewStepHandle } from "./steps/ReviewStep";
 import { useWill } from "@/context/WillContext";
+import { apiClient } from "@/utils/apiClient";
+import { toast } from "sonner";
 
 // Define the different question types
 type QuestionType =
@@ -492,23 +494,109 @@ export default function WillWizard() {
 		};
 	};
 
-	// Handle spouse question response
-	const handleHasSpouse = (hasSpouse: boolean) => {
-		setFormData((prev) => ({ ...prev, hasSpouse }));
+	// Modify handleHasSpouse to handle API calls
+	const handleHasSpouse = async (hasSpouse: boolean) => {
+		if (!activeWill?.id) {
+			toast.error("No active will found. Please try again.");
+			return;
+		}
+
+		// Save personal details with marital status
+		const personalDetails = {
+			will_id: activeWill.id,
+			first_name: formData.firstName,
+			last_name: formData.lastName,
+			street: formData.address.street,
+			city: formData.address.city,
+			state: formData.address.state,
+			post_code: formData.address.zipCode,
+			country: formData.address.country,
+			marital_status: hasSpouse ? "married" : "single",
+		};
+
+		const response = await apiClient("/will_owner", {
+			method: "POST",
+			body: JSON.stringify(personalDetails),
+		});
+
+		if (response.error) {
+			toast.error("Failed to save personal details. Please try again.");
+			return;
+		}
+
+		setFormData((prev) => ({
+			...prev,
+			hasSpouse,
+		}));
 
 		if (hasSpouse) {
-			// Open the spouse dialog if they have a spouse
 			setSpouseDialogOpen(true);
 		} else {
-			// Move to the next question if they don't have a spouse
 			setCurrentQuestion("hasChildren");
 		}
 	};
 
-	// Handle spouse data from dialog
-	const handleSpouseData = (spouseData: SpouseData) => {
-		setFormData((prev) => ({ ...prev, spouse: spouseData }));
-		// Move to the next question after spouse data is collected
+	// Modify handleSpouseData to include API call
+	const handleSpouseData = async (spouseData: SpouseData) => {
+		if (!activeWill?.id) {
+			toast.error("No active will found. Please try again.");
+			return;
+		}
+
+		// First save the spouse details
+		const spouseDetails = {
+			will_id: activeWill.id,
+			first_name: spouseData.firstName,
+			last_name: spouseData.lastName,
+			street: spouseData.address.street,
+			city: spouseData.address.city,
+			state: spouseData.address.state,
+			post_code: spouseData.address.zipCode,
+			country: spouseData.address.country,
+			relationship: "spouse",
+		};
+
+		const spouseResponse = await apiClient("/will_owner", {
+			method: "POST",
+			body: JSON.stringify(spouseDetails),
+		});
+
+		if (spouseResponse.error) {
+			toast.error("Failed to save spouse details. Please try again.");
+			return;
+		}
+
+		// Then save the personal details with marital status
+		const personalDetails = {
+			will_id: activeWill.id,
+			first_name: formData.firstName,
+			last_name: formData.lastName,
+			street: formData.address.street,
+			city: formData.address.city,
+			state: formData.address.state,
+			post_code: formData.address.zipCode,
+			country: formData.address.country,
+			marital_status: "married",
+		};
+
+		const personalResponse = await apiClient("/will_owner", {
+			method: "POST",
+			body: JSON.stringify(personalDetails),
+		});
+
+		if (personalResponse.error) {
+			toast.error("Failed to save personal details. Please try again.");
+			return;
+		}
+
+		// Update the form data with spouse information
+		setFormData((prev) => ({
+			...prev,
+			hasSpouse: true,
+			spouse: spouseData,
+		}));
+
+		// Move to the next question
 		setCurrentQuestion("hasChildren");
 	};
 
@@ -677,8 +765,8 @@ export default function WillWizard() {
 		);
 	};
 
-	// Handle moving to the next question for simple inputs
-	const handleNext = () => {
+	// Modify handleNext to include API call
+	const handleNext = async () => {
 		if (currentQuestion === "name") {
 			if (
 				formData.firstName.trim().length < 2 ||
