@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { pdf } from "@react-pdf/renderer";
 import WillPDF from "@/components/will-wizard/WillPDF";
+import { apiClient } from "@/utils/apiClient";
 
 interface Will {
 	id: string;
@@ -55,6 +56,7 @@ export default function DashboardPage() {
 	const navigate = useNavigate();
 	const [userName, setUserName] = useState<string>("");
 	const [wills, setWills] = useState<Will[]>([]);
+	const [isLoading, setIsLoading] = useState(true);
 
 	useEffect(() => {
 		const userDetails = getUserDetails();
@@ -66,21 +68,50 @@ export default function DashboardPage() {
 		const name = userDetails.first_name || userDetails.email.split("@")[0];
 		setUserName(name);
 
-		// Load saved wills from localStorage
-		const savedWills = JSON.parse(localStorage.getItem("wills") || "[]");
-		setWills(savedWills);
+		// Fetch wills from API
+		const fetchWills = async () => {
+			try {
+				const { data, error } = await apiClient<Will[]>("/wills");
+				if (error) {
+					console.error("Error fetching wills:", error);
+					toast.error("Failed to load wills. Please try again.");
+					return;
+				}
+				setWills(Array.isArray(data) ? data : []);
+			} catch (error) {
+				console.error("Error fetching wills:", error);
+				toast.error("Failed to load wills. Please try again.");
+			} finally {
+				setIsLoading(false);
+			}
+		};
+
+		fetchWills();
 	}, [navigate]);
 
-	const handleDeleteWill = (willId: string) => {
-		const updatedWills = wills.filter((will) => will.id !== willId);
-		localStorage.setItem("wills", JSON.stringify(updatedWills));
-		setWills(updatedWills);
-		toast.success("Will deleted successfully");
+	const handleDeleteWill = async (willId: string) => {
+		try {
+			const { error } = await apiClient(`/wills/${willId}`, {
+				method: "DELETE",
+			});
+
+			if (error) {
+				console.error("Error deleting will:", error);
+				toast.error("Failed to delete will. Please try again.");
+				return;
+			}
+
+			// Update local state
+			setWills((prevWills) => prevWills.filter((will) => will.id !== willId));
+			toast.success("Will deleted successfully");
+		} catch (error) {
+			console.error("Error deleting will:", error);
+			toast.error("Failed to delete will. Please try again.");
+		}
 	};
 
 	const handleEditWill = (willId: string) => {
-		// Navigate to the will wizard with the will ID
-		navigate(`/create-will?edit=${willId}`);
+		navigate(`/app/create-will?edit=${willId}`);
 	};
 
 	const handleDownloadPDF = async (will: Will) => {
@@ -192,7 +223,14 @@ export default function DashboardPage() {
 			<div>
 				<h2 className="text-xl font-semibold mb-4">Recent Documents</h2>
 				<div className="grid grid-cols-1 gap-4">
-					{wills.length === 0 ? (
+					{isLoading ? (
+						<Card className="p-4">
+							<div className="flex items-center justify-center py-8">
+								<div className="h-8 w-8 animate-spin rounded-full border-t-2 border-b-2 border-primary"></div>
+								<p className="text-muted-foreground ml-2">Loading wills...</p>
+							</div>
+						</Card>
+					) : wills.length === 0 ? (
 						<Card className="p-4">
 							<p className="text-muted-foreground text-center py-8">
 								No documents created yet. Start by creating a will or trust.
