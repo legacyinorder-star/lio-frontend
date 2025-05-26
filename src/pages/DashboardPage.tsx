@@ -8,54 +8,12 @@ import { toast } from "sonner";
 import { pdf } from "@react-pdf/renderer";
 import WillPDF from "@/components/will-wizard/WillPDF";
 import { apiClient } from "@/utils/apiClient";
-
-interface Will {
-	id: string;
-	createdAt: string;
-	updatedAt: string;
-	status: "draft" | "final";
-	data: {
-		personal: {
-			fullName: string;
-			dateOfBirth: string;
-			address: string;
-			phone: string;
-			maritalStatus: string;
-		};
-		assets: Array<{
-			type: string;
-			description: string;
-			value: string;
-		}>;
-		beneficiaries: Array<{
-			fullName: string;
-			relationship: string;
-			email?: string;
-			phone?: string;
-			allocation: number;
-		}>;
-		executors: Array<{
-			fullName?: string;
-			companyName?: string;
-			relationship?: string;
-			email?: string;
-			phone?: string;
-			address: string;
-			isPrimary: boolean;
-			type: "individual" | "corporate";
-			contactPerson?: string;
-		}>;
-		witnesses: Array<{
-			fullName: string;
-			address: string;
-		}>;
-	};
-}
+import { type WillData } from "@/context/WillContext";
 
 export default function DashboardPage() {
 	const navigate = useNavigate();
 	const [userName, setUserName] = useState<string>("");
-	const [wills, setWills] = useState<Will[]>([]);
+	const [wills, setWills] = useState<WillData[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
 
 	useEffect(() => {
@@ -71,7 +29,7 @@ export default function DashboardPage() {
 		// Fetch wills from API
 		const fetchWills = async () => {
 			try {
-				const { data, error } = await apiClient<Will[]>("/wills");
+				const { data, error } = await apiClient<WillData[]>("/wills");
 				if (error) {
 					console.error("Error fetching wills:", error);
 					toast.error("Failed to load wills. Please try again.");
@@ -114,43 +72,126 @@ export default function DashboardPage() {
 		navigate(`/app/create-will?edit=${willId}`);
 	};
 
-	const handleDownloadPDF = async (will: Will) => {
+	const handleDownloadPDF = async (will: WillData) => {
 		try {
+			// Transform the will data into the format expected by WillPDF
+			const pdfData = {
+				personal: {
+					fullName: `${will.data.owner.firstName} ${will.data.owner.lastName}`,
+					dateOfBirth: "", // Not available in WillData
+					address: `${will.data.owner.address}, ${will.data.owner.city}, ${will.data.owner.state} ${will.data.owner.postCode}, ${will.data.owner.country}`,
+					phone: "", // Not available in WillData
+					maritalStatus: will.data.owner.maritalStatus,
+				},
+				assets: will.data.assets.map((asset) => ({
+					type: asset.type,
+					description: asset.description,
+					value: asset.value,
+					distributionType: "equal" as const, // Default to equal distribution
+					beneficiaries: [], // Not available in WillData
+				})),
+				beneficiaries: will.data.beneficiaries.map((beneficiary) => ({
+					id: "", // Not available in WillBeneficiary
+					fullName: `${beneficiary.firstName} ${beneficiary.lastName}`,
+					relationship: beneficiary.relationship,
+					email: "", // Not available in WillBeneficiary
+					phone: "", // Not available in WillBeneficiary
+					allocation: beneficiary.allocation,
+					dateOfBirth: "", // Not available in WillBeneficiary
+					requiresGuardian: false, // Not available in WillBeneficiary
+				})),
+				executors: will.data.executors.map((executor) => ({
+					fullName:
+						executor.type === "individual"
+							? `${executor.firstName} ${executor.lastName}`
+							: undefined,
+					companyName:
+						executor.type === "corporate" ? executor.companyName : undefined,
+					relationship: executor.relationship,
+					email: "", // Not available in WillExecutor
+					phone: "", // Not available in WillExecutor
+					address: `${executor.address.address}, ${executor.address.city}, ${executor.address.state} ${executor.address.postCode}, ${executor.address.country}`,
+					isPrimary: executor.isPrimary,
+					type: executor.type,
+					contactPerson:
+						executor.type === "corporate" ? executor.contactPerson : undefined,
+					registrationNumber: "", // Not available in WillExecutor
+				})),
+				witnesses: will.data.witnesses.map((witness) => ({
+					fullName: `${witness.firstName} ${witness.lastName}`,
+					address: `${witness.address.address}, ${witness.address.city}, ${witness.address.state} ${witness.address.postCode}, ${witness.address.country}`,
+				})),
+				guardians: [], // Not available in WillData
+				gifts: [], // Not available in WillData
+				residuaryBeneficiaries: [], // Not available in WillData
+				additionalInstructions: "", // Not available in WillData
+			};
+
 			// Create the PDF document using our WillPDF component
 			const pdfDoc = pdf(
 				<WillPDF
-					data={will.data}
+					data={pdfData}
 					additionalText="This is a sample additional text that can be customized based on the user's input."
 				/>
 			);
 
-			// Generate blob
-			const blob = await pdfDoc.toBlob();
+			try {
+				// First try to get the blob directly
+				const blob = await pdfDoc.toBlob();
+				const url = URL.createObjectURL(blob);
+				const link = document.createElement("a");
+				link.href = url;
+				link.download = `will-${will.data.owner.firstName
+					.toLowerCase()
+					.replace(/\s+/g, "-")}-${new Date().toISOString().split("T")[0]}.pdf`;
 
-			// Create download link
-			const url = URL.createObjectURL(blob);
-			const link = document.createElement("a");
-			link.href = url;
-			link.download = `will-${will.data.personal.fullName
-				.toLowerCase()
-				.replace(/\s+/g, "-")}-${
-				new Date(will.createdAt).toISOString().split("T")[0]
-			}.pdf`;
+				// Trigger download
+				document.body.appendChild(link);
+				link.click();
+				document.body.removeChild(link);
 
-			// Trigger download
-			document.body.appendChild(link);
-			link.click();
-			document.body.removeChild(link);
+				// Clean up
+				setTimeout(() => {
+					URL.revokeObjectURL(url);
+				}, 100);
 
-			// Clean up
-			setTimeout(() => {
-				URL.revokeObjectURL(url);
-			}, 100);
+				toast.success("Will downloaded successfully");
+			} catch (error) {
+				console.error("Direct blob generation failed, trying buffer:", error);
+				try {
+					// If direct blob generation fails, try using buffer
+					const buffer = await pdfDoc.toBuffer();
+					const blob = new Blob([buffer], { type: "application/pdf" });
+					const url = URL.createObjectURL(blob);
+					const link = document.createElement("a");
+					link.href = url;
+					link.download = `will-${will.data.owner.firstName
+						.toLowerCase()
+						.replace(/\s+/g, "-")}-${
+						new Date().toISOString().split("T")[0]
+					}.pdf`;
 
-			toast.success("PDF downloaded successfully");
+					// Trigger download
+					document.body.appendChild(link);
+					link.click();
+					document.body.removeChild(link);
+
+					// Clean up
+					setTimeout(() => {
+						URL.revokeObjectURL(url);
+					}, 100);
+
+					toast.success("Will downloaded successfully");
+				} catch (bufferError) {
+					console.error("Buffer generation failed:", bufferError);
+					throw new Error("Failed to generate PDF document");
+				}
+			}
 		} catch (error) {
 			console.error("Error generating PDF:", error);
-			toast.error("Failed to generate PDF");
+			toast.error(
+				"Failed to generate PDF. Please try again or contact support if the issue persists."
+			);
 		}
 	};
 
@@ -242,13 +283,14 @@ export default function DashboardPage() {
 								<div className="flex justify-between items-start">
 									<div className="space-y-2">
 										<h3 className="font-medium">
-											Will for {will.data.personal.fullName}
+											Will for {will.data.owner.firstName}{" "}
+											{will.data.owner.lastName}
 										</h3>
 										<p className="text-sm text-muted-foreground">
 											Created on {new Date(will.createdAt).toLocaleDateString()}
-											{will.updatedAt !== will.createdAt &&
+											{will.lastUpdatedAt !== will.createdAt &&
 												` (Updated on ${new Date(
-													will.updatedAt
+													will.lastUpdatedAt
 												).toLocaleDateString()})`}
 										</p>
 										<div className="text-sm">

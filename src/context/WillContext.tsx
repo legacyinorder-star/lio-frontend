@@ -53,6 +53,7 @@ export interface WillWitness {
 export interface WillData {
 	id: string;
 	lastUpdatedAt: string;
+	createdAt: string;
 	status: string;
 	userId: string;
 	data: {
