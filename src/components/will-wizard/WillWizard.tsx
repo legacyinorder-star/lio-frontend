@@ -506,28 +506,33 @@ export default function WillWizard() {
 	// Modify handleHasSpouse to handle API calls
 	const handleHasSpouse = async (hasSpouse: boolean) => {
 		if (hasSpouse) {
-			// If user indicates they have a spouse, just update form state and open dialog
 			setFormData((prev) => ({
 				...prev,
 				hasSpouse: true,
 			}));
 			setSpouseDialogOpen(true);
 		} else {
-			// If user indicates no spouse, proceed with API call
 			try {
 				const willData = {
 					...(activeWill?.id && { will_id: activeWill.id }),
 					owner: {
-						firstName: formData.firstName,
-						lastName: formData.lastName,
-						maritalStatus: "single",
+						first_name: formData.firstName,
+						last_name: formData.lastName,
+						marital_status: "single",
 						address: formData.address.street,
 						city: formData.address.city,
 						state: formData.address.state,
-						postCode: formData.address.zipCode,
+						post_code: formData.address.zipCode,
 						country: formData.address.country,
 					},
 				};
+
+				console.log("Form Data:", formData);
+				console.log("Will Data being sent:", willData);
+				console.log(
+					"Will Data stringified:",
+					JSON.stringify(willData, null, 2)
+				);
 
 				const { data, error } = await apiClient<WillData>("/wills/create", {
 					method: "POST",
@@ -536,6 +541,7 @@ export default function WillWizard() {
 
 				if (error) {
 					console.error("Error creating/updating will:", error);
+					console.error("Request payload:", willData);
 					toast.error("Failed to save will information. Please try again.");
 					return;
 				}
