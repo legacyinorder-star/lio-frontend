@@ -32,7 +32,7 @@ import {
 	Package,
 } from "lucide-react";
 import ReviewStep, { ReviewStepHandle } from "./steps/ReviewStep";
-import { useWill } from "@/context/WillContext";
+import { useWill, type WillData } from "@/context/WillContext";
 import { apiClient } from "@/utils/apiClient";
 import { toast } from "sonner";
 
@@ -304,6 +304,15 @@ type BeneficiaryType =
 	| "charity"
 	| "individual";
 
+// Update the beneficiary type definition
+type BeneficiaryDisplay = {
+	id: string;
+	firstName: string;
+	lastName: string;
+	relationship: string;
+	allocation?: number;
+};
+
 export default function WillWizard() {
 	// Track the current question being shown
 	const [currentQuestion, setCurrentQuestion] = useState<QuestionType>("name");
@@ -460,14 +469,14 @@ export default function WillWizard() {
 		setMounted(true);
 	}, []);
 
-	const { activeWill } = useWill();
+	const { activeWill, setActiveWill } = useWill();
 
 	useEffect(() => {
-		if (activeWill && activeWill.data && activeWill.data.owner) {
+		if (activeWill && activeWill.owner) {
 			setFormData((prev) => ({
 				...prev,
-				firstName: activeWill.data.owner.firstName,
-				lastName: activeWill.data.owner.lastName,
+				firstName: activeWill.owner.firstName,
+				lastName: activeWill.owner.lastName,
 			}));
 		}
 	}, [activeWill]);
@@ -496,108 +505,101 @@ export default function WillWizard() {
 
 	// Modify handleHasSpouse to handle API calls
 	const handleHasSpouse = async (hasSpouse: boolean) => {
-		if (!activeWill?.id) {
-			toast.error("No active will found. Please try again.");
-			return;
-		}
-
-		// Save personal details with marital status
-		const personalDetails = {
-			will_id: activeWill.id,
-			first_name: formData.firstName,
-			last_name: formData.lastName,
-			street: formData.address.street,
-			city: formData.address.city,
-			state: formData.address.state,
-			post_code: formData.address.zipCode,
-			country: formData.address.country,
-			marital_status: hasSpouse ? "married" : "single",
-		};
-
-		const response = await apiClient("/will_owner", {
-			method: "POST",
-			body: JSON.stringify(personalDetails),
-		});
-
-		if (response.error) {
-			toast.error("Failed to save personal details. Please try again.");
-			return;
-		}
-
-		setFormData((prev) => ({
-			...prev,
-			hasSpouse,
-		}));
-
 		if (hasSpouse) {
+			// If user indicates they have a spouse, just update form state and open dialog
+			setFormData((prev) => ({
+				...prev,
+				hasSpouse: true,
+			}));
 			setSpouseDialogOpen(true);
 		} else {
-			setCurrentQuestion("hasChildren");
+			// If user indicates no spouse, proceed with API call
+			try {
+				const willData = {
+					...(activeWill?.id && { will_id: activeWill.id }),
+					owner: {
+						firstName: formData.firstName,
+						lastName: formData.lastName,
+						maritalStatus: "single",
+						address: formData.address.street,
+						city: formData.address.city,
+						state: formData.address.state,
+						postCode: formData.address.zipCode,
+						country: formData.address.country,
+					},
+				};
+
+				const { data, error } = await apiClient<WillData>("/wills/create", {
+					method: "POST",
+					body: JSON.stringify(willData),
+				});
+
+				if (error) {
+					console.error("Error creating/updating will:", error);
+					toast.error("Failed to save will information. Please try again.");
+					return;
+				}
+
+				setActiveWill(data);
+				setFormData((prev) => ({
+					...prev,
+					hasSpouse: false,
+					spouse: undefined,
+				}));
+				setCurrentQuestion("hasChildren");
+			} catch (error) {
+				console.error("Error in spouse handling:", error);
+				toast.error("An error occurred. Please try again.");
+			}
 		}
 	};
 
-	// Modify handleSpouseData to include API call
+	// Helper function to get full name from first and last name
+	const getFullName = (firstName: string, lastName: string) =>
+		`${firstName} ${lastName}`;
+
+	// Update spouse data handling
 	const handleSpouseData = async (spouseData: SpouseData) => {
-		if (!activeWill?.id) {
-			toast.error("No active will found. Please try again.");
-			return;
+		try {
+			const willData = {
+				...(activeWill?.id && { will_id: activeWill.id }),
+				owner: {
+					firstName: formData.firstName,
+					lastName: formData.lastName,
+					maritalStatus: "married",
+					address: formData.address.street,
+					city: formData.address.city,
+					state: formData.address.state,
+					postCode: formData.address.zipCode,
+					country: formData.address.country,
+				},
+				spouse: {
+					firstName: spouseData.firstName,
+					lastName: spouseData.lastName,
+				},
+			};
+
+			const { data, error } = await apiClient<WillData>("/wills/create", {
+				method: "POST",
+				body: JSON.stringify(willData),
+			});
+
+			if (error) {
+				console.error("Error updating will with spouse:", error);
+				toast.error("Failed to save spouse information. Please try again.");
+				return;
+			}
+
+			setActiveWill(data);
+			setFormData((prev) => ({
+				...prev,
+				spouse: spouseData,
+			}));
+			setCurrentQuestion("hasChildren");
+		} catch (error) {
+			console.error("Error in spouse data handling:", error);
+			toast.error("An error occurred. Please try again.");
 		}
-
-		// First save the spouse details
-		const spouseDetails = {
-			will_id: activeWill.id,
-			first_name: spouseData.firstName,
-			last_name: spouseData.lastName,
-			street: spouseData.address.street,
-			city: spouseData.address.city,
-			state: spouseData.address.state,
-			post_code: spouseData.address.zipCode,
-			country: spouseData.address.country,
-			relationship: "spouse",
-		};
-
-		const spouseResponse = await apiClient("/will_owner", {
-			method: "POST",
-			body: JSON.stringify(spouseDetails),
-		});
-
-		if (spouseResponse.error) {
-			toast.error("Failed to save spouse details. Please try again.");
-			return;
-		}
-
-		// Then save the personal details with marital status
-		const personalDetails = {
-			will_id: activeWill.id,
-			first_name: formData.firstName,
-			last_name: formData.lastName,
-			street: formData.address.street,
-			city: formData.address.city,
-			state: formData.address.state,
-			post_code: formData.address.zipCode,
-			country: formData.address.country,
-			marital_status: "married",
-		};
-
-		const personalResponse = await apiClient("/will_owner", {
-			method: "POST",
-			body: JSON.stringify(personalDetails),
-		});
-
-		if (personalResponse.error) {
-			toast.error("Failed to save personal details. Please try again.");
-			return;
-		}
-
-		// Update the form data with spouse information
-		setFormData((prev) => ({
-			...prev,
-			hasSpouse: true,
-			spouse: spouseData,
-		}));
-
-		// Move to the next question
-		setCurrentQuestion("hasChildren");
 	};
 
 	// Handle child form changes
@@ -1006,7 +1008,7 @@ export default function WillWizard() {
 		otherBeneficiaries?: NewBeneficiary[]
 	) => {
 		if (beneficiaryId === "spouse" && spouse) {
-			return spouse.fullName;
+			return getFullName(spouse.firstName, spouse.lastName);
 		}
 		const child = children.find((c) => c.id === beneficiaryId);
 		if (child) {
@@ -1223,11 +1225,22 @@ export default function WillWizard() {
 	): { hasConflict: boolean; beneficiary: string } => {
 		// Check spouse
 		if (formData.hasSpouse && formData.spouse) {
-			const spouseName = formData.spouse.fullName.toLowerCase();
-			const witnessName =
-				`${witness.firstName} ${witness.lastName}`.toLowerCase();
+			const spouseName = getFullName(
+				formData.spouse.firstName,
+				formData.spouse.lastName
+			).toLowerCase();
+			const witnessName = getFullName(
+				witness.firstName,
+				witness.lastName
+			).toLowerCase();
 			if (spouseName === witnessName) {
-				return { hasConflict: true, beneficiary: formData.spouse.fullName };
+				return {
+					hasConflict: true,
+					beneficiary: getFullName(
+						formData.spouse.firstName,
+						formData.spouse.lastName
+					),
+				};
 			}
 		}
 
@@ -1990,31 +2003,40 @@ export default function WillWizard() {
 											variant="outline"
 											onClick={() => {
 												// Initialize beneficiaries with all existing beneficiaries
-												const beneficiaries = [];
-
-												// Add spouse if exists
-												if (formData.hasSpouse && formData.spouse) {
-													beneficiaries.push({
-														id: "spouse",
-														percentage: undefined,
-													});
-												}
-
-												// Add all children
-												formData.children.forEach((child) => {
-													beneficiaries.push({
+												const beneficiaries: BeneficiaryDisplay[] = [
+													...(formData.spouse
+														? [
+																{
+																	id: "spouse",
+																	firstName: formData.spouse.firstName,
+																	lastName: formData.spouse.lastName,
+																	relationship: "Spouse",
+																	allocation: 0,
+																},
+														  ]
+														: []),
+													...formData.children.map((child) => ({
 														id: child.id,
-														percentage: undefined,
-													});
-												});
-
-												// Add all other beneficiaries
-												formData.otherBeneficiaries?.forEach((beneficiary) => {
-													beneficiaries.push({
-														id: beneficiary.id,
-														percentage: undefined,
-													});
-												});
+														firstName: child.firstName,
+														lastName: child.lastName,
+														relationship: "Child",
+														allocation: 0,
+													})),
+													...formData.guardians.map((guardian) => ({
+														id: guardian.id,
+														firstName: guardian.firstName,
+														lastName: guardian.lastName,
+														relationship: guardian.relationship,
+														allocation: 0,
+													})),
+													...formData.otherBeneficiaries.map((ben) => ({
+														id: ben.id,
+														firstName: ben.firstName,
+														lastName: ben.lastName,
+														relationship: ben.relationship,
+														allocation: 0,
+													})),
+												];
 
 												setAssetForm({
 													id: "",
@@ -2444,7 +2466,11 @@ export default function WillWizard() {
 														<option value="">Select a beneficiary</option>
 														{formData.hasSpouse && formData.spouse && (
 															<option value="spouse">
-																{formData.spouse.fullName} (Spouse)
+																{getFullName(
+																	formData.spouse.firstName,
+																	formData.spouse.lastName
+																)}{" "}
+																(Spouse)
 															</option>
 														)}
 														{formData.children.map((child) => (
@@ -2740,8 +2766,12 @@ export default function WillWizard() {
 											? [
 													{
 														id: "spouse",
-														fullName: formData.spouse.fullName,
+														fullName: getFullName(
+															formData.spouse.firstName,
+															formData.spouse.lastName
+														),
 														relationship: "Spouse",
+														allocation: 0,
 													},
 											  ]
 											: []),
@@ -2749,16 +2779,19 @@ export default function WillWizard() {
 											id: child.id,
 											fullName: `${child.firstName} ${child.lastName}`,
 											relationship: "Child",
+											allocation: 0,
 										})),
 										...formData.guardians.map((guardian) => ({
 											id: guardian.id,
 											fullName: `${guardian.firstName} ${guardian.lastName}`,
 											relationship: guardian.relationship,
+											allocation: 0,
 										})),
 										...formData.otherBeneficiaries.map((ben) => ({
 											id: ben.id,
 											fullName: `${ben.firstName} ${ben.lastName}`,
 											relationship: ben.relationship,
+											allocation: 0,
 										})),
 									].map((beneficiary) => {
 										const existingAllocation =
@@ -3578,7 +3611,10 @@ export default function WillWizard() {
 										? [
 												{
 													id: "spouse",
-													fullName: formData.spouse.fullName,
+													fullName: getFullName(
+														formData.spouse.firstName,
+														formData.spouse.lastName
+													),
 													relationship: "Spouse",
 													allocation: 0,
 												},
@@ -3891,7 +3927,10 @@ export default function WillWizard() {
 											>
 												<div>
 													<span className="font-medium">
-														{formData.spouse.fullName}
+														{getFullName(
+															formData.spouse.firstName,
+															formData.spouse.lastName
+														)}
 													</span>
 													<span className="text-sm text-muted-foreground ml-2">
 														(Spouse)

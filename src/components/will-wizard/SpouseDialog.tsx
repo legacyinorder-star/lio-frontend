@@ -21,16 +21,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 const spouseSchema = z.object({
-	fullName: z.string().min(2, "Spouse name must be at least 2 characters"),
 	firstName: z.string().min(2, "First name must be at least 2 characters"),
 	lastName: z.string().min(2, "Last name must be at least 2 characters"),
-	address: z.object({
-		street: z.string().min(1, "Street address is required"),
-		city: z.string().min(1, "City is required"),
-		state: z.string().min(1, "State is required"),
-		zipCode: z.string().min(1, "Postal/ZIP code is required"),
-		country: z.string().min(1, "Country is required"),
-	}),
 });
 
 export type SpouseData = z.infer<typeof spouseSchema>;
@@ -56,7 +48,8 @@ export default function SpouseDialog({
 	const form = useForm<SpouseData>({
 		resolver: zodResolver(spouseSchema),
 		defaultValues: {
-			fullName: "",
+			firstName: "",
+			lastName: "",
 		},
 	});
 
@@ -89,19 +82,6 @@ export default function SpouseDialog({
 						onSubmit={form.handleSubmit(handleSubmit)}
 						className="space-y-4"
 					>
-						<FormField
-							control={form.control}
-							name="fullName"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Partner Name</FormLabel>
-									<FormControl>
-										<Input placeholder="Jane Doe" {...field} autoFocus />
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
 						<div className="grid grid-cols-2 gap-4">
 							<FormField
 								control={form.control}
@@ -110,7 +90,7 @@ export default function SpouseDialog({
 									<FormItem>
 										<FormLabel>First Name</FormLabel>
 										<FormControl>
-											<Input placeholder="Jane" {...field} />
+											<Input placeholder="Jane" {...field} autoFocus />
 										</FormControl>
 										<FormMessage />
 									</FormItem>
@@ -129,77 +109,6 @@ export default function SpouseDialog({
 									</FormItem>
 								)}
 							/>
-						</div>
-						<div className="space-y-4">
-							<FormField
-								control={form.control}
-								name="address.street"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Street Address</FormLabel>
-										<FormControl>
-											<Input placeholder="123 Main St" {...field} />
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-							<div className="grid grid-cols-2 gap-4">
-								<FormField
-									control={form.control}
-									name="address.city"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>City</FormLabel>
-											<FormControl>
-												<Input placeholder="Toronto" {...field} />
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-								<FormField
-									control={form.control}
-									name="address.state"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>State/Province</FormLabel>
-											<FormControl>
-												<Input placeholder="Ontario" {...field} />
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-							</div>
-							<div className="grid grid-cols-2 gap-4">
-								<FormField
-									control={form.control}
-									name="address.zipCode"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>Postal/ZIP Code</FormLabel>
-											<FormControl>
-												<Input placeholder="M5V 2H1" {...field} />
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-								<FormField
-									control={form.control}
-									name="address.country"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>Country</FormLabel>
-											<FormControl>
-												<Input placeholder="Canada" {...field} />
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-							</div>
 						</div>
 						<DialogFooter>
 							<Button type="submit">Save</Button>
