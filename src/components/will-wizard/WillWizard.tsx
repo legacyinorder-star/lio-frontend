@@ -570,20 +570,26 @@ export default function WillWizard() {
 			const willData = {
 				...(activeWill?.id && { will_id: activeWill.id }),
 				owner: {
-					firstName: formData.firstName,
-					lastName: formData.lastName,
-					maritalStatus: "married",
+					first_name: formData.firstName,
+					last_name: formData.lastName,
+					marital_status: "married",
 					address: formData.address.street,
 					city: formData.address.city,
 					state: formData.address.state,
-					postCode: formData.address.zipCode,
+					post_code: formData.address.zipCode,
 					country: formData.address.country,
 				},
 				spouse: {
-					firstName: spouseData.firstName,
-					lastName: spouseData.lastName,
+					first_name: spouseData.firstName,
+					last_name: spouseData.lastName,
 				},
 			};
+
+			console.log("Spouse Data being sent:", willData);
+			console.log(
+				"Spouse Data stringified:",
+				JSON.stringify(willData, null, 2)
+			);
 
 			const { data, error } = await apiClient<WillData>("/wills/create", {
 				method: "POST",
@@ -592,6 +598,7 @@ export default function WillWizard() {
 
 			if (error) {
 				console.error("Error updating will with spouse:", error);
+				console.error("Request payload:", willData);
 				toast.error("Failed to save spouse information. Please try again.");
 				return;
 			}
