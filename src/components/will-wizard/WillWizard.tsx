@@ -14,6 +14,8 @@ import {
 	ArrowLeft,
 	Save,
 	X,
+	Flame,
+	Cross,
 } from "lucide-react";
 import {
 	Dialog,
@@ -50,6 +52,7 @@ type QuestionType =
 	| "residuary"
 	| "executors"
 	| "witnesses"
+	| "funeralInstructions"
 	| "additionalInstructions"
 	| "review";
 
@@ -174,6 +177,10 @@ interface WillFormData {
 	executors: Executor[];
 	witnesses: Witness[];
 	additionalInstructions: string;
+	funeralInstructions: {
+		disposition: "cremation" | "burial" | null;
+		location?: string;
+	};
 }
 
 // Add these types and constants after the other type definitions
@@ -365,6 +372,10 @@ export default function WillWizard() {
 		executors: [],
 		witnesses: [],
 		additionalInstructions: "",
+		funeralInstructions: {
+			disposition: null,
+			location: "",
+		},
 	});
 
 	// For the spouse dialog
@@ -876,6 +887,8 @@ export default function WillWizard() {
 		} else if (currentQuestion === "executors") {
 			setCurrentQuestion("witnesses");
 		} else if (currentQuestion === "witnesses") {
+			setCurrentQuestion("funeralInstructions");
+		} else if (currentQuestion === "funeralInstructions") {
 			setCurrentQuestion("additionalInstructions");
 		} else if (currentQuestion === "additionalInstructions") {
 			setCurrentQuestion("review");
@@ -928,8 +941,11 @@ export default function WillWizard() {
 			case "witnesses":
 				setCurrentQuestion("executors");
 				break;
-			case "additionalInstructions":
+			case "funeralInstructions":
 				setCurrentQuestion("witnesses");
+				break;
+			case "additionalInstructions":
+				setCurrentQuestion("funeralInstructions");
 				break;
 			case "review":
 				setCurrentQuestion("additionalInstructions");
@@ -1949,7 +1965,7 @@ export default function WillWizard() {
 													label="Relationship to You"
 													required
 													error={guardianFormErrors.relationship}
-													excludeRelationships={["child"]}
+													excludeRelationships={["spouse", "child"]}
 												/>
 											</div>
 											<div className="flex items-center space-x-2">
@@ -3615,6 +3631,95 @@ export default function WillWizard() {
 					</div>
 				);
 
+			case "funeralInstructions":
+				return (
+					<div className="space-y-4">
+						<div className="text-2xl font-semibold">Funeral Instructions</div>
+						<div className="text-muted-foreground">
+							Please specify your preferences for your funeral arrangements.
+							This information will be included in your will to guide your loved
+							ones.
+						</div>
+						<div className="space-y-6 mt-6">
+							<div className="space-y-4">
+								<div className="space-y-2">
+									<Label>Disposition Preference</Label>
+									<div className="grid grid-cols-2 gap-4">
+										<Button
+											variant={
+												formData.funeralInstructions.disposition === "cremation"
+													? "default"
+													: "outline"
+											}
+											onClick={() =>
+												setFormData((prev) => ({
+													...prev,
+													funeralInstructions: {
+														...prev.funeralInstructions,
+														disposition: "cremation",
+													},
+												}))
+											}
+											className="h-24 flex flex-col items-center justify-center gap-2 cursor-pointer"
+										>
+											<Flame className="h-6 w-6" />
+											<span>Cremation</span>
+										</Button>
+										<Button
+											variant={
+												formData.funeralInstructions.disposition === "burial"
+													? "default"
+													: "outline"
+											}
+											onClick={() =>
+												setFormData((prev) => ({
+													...prev,
+													funeralInstructions: {
+														...prev.funeralInstructions,
+														disposition: "burial",
+													},
+												}))
+											}
+											className="h-24 flex flex-col items-center justify-center gap-2 cursor-pointer"
+										>
+											<Cross className="h-6 w-6" />
+											<span>Burial</span>
+										</Button>
+									</div>
+								</div>
+
+								{formData.funeralInstructions.disposition && (
+									<div className="space-y-2">
+										<Label htmlFor="funeralLocation">
+											{formData.funeralInstructions.disposition === "cremation"
+												? "Preferred Crematorium"
+												: "Preferred Cemetery"}
+										</Label>
+										<Input
+											id="funeralLocation"
+											value={formData.funeralInstructions.location || ""}
+											onChange={(e) =>
+												setFormData((prev) => ({
+													...prev,
+													funeralInstructions: {
+														...prev.funeralInstructions,
+														location: e.target.value,
+													},
+												}))
+											}
+											placeholder={`Enter preferred ${
+												formData.funeralInstructions.disposition === "cremation"
+													? "crematorium"
+													: "cemetery"
+											} name`}
+										/>
+									</div>
+								)}
+							</div>
+						</div>
+					</div>
+				);
+
 			case "additionalInstructions":
 				return (
 					<div className="space-y-4">
@@ -3769,6 +3874,13 @@ export default function WillWizard() {
 									})
 								),
 								additionalInstructions: formData.additionalInstructions,
+								funeralInstructions: formData.funeralInstructions.disposition
+									? {
+											disposition: formData.funeralInstructions.disposition,
+											location:
+												formData.funeralInstructions.location || undefined,
+									  }
+									: undefined,
 							}}
 							onSave={handleSaveWill}
 						/>
@@ -3801,7 +3913,7 @@ export default function WillWizard() {
 	};
 
 	// Track progress
-	const totalQuestions = 12; // Updated to include additional instructions
+	const totalQuestions = 13; // Updated to include additional instructions and funeral instructions
 	const progress = (() => {
 		switch (currentQuestion) {
 			case "name":
@@ -3824,10 +3936,12 @@ export default function WillWizard() {
 				return 9;
 			case "witnesses":
 				return 10;
-			case "additionalInstructions":
+			case "funeralInstructions":
 				return 11;
-			case "review":
+			case "additionalInstructions":
 				return 12;
+			case "review":
+				return 13;
 			default:
 				return 1;
 		}
