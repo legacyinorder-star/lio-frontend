@@ -36,6 +36,7 @@ import ReviewStep, { ReviewStepHandle } from "./steps/ReviewStep";
 import { useWill, type WillData } from "@/context/WillContext";
 import { apiClient } from "@/utils/apiClient";
 import { toast } from "sonner";
+import { useRelationships } from "@/hooks/useRelationships";
 
 // Define the different question types
 type QuestionType =
@@ -63,19 +64,10 @@ interface Address {
 
 // Define child type
 interface Child {
-	id: `${string}-${string}-${string}-${string}-${string}`;
+	id: string;
 	firstName: string;
 	lastName: string;
-	dateOfBirth: string;
-	requiresGuardian: boolean;
-	guardian?: {
-		firstName: string;
-		lastName: string;
-		relationship: string;
-		phone: string;
-		email: string;
-		address: Address;
-	};
+	isMinor: boolean;
 }
 
 // Define guardian type
@@ -314,14 +306,34 @@ type BeneficiaryDisplay = {
 };
 
 // Add this type near the top of the file with other types
-type ChangeEvent = {
-	target: {
-		value: string;
-	};
-};
+// type ChangeEvent = {
+// 	target: {
+// 		value: string;
+// 	};
+// };
 
 // Update the type to match React's ChangeEvent
 type FormChangeEvent = React.ChangeEvent<HTMLInputElement>;
+
+// Add this type near other interfaces
+interface PersonResponse {
+	id: string;
+	will_id: string;
+	first_name: string;
+	last_name: string;
+	relationship_id: string;
+	is_minor: boolean;
+	created_at: string;
+}
+
+// Add this type near other interfaces
+interface GuardianshipResponse {
+	id: string;
+	will_id: string;
+	guardian_id: string;
+	is_primary: boolean;
+	created_at: string;
+}
 
 export default function WillWizard() {
 	// Track the current question being shown
@@ -364,8 +376,7 @@ export default function WillWizard() {
 	const [childForm, setChildForm] = useState<Omit<Child, "id">>({
 		firstName: "",
 		lastName: "",
-		dateOfBirth: "",
-		requiresGuardian: false,
+		isMinor: false,
 	});
 
 	// Guardian dialog state
@@ -473,6 +484,16 @@ export default function WillWizard() {
 		witness: Witness;
 		beneficiary: string;
 	} | null>(null);
+
+	// Add useRelationships hook near other hooks
+	const { relationships } = useRelationships();
+
+	// Add guardianFormErrors to the state
+	const [guardianFormErrors, setGuardianFormErrors] = useState<{
+		firstName?: string;
+		lastName?: string;
+		relationship?: string;
+	}>({});
 
 	// Ensure we're mounted before rendering any dialogs
 	useEffect(() => {
@@ -644,9 +665,7 @@ export default function WillWizard() {
 		setChildForm({
 			firstName: child.firstName,
 			lastName: child.lastName,
-			dateOfBirth: child.dateOfBirth,
-			requiresGuardian: child.requiresGuardian,
-			guardian: child.guardian,
+			isMinor: child.isMinor,
 		});
 	};
 
@@ -685,63 +704,114 @@ export default function WillWizard() {
 
 	// Handle guardian form changes
 	const handleGuardianFormChange =
-		(field: keyof Guardian) => (e: React.ChangeEvent<HTMLInputElement>) => {
-			setGuardianForm((prev) => ({
-				...prev,
-				[field]: e.target.value,
-			}));
+		(field: keyof typeof guardianForm) => (e: FormChangeEvent) => {
+			const value = e.target.value;
+			setGuardianForm((prev) => ({ ...prev, [field]: value }));
+			// Clear error when field is updated
+			setGuardianFormErrors((prev) => ({ ...prev, [field]: undefined }));
 		};
 
-	// Handle adding/editing guardian
-	const handleSaveGuardian = () => {
+	// Update handleSaveGuardian to include API call
+	const handleSaveGuardian = async () => {
+		if (!activeWill?.id) {
+			toast.error("No active will found");
+			return;
+		}
+
 		if (
 			!guardianForm.firstName ||
 			!guardianForm.lastName ||
 			!guardianForm.relationship
 		) {
+			toast.error("Please fill in all required fields");
 			return;
 		}
 
-		// If this is a primary guardian, ensure no other primary exists
-		if (guardianForm.isPrimary) {
-			setFormData((prev) => ({
-				...prev,
-				guardians: prev.guardians.map((g) => ({
-					...g,
-					isPrimary: false,
-				})),
-			}));
-		}
+		try {
+			// First create the guardian person record
+			const { data: personData, error: personError } =
+				await apiClient<PersonResponse>("/people", {
+					method: "POST",
+					body: JSON.stringify({
+						will_id: activeWill.id,
+						first_name: guardianForm.firstName,
+						last_name: guardianForm.lastName,
+						relationship_id: guardianForm.relationship,
+						is_minor: false, // Guardians are never minors
+					}),
+				});
 
-		if (editingGuardian) {
-			// Update existing guardian
-			setFormData((prev) => ({
-				...prev,
-				guardians: prev.guardians.map((guardian) =>
-					guardian.id === editingGuardian.id ? guardianForm : guardian
-				),
-			}));
-		} else {
-			// Add new guardian
-			setFormData((prev) => ({
-				...prev,
-				guardians: [
-					...prev.guardians,
-					{ ...guardianForm, id: crypto.randomUUID() },
-				],
-			}));
-		}
+			if (personError || !personData) {
+				toast.error("Failed to save guardian information");
+				return;
+			}
 
-		// Reset form and close dialog
-		setGuardianForm({
-			id: "",
-			firstName: "",
-			lastName: "",
-			relationship: "",
-			isPrimary: false,
-		});
-		setEditingGuardian(null);
-		setGuardianDialogOpen(false);
+			// Then create the guardianship record
+			const { data: guardianshipData, error: guardianshipError } =
+				await apiClient<GuardianshipResponse>("/guardianship", {
+					method: "POST",
+					body: JSON.stringify({
+						will_id: activeWill.id,
+						guardian_id: personData.id,
+						is_primary: guardianForm.isPrimary,
+					}),
+				});
+
+			if (guardianshipError || !guardianshipData) {
+				toast.error("Failed to save guardianship information");
+				return;
+			}
+
+			// If this is a primary guardian, ensure no other primary exists
+			if (guardianForm.isPrimary) {
+				setFormData((prev) => ({
+					...prev,
+					guardians: prev.guardians.map((g) => ({
+						...g,
+						isPrimary: false,
+					})),
+				}));
+			}
+
+			const newGuardian: Guardian = {
+				id: personData.id,
+				firstName: personData.first_name,
+				lastName: personData.last_name,
+				relationship: guardianForm.relationship,
+				isPrimary: guardianForm.isPrimary,
+			};
+
+			if (editingGuardian) {
+				// Update existing guardian
+				setFormData((prev) => ({
+					...prev,
+					guardians: prev.guardians.map((guardian) =>
+						guardian.id === editingGuardian.id ? newGuardian : guardian
+					),
+				}));
+			} else {
+				// Add new guardian
+				setFormData((prev) => ({
+					...prev,
+					guardians: [...prev.guardians, newGuardian],
+				}));
+			}
+
+			// Reset form and close dialog
+			setGuardianForm({
+				id: "",
+				firstName: "",
+				lastName: "",
+				relationship: "",
+				isPrimary: false,
+			});
+			setEditingGuardian(null);
+			setGuardianDialogOpen(false);
+			toast.success("Guardian saved successfully");
+		} catch (error) {
+			console.error("Error saving guardian:", error);
+			toast.error("An error occurred while saving guardian information");
+		}
 	};
 
 	// Handle editing guardian
@@ -763,7 +833,7 @@ export default function WillWizard() {
 
 	// Check if guardians are needed
 	const needsGuardians = () => {
-		return formData.children.some((child) => child.requiresGuardian);
+		return formData.children.some((child) => child.isMinor);
 	};
 
 	// Check if guardians are valid
@@ -1609,8 +1679,7 @@ export default function WillWizard() {
 													setChildForm({
 														firstName: "",
 														lastName: "",
-														dateOfBirth: "",
-														requiresGuardian: false,
+														isMinor: false,
 													});
 													setEditingChild(null);
 												}}
@@ -1651,19 +1720,16 @@ export default function WillWizard() {
 												<div className="space-y-2">
 													<div className="flex items-center space-x-2">
 														<Checkbox
-															id="requiresGuardian"
-															checked={childForm.requiresGuardian}
+															id="isMinor"
+															checked={childForm.isMinor}
 															onCheckedChange={(checked: boolean) =>
 																setChildForm((prev) => ({
 																	...prev,
-																	requiresGuardian: checked,
+																	isMinor: checked,
 																}))
 															}
 														/>
-														<Label
-															htmlFor="requiresGuardian"
-															className="text-sm"
-														>
+														<Label htmlFor="isMinor" className="text-sm">
 															This child is a minor or requires a legal guardian
 														</Label>
 													</div>
@@ -1708,7 +1774,7 @@ export default function WillWizard() {
 																{child.firstName} {child.lastName}
 															</p>
 															<p className="text-sm text-muted-foreground">
-																{child.requiresGuardian
+																{child.isMinor
 																	? "Requires legal guardian"
 																	: "Adult (no guardian required)"}
 															</p>
@@ -1872,9 +1938,6 @@ export default function WillWizard() {
 												</div>
 											</div>
 											<div className="space-y-2">
-												<Label htmlFor="guardianRelationship">
-													Relationship to You
-												</Label>
 												<RelationshipSelect
 													value={guardianForm.relationship || ""}
 													onValueChange={(value) => {
@@ -1883,7 +1946,10 @@ export default function WillWizard() {
 														} as FormChangeEvent;
 														handleGuardianFormChange("relationship")(event);
 													}}
+													label="Relationship to You"
 													required
+													error={guardianFormErrors.relationship}
+													excludeRelationships={["child"]}
 												/>
 											</div>
 											<div className="flex items-center space-x-2">
@@ -1942,7 +2008,7 @@ export default function WillWizard() {
 															)}
 														</p>
 														<p className="text-sm text-muted-foreground">
-															{guardian.relationship}
+															{getRelationshipName(guardian.relationship)}
 														</p>
 													</div>
 													<div className="flex space-x-2">
@@ -3637,8 +3703,6 @@ export default function WillWizard() {
 										fullName: `${child.firstName} ${child.lastName}`,
 										relationship: "Child",
 										allocation: 0,
-										dateOfBirth: child.dateOfBirth,
-										requiresGuardian: child.requiresGuardian,
 									})),
 									...formData.guardians.map((guardian) => ({
 										id: guardian.id,
@@ -3772,32 +3836,66 @@ export default function WillWizard() {
 	const progressPercent = (progress / totalQuestions) * 100;
 
 	// Add the saveChild function
-	const saveChild = () => {
-		if (editingChild) {
-			setFormData((prev) => ({
-				...prev,
-				children: prev.children.map((child) =>
-					child.id === editingChild.id ? { ...childForm, id: child.id } : child
-				),
-			}));
-		} else {
-			const newChild: Child = {
-				id: crypto.randomUUID() as `${string}-${string}-${string}-${string}-${string}`,
-				...childForm,
-			};
-			setFormData((prev) => ({
-				...prev,
-				children: [...prev.children, newChild],
-			}));
+	const saveChild = async () => {
+		// Find the "child" relationship UUID
+		const childRelationship = relationships.find(
+			(r) => r.name.toLowerCase() === "child"
+		);
+		if (!childRelationship) {
+			toast.error("Could not find child relationship type");
+			return;
 		}
-		setChildForm({
-			firstName: "",
-			lastName: "",
-			dateOfBirth: "",
-			requiresGuardian: false,
-		});
-		setEditingChild(null);
-		setChildDialogOpen(false);
+
+		if (!activeWill?.id) {
+			toast.error("No active will found");
+			return;
+		}
+
+		try {
+			const { data, error } = await apiClient<PersonResponse>("/people", {
+				method: "POST",
+				body: JSON.stringify({
+					will_id: activeWill.id,
+					first_name: childForm.firstName,
+					last_name: childForm.lastName,
+					is_minor: childForm.isMinor,
+					relationship_id: childRelationship.id,
+				}),
+			});
+
+			if (error) {
+				toast.error("Failed to save child information");
+				return;
+			}
+
+			if (data) {
+				const newChild: Child = {
+					id: data.id,
+					firstName: data.first_name,
+					lastName: data.last_name,
+					isMinor: data.is_minor,
+				};
+
+				setFormData((prev) => ({
+					...prev,
+					children: editingChild
+						? prev.children.map((c) =>
+								c.id === editingChild.id ? newChild : c
+						  )
+						: [...prev.children, newChild],
+				}));
+
+				setChildDialogOpen(false);
+				setEditingChild(null);
+				setChildForm({
+					firstName: "",
+					lastName: "",
+					isMinor: false,
+				});
+			}
+		} catch (err) {
+			toast.error("An error occurred while saving child information");
+		}
 	};
 
 	const reviewStepRef = useRef<ReviewStepHandle>(null);
@@ -3847,6 +3945,18 @@ export default function WillWizard() {
 		if (reviewStepRef.current) {
 			await reviewStepRef.current.handleSaveAndDownload();
 		}
+	};
+
+	// Add this helper function near other helper functions
+	const getRelationshipName = (relationshipId: string) => {
+		const relationship = relationships.find((r) => r.id === relationshipId);
+		if (!relationship) return relationshipId;
+
+		// Convert to title case by capitalizing first letter of each word
+		return relationship.name
+			.split(" ")
+			.map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+			.join(" ");
 	};
 
 	return (
