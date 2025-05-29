@@ -19,6 +19,7 @@ interface RelationshipSelectProps {
 	required?: boolean;
 	error?: string;
 	className?: string;
+	excludeRelationships?: string[];
 }
 
 export function RelationshipSelect({
@@ -30,8 +31,15 @@ export function RelationshipSelect({
 	required = false,
 	error,
 	className = "",
+	excludeRelationships = [],
 }: RelationshipSelectProps) {
 	const { relationships, isLoading, error: fetchError } = useRelationships();
+
+	// Filter out excluded relationships
+	const filteredRelationships = relationships.filter(
+		(relationship) =>
+			!excludeRelationships.includes(relationship.name.toLowerCase())
+	);
 
 	if (isLoading) {
 		return (
@@ -79,12 +87,17 @@ export function RelationshipSelect({
 					{required && <span className="text-destructive">*</span>}
 				</Label>
 			)}
-			<Select value={value} onValueChange={onValueChange} disabled={disabled}>
+			<Select
+				className="bg-white"
+				value={value}
+				onValueChange={onValueChange}
+				disabled={disabled}
+			>
 				<SelectTrigger>
 					<SelectValue placeholder={placeholder} />
 				</SelectTrigger>
-				<SelectContent>
-					{relationships.map((relationship) => (
+				<SelectContent className="bg-white">
+					{filteredRelationships.map((relationship) => (
 						<SelectItem key={relationship.id} value={relationship.id}>
 							{relationship.name
 								.split(" ")
