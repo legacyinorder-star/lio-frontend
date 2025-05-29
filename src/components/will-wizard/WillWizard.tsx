@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { RelationshipSelect } from "@/components/ui/relationship-select";
 import SpouseDialog, { SpouseData } from "./SpouseDialog";
 import {
 	ArrowRight,
@@ -307,11 +308,20 @@ type BeneficiaryType =
 // Update the beneficiary type definition
 type BeneficiaryDisplay = {
 	id: string;
-	firstName: string;
-	lastName: string;
+	fullName: string;
 	relationship: string;
-	allocation?: number;
+	allocation: number;
 };
+
+// Add this type near the top of the file with other types
+type ChangeEvent = {
+	target: {
+		value: string;
+	};
+};
+
+// Update the type to match React's ChangeEvent
+type FormChangeEvent = React.ChangeEvent<HTMLInputElement>;
 
 export default function WillWizard() {
 	// Track the current question being shown
@@ -527,13 +537,6 @@ export default function WillWizard() {
 					},
 				};
 
-				console.log("Form Data:", formData);
-				console.log("Will Data being sent:", willData);
-				console.log(
-					"Will Data stringified:",
-					JSON.stringify(willData, null, 2)
-				);
-
 				const { data, error } = await apiClient<WillData>("/wills/create", {
 					method: "POST",
 					body: JSON.stringify(willData),
@@ -541,7 +544,6 @@ export default function WillWizard() {
 
 				if (error) {
 					console.error("Error creating/updating will:", error);
-					console.error("Request payload:", willData);
 					toast.error("Failed to save will information. Please try again.");
 					return;
 				}
@@ -585,12 +587,6 @@ export default function WillWizard() {
 				},
 			};
 
-			console.log("Spouse Data being sent:", willData);
-			console.log(
-				"Spouse Data stringified:",
-				JSON.stringify(willData, null, 2)
-			);
-
 			const { data, error } = await apiClient<WillData>("/wills/create", {
 				method: "POST",
 				body: JSON.stringify(willData),
@@ -598,7 +594,6 @@ export default function WillWizard() {
 
 			if (error) {
 				console.error("Error updating will with spouse:", error);
-				console.error("Request payload:", willData);
 				toast.error("Failed to save spouse information. Please try again.");
 				return;
 			}
@@ -1880,11 +1875,15 @@ export default function WillWizard() {
 												<Label htmlFor="guardianRelationship">
 													Relationship to You
 												</Label>
-												<Input
-													id="guardianRelationship"
-													value={guardianForm.relationship}
-													onChange={handleGuardianFormChange("relationship")}
-													placeholder="e.g., Brother, Sister, Close Friend"
+												<RelationshipSelect
+													value={guardianForm.relationship || ""}
+													onValueChange={(value) => {
+														const event = {
+															target: { value },
+														} as FormChangeEvent;
+														handleGuardianFormChange("relationship")(event);
+													}}
+													required
 												/>
 											</div>
 											<div className="flex items-center space-x-2">
@@ -2021,8 +2020,10 @@ export default function WillWizard() {
 														? [
 																{
 																	id: "spouse",
-																	firstName: formData.spouse.firstName,
-																	lastName: formData.spouse.lastName,
+																	fullName: getFullName(
+																		formData.spouse.firstName,
+																		formData.spouse.lastName
+																	),
 																	relationship: "Spouse",
 																	allocation: 0,
 																},
@@ -2030,22 +2031,19 @@ export default function WillWizard() {
 														: []),
 													...formData.children.map((child) => ({
 														id: child.id,
-														firstName: child.firstName,
-														lastName: child.lastName,
+														fullName: `${child.firstName} ${child.lastName}`,
 														relationship: "Child",
 														allocation: 0,
 													})),
 													...formData.guardians.map((guardian) => ({
 														id: guardian.id,
-														firstName: guardian.firstName,
-														lastName: guardian.lastName,
+														fullName: `${guardian.firstName} ${guardian.lastName}`,
 														relationship: guardian.relationship,
 														allocation: 0,
 													})),
 													...formData.otherBeneficiaries.map((ben) => ({
 														id: ben.id,
-														firstName: ben.firstName,
-														lastName: ben.lastName,
+														fullName: `${ben.firstName} ${ben.lastName}`,
 														relationship: ben.relationship,
 														allocation: 0,
 													})),
@@ -2624,16 +2622,15 @@ export default function WillWizard() {
 																	<Label htmlFor="beneficiaryRelationship">
 																		Relationship
 																	</Label>
-																	<Input
-																		id="beneficiaryRelationship"
+																	<RelationshipSelect
 																		value={newBeneficiaryForm.relationship}
-																		onChange={(e) =>
+																		onValueChange={(value) =>
 																			setNewBeneficiaryForm((prev) => ({
 																				...prev,
-																				relationship: e.target.value,
+																				relationship: value,
 																			}))
 																		}
-																		placeholder="e.g., Niece, Nephew, Friend"
+																		required
 																	/>
 																</div>
 															</>
@@ -3039,13 +3036,15 @@ export default function WillWizard() {
 														<Label htmlFor="executorRelationship">
 															Relationship to You
 														</Label>
-														<Input
-															id="executorRelationship"
-															value={executorForm.relationship}
-															onChange={handleExecutorFormChange(
-																"relationship"
-															)}
-															placeholder="e.g., Brother, Sister, Close Friend"
+														<RelationshipSelect
+															value={executorForm.relationship || ""}
+															onValueChange={(value) => {
+																const event = {
+																	target: { value },
+																} as FormChangeEvent;
+																handleExecutorFormChange("relationship")(event);
+															}}
+															required
 														/>
 													</div>
 												</>
@@ -4069,7 +4068,7 @@ export default function WillWizard() {
 														(
 														{beneficiary.type === "charity"
 															? "Charity"
-															: beneficiary.relationship}
+															: beneficiary.relationship || ""}
 														)
 													</span>
 												</div>
@@ -4193,16 +4192,15 @@ export default function WillWizard() {
 											<Label htmlFor="beneficiaryRelationship">
 												Relationship
 											</Label>
-											<Input
-												id="beneficiaryRelationship"
+											<RelationshipSelect
 												value={newBeneficiaryForm.relationship}
-												onChange={(e) =>
+												onValueChange={(value) =>
 													setNewBeneficiaryForm((prev) => ({
 														...prev,
-														relationship: e.target.value,
+														relationship: value,
 													}))
 												}
-												placeholder="e.g., Niece, Nephew, Friend"
+												required
 											/>
 										</div>
 									</>

@@ -11,6 +11,7 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { RelationshipSelect } from "@/components/ui/relationship-select";
 
 const executorSchema = z.object({
 	fullName: z.string().min(2, "Full name must be at least 2 characters"),
@@ -71,19 +72,11 @@ export default function ExecutorStep({ data, onUpdate }: ExecutorStepProps) {
 						<FormItem>
 							<FormLabel>Relationship</FormLabel>
 							<FormControl>
-								<select
-									className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-									{...field}
-								>
-									<option value="">Select relationship</option>
-									<option value="spouse">Spouse</option>
-									<option value="child">Child</option>
-									<option value="parent">Parent</option>
-									<option value="sibling">Sibling</option>
-									<option value="friend">Friend</option>
-									<option value="lawyer">Lawyer</option>
-									<option value="other">Other</option>
-								</select>
+								<RelationshipSelect
+									value={field.value}
+									onValueChange={field.onChange}
+									required
+								/>
 							</FormControl>
 							<FormMessage />
 						</FormItem>

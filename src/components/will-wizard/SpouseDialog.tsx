@@ -111,7 +111,9 @@ export default function SpouseDialog({
 							/>
 						</div>
 						<DialogFooter>
-							<Button type="submit">Save</Button>
+							<Button type="submit" className="cursor-pointer">
+								Save
+							</Button>
 						</DialogFooter>
 					</form>
 				</Form>
