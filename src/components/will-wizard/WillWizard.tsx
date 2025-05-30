@@ -305,12 +305,12 @@ type BeneficiaryType =
 	| "individual";
 
 // Update the beneficiary type definition
-type BeneficiaryDisplay = {
-	id: string;
-	fullName: string;
-	relationship: string;
-	allocation: number;
-};
+// type BeneficiaryDisplay = {
+//   id: string;
+//   fullName: string;
+//   relationship: string;
+//   allocation: number;
+// };
 
 // Add this type near the top of the file with other types
 // type ChangeEvent = {
@@ -340,6 +340,21 @@ interface GuardianshipResponse {
 	guardian_id: string;
 	is_primary: boolean;
 	created_at: string;
+}
+
+interface BeneficiaryResponse {
+	charities: Array<{
+		id: string;
+		name: string;
+		registration_number?: string;
+	}>;
+	people: Array<{
+		id: string;
+		first_name: string;
+		last_name: string;
+		relationship: string;
+		is_minor: boolean;
+	}>;
 }
 
 export default function WillWizard() {
@@ -856,7 +871,54 @@ export default function WillWizard() {
 		);
 	};
 
-	// Modify handleNext to include API call
+	// Add fetchBeneficiaries function
+	const fetchBeneficiaries = async () => {
+		if (!activeWill?.id) {
+			toast.error("No active will found");
+			return;
+		}
+
+		setIsLoadingBeneficiaries(true);
+		try {
+			const { data, error } = await apiClient<BeneficiaryResponse>(
+				`/beneficiaries/${activeWill.id}`,
+				{
+					method: "GET",
+				}
+			);
+
+			if (error) {
+				toast.error("Failed to fetch beneficiaries");
+				return;
+			}
+
+			if (data) {
+				const combinedBeneficiaries = [
+					...data.charities.map((charity) => ({
+						id: charity.id,
+						fullName: charity.name,
+						relationship: "Charity",
+						type: "charity" as const,
+						registrationNumber: charity.registration_number,
+					})),
+					...data.people.map((person) => ({
+						id: person.id,
+						fullName: `${person.first_name} ${person.last_name}`,
+						relationship: person.relationship,
+						isMinor: person.is_minor,
+						type: "person" as const,
+					})),
+				];
+				setBeneficiaries(combinedBeneficiaries);
+			}
+		} catch (err) {
+			toast.error("Failed to fetch beneficiaries");
+		} finally {
+			setIsLoadingBeneficiaries(false);
+		}
+	};
+
+	// Modify handleNext to fetch beneficiaries when entering asset distribution
 	const handleNext = async () => {
 		if (currentQuestion === "name") {
 			if (
@@ -4073,6 +4135,18 @@ export default function WillWizard() {
 			.join(" ");
 	};
 
+	const [beneficiaries, setBeneficiaries] = useState<
+		Array<{
+			id: string;
+			fullName: string;
+			relationship: string;
+			isMinor?: boolean;
+			type: "charity" | "person";
+			registrationNumber?: string;
+		}>
+	>([]);
+	const [isLoadingBeneficiaries, setIsLoadingBeneficiaries] = useState(false);
+
 	return (
 		<div className="container mx-auto py-8">
 			<Card className="max-w-3xl mx-auto">
@@ -4137,168 +4211,55 @@ export default function WillWizard() {
 						{beneficiaryType === "existing" ? (
 							<div className="space-y-2">
 								<Label>Select Beneficiary</Label>
-								<div className="space-y-2 max-h-[300px] overflow-y-auto">
-									{/* Spouse */}
-									{formData.hasSpouse &&
-										formData.spouse &&
-										!assetForm.beneficiaries.some((b) => b.id === "spouse") && (
-											<div
-												className="flex items-center justify-between p-2 border rounded-md hover:bg-muted cursor-pointer"
-												onClick={() => {
-													setAssetForm((prev) => ({
-														...prev,
-														beneficiaries: [
-															...prev.beneficiaries,
-															{
-																id: "spouse",
-																percentage:
-																	prev.distributionType === "percentage"
-																		? 0
-																		: undefined,
-															},
-														],
-													}));
-													setBeneficiaryDialogOpen(false);
-												}}
-											>
-												<div>
-													<span className="font-medium">
-														{getFullName(
-															formData.spouse.firstName,
-															formData.spouse.lastName
-														)}
-													</span>
-													<span className="text-sm text-muted-foreground ml-2">
-														(Spouse)
-													</span>
+								{isLoadingBeneficiaries ? (
+									<div className="text-center py-4">
+										Loading beneficiaries...
+									</div>
+								) : (
+									<div className="space-y-2 max-h-[300px] overflow-y-auto">
+										{beneficiaries
+											.filter(
+												(beneficiary) =>
+													!assetForm.beneficiaries.some(
+														(b) => b.id === beneficiary.id
+													)
+											)
+											.map((beneficiary) => (
+												<div
+													key={beneficiary.id}
+													className="flex items-center justify-between p-2 border rounded-md hover:bg-muted cursor-pointer"
+													onClick={() => {
+														setAssetForm((prev) => ({
+															...prev,
+															beneficiaries: [
+																...prev.beneficiaries,
+																{
+																	id: beneficiary.id,
+																	percentage:
+																		prev.distributionType === "percentage"
+																			? 0
+																			: undefined,
+																},
+															],
+														}));
+														setBeneficiaryDialogOpen(false);
+													}}
+												>
+													<div>
+														<span className="font-medium">
+															{beneficiary.fullName}
+														</span>
+														<span className="text-sm text-muted-foreground ml-2">
+															({beneficiary.relationship})
+															{beneficiary.type === "charity" &&
+																beneficiary.registrationNumber &&
+																` - Reg: ${beneficiary.registrationNumber}`}
+														</span>
+													</div>
 												</div>
-											</div>
-										)}
-
-									{/* Children */}
-									{formData.children
-										.filter(
-											(child) =>
-												!assetForm.beneficiaries.some((b) => b.id === child.id)
-										)
-										.map((child) => (
-											<div
-												key={child.id}
-												className="flex items-center justify-between p-2 border rounded-md hover:bg-muted cursor-pointer"
-												onClick={() => {
-													setAssetForm((prev) => ({
-														...prev,
-														beneficiaries: [
-															...prev.beneficiaries,
-															{
-																id: child.id,
-																percentage:
-																	prev.distributionType === "percentage"
-																		? 0
-																		: undefined,
-															},
-														],
-													}));
-													setBeneficiaryDialogOpen(false);
-												}}
-											>
-												<div>
-													<span className="font-medium">
-														{child.firstName} {child.lastName}
-													</span>
-													<span className="text-sm text-muted-foreground ml-2">
-														(Child)
-													</span>
-												</div>
-											</div>
-										))}
-
-									{/* Guardians */}
-									{formData.guardians
-										.filter(
-											(guardian) =>
-												!assetForm.beneficiaries.some(
-													(b) => b.id === guardian.id
-												)
-										)
-										.map((guardian) => (
-											<div
-												key={guardian.id}
-												className="flex items-center justify-between p-2 border rounded-md hover:bg-muted cursor-pointer"
-												onClick={() => {
-													setAssetForm((prev) => ({
-														...prev,
-														beneficiaries: [
-															...prev.beneficiaries,
-															{
-																id: guardian.id,
-																percentage:
-																	prev.distributionType === "percentage"
-																		? 0
-																		: undefined,
-															},
-														],
-													}));
-													setBeneficiaryDialogOpen(false);
-												}}
-											>
-												<div>
-													<span className="font-medium">
-														{guardian.firstName} {guardian.lastName}
-													</span>
-													<span className="text-sm text-muted-foreground ml-2">
-														(Guardian{guardian.isPrimary ? " - Primary" : ""})
-													</span>
-												</div>
-											</div>
-										))}
-
-									{/* Other Beneficiaries */}
-									{formData.otherBeneficiaries
-										?.filter(
-											(beneficiary) =>
-												!assetForm.beneficiaries.some(
-													(b) => b.id === beneficiary.id
-												)
-										)
-										.map((beneficiary) => (
-											<div
-												key={beneficiary.id}
-												className="flex items-center justify-between p-2 border rounded-md hover:bg-muted cursor-pointer"
-												onClick={() => {
-													setAssetForm((prev) => ({
-														...prev,
-														beneficiaries: [
-															...prev.beneficiaries,
-															{
-																id: beneficiary.id,
-																percentage:
-																	prev.distributionType === "percentage"
-																		? 0
-																		: undefined,
-															},
-														],
-													}));
-													setBeneficiaryDialogOpen(false);
-												}}
-											>
-												<div>
-													<span className="font-medium">
-														{beneficiary.type === "charity"
-															? beneficiary.organizationName
-															: `${beneficiary.firstName} ${beneficiary.lastName}`}
-													</span>
-													<span className="text-sm text-muted-foreground ml-2">
-														(
-														{beneficiary.type === "charity"
-															? "Charity"
-															: beneficiary.relationship || ""}
-														)
-													</span>
-												</div>
-											</div>
-										))}
-								</div>
+											))}
+									</div>
+								)}
 							</div>
 						) : (
 							<div className="space-y-4">
