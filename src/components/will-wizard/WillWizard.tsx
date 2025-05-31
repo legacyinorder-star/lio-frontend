@@ -39,6 +39,7 @@ import { useWill, type WillData } from "@/context/WillContext";
 import { apiClient } from "@/utils/apiClient";
 import { toast } from "sonner";
 import { useRelationships } from "@/hooks/useRelationships";
+import { getFormattedRelationshipNameById } from "@/utils/relationships";
 
 // Define the different question types
 type QuestionType =
@@ -2023,7 +2024,10 @@ export default function WillWizard() {
 															)}
 														</p>
 														<p className="text-sm text-muted-foreground">
-															{getRelationshipName(guardian.relationship)}
+															{getFormattedRelationshipNameById(
+																relationships,
+																guardian.relationship
+															)}
 														</p>
 													</div>
 													<div className="flex space-x-2">
@@ -2276,7 +2280,12 @@ export default function WillWizard() {
 																			{beneficiaryDetails.fullName}
 																		</span>
 																		<span className="text-sm text-muted-foreground ml-2">
-																			({beneficiaryDetails.relationship})
+																			(
+																			{getFormattedRelationshipNameById(
+																				relationships,
+																				beneficiaryDetails.relationship
+																			)}
+																			)
 																			{beneficiaryDetails.type === "charity" &&
 																				beneficiaryDetails.registrationNumber &&
 																				` - Reg: ${beneficiaryDetails.registrationNumber}`}
@@ -2599,7 +2608,12 @@ export default function WillWizard() {
 															>
 																{beneficiary.type === "charity"
 																	? `${beneficiary.organizationName} (Charity)`
-																	: `${beneficiary.firstName} ${beneficiary.lastName} (${beneficiary.relationship})`}
+																	: `${beneficiary.firstName} ${
+																			beneficiary.lastName
+																	  } (${getFormattedRelationshipNameById(
+																			relationships,
+																			beneficiary.relationship
+																	  )})`}
 															</option>
 														))}
 													</select>
@@ -2897,13 +2911,21 @@ export default function WillWizard() {
 										...formData.guardians.map((guardian) => ({
 											id: guardian.id,
 											fullName: `${guardian.firstName} ${guardian.lastName}`,
-											relationship: guardian.relationship,
+											relationship:
+												getFormattedRelationshipNameById(
+													relationships,
+													guardian.relationship
+												) || guardian.relationship,
 											allocation: 0,
 										})),
 										...formData.otherBeneficiaries.map((ben) => ({
 											id: ben.id,
 											fullName: `${ben.firstName} ${ben.lastName}`,
-											relationship: ben.relationship,
+											relationship:
+												getFormattedRelationshipNameById(
+													relationships,
+													ben.relationship
+												) || ben.relationship,
 											allocation: 0,
 										})),
 									].map((beneficiary) => {
@@ -3833,13 +3855,21 @@ export default function WillWizard() {
 									...formData.guardians.map((guardian) => ({
 										id: guardian.id,
 										fullName: `${guardian.firstName} ${guardian.lastName}`,
-										relationship: guardian.relationship,
+										relationship:
+											getFormattedRelationshipNameById(
+												relationships,
+												guardian.relationship
+											) || guardian.relationship,
 										allocation: 0,
 									})),
 									...formData.otherBeneficiaries.map((ben) => ({
 										id: ben.id,
 										fullName: `${ben.firstName} ${ben.lastName}`,
-										relationship: ben.relationship,
+										relationship:
+											getFormattedRelationshipNameById(
+												relationships,
+												ben.relationship
+											) || ben.relationship,
 										allocation: Number(ben.allocation),
 										email: ben.email,
 										phone: ben.phone,
@@ -3852,7 +3882,12 @@ export default function WillWizard() {
 											: undefined,
 									companyName:
 										exec.type === "corporate" ? exec.companyName : undefined,
-									relationship: exec.relationship,
+									relationship: exec.relationship
+										? getFormattedRelationshipNameById(
+												relationships,
+												exec.relationship
+										  )
+										: undefined,
 									email: exec.email,
 									phone: exec.phone,
 									address: formatAddress(exec.address),
@@ -3871,7 +3906,11 @@ export default function WillWizard() {
 								})),
 								guardians: formData.guardians.map((guardian) => ({
 									fullName: `${guardian.firstName} ${guardian.lastName}`,
-									relationship: guardian.relationship,
+									relationship:
+										getFormattedRelationshipNameById(
+											relationships,
+											guardian.relationship
+										) || guardian.relationship,
 									isPrimary: guardian.isPrimary,
 								})),
 								gifts: formData.gifts.map((gift) => ({
