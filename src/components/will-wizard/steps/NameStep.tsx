@@ -1,5 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@/components/ui/button";
+import { ArrowRight } from "lucide-react";
 import * as z from "zod";
 import {
 	Form,
@@ -15,8 +17,6 @@ import { StepProps } from "../types/will.types";
 const nameSchema = z.object({
 	firstName: z.string().min(2, "First name must be at least 2 characters"),
 	lastName: z.string().min(2, "Last name must be at least 2 characters"),
-	dateOfBirth: z.string().min(1, "Date of birth is required"),
-	phone: z.string().min(10, "Phone number must be at least 10 characters"),
 });
 
 type NameData = z.infer<typeof nameSchema>;
@@ -27,10 +27,13 @@ export default function NameStep({ data, onUpdate, onNext }: StepProps) {
 		defaultValues: {
 			firstName: data.firstName || "",
 			lastName: data.lastName || "",
-			dateOfBirth: data.dateOfBirth || "",
-			phone: data.phone || "",
 		},
+		mode: "onChange",
 	});
+
+	const {
+		formState: { isValid, isDirty },
+	} = form;
 
 	const onSubmit = (values: NameData) => {
 		onUpdate(values);
@@ -40,80 +43,50 @@ export default function NameStep({ data, onUpdate, onNext }: StepProps) {
 	return (
 		<Form {...form}>
 			<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-				<div className="grid grid-cols-2 gap-4">
-					<FormField
-						control={form.control}
-						name="firstName"
-						render={({ field }) => (
-							<FormItem>
-								<FormLabel>First Name</FormLabel>
-								<FormControl>
-									<Input placeholder="John" {...field} />
-								</FormControl>
-								<FormMessage />
-							</FormItem>
-						)}
-					/>
-					<FormField
-						control={form.control}
-						name="lastName"
-						render={({ field }) => (
-							<FormItem>
-								<FormLabel>Last Name</FormLabel>
-								<FormControl>
-									<Input placeholder="Doe" {...field} />
-								</FormControl>
-								<FormMessage />
-							</FormItem>
-						)}
-					/>
+				<div className="text-2xl font-semibold">What is your full name?</div>
+				<div className="text-muted-foreground">
+					We'll use this as the legal name in your will.
 				</div>
-				<FormField
-					control={form.control}
-					name="dateOfBirth"
-					render={({ field }) => (
-						<FormItem>
-							<FormLabel>Date of Birth</FormLabel>
-							<FormControl>
-								<Input type="date" {...field} />
-							</FormControl>
-							<FormMessage />
-						</FormItem>
-					)}
-				/>
-				<FormField
-					control={form.control}
-					name="phone"
-					render={({ field }) => (
-						<FormItem>
-							<FormLabel>Phone Number</FormLabel>
-							<FormControl>
-								<Input type="tel" placeholder="+1234567890" {...field} />
-							</FormControl>
-							<FormMessage />
-						</FormItem>
-					)}
-				/>
+				<div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-md">
+					<div className="space-y-2">
+						<FormField
+							control={form.control}
+							name="firstName"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>First Name</FormLabel>
+									<FormControl>
+										<Input placeholder="John" {...field} className="w-full" />
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+					</div>
+					<div className="space-y-2">
+						<FormField
+							control={form.control}
+							name="lastName"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Last Name</FormLabel>
+									<FormControl>
+										<Input placeholder="Doe" {...field} className="w-full" />
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+					</div>
+				</div>
 				<div className="flex justify-end">
-					<button
+					<Button
 						type="submit"
-						className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+						className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
+						disabled={!isValid || !isDirty}
 					>
-						Next
-						<svg
-							className="ml-2 h-4 w-4"
-							fill="none"
-							stroke="currentColor"
-							viewBox="0 0 24 24"
-						>
-							<path
-								strokeLinecap="round"
-								strokeLinejoin="round"
-								strokeWidth={2}
-								d="M9 5l7 7-7 7"
-							/>
-						</svg>
-					</button>
+						Next <ArrowRight className="ml-2 h-4 w-4" />
+					</Button>
 				</div>
 			</form>
 		</Form>
