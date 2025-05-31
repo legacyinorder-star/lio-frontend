@@ -37,15 +37,15 @@ export interface Child extends BasePerson {
 	isMinor: boolean;
 }
 
+export interface Witness extends BasePerson {
+	id: string;
+	address: Address;
+}
+
 export interface Guardian extends BasePerson {
 	id: string;
 	relationship: string;
 	isPrimary: boolean;
-}
-
-export interface Witness extends BasePerson {
-	id: string;
-	address: Address;
 }
 
 // Asset Types
