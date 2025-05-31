@@ -653,24 +653,6 @@ export default function WillWizard() {
 			}));
 		};
 
-	// Handle adding/editing child
-	// const _addChild = () => {
-	// 	const newChild: Child = {
-	// 		id: crypto.randomUUID() as `${string}-${string}-${string}-${string}-${string}`,
-	// 		...childForm,
-	// 	};
-	// 	setFormData((prev) => ({
-	// 		...prev,
-	// 		children: [...prev.children, newChild],
-	// 	}));
-	// 	setChildForm({
-	// 		firstName: "",
-	// 		lastName: "",
-	// 		dateOfBirth: "",
-	// 		requiresGuardian: false,
-	// 	});
-	// };
-
 	// Handle editing child
 	const editChild = (child: Child) => {
 		setEditingChild(child);
@@ -4145,11 +4127,6 @@ export default function WillWizard() {
 		}
 	};
 
-	// Add this helper function near other helper functions
-	const getRelationshipName = (relationship: string): string => {
-		return relationship.charAt(0).toUpperCase() + relationship.slice(1);
-	};
-
 	// Add type for beneficiaries state
 	const [beneficiaries, setBeneficiaries] = useState<
 		Array<{
@@ -4238,7 +4215,12 @@ export default function WillWizard() {
 													{beneficiary.fullName}
 												</span>
 												<span className="text-sm text-muted-foreground ml-2">
-													({beneficiary.relationship})
+													(
+													{getFormattedRelationshipNameById(
+														relationships,
+														beneficiary.relationship
+													)}
+													)
 													{beneficiary.type === "charity" &&
 														beneficiary.registrationNumber &&
 														` - Reg: ${beneficiary.registrationNumber}`}
