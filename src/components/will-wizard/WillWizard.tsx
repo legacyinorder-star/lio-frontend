@@ -304,21 +304,6 @@ type BeneficiaryType =
 	| "charity"
 	| "individual";
 
-// Update the beneficiary type definition
-// type BeneficiaryDisplay = {
-//   id: string;
-//   fullName: string;
-//   relationship: string;
-//   allocation: number;
-// };
-
-// Add this type near the top of the file with other types
-// type ChangeEvent = {
-// 	target: {
-// 		value: string;
-// 	};
-// };
-
 // Update the type to match React's ChangeEvent
 type FormChangeEvent = React.ChangeEvent<HTMLInputElement>;
 
@@ -871,53 +856,6 @@ export default function WillWizard() {
 		);
 	};
 
-	// Add fetchBeneficiaries function
-	const fetchBeneficiaries = async () => {
-		if (!activeWill?.id) {
-			toast.error("No active will found");
-			return;
-		}
-
-		setIsLoadingBeneficiaries(true);
-		try {
-			const { data, error } = await apiClient<BeneficiaryResponse>(
-				`/beneficiaries/${activeWill.id}`,
-				{
-					method: "GET",
-				}
-			);
-
-			if (error) {
-				toast.error("Failed to fetch beneficiaries");
-				return;
-			}
-
-			if (data) {
-				const combinedBeneficiaries = [
-					...data.charities.map((charity) => ({
-						id: charity.id,
-						fullName: charity.name,
-						relationship: "Charity",
-						type: "charity" as const,
-						registrationNumber: charity.registration_number,
-					})),
-					...data.people.map((person) => ({
-						id: person.id,
-						fullName: `${person.first_name} ${person.last_name}`,
-						relationship: person.relationship,
-						isMinor: person.is_minor,
-						type: "person" as const,
-					})),
-				];
-				setBeneficiaries(combinedBeneficiaries);
-			}
-		} catch (err) {
-			toast.error("Failed to fetch beneficiaries");
-		} finally {
-			setIsLoadingBeneficiaries(false);
-		}
-	};
-
 	// Modify handleNext to fetch beneficiaries when entering asset distribution
 	const handleNext = async () => {
 		if (currentQuestion === "name") {
@@ -1116,7 +1054,6 @@ export default function WillWizard() {
 	};
 
 	const handleAddBeneficiary = () => {
-		setBeneficiaryType("existing");
 		setBeneficiaryDialogOpen(true);
 	};
 
@@ -2157,51 +2094,75 @@ export default function WillWizard() {
 									<DialogTrigger asChild>
 										<Button
 											variant="outline"
-											onClick={() => {
-												// Initialize beneficiaries with all existing beneficiaries
-												const beneficiaries: BeneficiaryDisplay[] = [
-													...(formData.spouse
-														? [
-																{
-																	id: "spouse",
-																	fullName: getFullName(
-																		formData.spouse.firstName,
-																		formData.spouse.lastName
-																	),
-																	relationship: "Spouse",
-																	allocation: 0,
-																},
-														  ]
-														: []),
-													...formData.children.map((child) => ({
-														id: child.id,
-														fullName: `${child.firstName} ${child.lastName}`,
-														relationship: "Child",
-														allocation: 0,
-													})),
-													...formData.guardians.map((guardian) => ({
-														id: guardian.id,
-														fullName: `${guardian.firstName} ${guardian.lastName}`,
-														relationship: guardian.relationship,
-														allocation: 0,
-													})),
-													...formData.otherBeneficiaries.map((ben) => ({
-														id: ben.id,
-														fullName: `${ben.firstName} ${ben.lastName}`,
-														relationship: ben.relationship,
-														allocation: 0,
-													})),
-												];
-
+											onClick={async () => {
+												// Reset asset form
 												setAssetForm({
 													id: "",
 													type: "Property" as AssetType,
 													description: "",
 													distributionType: "equal",
-													beneficiaries,
+													beneficiaries: [],
 													value: "",
 												});
 												setEditingAsset(null);
+
+												// Fetch beneficiaries before opening dialog
+												if (!activeWill?.id) {
+													toast.error("No active will found");
+													return;
+												}
+
+												setIsLoadingBeneficiaries(true);
+												try {
+													const { data, error } =
+														await apiClient<BeneficiaryResponse>(
+															`/beneficiaries/${activeWill.id}`,
+															{
+																method: "GET",
+															}
+														);
+
+													if (error) {
+														toast.error("Failed to fetch beneficiaries");
+														return;
+													}
+
+													if (data) {
+														const combinedBeneficiaries = [
+															...data.charities.map((charity) => ({
+																id: charity.id,
+																fullName: charity.name,
+																relationship: "Charity",
+																type: "charity" as const,
+																registrationNumber: charity.registration_number,
+															})),
+															...data.people.map((person) => ({
+																id: person.id,
+																fullName: `${person.first_name} ${person.last_name}`,
+																relationship: person.relationship,
+																isMinor: person.is_minor,
+																type: "person" as const,
+															})),
+														];
+														setBeneficiaries(combinedBeneficiaries);
+
+														// Pre-populate beneficiaries in asset form
+														setAssetForm((prev) => ({
+															...prev,
+															beneficiaries: combinedBeneficiaries.map((b) => ({
+																id: b.id,
+																percentage:
+																	prev.distributionType === "percentage"
+																		? 0
+																		: undefined,
+															})),
+														}));
+													}
+												} catch (err) {
+													toast.error("Failed to fetch beneficiaries");
+												} finally {
+													setIsLoadingBeneficiaries(false);
+												}
 											}}
 											className="cursor-pointer"
 										>
@@ -2284,109 +2245,107 @@ export default function WillWizard() {
 														onClick={handleAddBeneficiary}
 														className="cursor-pointer"
 													>
-														<Plus className="h-4 w-4 mr-1" />
+														<Plus className="mr-2 h-4 w-4" />
 														Add Beneficiary
 													</Button>
 												</div>
-												<div className="space-y-2">
-													{assetForm.beneficiaries.map((beneficiary) => {
-														const name = getBeneficiaryName(
-															beneficiary.id,
-															formData.spouse,
-															formData.children,
-															formData.guardians,
-															formData.otherBeneficiaries
-														);
-														const isSpouse = beneficiary.id === "spouse";
+												{assetForm.beneficiaries.length === 0 ? (
+													<p className="text-sm text-muted-foreground">
+														No beneficiaries selected
+													</p>
+												) : (
+													<div className="space-y-2">
+														<p className="text-sm text-muted-foreground mb-2">
+															All available beneficiaries have been
+															pre-selected. You can adjust their percentages or
+															remove any as needed.
+														</p>
+														{assetForm.beneficiaries.map((beneficiary) => {
+															const beneficiaryDetails = beneficiaries.find(
+																(b) => b.id === beneficiary.id
+															);
+															if (!beneficiaryDetails) return null;
 
-														if (!name) return null;
-
-														return (
-															<div
-																key={beneficiary.id}
-																className="flex items-center justify-between p-2 border rounded-md"
-															>
-																<div className="flex items-center space-x-2">
-																	<span className="font-medium">{name}</span>
-																	{isSpouse && (
-																		<span className="text-sm text-muted-foreground">
-																			(Spouse)
+															return (
+																<div
+																	key={beneficiary.id}
+																	className="flex items-center justify-between p-2 border rounded-md"
+																>
+																	<div>
+																		<span className="font-medium">
+																			{beneficiaryDetails.fullName}
 																		</span>
-																	)}
-																</div>
-																<div className="flex items-center space-x-2">
-																	{assetForm.distributionType ===
-																		"percentage" && (
-																		<div className="flex items-center space-x-2">
+																		<span className="text-sm text-muted-foreground ml-2">
+																			({beneficiaryDetails.relationship})
+																			{beneficiaryDetails.type === "charity" &&
+																				beneficiaryDetails.registrationNumber &&
+																				` - Reg: ${beneficiaryDetails.registrationNumber}`}
+																		</span>
+																		{assetForm.distributionType ===
+																			"percentage" && (
+																			<span className="text-sm text-muted-foreground ml-2">
+																				({beneficiary.percentage}%)
+																			</span>
+																		)}
+																	</div>
+																	<div className="flex items-center space-x-2">
+																		{assetForm.distributionType ===
+																			"percentage" && (
 																			<Input
 																				type="number"
-																				value={beneficiary.percentage || 0}
-																				onChange={(e) =>
-																					handleBeneficiaryPercentageChange(
-																						beneficiary.id,
-																						Number(e.target.value)
-																					)
-																				}
-																				className="w-24"
 																				min="0"
 																				max="100"
+																				value={beneficiary.percentage || 0}
+																				onChange={(e) => {
+																					const value = Math.min(
+																						100,
+																						Math.max(0, Number(e.target.value))
+																					);
+																					handleBeneficiaryPercentageChange(
+																						beneficiary.id,
+																						value
+																					);
+																				}}
+																				className="w-20"
 																			/>
-																			<span>%</span>
-																		</div>
-																	)}
-																	<Button
-																		variant="ghost"
-																		size="icon"
-																		onClick={() =>
-																			handleRemoveBeneficiary(beneficiary.id)
-																		}
-																		className="cursor-pointer"
-																	>
-																		<Trash2 className="h-4 w-4" />
-																	</Button>
+																		)}
+																		<Button
+																			variant="ghost"
+																			size="icon"
+																			onClick={() =>
+																				handleRemoveBeneficiary(beneficiary.id)
+																			}
+																			className="cursor-pointer"
+																		>
+																			<X className="h-4 w-4" />
+																		</Button>
+																	</div>
 																</div>
-															</div>
-														);
-													})}
-												</div>
-												{assetForm.distributionType === "percentage" && (
-													<div className="text-sm text-muted-foreground mt-2">
-														Total:{" "}
-														{assetForm.beneficiaries.reduce(
-															(sum, b) => sum + (b.percentage || 0),
-															0
-														)}
-														%
+															);
+														})}
 													</div>
 												)}
 											</div>
-											<div className="flex justify-end space-x-2">
-												<Button
-													variant="outline"
-													onClick={() => setAssetDialogOpen(false)}
-													className="cursor-pointer"
-												>
-													Cancel
-												</Button>
-												<Button
-													onClick={handleSaveAsset}
-													disabled={
-														!assetForm.description ||
-														assetForm.beneficiaries.length === 0 ||
-														(assetForm.distributionType === "percentage" &&
-															Math.abs(
-																assetForm.beneficiaries.reduce(
-																	(sum, b) => sum + (b.percentage || 0),
-																	0
-																) - 100
-															) > 0.01)
-													}
-													className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
-												>
-													Save
-												</Button>
-											</div>
 										</div>
+										<DialogFooter>
+											<Button
+												onClick={handleSaveAsset}
+												disabled={
+													!assetForm.description ||
+													assetForm.beneficiaries.length === 0 ||
+													(assetForm.distributionType === "percentage" &&
+														Math.abs(
+															assetForm.beneficiaries.reduce(
+																(sum, b) => sum + (b.percentage || 0),
+																0
+															) - 100
+														) > 0.01)
+												}
+												className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
+											>
+												{editingAsset ? "Save Changes" : "Add Asset"}
+											</Button>
+										</DialogFooter>
 									</DialogContent>
 								</Dialog>
 							</div>
@@ -4074,7 +4033,7 @@ export default function WillWizard() {
 		}
 	};
 
-	const reviewStepRef = useRef<ReviewStepHandle>(null);
+	const reviewStepRef = useRef<ReviewStepHandle | null>(null);
 
 	const handleResiduaryBeneficiaryChange = (
 		beneficiaryId: string,
@@ -4118,30 +4077,48 @@ export default function WillWizard() {
 	};
 
 	const handleSaveWill = async () => {
-		if (reviewStepRef.current) {
-			await reviewStepRef.current.handleSaveAndDownload();
+		if (!activeWill) {
+			toast.error("No active will found");
+			return;
+		}
+
+		try {
+			const response = await fetch(`/api/wills/${activeWill.id}`, {
+				method: "PUT",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({
+					...formData,
+					status: "completed",
+				}),
+			});
+
+			if (!response.ok) {
+				throw new Error("Failed to save will");
+			}
+
+			toast.success("Will saved successfully");
+			// Handle successful save (e.g., redirect to dashboard)
+		} catch (error) {
+			console.error("Error saving will:", error);
+			toast.error("Failed to save will");
 		}
 	};
 
 	// Add this helper function near other helper functions
-	const getRelationshipName = (relationshipId: string) => {
-		const relationship = relationships.find((r) => r.id === relationshipId);
-		if (!relationship) return relationshipId;
-
-		// Convert to title case by capitalizing first letter of each word
-		return relationship.name
-			.split(" ")
-			.map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-			.join(" ");
+	const getRelationshipName = (relationship: string): string => {
+		return relationship.charAt(0).toUpperCase() + relationship.slice(1);
 	};
 
+	// Add type for beneficiaries state
 	const [beneficiaries, setBeneficiaries] = useState<
 		Array<{
 			id: string;
 			fullName: string;
 			relationship: string;
 			isMinor?: boolean;
-			type: "charity" | "person";
+			type: "person" | "charity";
 			registrationNumber?: string;
 		}>
 	>([]);
@@ -4182,241 +4159,56 @@ export default function WillWizard() {
 			>
 				<DialogContent className="bg-white">
 					<DialogHeader>
-						<DialogTitle>Add Beneficiary</DialogTitle>
+						<DialogTitle>Select Beneficiary</DialogTitle>
 					</DialogHeader>
 					<div className="space-y-4 py-4">
-						<div className="flex space-x-4 mb-4">
-							<Button
-								variant={beneficiaryType === "existing" ? "default" : "outline"}
-								onClick={() => setBeneficiaryType("existing")}
-								className={`cursor-pointer ${
-									beneficiaryType === "existing"
-										? "bg-light-green text-black"
-										: ""
-								}`}
-							>
-								Select Existing Beneficiary
-							</Button>
-							<Button
-								variant={beneficiaryType === "new" ? "default" : "outline"}
-								onClick={() => setBeneficiaryType("new")}
-								className={`cursor-pointer ${
-									beneficiaryType === "new" ? "bg-light-green text-black" : ""
-								}`}
-							>
-								Add New Beneficiary
-							</Button>
-						</div>
-
-						{beneficiaryType === "existing" ? (
-							<div className="space-y-2">
-								<Label>Select Beneficiary</Label>
-								{isLoadingBeneficiaries ? (
-									<div className="text-center py-4">
-										Loading beneficiaries...
-									</div>
-								) : (
-									<div className="space-y-2 max-h-[300px] overflow-y-auto">
-										{beneficiaries
-											.filter(
-												(beneficiary) =>
-													!assetForm.beneficiaries.some(
-														(b) => b.id === beneficiary.id
-													)
-											)
-											.map((beneficiary) => (
-												<div
-													key={beneficiary.id}
-													className="flex items-center justify-between p-2 border rounded-md hover:bg-muted cursor-pointer"
-													onClick={() => {
-														setAssetForm((prev) => ({
-															...prev,
-															beneficiaries: [
-																...prev.beneficiaries,
-																{
-																	id: beneficiary.id,
-																	percentage:
-																		prev.distributionType === "percentage"
-																			? 0
-																			: undefined,
-																},
-															],
-														}));
-														setBeneficiaryDialogOpen(false);
-													}}
-												>
-													<div>
-														<span className="font-medium">
-															{beneficiary.fullName}
-														</span>
-														<span className="text-sm text-muted-foreground ml-2">
-															({beneficiary.relationship})
-															{beneficiary.type === "charity" &&
-																beneficiary.registrationNumber &&
-																` - Reg: ${beneficiary.registrationNumber}`}
-														</span>
-													</div>
-												</div>
-											))}
-									</div>
-								)}
-							</div>
+						{isLoadingBeneficiaries ? (
+							<div className="text-center py-4">Loading beneficiaries...</div>
 						) : (
-							<div className="space-y-4">
-								<div className="flex space-x-4 mb-4">
-									<Button
-										variant={
-											newBeneficiaryForm.type === "other"
-												? "default"
-												: "outline"
-										}
-										onClick={() =>
-											setNewBeneficiaryForm((prev) => ({
-												...prev,
-												type: "other",
-											}))
-										}
-										className={`cursor-pointer ${
-											newBeneficiaryForm.type === "other"
-												? "bg-light-green text-black"
-												: ""
-										}`}
-									>
-										Add Person
-									</Button>
-									<Button
-										variant={
-											newBeneficiaryForm.type === "charity"
-												? "default"
-												: "outline"
-										}
-										onClick={() =>
-											setNewBeneficiaryForm((prev) => ({
-												...prev,
-												type: "charity",
-											}))
-										}
-										className={`cursor-pointer ${
-											newBeneficiaryForm.type === "charity"
-												? "bg-light-green text-black"
-												: ""
-										}`}
-									>
-										Add Charity
-									</Button>
-								</div>
-
-								{newBeneficiaryForm.type === "charity" ? (
-									<>
-										<div className="space-y-2">
-											<Label htmlFor="organizationName">
-												Organization Name
-											</Label>
-											<Input
-												id="organizationName"
-												value={newBeneficiaryForm.organizationName}
-												onChange={(e) =>
-													setNewBeneficiaryForm((prev) => ({
-														...prev,
-														organizationName: e.target.value,
-													}))
-												}
-												placeholder="Enter charity name"
-											/>
-										</div>
-										<div className="space-y-2">
-											<Label htmlFor="registrationNumber">
-												Charity Registration Number (Optional)
-											</Label>
-											<Input
-												id="registrationNumber"
-												value={newBeneficiaryForm.registrationNumber}
-												onChange={(e) =>
-													setNewBeneficiaryForm((prev) => ({
-														...prev,
-														registrationNumber: e.target.value,
-													}))
-												}
-												placeholder="Enter registration number if available"
-											/>
-										</div>
-									</>
-								) : (
-									<>
-										<div className="grid grid-cols-2 gap-4">
-											<div className="space-y-2">
-												<Label htmlFor="beneficiaryFirstName">First Name</Label>
-												<Input
-													id="beneficiaryFirstName"
-													value={newBeneficiaryForm.firstName}
-													onChange={(e) =>
-														setNewBeneficiaryForm((prev) => ({
-															...prev,
-															firstName: e.target.value,
-														}))
-													}
-													placeholder="John"
-												/>
-											</div>
-											<div className="space-y-2">
-												<Label htmlFor="beneficiaryLastName">Last Name</Label>
-												<Input
-													id="beneficiaryLastName"
-													value={newBeneficiaryForm.lastName}
-													onChange={(e) =>
-														setNewBeneficiaryForm((prev) => ({
-															...prev,
-															lastName: e.target.value,
-														}))
-													}
-													placeholder="Doe"
-												/>
+							<div className="space-y-2 max-h-[300px] overflow-y-auto">
+								{beneficiaries
+									.filter(
+										(beneficiary) =>
+											!assetForm.beneficiaries.some(
+												(b: { id: string }) => b.id === beneficiary.id
+											)
+									)
+									.map((beneficiary) => (
+										<div
+											key={beneficiary.id}
+											className="flex items-center justify-between p-2 border rounded-md hover:bg-muted cursor-pointer"
+											onClick={() => {
+												setAssetForm((prev) => ({
+													...prev,
+													beneficiaries: [
+														...prev.beneficiaries,
+														{
+															id: beneficiary.id,
+															percentage:
+																prev.distributionType === "percentage"
+																	? 0
+																	: undefined,
+														},
+													],
+												}));
+												setBeneficiaryDialogOpen(false);
+											}}
+										>
+											<div>
+												<span className="font-medium">
+													{beneficiary.fullName}
+												</span>
+												<span className="text-sm text-muted-foreground ml-2">
+													({beneficiary.relationship})
+													{beneficiary.type === "charity" &&
+														beneficiary.registrationNumber &&
+														` - Reg: ${beneficiary.registrationNumber}`}
+												</span>
 											</div>
 										</div>
-										<div className="space-y-2">
-											<Label htmlFor="beneficiaryRelationship">
-												Relationship
-											</Label>
-											<RelationshipSelect
-												value={newBeneficiaryForm.relationship}
-												onValueChange={(value) =>
-													setNewBeneficiaryForm((prev) => ({
-														...prev,
-														relationship: value,
-													}))
-												}
-												required
-											/>
-										</div>
-									</>
-								)}
+									))}
 							</div>
 						)}
-						<div className="flex justify-end space-x-2">
-							<Button
-								variant="outline"
-								onClick={() => setBeneficiaryDialogOpen(false)}
-								className="cursor-pointer"
-							>
-								Cancel
-							</Button>
-							{beneficiaryType === "new" && (
-								<Button
-									onClick={handleSaveNewBeneficiary}
-									disabled={
-										(newBeneficiaryForm.type === "charity" &&
-											!newBeneficiaryForm.organizationName) ||
-										(newBeneficiaryForm.type === "other" &&
-											(!newBeneficiaryForm.firstName ||
-												!newBeneficiaryForm.lastName ||
-												!newBeneficiaryForm.relationship))
-									}
-									className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
-								>
-									Add Beneficiary
-								</Button>
-							)}
-						</div>
 					</div>
 				</DialogContent>
 			</Dialog>
