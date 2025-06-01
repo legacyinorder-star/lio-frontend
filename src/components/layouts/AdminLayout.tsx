@@ -7,12 +7,24 @@ import {
 	LayoutDashboard,
 	ShoppingCart,
 	ArrowLeft,
+	Search,
+	Bell,
+	ChevronDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuLabel,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export function AdminLayout() {
 	const navigate = useNavigate();
@@ -57,7 +69,7 @@ export function AdminLayout() {
 
 	const navItems = [
 		{
-			title: "Dashboard",
+			title: "Home",
 			icon: <LayoutDashboard className="h-5 w-5" />,
 			href: "/admin/dashboard",
 		},
@@ -103,28 +115,31 @@ export function AdminLayout() {
 	return (
 		<div className="flex h-screen bg-background">
 			{/* Sidebar */}
-			<aside className="w-64 border-r bg-card">
-				<div className="flex h-16 items-center border-b px-6">
-					<Link to="/admin/dashboard" className="flex items-center">
+			<aside className="w-64 border-r bg-[#083402]">
+				<div className="flex h-16 items-center justify-center px-6">
+					<Link
+						to="/admin/dashboard"
+						className="flex items-center justify-center w-full"
+					>
 						<img
-							src="/logos/LIO_Logo_Black.svg"
+							src="/logos/LIO_Logo_White.svg"
 							alt="Legacy In Order"
-							className="h-8"
+							className="h-12"
 						/>
 					</Link>
 				</div>
 
 				{/* Navigation */}
-				<nav className="flex flex-col gap-1 p-4">
+				<nav className="flex flex-col gap-1 p-4 pt-[40px]">
 					{navItems.map((item) => (
 						<Link
 							key={item.href}
 							to={item.href}
 							className={cn(
-								"flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
+								"flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-white/10",
 								location.pathname === item.href
-									? "bg-accent text-accent-foreground"
-									: "text-muted-foreground"
+									? "bg-white/10 text-white"
+									: "text-white/70 hover:text-white"
 							)}
 						>
 							{item.icon}
@@ -132,35 +147,97 @@ export function AdminLayout() {
 						</Link>
 					))}
 				</nav>
-
-				{/* User profile & logout */}
-				<div className="mt-auto p-4 border-t">
-					<div className="flex items-center gap-3 mb-4">
-						<Avatar className="h-9 w-9">
-							<AvatarFallback initials={getInitials(fullName)} />
-						</Avatar>
-						<div className="space-y-0.5">
-							<p className="text-sm font-medium leading-none">{fullName}</p>
-							<p className="text-xs text-muted-foreground">Admin</p>
-						</div>
-					</div>
-					<Button
-						variant="outline"
-						className="w-full justify-start"
-						onClick={handleLogout}
-					>
-						<LogOut className="mr-2 h-4 w-4" />
-						Logout
-					</Button>
-				</div>
 			</aside>
 
 			{/* Main content */}
-			<main className="flex-1 overflow-auto">
-				<div className="p-6">
-					<Outlet />
-				</div>
-			</main>
+			<div className="flex-1 flex flex-col">
+				{/* Header */}
+				<header className="h-16 border-b border-[#ECECEC] bg-white flex items-center px-6 justify-between">
+					{/* Search */}
+					<div className="flex-1 max-w-md">
+						<div className="relative">
+							<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+							<Input
+								type="search"
+								placeholder="Search..."
+								className="pl-9 bg-[#F3F3F3] border-none focus-visible:ring-0"
+							/>
+						</div>
+					</div>
+
+					{/* Right side items */}
+					<div className="flex items-center gap-4">
+						{/* Notifications */}
+						<Button
+							variant="ghost"
+							size="icon"
+							className="relative"
+							onClick={() => {
+								// Handle notifications click
+								toast.info("Notifications coming soon!");
+							}}
+						>
+							<Bell className="h-5 w-5" />
+							<span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500" />
+						</Button>
+
+						{/* User dropdown */}
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
+								<Button
+									variant="ghost"
+									className="flex items-center gap-2 px-2 hover:bg-muted/50"
+								>
+									<Avatar className="h-8 w-8">
+										<AvatarFallback
+											className="bg-[#083402] text-white"
+											initials={getInitials(fullName)}
+										/>
+									</Avatar>
+									<div className="flex flex-col items-start">
+										<span className="text-sm font-medium leading-none">
+											{fullName}
+										</span>
+										<span className="text-xs text-muted-foreground">Admin</span>
+									</div>
+									<ChevronDown className="h-4 w-4 text-muted-foreground" />
+								</Button>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent className="w-56" align="end">
+								<DropdownMenuLabel>My Account</DropdownMenuLabel>
+								<DropdownMenuSeparator />
+								<DropdownMenuItem
+									onClick={() => navigate("/admin/profile")}
+									className="cursor-pointer"
+								>
+									Profile
+								</DropdownMenuItem>
+								<DropdownMenuItem
+									onClick={() => navigate("/admin/settings")}
+									className="cursor-pointer"
+								>
+									Settings
+								</DropdownMenuItem>
+								<DropdownMenuSeparator />
+								<DropdownMenuItem
+									onClick={handleLogout}
+									className="cursor-pointer text-red-600 focus:text-red-600"
+								>
+									<LogOut className="mr-2 h-4 w-4" />
+									Logout
+								</DropdownMenuItem>
+							</DropdownMenuContent>
+						</DropdownMenu>
+					</div>
+				</header>
+
+				{/* Main content */}
+				<main className="flex-1 overflow-auto">
+					<div className="p-6 pt-12">
+						<Outlet />
+					</div>
+				</main>
+			</div>
 		</div>
 	);
 }
