@@ -28,39 +28,45 @@ export function CardMetric({
 	return (
 		<Card className={cn("overflow-hidden", className)}>
 			<CardContent className="p-6">
-				<div className="flex items-center justify-between">
-					<p className="text-sm font-medium text-muted-foreground">{title}</p>
-					<div className="h-10 w-10 rounded-full bg-primary/10 p-2 text-primary">
-						{icon}
+				<div className="flex flex-col items-start">
+					<div className="h-8 w-8 rounded-full bg-[#F2F2F2] flex items-center justify-center mb-3">
+						<div className="h-4 w-4">{icon}</div>
 					</div>
-				</div>
-				<div className="mt-3">
-					<div className="flex items-baseline">
-						<h2 className="text-3xl font-bold">{value}</h2>
-						{trend !== undefined && (
-							<span
-								className={cn(
-									"ml-2 text-sm font-medium",
-									isTrendPositive && "text-green-600",
-									isTrendNegative && "text-red-600"
-								)}
-							>
-								<span className="inline-flex items-center">
-									{isTrendPositive && <ArrowUpIcon className="mr-1 h-3 w-3" />}
-									{isTrendNegative && (
-										<ArrowDownIcon className="mr-1 h-3 w-3" />
+					<div className="w-full">
+						<p className="text-sm font-normal text-muted-foreground mt-3">
+							{title}
+						</p>
+						<div className="flex items-center justify-between mt-1">
+							<h2 className="text-3xl font-bold">{value}</h2>
+							{trend !== undefined && (
+								<div
+									className={cn(
+										"px-2 py-1 rounded-full text-xs font-medium",
+										isTrendPositive && "bg-green-100 text-green-700",
+										isTrendNegative && "bg-red-100 text-red-700"
 									)}
-									{trendValue}%
-								</span>
-							</span>
+								>
+									<span className="inline-flex items-center">
+										{isTrendPositive && (
+											<ArrowUpIcon className="mr-1 h-3 w-3" />
+										)}
+										{isTrendNegative && (
+											<ArrowDownIcon className="mr-1 h-3 w-3" />
+										)}
+										{trendValue}%
+									</span>
+								</div>
+							)}
+						</div>
+						{description && (
+							<p className="mt-1 text-sm text-muted-foreground">
+								{description}
+							</p>
+						)}
+						{trendLabel && (
+							<p className="mt-1 text-xs text-muted-foreground">{trendLabel}</p>
 						)}
 					</div>
-					{description && (
-						<p className="mt-1 text-sm text-muted-foreground">{description}</p>
-					)}
-					{trendLabel && (
-						<p className="mt-1 text-xs text-muted-foreground">{trendLabel}</p>
-					)}
 				</div>
 			</CardContent>
 		</Card>

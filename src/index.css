@@ -115,9 +115,24 @@
     font-family: 'DM Sans', sans-serif;
   }
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Hedvig Letters Serif', serif;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 2rem;
+    color: #333333;
   }
   .font-dmsans {
     font-family: 'DM Sans', sans-serif;
+  }
+  /* Global placeholder color */
+  ::placeholder {
+    color: #808080 !important;
+  }
+  /* For Firefox */
+  ::-moz-placeholder {
+    color: #808080 !important;
+    opacity: 1;
+  }
+  /* For Edge */
+  ::-ms-input-placeholder {
+    color: #808080 !important;
   }
 }

@@ -6,7 +6,15 @@ import { DataTable } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, DollarSign, Clock, ShoppingCart } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+	Users,
+	DollarSign,
+	Clock,
+	ShoppingCart,
+	Calendar,
+	Plus,
+} from "lucide-react";
 
 // Define types
 interface User {
@@ -267,11 +275,21 @@ export default function AdminDashboardPage() {
 
 	return (
 		<div className="space-y-6">
-			<div>
+			<div className="flex justify-between items-center">
 				<h2 className="text-3xl font-bold tracking-tight">Admin Dashboard</h2>
-				<p className="text-muted-foreground">
-					Overview of business statistics and performance.
-				</p>
+				<div className="flex gap-3">
+					<Button
+						variant="outline"
+						className="flex items-center gap-2 rounded-[4px]"
+					>
+						Last 7 Days
+						<Calendar className="h-4 w-4" />
+					</Button>
+					<Button className="flex items-center gap-2 rounded-[4px] bg-[#C6F91F] hover:bg-[#C6F91F]/90 text-black">
+						<Plus className="h-4 w-4" />
+						Generate Report
+					</Button>
+				</div>
 			</div>
 
 			{/* Key metrics */}
@@ -279,30 +297,30 @@ export default function AdminDashboardPage() {
 				<CardMetric
 					title="Total Users"
 					value={stats.totalUsers.toLocaleString()}
-					icon={<Users className="h-6 w-6" />}
+					icon={<Users className="h-4 w-4" />}
 					trend={12.5}
-					trendLabel="vs. last month"
+					className="shadow-md border-[#F2F2F2]"
 				/>
 				<CardMetric
 					title="Total Orders"
 					value={stats.totalOrders.toLocaleString()}
-					icon={<ShoppingCart className="h-6 w-6" />}
+					icon={<ShoppingCart className="h-4 w-4" />}
 					trend={8.2}
-					trendLabel="vs. last month"
+					className="shadow-md border-[#F2F2F2]"
 				/>
 				<CardMetric
 					title="Pending Orders"
 					value={stats.pendingOrders.toLocaleString()}
-					icon={<Clock className="h-6 w-6" />}
+					icon={<Clock className="h-4 w-4" />}
 					trend={-4.5}
-					trendLabel="vs. last month"
+					className="shadow-md border-[#F2F2F2]"
 				/>
 				<CardMetric
 					title="Total Revenue"
 					value={`$${stats.revenue.toLocaleString()}`}
-					icon={<DollarSign className="h-6 w-6" />}
+					icon={<DollarSign className="h-4 w-4" />}
 					trend={15.3}
-					trendLabel="vs. last month"
+					className="shadow-md border-[#F2F2F2]"
 				/>
 			</div>
 
@@ -316,7 +334,7 @@ export default function AdminDashboardPage() {
 
 				<TabsContent value="overview" className="space-y-4">
 					<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-						<Card className="lg:col-span-4">
+						<Card className="lg:col-span-4 shadow-md border-[#F2F2F2]">
 							<CardHeader>
 								<CardTitle>User Growth</CardTitle>
 							</CardHeader>
@@ -324,7 +342,7 @@ export default function AdminDashboardPage() {
 								<BarChart title="" data={userGrowthData} height={300} />
 							</CardContent>
 						</Card>
-						<Card className="lg:col-span-3">
+						<Card className="lg:col-span-3 shadow-md border-[#F2F2F2]">
 							<CardHeader>
 								<CardTitle>Revenue Sources</CardTitle>
 							</CardHeader>
@@ -335,7 +353,7 @@ export default function AdminDashboardPage() {
 					</div>
 
 					<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-						<Card className="lg:col-span-3">
+						<Card className="lg:col-span-3 shadow-md border-[#F2F2F2]">
 							<CardHeader>
 								<CardTitle>Document Types Created</CardTitle>
 							</CardHeader>
@@ -343,7 +361,7 @@ export default function AdminDashboardPage() {
 								<BarChart title="" data={documentCreationData} height={300} />
 							</CardContent>
 						</Card>
-						<Card className="lg:col-span-4">
+						<Card className="lg:col-span-4 shadow-md border-[#F2F2F2]">
 							<CardHeader>
 								<CardTitle>Recent Orders</CardTitle>
 							</CardHeader>
@@ -355,7 +373,7 @@ export default function AdminDashboardPage() {
 				</TabsContent>
 
 				<TabsContent value="users" className="space-y-4">
-					<Card>
+					<Card className="shadow-md border-[#F2F2F2]">
 						<CardHeader>
 							<CardTitle>User Management</CardTitle>
 						</CardHeader>
@@ -366,7 +384,7 @@ export default function AdminDashboardPage() {
 				</TabsContent>
 
 				<TabsContent value="orders" className="space-y-4">
-					<Card>
+					<Card className="shadow-md border-[#F2F2F2]">
 						<CardHeader>
 							<CardTitle>Order Management</CardTitle>
 						</CardHeader>
