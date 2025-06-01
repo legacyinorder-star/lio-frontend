@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { CardMetric } from "@/components/ui/card-metric";
-import { BarChart } from "@/components/charts/bar-chart";
 import { PieChart } from "@/components/charts/pie-chart";
 import { DataTable } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
@@ -12,9 +11,15 @@ import {
 	DollarSign,
 	Clock,
 	ShoppingCart,
-	Calendar,
 	Plus,
+	ChevronDown,
 } from "lucide-react";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 // Define types
 interface User {
@@ -136,11 +141,11 @@ const userGrowthData = [
 ];
 
 const documentCreationData = [
-	{ label: "Will", value: 45 },
-	{ label: "Power of Attorney", value: 35 },
-	{ label: "Trust", value: 28 },
-	{ label: "Living Will", value: 18 },
-	{ label: "Estate Plan", value: 24 },
+	{ label: "Will", value: 45, color: "#0D4705" },
+	{ label: "Power of Attorney", value: 35, color: "#0D4705" },
+	{ label: "Trust", value: 28, color: "#0D4705" },
+	{ label: "Living Will", value: 18, color: "#0D4705" },
+	{ label: "Estate Plan", value: 24, color: "#0D4705" },
 ];
 
 const revenueSourceData = [
@@ -245,6 +250,7 @@ const orderColumns: ColumnDef<Order>[] = [
 
 export default function AdminDashboardPage() {
 	const [isLoading, setIsLoading] = useState(true);
+	const [timeRange, setTimeRange] = useState("Last 7 Days");
 	const [stats, setStats] = useState({
 		totalUsers: 0,
 		totalOrders: 0,
@@ -278,13 +284,34 @@ export default function AdminDashboardPage() {
 			<div className="flex justify-between items-center">
 				<h2 className="text-3xl font-bold tracking-tight">Admin Dashboard</h2>
 				<div className="flex gap-3">
-					<Button
-						variant="outline"
-						className="flex items-center gap-2 rounded-[4px]"
-					>
-						Last 7 Days
-						<Calendar className="h-4 w-4" />
-					</Button>
+					<DropdownMenu>
+						<DropdownMenuTrigger asChild>
+							<Button
+								variant="outline"
+								className="flex items-center gap-2 rounded-[4px]"
+							>
+								{timeRange}
+								<ChevronDown className="h-4 w-4" />
+							</Button>
+						</DropdownMenuTrigger>
+						<DropdownMenuContent align="end">
+							<DropdownMenuItem onClick={() => setTimeRange("Last 7 Days")}>
+								Last 7 Days
+							</DropdownMenuItem>
+							<DropdownMenuItem onClick={() => setTimeRange("Last 30 Days")}>
+								Last 30 Days
+							</DropdownMenuItem>
+							<DropdownMenuItem onClick={() => setTimeRange("Last 90 Days")}>
+								Last 90 Days
+							</DropdownMenuItem>
+							<DropdownMenuItem onClick={() => setTimeRange("This Year")}>
+								This Year
+							</DropdownMenuItem>
+							<DropdownMenuItem onClick={() => setTimeRange("Custom Range")}>
+								Custom Range
+							</DropdownMenuItem>
+						</DropdownMenuContent>
+					</DropdownMenu>
 					<Button className="flex items-center gap-2 rounded-[4px] bg-[#C6F91F] hover:bg-[#C6F91F]/90 text-black">
 						<Plus className="h-4 w-4" />
 						Generate Report
@@ -339,7 +366,37 @@ export default function AdminDashboardPage() {
 								<CardTitle>User Growth</CardTitle>
 							</CardHeader>
 							<CardContent>
-								<BarChart title="" data={userGrowthData} height={300} />
+								<div className="space-y-4" style={{ height: 300 }}>
+									{userGrowthData.map((item, index) => (
+										<div key={index} className="relative">
+											<div className="flex items-center">
+												<div className="w-20 text-sm font-medium">
+													{item.label}
+												</div>
+												<div className="flex-1">
+													<div className="overflow-hidden rounded-[4px] bg-[#F2F2F2]">
+														<div
+															className="h-8 rounded-[4px]"
+															style={{
+																width: `${
+																	(item.value /
+																		Math.max(
+																			...userGrowthData.map((d) => d.value)
+																		)) *
+																	100
+																}%`,
+																backgroundColor: "#0D4705",
+															}}
+														/>
+													</div>
+												</div>
+												<div className="ml-2 w-10 text-right text-sm tabular-nums">
+													{item.value}
+												</div>
+											</div>
+										</div>
+									))}
+								</div>
 							</CardContent>
 						</Card>
 						<Card className="lg:col-span-3 shadow-md border-[#F2F2F2]">
@@ -357,8 +414,56 @@ export default function AdminDashboardPage() {
 							<CardHeader>
 								<CardTitle>Document Types Created</CardTitle>
 							</CardHeader>
-							<CardContent>
-								<BarChart title="" data={documentCreationData} height={300} />
+							<CardContent className="pt-6">
+								<div className="h-[300px] relative">
+									{/* Graph lines */}
+									<div className="absolute inset-0 flex flex-col justify-between">
+										{[100, 75, 50, 25, 0].map((percent, index) => (
+											<div key={index} className="relative w-full">
+												<div className="absolute inset-x-0 border-t border-[#F2F2F2]" />
+												<div className="absolute -left-8 text-xs text-muted-foreground">
+													{Math.round(
+														(Math.max(
+															...documentCreationData.map((d) => d.value)
+														) *
+															percent) /
+															100
+													)}
+												</div>
+											</div>
+										))}
+									</div>
+									{/* Bars */}
+									<div className="absolute inset-0 flex items-end justify-between gap-8 px-8 pb-8">
+										{documentCreationData.map((item, index) => (
+											<div
+												key={index}
+												className="flex flex-col items-center flex-1 h-full"
+											>
+												<div className="flex-1 w-full flex items-end">
+													<div
+														className="w-2 mx-auto rounded-[4px] bg-[#0D4705]"
+														style={{
+															height: `${
+																(item.value /
+																	Math.max(
+																		...documentCreationData.map((d) => d.value)
+																	)) *
+																100
+															}%`,
+														}}
+													/>
+												</div>
+												<div className="mt-2 text-sm font-medium text-center">
+													{item.label}
+												</div>
+												<div className="text-sm text-muted-foreground">
+													{item.value}
+												</div>
+											</div>
+										))}
+									</div>
+								</div>
 							</CardContent>
 						</Card>
 						<Card className="lg:col-span-4 shadow-md border-[#F2F2F2]">
