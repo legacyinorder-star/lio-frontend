@@ -22,7 +22,7 @@ export interface Address {
 	street: string;
 	city: string;
 	state: string;
-	zipCode: string;
+	postCode: string;
 	country: string;
 }
 

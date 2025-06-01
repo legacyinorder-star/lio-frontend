@@ -16,6 +16,7 @@ import FuneralInstructionsStep from "./steps/FuneralInstructionsStep";
 import AdditionalInstructionsStep from "./steps/AdditionalInstructionsStep";
 import ReviewStep from "./steps/ReviewStep";
 import ExecutorStep from "./steps/ExecutorStep";
+import GuardiansStep from "./steps/GuardiansStep";
 
 export default function WillWizard() {
 	// Track the current question being shown
@@ -31,7 +32,7 @@ export default function WillWizard() {
 			street: "",
 			city: "",
 			state: "",
-			zipCode: "",
+			postCode: "",
 			country: "",
 		},
 		hasSpouse: false,
@@ -216,7 +217,7 @@ export default function WillWizard() {
 			personal: {
 				fullName: `${formData.firstName} ${formData.lastName}`,
 				dateOfBirth: formData.dateOfBirth,
-				address: `${formData.address.street}, ${formData.address.city}, ${formData.address.state} ${formData.address.zipCode}, ${formData.address.country}`,
+				address: `${formData.address.street}, ${formData.address.city}, ${formData.address.state} ${formData.address.postCode}, ${formData.address.country}`,
 				phone: formData.phone,
 				maritalStatus: formData.hasSpouse ? "Married" : "Single",
 			},
@@ -247,7 +248,7 @@ export default function WillWizard() {
 				relationship: exec.relationship,
 				email: exec.email,
 				phone: exec.phone,
-				address: `${exec.address.street}, ${exec.address.city}, ${exec.address.state} ${exec.address.zipCode}, ${exec.address.country}`,
+				address: `${exec.address.street}, ${exec.address.city}, ${exec.address.state} ${exec.address.postCode}, ${exec.address.country}`,
 				isPrimary: exec.isPrimary,
 				type: exec.type,
 				contactPerson: exec.contactPerson,
@@ -255,7 +256,7 @@ export default function WillWizard() {
 			})),
 			witnesses: formData.witnesses.map((wit) => ({
 				fullName: `${wit.firstName} ${wit.lastName}`,
-				address: `${wit.address.street}, ${wit.address.city}, ${wit.address.state} ${wit.address.zipCode}, ${wit.address.country}`,
+				address: `${wit.address.street}, ${wit.address.city}, ${wit.address.state} ${wit.address.postCode}, ${wit.address.country}`,
 			})),
 			guardians: formData.guardians.map((guard) => ({
 				fullName: `${guard.firstName} ${guard.lastName}`,
@@ -303,6 +304,9 @@ export default function WillWizard() {
 			case "hasChildren":
 				return <ChildrenStep {...commonProps} />;
 
+			case "guardians":
+				return <GuardiansStep {...commonProps} />;
+
 			case "hasAssets":
 				return (
 					<AssetsStep {...commonProps} beneficiaries={getBeneficiaries()} />
@@ -324,7 +328,7 @@ export default function WillWizard() {
 					email: executor.email || "",
 					phone: executor.phone || "",
 					address: executor.address
-						? `${executor.address.street}, ${executor.address.city}, ${executor.address.state} ${executor.address.zipCode}, ${executor.address.country}`
+						? `${executor.address.street}, ${executor.address.city}, ${executor.address.state} ${executor.address.postCode}, ${executor.address.country}`
 						: "",
 				};
 				return (
@@ -352,7 +356,7 @@ export default function WillWizard() {
 											state: (data.address?.split(",")[2] || "")
 												.trim()
 												.split(" ")[0],
-											zipCode: (data.address?.split(",")[2] || "")
+											postCode: (data.address?.split(",")[2] || "")
 												.trim()
 												.split(" ")[1],
 											country: (data.address?.split(",")[3] || "").trim(),

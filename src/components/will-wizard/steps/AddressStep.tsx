@@ -1,6 +1,9 @@
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
 import * as z from "zod";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import {
 	Form,
 	FormControl,
@@ -9,15 +12,14 @@ import {
 	FormLabel,
 	FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { StepProps, Address } from "../types/will.types";
+import { StepProps } from "../types/will.types";
 
 const addressSchema = z.object({
-	street: z.string().min(5, "Street address must be at least 5 characters"),
-	city: z.string().min(2, "City must be at least 2 characters"),
-	state: z.string().min(2, "State must be at least 2 characters"),
-	zipCode: z.string().min(5, "Zip code must be at least 5 characters"),
-	country: z.string().min(2, "Country must be at least 2 characters"),
+	street: z.string().min(1, "Street address is required"),
+	city: z.string().min(1, "City is required"),
+	state: z.string().min(1, "State/Province is required"),
+	postCode: z.string().min(1, "Postal/ZIP code is required"),
+	country: z.string().min(1, "Country is required"),
 });
 
 type AddressData = z.infer<typeof addressSchema>;
@@ -34,130 +36,127 @@ export default function AddressStep({
 			street: data.address?.street || "",
 			city: data.address?.city || "",
 			state: data.address?.state || "",
-			zipCode: data.address?.zipCode || "",
+			postCode: data.address?.postCode || "",
 			country: data.address?.country || "",
 		},
 	});
 
 	const onSubmit = (values: AddressData) => {
-		onUpdate({ address: values as Address });
+		onUpdate({ address: values });
 		onNext();
 	};
 
 	return (
-		<Form {...form}>
-			<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-				<FormField
-					control={form.control}
-					name="street"
-					render={({ field }) => (
-						<FormItem>
-							<FormLabel>Street Address</FormLabel>
-							<FormControl>
-								<Input placeholder="123 Main St" {...field} />
-							</FormControl>
-							<FormMessage />
-						</FormItem>
-					)}
-				/>
-				<div className="grid grid-cols-2 gap-4">
-					<FormField
-						control={form.control}
-						name="city"
-						render={({ field }) => (
-							<FormItem>
-								<FormLabel>City</FormLabel>
-								<FormControl>
-									<Input placeholder="New York" {...field} />
-								</FormControl>
-								<FormMessage />
-							</FormItem>
-						)}
-					/>
-					<FormField
-						control={form.control}
-						name="state"
-						render={({ field }) => (
-							<FormItem>
-								<FormLabel>State/Province</FormLabel>
-								<FormControl>
-									<Input placeholder="NY" {...field} />
-								</FormControl>
-								<FormMessage />
-							</FormItem>
-						)}
-					/>
-				</div>
-				<div className="grid grid-cols-2 gap-4">
-					<FormField
-						control={form.control}
-						name="zipCode"
-						render={({ field }) => (
-							<FormItem>
-								<FormLabel>Zip/Postal Code</FormLabel>
-								<FormControl>
-									<Input placeholder="10001" {...field} />
-								</FormControl>
-								<FormMessage />
-							</FormItem>
-						)}
-					/>
-					<FormField
-						control={form.control}
-						name="country"
-						render={({ field }) => (
-							<FormItem>
-								<FormLabel>Country</FormLabel>
-								<FormControl>
-									<Input placeholder="United States" {...field} />
-								</FormControl>
-								<FormMessage />
-							</FormItem>
-						)}
-					/>
-				</div>
-				<div className="flex justify-between">
-					<button
-						type="button"
-						onClick={onBack}
-						className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
-					>
-						<svg
-							className="mr-2 h-4 w-4"
-							fill="none"
-							stroke="currentColor"
-							viewBox="0 0 24 24"
-						>
-							<path
-								strokeLinecap="round"
-								strokeLinejoin="round"
-								strokeWidth={2}
-								d="M15 19l-7-7 7-7"
+		<div className="space-y-4">
+			<div className="text-2xl font-semibold">
+				What is your current address?
+			</div>
+			<div className="text-muted-foreground">
+				Please provide your full residential address as it appears on official
+				documents.
+			</div>
+			<Form {...form}>
+				<form
+					onSubmit={form.handleSubmit(onSubmit)}
+					className="space-y-4 max-w-md"
+				>
+					<div className="space-y-2">
+						<FormField
+							control={form.control}
+							name="street"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Street Address</FormLabel>
+									<FormControl>
+										<Input placeholder="123 Main Street" {...field} />
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+					</div>
+					<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+						<div className="space-y-2">
+							<FormField
+								control={form.control}
+								name="city"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>City</FormLabel>
+										<FormControl>
+											<Input placeholder="Toronto" {...field} />
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
 							/>
-						</svg>
-						Back
-					</button>
-					<button
-						type="submit"
-						className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-					>
-						Next
-						<svg
-							className="ml-2 h-4 w-4"
-							fill="none"
-							stroke="currentColor"
-							viewBox="0 0 24 24"
-						>
-							<path
-								strokeLinecap="round"
-								strokeLinejoin="round"
-								strokeWidth={2}
-								d="M9 5l7 7-7 7"
+						</div>
+						<div className="space-y-2">
+							<FormField
+								control={form.control}
+								name="postCode"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Postal/ZIP Code</FormLabel>
+										<FormControl>
+											<Input placeholder="M5V 2H1" {...field} />
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
 							/>
-						</svg>
-					</button>
-				</div>
-			</form>
-		</Form>
+						</div>
+					</div>
+					<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+						<div className="space-y-2">
+							<FormField
+								control={form.control}
+								name="state"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>State/Province</FormLabel>
+										<FormControl>
+											<Input placeholder="Ontario" {...field} />
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+						</div>
+						<div className="space-y-2">
+							<FormField
+								control={form.control}
+								name="country"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Country</FormLabel>
+										<FormControl>
+											<Input placeholder="Canada" {...field} />
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+						</div>
+					</div>
+					<div className="flex justify-between pt-4">
+						<Button
+							type="button"
+							variant="outline"
+							onClick={onBack}
+							className="cursor-pointer"
+						>
+							<ArrowLeft className="mr-2 h-4 w-4" /> Back
+						</Button>
+						<Button
+							type="submit"
+							className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
+						>
+							Next <ArrowRight className="ml-2 h-4 w-4" />
+						</Button>
+					</div>
+				</form>
+			</Form>
+		</div>
 	);
 }
