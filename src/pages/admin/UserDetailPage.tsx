@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getApiUrl } from "@/config/api";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -9,10 +8,11 @@ import {
 	Shield,
 	User,
 	ArrowLeft,
-	Mail,
 	Calendar,
 	Clock,
 	Pencil,
+	FilePlus,
+	PlusCircle,
 } from "lucide-react";
 
 interface UserDetails {
@@ -182,90 +182,130 @@ export default function UserDetailPage() {
 				</div>
 			</div>
 
-			<div className="grid gap-6">
-				<Card>
-					<CardHeader>
-						<CardTitle className="text-xl">Profile Information</CardTitle>
-					</CardHeader>
-					<CardContent>
+			<div className="grid grid-cols-3 gap-12 mt-12">
+				{/* Left Column - 2/3 width */}
+				<div className="col-span-2 space-y-6">
+					<div className="space-y-4">
+						<h3 className="text-[1.25rem] font-medium text-[#181D27] font-dm-sans">
+							Documents Created
+						</h3>
+						<div className="border-2 border-dashed border-[#BCBCBC] rounded-[4px] p-8 flex flex-col items-center justify-center text-center">
+							<p className="text-[#909090] mb-4">
+								This user has not created any documents
+							</p>
+							<Button
+								variant="outline"
+								className="border-[#DADADA] rounded-[4px] text-[#212121] hover:bg-muted/50 gap-2 cursor-pointer"
+							>
+								<FilePlus className="h-4 w-4" />
+								Create Document
+							</Button>
+						</div>
+					</div>
+
+					<div className="space-y-4">
+						<h3 className="text-[1.25rem] font-medium text-[#181D27] font-dm-sans">
+							Subscriptions
+						</h3>
+						<div className="border-2 border-dashed border-[#909090] rounded-[4px] p-8 flex flex-col items-center justify-center text-center">
+							<p className="text-[#909090] mb-4">
+								This user has no subscriptions
+							</p>
+							<Button
+								variant="outline"
+								className="border-[#DADADA] rounded-[4px] text-[#212121] hover:bg-muted/50 gap-2 cursor-pointer"
+							>
+								<PlusCircle className="h-4 w-4" />
+								Add Subscription
+							</Button>
+						</div>
+					</div>
+
+					<div className="space-y-4">
+						<h3 className="text-[1.25rem] font-medium text-[#181D27] font-dm-sans">
+							Recent Activity
+						</h3>
+						<div className="text-[#545454] text-sm">No recent activity</div>
+					</div>
+				</div>
+
+				{/* Right Column - 1/3 width */}
+				<div className="space-y-6">
+					<div className="space-y-4">
+						<h3 className="text-[1.25rem] font-medium text-[#181D27] font-dm-sans">
+							Details
+						</h3>
 						<div className="grid gap-6">
-							<div className="flex items-center gap-4">
-								<div className="h-16 w-16 rounded-full bg-[#F3F3F3] flex items-center justify-center">
-									<span className="text-2xl font-medium text-[#545454]">
-										{user.first_name?.[0] || ""}
-										{user.last_name?.[0] || ""}
+							<div className="space-y-1">
+								<p className="text-sm text-[#909090]">Full Name</p>
+								<p className="font-medium">
+									{user.first_name} {user.last_name}
+								</p>
+							</div>
+
+							<div className="space-y-1">
+								<p className="text-sm text-[#909090]">Email Address</p>
+								<p className="font-medium">{user.email}</p>
+							</div>
+
+							<div className="space-y-1">
+								<p className="text-sm text-[#909090]">Role</p>
+								<div className="flex items-center gap-2">
+									{user.role === "admin" ? (
+										<Shield className="h-4 w-4 text-purple-600" />
+									) : (
+										<User className="h-4 w-4 text-gray-600" />
+									)}
+									<span className="font-medium">
+										{user.role
+											? user.role.charAt(0).toUpperCase() + user.role.slice(1)
+											: "User"}
 									</span>
-								</div>
-								<div>
-									<h3 className="text-lg font-medium">
-										{user.first_name} {user.last_name}
-									</h3>
-									<div className="flex items-center gap-2 text-[#545454]">
-										<Mail className="h-4 w-4" />
-										<span>{user.email}</span>
-									</div>
 								</div>
 							</div>
 
-							<div className="grid grid-cols-2 gap-4">
-								<div className="space-y-1">
-									<p className="text-sm text-[#909090]">Role</p>
-									<div className="flex items-center gap-2">
-										{user.role === "admin" ? (
-											<Shield className="h-4 w-4 text-purple-600" />
-										) : (
-											<User className="h-4 w-4 text-gray-600" />
-										)}
-										<span className="font-medium">
-											{user.role
-												? user.role.charAt(0).toUpperCase() + user.role.slice(1)
-												: "User"}
-										</span>
-									</div>
-								</div>
-
-								<div className="space-y-1">
-									<p className="text-sm text-[#909090]">Status</p>
-									<div className="flex items-center gap-2">
+							<div className="space-y-1">
+								<p className="text-sm text-[#909090]">Status</p>
+								<div className="flex items-center gap-2">
+									<span
+										className={`inline-flex items-center px-2 py-[2px] rounded-[4px] text-[11px] font-medium ${
+											user.is_active
+												? "bg-[#E5FC99] text-[#3F7F03]"
+												: "bg-[#FFCACA] text-[#FF0000]"
+										}`}
+									>
 										<span
-											className={`inline-flex items-center px-2 py-[2px] rounded-[4px] text-[11px] font-medium ${
-												user.is_active
-													? "bg-[#E5FC99] text-[#3F7F03]"
-													: "bg-[#FFCACA] text-[#FF0000]"
+											className={`mr-1 h-1 w-1 rounded-full ${
+												user.is_active ? "bg-[#3F7F03]" : "bg-[#FF0000]"
 											}`}
-										>
-											<span
-												className={`mr-1 h-1 w-1 rounded-full ${
-													user.is_active ? "bg-[#3F7F03]" : "bg-[#FF0000]"
-												}`}
-											/>
-											{user.is_active ? "Active" : "Inactive"}
-										</span>
-									</div>
+										/>
+										{user.is_active ? "Active" : "Inactive"}
+									</span>
 								</div>
+							</div>
 
-								<div className="space-y-1">
-									<p className="text-sm text-[#909090]">Created</p>
-									<div className="flex items-center gap-2">
-										<Calendar className="h-4 w-4 text-[#545454]" />
-										<span>{formatDate(user.created_at)}</span>
-									</div>
+							<div className="space-y-1">
+								<p className="text-sm text-[#909090]">Account Created</p>
+								<div className="flex items-center gap-2">
+									<Calendar className="h-4 w-4 text-[#545454]" />
+									<span className="font-medium">
+										{formatDate(user.created_at)}
+									</span>
 								</div>
+							</div>
 
-								<div className="space-y-1">
-									<p className="text-sm text-[#909090]">Last Login</p>
-									<div className="flex items-center gap-2">
-										<Clock className="h-4 w-4 text-[#545454]" />
-										<span>{formatDate(user.last_login_at)}</span>
-									</div>
+							<div className="space-y-1">
+								<p className="text-sm text-[#909090]">Last Login</p>
+								<div className="flex items-center gap-2">
+									<Clock className="h-4 w-4 text-[#545454]" />
+									<span className="font-medium">
+										{formatDate(user.last_login_at)}
+									</span>
 								</div>
 							</div>
 						</div>
-					</CardContent>
-				</Card>
-
-				{/* Add more cards here for additional user information */}
-				{/* For example: Activity Log, Associated Documents, etc. */}
+					</div>
+				</div>
 			</div>
 		</div>
 	);
