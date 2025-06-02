@@ -203,7 +203,7 @@ export function AdminLayout() {
 									<ChevronDown className="h-4 w-4 text-muted-foreground" />
 								</Button>
 							</DropdownMenuTrigger>
-							<DropdownMenuContent className="w-56" align="end">
+							<DropdownMenuContent className="w-56 bg-white" align="end">
 								<DropdownMenuLabel>My Account</DropdownMenuLabel>
 								<DropdownMenuSeparator />
 								<DropdownMenuItem
