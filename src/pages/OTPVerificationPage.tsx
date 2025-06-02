@@ -103,7 +103,13 @@ export default function OTPVerificationPage() {
 			});
 
 			toast.success("OTP verified successfully!");
-			navigate("/app/dashboard");
+
+			// Redirect based on user role
+			if (userDetails.role === "admin") {
+				navigate("/admin/dashboard");
+			} else {
+				navigate("/app/dashboard");
+			}
 		} catch (error) {
 			console.error("OTP verification failed:", error);
 			console.log(error);

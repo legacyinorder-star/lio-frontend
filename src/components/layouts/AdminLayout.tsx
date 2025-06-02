@@ -4,12 +4,13 @@ import {
 	LogOut,
 	Users,
 	BookText,
-	ShoppingCart,
+	FileText,
 	ArrowLeft,
 	Search,
 	Bell,
 	ChevronDown,
 	House,
+	BarChart3,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -79,14 +80,19 @@ export function AdminLayout() {
 			href: "/admin/users",
 		},
 		{
-			title: "Orders",
-			icon: <ShoppingCart className="h-5 w-5" />,
-			href: "/admin/orders",
+			title: "Documents",
+			icon: <FileText className="h-5 w-5" />,
+			href: "/admin/documents",
 		},
 		{
 			title: "Transactions",
 			icon: <BookText className="h-5 w-5" />,
 			href: "/admin/transactions",
+		},
+		{
+			title: "Reports & Analytics",
+			icon: <BarChart3 className="h-5 w-5" />,
+			href: "/admin/reports",
 		},
 		{
 			title: "Back to User View",
@@ -136,10 +142,10 @@ export function AdminLayout() {
 							key={item.href}
 							to={item.href}
 							className={cn(
-								"flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-white/10",
+								"flex items-center gap-3 rounded-md px-3 py-2 text-[0.875rem] font-medium transition-colors hover:bg-white/10",
 								location.pathname === item.href
-									? "bg-white/10 text-white"
-									: "text-white/70 hover:text-white"
+									? "bg-white/10 text-white font-[500]"
+									: "text-white/70 hover:text-white font-[500]"
 							)}
 						>
 							{item.icon}
