@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getApiUrl } from "@/config/api";
@@ -8,11 +8,11 @@ import { toast } from "sonner";
 import {
 	Shield,
 	User,
-	Power,
 	ArrowLeft,
 	Mail,
 	Calendar,
 	Clock,
+	Pencil,
 } from "lucide-react";
 
 interface UserDetails {
@@ -42,7 +42,7 @@ export default function UserDetailPage() {
 	const fetchUserDetails = async () => {
 		setIsLoading(true);
 		try {
-			const response = await fetch(getApiUrl(`/admin/users/${userId}`), {
+			const response = await fetch(getApiUrl(`/user/${userId}`), {
 				headers: {
 					Authorization: `Bearer ${currentUser?.token}`,
 				},
@@ -132,25 +132,54 @@ export default function UserDetailPage() {
 	return (
 		<div className="space-y-6">
 			<div className="flex items-center justify-between">
-				<div className="flex items-center gap-4">
-					<Button
-						variant="ghost"
-						onClick={() => navigate("/admin/users")}
-						className="gap-2"
+				<div className="flex flex-col gap-1">
+					<Link
+						to="/admin/users"
+						className="text-[#499700] hover:text-[#499700]/90 text-sm font-medium mb-2"
 					>
-						<ArrowLeft className="h-4 w-4" />
-						Back
-					</Button>
-					<h2 className="text-3xl font-medium tracking-tight">User Details</h2>
+						Users
+					</Link>
+					<div className="flex flex-col gap-1">
+						<h2 className="text-3xl font-medium text-[#181D27] tracking-tight flex items-center gap-3">
+							{user.first_name} {user.last_name}
+							<span
+								className={`inline-flex items-center px-2 py-[2px] rounded-[4px] text-[11px] font-medium ${
+									user.is_active
+										? "bg-[#E5FC99] text-[#3F7F03]"
+										: "bg-[#FFCACA] text-[#FF0000]"
+								}`}
+							>
+								<span
+									className={`mr-1 h-1 w-1 rounded-full ${
+										user.is_active ? "bg-[#3F7F03]" : "bg-[#FF0000]"
+									}`}
+								/>
+								{user.is_active ? "Active" : "Inactive"}
+							</span>
+						</h2>
+						<span className="text-[0.875rem] text-[#545454]">{user.email}</span>
+					</div>
 				</div>
-				<Button
-					variant={user.is_active ? "destructive" : "default"}
-					onClick={toggleUserStatus}
-					className="gap-2"
-				>
-					<Power className="h-4 w-4" />
-					{user.is_active ? "Deactivate User" : "Activate User"}
-				</Button>
+				<div className="flex items-center gap-3">
+					<Button
+						variant="outline"
+						className="gap-2 border-[#DADADA] text-[#545454] hover:bg-muted/50 cursor-pointer"
+					>
+						<Pencil className="h-4 w-4" />
+						Edit Information
+					</Button>
+					<Button
+						variant="outline"
+						className={`gap-2 cursor-pointer ${
+							user.is_active
+								? "text-[#FF0000] border-[#DADADA] hover:bg-red-50"
+								: "bg-light-green text-black border-[#DADADA] hover:bg-light-green/90"
+						}`}
+						onClick={toggleUserStatus}
+					>
+						{user.is_active ? "Deactivate User" : "Activate User"}
+					</Button>
+				</div>
 			</div>
 
 			<div className="grid gap-6">
@@ -188,8 +217,9 @@ export default function UserDetailPage() {
 											<User className="h-4 w-4 text-gray-600" />
 										)}
 										<span className="font-medium">
-											{user.role?.charAt(0).toUpperCase() +
-												user.role?.slice(1) || "User"}
+											{user.role
+												? user.role.charAt(0).toUpperCase() + user.role.slice(1)
+												: "User"}
 										</span>
 									</div>
 								</div>
@@ -198,14 +228,14 @@ export default function UserDetailPage() {
 									<p className="text-sm text-[#909090]">Status</p>
 									<div className="flex items-center gap-2">
 										<span
-											className={`inline-flex items-center px-2.5 py-0.5 rounded-[6px] text-xs font-medium ${
+											className={`inline-flex items-center px-2 py-[2px] rounded-[4px] text-[11px] font-medium ${
 												user.is_active
 													? "bg-[#E5FC99] text-[#3F7F03]"
 													: "bg-[#FFCACA] text-[#FF0000]"
 											}`}
 										>
 											<span
-												className={`mr-1.5 h-1.5 w-1.5 rounded-full ${
+												className={`mr-1 h-1 w-1 rounded-full ${
 													user.is_active ? "bg-[#3F7F03]" : "bg-[#FF0000]"
 												}`}
 											/>
