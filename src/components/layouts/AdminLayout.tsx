@@ -4,12 +4,12 @@ import {
 	LogOut,
 	Users,
 	BookText,
-	LayoutDashboard,
 	ShoppingCart,
 	ArrowLeft,
 	Search,
 	Bell,
 	ChevronDown,
+	House,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -70,7 +70,7 @@ export function AdminLayout() {
 	const navItems = [
 		{
 			title: "Home",
-			icon: <LayoutDashboard className="h-5 w-5" />,
+			icon: <House className="h-5 w-5" />,
 			href: "/admin/dashboard",
 		},
 		{
@@ -115,7 +115,7 @@ export function AdminLayout() {
 	return (
 		<div className="flex h-screen bg-background">
 			{/* Sidebar */}
-			<aside className="w-64 border-r bg-[#083402]">
+			<aside className="w-64 border-r bg-[#083402] pt-8">
 				<div className="flex h-16 items-center justify-center px-6">
 					<Link
 						to="/admin/dashboard"
@@ -150,17 +150,17 @@ export function AdminLayout() {
 			</aside>
 
 			{/* Main content */}
-			<div className="flex-1 flex flex-col">
+			<div className="flex-1 flex flex-col pt-2">
 				{/* Header */}
-				<header className="h-16 border-b border-[#ECECEC] bg-white flex items-center px-6 justify-between">
+				<header className="h-16 border-b border-[#ECECEC] bg-white flex items-center px-6 justify-between pb-1.5">
 					{/* Search */}
 					<div className="flex-1 max-w-md">
 						<div className="relative">
-							<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+							<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#929292]" />
 							<Input
 								type="search"
 								placeholder="Search..."
-								className="pl-9 bg-[#F3F3F3] border-none focus-visible:ring-0"
+								className="pl-9 bg-[#F3F3F3] border-none focus-visible:ring-0 h-10"
 							/>
 						</div>
 					</div>
@@ -233,7 +233,7 @@ export function AdminLayout() {
 
 				{/* Main content */}
 				<main className="flex-1 overflow-auto">
-					<div className="p-6 pt-12">
+					<div className="p-6 pt-6">
 						<Outlet />
 					</div>
 				</main>

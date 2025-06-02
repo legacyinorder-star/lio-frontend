@@ -282,7 +282,7 @@ export default function AdminDashboardPage() {
 	return (
 		<div className="space-y-6">
 			<div className="flex justify-between items-center">
-				<h2 className="text-3xl font-bold tracking-tight">Admin Dashboard</h2>
+				<h2 className="text-3xl font-medium tracking-tight">Admin Dashboard</h2>
 				<div className="flex gap-3">
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
