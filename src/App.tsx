@@ -16,6 +16,7 @@ import { AdminLayout } from "@/components/layouts/AdminLayout";
 import ManageUsersPage from "./pages/admin/ManageUsersPage";
 import UserDetailPage from "./pages/admin/UserDetailPage";
 import AdminDashboardPage from "@/pages/admin/AdminDashboardPage";
+import ManageDocumentsPage from "./pages/admin/ManageDocumentsPage";
 import LogoutPage from "./pages/LogoutPage";
 import HomePage from "@/pages/HomePage";
 import NotFoundPage from "@/pages/NotFoundPage";
@@ -53,6 +54,7 @@ function App() {
 						>
 							<Route path="users" element={<ManageUsersPage />} />
 							<Route path="users/:userId" element={<UserDetailPage />} />
+							<Route path="documents" element={<ManageDocumentsPage />} />
 							<Route path="dashboard" element={<AdminDashboardPage />} />
 						</Route>
 						<Route

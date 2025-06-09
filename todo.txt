@@ -1,0 +1,99 @@
+Here are several suggestions to refactor the WillWizard component to make it more manageable:
+
+1. **Split into Smaller Components**
+   - Break down the large `renderQuestion` switch statement into separate components for each step (NameStep, AddressStep, SpouseStep, etc.)
+   - Each step component would handle its own state and UI logic
+   - This would make the code more maintainable and easier to test
+   - Example: `GuardiansStep`, `AssetsStep`, `ExecutorsStep`, etc.
+
+2. **Custom Hooks for State Management**
+   - Create custom hooks for different aspects of the form:
+     - `useWillForm` - for managing the main form state
+     - `useBeneficiaries` - for beneficiary-related operations
+     - `useAssets` - for asset management
+     - `useGuardians` - for guardian management
+     - `useExecutors` - for executor management
+   - This would separate business logic from UI components
+   - Make state management more reusable and testable
+
+3. **Form State Management**
+   - Consider using a form management library like React Hook Form or Formik
+   - This would reduce boilerplate code for form handling
+   - Provide better validation and error handling
+   - Make form state management more predictable
+
+4. **API Layer Abstraction**
+   - Create a dedicated API service layer
+   - Move all API calls into separate service files
+   - Example: `willService.ts`, `beneficiaryService.ts`, `guardianService.ts`
+   - This would make API calls more maintainable and easier to mock for testing
+
+<!-- 5. **Type Definitions**
+   - Move all interfaces and types to separate files
+   - Create a `types` directory with files like:
+     - `will.types.ts`
+     - `beneficiary.types.ts`
+     - `asset.types.ts`
+   - This would make types more reusable and the code more organized -->
+
+6. **Constants and Configuration**
+   - Move all constants (like ASSET_TYPES) to a separate configuration file
+   - Create a `constants` directory for different categories
+   - Example: `assetConstants.ts`, `formConstants.ts`
+
+7. **Dialog Components**
+   - Extract all dialogs into separate components
+   - Create a `dialogs` directory
+   - Example: `AddAssetDialog`, `AddGuardianDialog`, `AddExecutorDialog`
+   - This would make the main component cleaner and dialogs more reusable
+
+8. **Utility Functions**
+   - Move utility functions to a separate `utils` directory
+   - Group related functions together
+   - Example: `formatters.ts`, `validators.ts`
+
+9. **Context Usage**
+   - Consider using React Context for global state
+   - Create separate contexts for different aspects of the will
+   - Example: `WillContext`, `BeneficiaryContext`, `AssetContext`
+   - This would make state management more organized and reduce prop drilling
+
+10. **Step Management**
+    - Create a dedicated step management system
+    - Move step logic into a custom hook like `useWillWizardSteps`
+    - Handle step transitions and validation in one place
+    - Make it easier to add/remove/modify steps
+
+11. **Error Handling**
+    - Create a centralized error handling system
+    - Implement proper error boundaries
+    - Create custom error components
+    - Make error handling more consistent across the application
+
+12. **Loading States**
+    - Implement a proper loading state management system
+    - Create loading components for different operations
+    - Make loading states more consistent and user-friendly
+
+13. **Testing Structure**
+    - Organize tests to match the new component structure
+    - Create separate test files for each component
+    - Implement proper unit and integration tests
+    - Make testing more maintainable
+
+14. **Documentation**
+    - Add proper JSDoc comments
+    - Create a documentation system
+    - Document component props, hooks, and utilities
+    - Make the codebase more maintainable for other developers
+
+These refactoring suggestions would make the code:
+- More maintainable
+- Easier to test
+- More reusable
+- Better organized
+- More scalable
+- Easier to debug
+- More performant (through better state management)
+
+Would you like me to elaborate on any of these suggestions?

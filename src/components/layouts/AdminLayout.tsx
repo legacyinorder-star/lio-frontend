@@ -192,7 +192,7 @@ export function AdminLayout() {
 							<DropdownMenuTrigger asChild>
 								<Button
 									variant="ghost"
-									className="flex items-center gap-2 px-2 hover:bg-muted/50"
+									className="flex items-center gap-2 border-none px-2 hover:bg-muted/50"
 								>
 									<Avatar className="h-8 w-8">
 										<AvatarFallback

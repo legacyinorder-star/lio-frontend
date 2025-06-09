@@ -354,9 +354,15 @@ export default function AdminDashboardPage() {
 			{/* Main content tabs */}
 			<Tabs defaultValue="overview" className="space-y-4">
 				<TabsList>
-					<TabsTrigger value="overview">Overview</TabsTrigger>
-					<TabsTrigger value="users">Users</TabsTrigger>
-					<TabsTrigger value="orders">Orders</TabsTrigger>
+					<TabsTrigger value="overview" className="cursor-pointer">
+						Overview
+					</TabsTrigger>
+					<TabsTrigger value="users" className="cursor-pointer">
+						Users
+					</TabsTrigger>
+					<TabsTrigger value="orders" className="cursor-pointer">
+						Transactions
+					</TabsTrigger>
 				</TabsList>
 
 				<TabsContent value="overview" className="space-y-4">
@@ -468,7 +474,7 @@ export default function AdminDashboardPage() {
 						</Card>
 						<Card className="lg:col-span-4 shadow-md border-[#F2F2F2]">
 							<CardHeader>
-								<CardTitle>Recent Orders</CardTitle>
+								<CardTitle>Recent Transactions</CardTitle>
 							</CardHeader>
 							<CardContent>
 								<DataTable columns={orderColumns} data={recentOrders} />
@@ -491,7 +497,7 @@ export default function AdminDashboardPage() {
 				<TabsContent value="orders" className="space-y-4">
 					<Card className="shadow-md border-[#F2F2F2]">
 						<CardHeader>
-							<CardTitle>Order Management</CardTitle>
+							<CardTitle>Transactions</CardTitle>
 						</CardHeader>
 						<CardContent>
 							<DataTable columns={orderColumns} data={recentOrders} />

@@ -14,6 +14,7 @@ export const API_CONFIG = {
 		admin: {
 			users: "/users",
 			toggleUserStatus: "admin/users/{users_id}/status",
+			documents: "/admin/documents",
 		},
 	},
 } as const;
