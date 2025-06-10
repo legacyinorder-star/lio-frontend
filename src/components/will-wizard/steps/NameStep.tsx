@@ -31,6 +31,7 @@ type NameData = z.infer<typeof nameSchema>;
 
 interface WillOwnerResponse {
 	will_id: string;
+	id: string;
 }
 
 export default function NameStep({ data, onUpdate, onNext }: StepProps) {
@@ -165,6 +166,7 @@ export default function NameStep({ data, onUpdate, onNext }: StepProps) {
 						id: responseData.will_id,
 						owner: {
 							...activeWill.owner,
+							id: responseData.id,
 							firstName: values.firstName,
 							lastName: values.lastName,
 						},
@@ -178,6 +180,7 @@ export default function NameStep({ data, onUpdate, onNext }: StepProps) {
 						status: "draft",
 						userId: "",
 						owner: {
+							id: responseData.id,
 							firstName: values.firstName,
 							lastName: values.lastName,
 							maritalStatus: "",

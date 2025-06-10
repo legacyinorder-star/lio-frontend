@@ -19,7 +19,7 @@ export type FormChangeEvent = React.ChangeEvent<HTMLInputElement>;
 
 // Address Types
 export interface Address {
-	street: string;
+	address: string;
 	city: string;
 	state: string;
 	postCode: string;

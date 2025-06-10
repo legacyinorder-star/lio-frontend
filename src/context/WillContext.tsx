@@ -10,6 +10,7 @@ export interface Address {
 }
 
 export interface WillPersonalData {
+	id?: string;
 	firstName: string;
 	lastName: string;
 	maritalStatus: string;
