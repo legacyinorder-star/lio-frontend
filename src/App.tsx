@@ -21,6 +21,9 @@ import LogoutPage from "./pages/LogoutPage";
 import HomePage from "@/pages/HomePage";
 import NotFoundPage from "@/pages/NotFoundPage";
 import { WillProvider } from "@/context/WillContext";
+import PaymentPage from "@/pages/PaymentPage";
+import PaymentSuccessPage from "@/pages/PaymentSuccessPage";
+import PaymentCancelPage from "@/pages/PaymentCancelPage";
 
 function App() {
 	return (
@@ -63,6 +66,32 @@ function App() {
 						/>
 						<Route path="/reset-password" element={<ResetPasswordPage />} />
 						<Route path="/verify-otp" element={<OTPVerificationPage />} />
+
+						{/* Payment Routes */}
+						<Route
+							path="/app/payment"
+							element={
+								<ProtectedRoute>
+									<PaymentPage />
+								</ProtectedRoute>
+							}
+						/>
+						<Route
+							path="/app/payment/success"
+							element={
+								<ProtectedRoute>
+									<PaymentSuccessPage />
+								</ProtectedRoute>
+							}
+						/>
+						<Route
+							path="/app/payment/cancel"
+							element={
+								<ProtectedRoute>
+									<PaymentCancelPage />
+								</ProtectedRoute>
+							}
+						/>
 
 						{/* 404 - This must be the last route to catch all unknown URLs */}
 						<Route path="*" element={<NotFoundPage />} />
