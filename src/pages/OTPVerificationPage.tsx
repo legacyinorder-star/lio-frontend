@@ -28,6 +28,7 @@ export default function OTPVerificationPage() {
 	const navigate = useNavigate();
 	const [searchParams] = useSearchParams();
 	const [isLoading, setIsLoading] = useState(false);
+	const [isResending, setIsResending] = useState(false);
 	const { setUser } = useAuth();
 	const otpId = searchParams.get("t");
 
@@ -124,6 +125,7 @@ export default function OTPVerificationPage() {
 	const handleResendOTP = async () => {
 		if (!otpId) return;
 
+		setIsResending(true);
 		try {
 			// API endpoint for resending OTP
 			const resendUrl = API_CONFIG.endpoints.auth.resendOtp.replace(
@@ -143,6 +145,8 @@ export default function OTPVerificationPage() {
 				throw new Error(data.message || "Failed to resend OTP");
 			}
 
+			console.log(data);
+
 			// Check if we received a new OTP ID in the response
 			if (data.otp_id) {
 				toast.success("New OTP code sent successfully!");
@@ -156,6 +160,8 @@ export default function OTPVerificationPage() {
 			toast.error(
 				error instanceof Error ? error.message : "Failed to resend OTP"
 			);
+		} finally {
+			setIsResending(false);
 		}
 	};
 
@@ -217,8 +223,9 @@ export default function OTPVerificationPage() {
 								<button
 									className="text-black font-bold cursor-pointer hover:underline"
 									onClick={handleResendOTP}
+									disabled={isResending}
 								>
-									Resend
+									{isResending ? "Resending..." : "Resend"}
 								</button>
 							</p>
 						</div>
