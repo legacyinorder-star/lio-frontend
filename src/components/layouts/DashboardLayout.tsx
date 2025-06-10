@@ -146,6 +146,7 @@ export function DashboardLayout() {
 	];
 
 	const handleWillAction = () => {
+		console.log(activeWill);
 		if (activeWill?.id) {
 			// Continue existing will
 			navigate("/app/create-will");

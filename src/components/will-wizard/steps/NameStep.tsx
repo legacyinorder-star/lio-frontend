@@ -13,10 +13,14 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { StepProps } from "../types/will.types";
-import { useWill } from "@/context/WillContext";
+import {
+	useWill,
+	type WillData,
+	type WillPersonalData,
+} from "@/context/WillContext";
 import { apiClient } from "@/utils/apiClient";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const nameSchema = z.object({
 	firstName: z.string().min(2, "First name must be at least 2 characters"),
@@ -33,18 +37,98 @@ export default function NameStep({ data, onUpdate, onNext }: StepProps) {
 	const { activeWill, setActiveWill } = useWill();
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
+	// Determine the initial values for the form
+	const getInitialValues = () => {
+		// Priority: activeWill > data prop > empty strings
+		if (activeWill) {
+			const activeWillAny = activeWill as WillData & {
+				first_name?: string;
+				last_name?: string;
+				firstName?: string;
+				lastName?: string;
+			};
+			const ownerAny = activeWill.owner as WillPersonalData & {
+				first_name?: string;
+				last_name?: string;
+			};
+			const firstName =
+				activeWill.owner?.firstName ||
+				ownerAny?.first_name ||
+				activeWillAny.first_name ||
+				activeWillAny.firstName;
+			const lastName =
+				activeWill.owner?.lastName ||
+				ownerAny?.last_name ||
+				activeWillAny.last_name ||
+				activeWillAny.lastName;
+
+			if (firstName || lastName) {
+				return {
+					firstName: firstName || "",
+					lastName: lastName || "",
+				};
+			}
+		}
+		if (data.firstName || data.lastName) {
+			return {
+				firstName: data.firstName || "",
+				lastName: data.lastName || "",
+			};
+		}
+		return {
+			firstName: "",
+			lastName: "",
+		};
+	};
+
+	const initialValues = getInitialValues();
+
 	const form = useForm<NameData>({
 		resolver: zodResolver(nameSchema),
-		defaultValues: {
-			firstName: data.firstName || "",
-			lastName: data.lastName || "",
-		},
-		mode: "onChange",
+		defaultValues: initialValues,
+		mode: "onSubmit",
 	});
 
 	const {
-		formState: { isValid, isDirty },
+		formState: { isValid },
+		setValue,
 	} = form;
+
+	// Pre-fill form with active will data when component loads
+	useEffect(() => {
+		if (activeWill) {
+			const activeWillAny = activeWill as WillData & {
+				first_name?: string;
+				last_name?: string;
+				firstName?: string;
+				lastName?: string;
+			};
+			const ownerAny = activeWill.owner as WillPersonalData & {
+				first_name?: string;
+				last_name?: string;
+			};
+			const firstName =
+				activeWill.owner?.firstName ||
+				ownerAny?.first_name ||
+				activeWillAny.first_name ||
+				activeWillAny.firstName;
+			const lastName =
+				activeWill.owner?.lastName ||
+				ownerAny?.last_name ||
+				activeWillAny.last_name ||
+				activeWillAny.lastName;
+
+			if (firstName || lastName) {
+				// Try using setValue instead of reset with shouldValidate: false
+				setValue("firstName", firstName || "", { shouldValidate: false });
+				setValue("lastName", lastName || "", { shouldValidate: false });
+			}
+		} else if (data.firstName || data.lastName) {
+			// Try using setValue instead of reset with shouldValidate: false
+			setValue("firstName", data.firstName || "", { shouldValidate: false });
+			setValue("lastName", data.lastName || "", { shouldValidate: false });
+		}
+	}, [activeWill, data, setValue]);
 
 	const onSubmit = async (values: NameData) => {
 		setIsSubmitting(true);
@@ -72,29 +156,43 @@ export default function NameStep({ data, onUpdate, onNext }: StepProps) {
 				return;
 			}
 
-			// Extract will_id from response and save as active will
+			// Extract will_id from response and update only specific fields
 			if (responseData && responseData.will_id) {
-				setActiveWill({
-					id: responseData.will_id,
-					lastUpdatedAt: new Date().toISOString(),
-					createdAt: new Date().toISOString(),
-					status: "draft",
-					userId: "",
-					owner: {
-						firstName: values.firstName,
-						lastName: values.lastName,
-						maritalStatus: "",
-						address: "",
-						city: "",
-						state: "",
-						postCode: "",
-						country: "",
-					},
-					assets: [],
-					beneficiaries: [],
-					executors: [],
-					witnesses: [],
-				});
+				if (activeWill) {
+					// Update existing will with new id and name data
+					setActiveWill({
+						...activeWill,
+						id: responseData.will_id,
+						owner: {
+							...activeWill.owner,
+							firstName: values.firstName,
+							lastName: values.lastName,
+						},
+					});
+				} else {
+					// Create new will with minimal data
+					setActiveWill({
+						id: responseData.will_id,
+						lastUpdatedAt: new Date().toISOString(),
+						createdAt: new Date().toISOString(),
+						status: "draft",
+						userId: "",
+						owner: {
+							firstName: values.firstName,
+							lastName: values.lastName,
+							maritalStatus: "",
+							address: "",
+							city: "",
+							state: "",
+							postCode: "",
+							country: "",
+						},
+						assets: [],
+						beneficiaries: [],
+						executors: [],
+						witnesses: [],
+					});
+				}
 			}
 
 			// Update local form data
@@ -116,7 +214,10 @@ export default function NameStep({ data, onUpdate, onNext }: StepProps) {
 	};
 
 	return (
-		<Form {...form}>
+		<Form
+			{...form}
+			key={`name-form-${initialValues.firstName}-${initialValues.lastName}`}
+		>
 			<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
 				<div className="text-2xl font-semibold">What is your full name?</div>
 				<div className="text-muted-foreground">
@@ -158,7 +259,7 @@ export default function NameStep({ data, onUpdate, onNext }: StepProps) {
 					<Button
 						type="submit"
 						className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
-						disabled={!isValid || !isDirty || isSubmitting}
+						disabled={!isValid || isSubmitting}
 					>
 						{isSubmitting ? (
 							<>

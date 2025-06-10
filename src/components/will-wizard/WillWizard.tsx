@@ -1,8 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { WillFormData, QuestionType, NewBeneficiary } from "./types/will.types";
 import type { ExecutorData } from "./steps/ExecutorStep";
 import WillGuard from "./WillGuard";
+import {
+	useWill,
+	type WillData,
+	type WillPersonalData,
+} from "@/context/WillContext";
 
 // Import step components
 import NameStep from "./steps/NameStep";
@@ -21,6 +26,7 @@ import GuardiansStep from "./steps/GuardiansStep";
 export default function WillWizard() {
 	// Track the current question being shown
 	const [currentQuestion, setCurrentQuestion] = useState<QuestionType>("name");
+	const { activeWill } = useWill();
 
 	// Data collection
 	const [formData, setFormData] = useState<WillFormData>({
@@ -53,6 +59,44 @@ export default function WillWizard() {
 			location: "",
 		},
 	});
+
+	// Load active will data into formData when component mounts or activeWill changes
+	useEffect(() => {
+		if (activeWill) {
+			// Check if the structure is different than expected
+			const activeWillAny = activeWill as WillData & {
+				first_name?: string;
+				last_name?: string;
+				firstName?: string;
+				lastName?: string;
+			};
+			const ownerAny = activeWill.owner as WillPersonalData & {
+				first_name?: string;
+				last_name?: string;
+			};
+			const firstName =
+				activeWill.owner?.firstName ||
+				ownerAny?.first_name ||
+				activeWillAny.first_name ||
+				activeWillAny.firstName;
+			const lastName =
+				activeWill.owner?.lastName ||
+				ownerAny?.last_name ||
+				activeWillAny.last_name ||
+				activeWillAny.lastName;
+
+			if (firstName || lastName) {
+				setFormData((prev) => {
+					const updated = {
+						...prev,
+						firstName: firstName || prev.firstName,
+						lastName: lastName || prev.lastName,
+					};
+					return updated;
+				});
+			}
+		}
+	}, [activeWill]);
 
 	const handleNext = () => {
 		switch (currentQuestion) {
