@@ -13,6 +13,10 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { StepProps } from "../types/will.types";
+import { useWill } from "@/context/WillContext";
+import { apiClient } from "@/utils/apiClient";
+import { toast } from "sonner";
+import { useState } from "react";
 
 const nameSchema = z.object({
 	firstName: z.string().min(2, "First name must be at least 2 characters"),
@@ -21,7 +25,14 @@ const nameSchema = z.object({
 
 type NameData = z.infer<typeof nameSchema>;
 
+interface WillOwnerResponse {
+	will_id: string;
+}
+
 export default function NameStep({ data, onUpdate, onNext }: StepProps) {
+	const { activeWill, setActiveWill } = useWill();
+	const [isSubmitting, setIsSubmitting] = useState(false);
+
 	const form = useForm<NameData>({
 		resolver: zodResolver(nameSchema),
 		defaultValues: {
@@ -35,9 +46,73 @@ export default function NameStep({ data, onUpdate, onNext }: StepProps) {
 		formState: { isValid, isDirty },
 	} = form;
 
-	const onSubmit = (values: NameData) => {
-		onUpdate(values);
-		onNext();
+	const onSubmit = async (values: NameData) => {
+		setIsSubmitting(true);
+
+		try {
+			// Prepare the request data
+			const requestData = {
+				first_name: values.firstName,
+				last_name: values.lastName,
+				...(activeWill?.id && { will_id: activeWill.id }),
+			};
+
+			// Make POST request to /will_owner
+			const { data: responseData, error } = await apiClient<WillOwnerResponse>(
+				"/will_owner",
+				{
+					method: "POST",
+					body: JSON.stringify(requestData),
+				}
+			);
+
+			if (error) {
+				console.error("Error saving will owner:", error);
+				toast.error("Failed to save name information. Please try again.");
+				return;
+			}
+
+			// Extract will_id from response and save as active will
+			if (responseData && responseData.will_id) {
+				setActiveWill({
+					id: responseData.will_id,
+					lastUpdatedAt: new Date().toISOString(),
+					createdAt: new Date().toISOString(),
+					status: "draft",
+					userId: "",
+					owner: {
+						firstName: values.firstName,
+						lastName: values.lastName,
+						maritalStatus: "",
+						address: "",
+						city: "",
+						state: "",
+						postCode: "",
+						country: "",
+					},
+					assets: [],
+					beneficiaries: [],
+					executors: [],
+					witnesses: [],
+				});
+			}
+
+			// Update local form data
+			onUpdate(values);
+
+			// Show success message
+			toast.success("Name saved successfully");
+
+			// Proceed to next step
+			onNext();
+		} catch (error) {
+			console.error("Error in name submission:", error);
+			toast.error(
+				"An error occurred while saving your name. Please try again."
+			);
+		} finally {
+			setIsSubmitting(false);
+		}
 	};
 
 	return (
@@ -83,9 +158,18 @@ export default function NameStep({ data, onUpdate, onNext }: StepProps) {
 					<Button
 						type="submit"
 						className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
-						disabled={!isValid || !isDirty}
+						disabled={!isValid || !isDirty || isSubmitting}
 					>
-						Next <ArrowRight className="ml-2 h-4 w-4" />
+						{isSubmitting ? (
+							<>
+								<div className="h-4 w-4 animate-spin rounded-full border-t-2 border-b-2 border-black mr-2" />
+								Saving...
+							</>
+						) : (
+							<>
+								Next <ArrowRight className="ml-2 h-4 w-4" />
+							</>
+						)}
 					</Button>
 				</div>
 			</form>

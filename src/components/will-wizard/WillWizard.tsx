@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useWill } from "@/context/WillContext";
 import { WillFormData, QuestionType, NewBeneficiary } from "./types/will.types";
 import type { ExecutorData } from "./steps/ExecutorStep";
+import WillGuard from "./WillGuard";
 
 // Import step components
 import NameStep from "./steps/NameStep";
@@ -53,18 +53,6 @@ export default function WillWizard() {
 			location: "",
 		},
 	});
-
-	const { activeWill } = useWill();
-
-	useEffect(() => {
-		if (activeWill && activeWill.owner) {
-			setFormData((prev) => ({
-				...prev,
-				firstName: activeWill.owner.firstName,
-				lastName: activeWill.owner.lastName,
-			}));
-		}
-	}, [activeWill]);
 
 	const handleNext = () => {
 		switch (currentQuestion) {
@@ -388,23 +376,25 @@ export default function WillWizard() {
 	};
 
 	return (
-		<div className="container mx-auto py-8">
-			<Card className="max-w-3xl mx-auto">
-				<CardHeader>
-					<CardTitle>Create Your Will</CardTitle>
-					{/* Progress bar */}
-					<div className="w-full bg-muted h-2 rounded-full mt-4">
-						<div
-							className="bg-primary h-2 rounded-full transition-all duration-500 ease-in-out"
-							style={{ width: `${progressPercent}%` }}
-						/>
-					</div>
-					<div className="text-xs text-muted-foreground mt-1">
-						Question {progress} of {totalQuestions}
-					</div>
-				</CardHeader>
-				<CardContent className="pt-6">{renderQuestion()}</CardContent>
-			</Card>
-		</div>
+		<WillGuard currentStep={currentQuestion}>
+			<div className="container mx-auto py-8">
+				<Card className="max-w-3xl mx-auto">
+					<CardHeader>
+						<CardTitle>Create Your Will</CardTitle>
+						{/* Progress bar */}
+						<div className="w-full bg-muted h-2 rounded-full mt-4">
+							<div
+								className="bg-primary h-2 rounded-full transition-all duration-500 ease-in-out"
+								style={{ width: `${progressPercent}%` }}
+							/>
+						</div>
+						<div className="text-xs text-muted-foreground mt-1">
+							Question {progress} of {totalQuestions}
+						</div>
+					</CardHeader>
+					<CardContent className="pt-6">{renderQuestion()}</CardContent>
+				</Card>
+			</div>
+		</WillGuard>
 	);
 }

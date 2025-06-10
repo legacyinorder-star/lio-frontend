@@ -16,7 +16,7 @@ import {
 	BookText,
 	ChevronDown,
 	User,
-	X,
+	Edit,
 } from "lucide-react";
 import {
 	DropdownMenu,
@@ -31,15 +31,6 @@ import { type UserDetails } from "@/utils/auth";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { apiClient } from "@/utils/apiClient";
 import { useWill } from "@/context/WillContext";
 
@@ -49,7 +40,6 @@ export function DashboardLayout() {
 	const { user } = useAuth();
 	const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
-	const [showWillDialog, setShowWillDialog] = useState(false);
 	const [isLoadingWill, setIsLoadingWill] = useState(false);
 	const { activeWill, setActiveWill } = useWill();
 
@@ -75,6 +65,36 @@ export function DashboardLayout() {
 
 		return () => clearTimeout(checkAuthTimer);
 	}, [user, navigate, location]);
+
+	// Load active will on component mount
+	useEffect(() => {
+		if (userDetails && !activeWill) {
+			loadActiveWill();
+		}
+	}, [userDetails, activeWill]);
+
+	const loadActiveWill = async () => {
+		try {
+			setIsLoadingWill(true);
+			const { data, error } = await apiClient("/wills/get-user-active-will");
+
+			if (error) {
+				console.error("Error loading active will:", error);
+				// Don't show error toast for this, just silently fail
+				return;
+			}
+
+			// Handle both array and single object responses
+			const willData = Array.isArray(data) ? data[0] : data;
+			if (willData) {
+				setActiveWill(willData);
+			}
+		} catch (error) {
+			console.error("Error loading active will:", error);
+		} finally {
+			setIsLoadingWill(false);
+		}
+	};
 
 	const sidebarLinks = [
 		{
@@ -109,7 +129,7 @@ export function DashboardLayout() {
 			title: "Will",
 			href: "/app/create-will",
 			icon: Scroll,
-			description: "Create a will",
+			description: activeWill ? "Continue your will" : "Create a will",
 		},
 		{
 			title: "Power of Attorney",
@@ -125,78 +145,13 @@ export function DashboardLayout() {
 		},
 	];
 
-	const checkActiveWill = async () => {
-		console.log("Checking active will");
-		try {
-			setIsLoadingWill(true);
-			const { data, error } = await apiClient("/wills/get-user-active-will");
-
-			if (error) {
-				console.error("Error checking active will:", error);
-				// If there's an error, just proceed to create new will
-				// handleCreateWill();
-				// navigate("/app/create-will");
-				toast.error("Error checking active will. Please try again.");
-				return;
-			}
-
-			// Handle both array and single object responses
-			const willData = Array.isArray(data) ? data[0] : data;
-			if (willData) {
-				setActiveWill(willData); // Set in context
-				setShowWillDialog(true);
-			} else {
-				// If no will data found, proceed to create new will
-				handleCreateWill();
-				navigate("/app/create-will");
-			}
-		} catch (error) {
-			console.error("Error checking active will:", error);
-			toast.error("Error checking active will. Please try again.");
-			// If there's an error, just proceed to create new will
-			// handleCreateWill();
-			// navigate("/app/create-will");
-		} finally {
-			setIsLoadingWill(false);
-		}
-	};
-
-	const handleCreateWill = async () => {
-		setShowWillDialog(false);
-		try {
-			// If there's an active will, delete it first
-			if (activeWill?.id) {
-				const { error: deleteError } = await apiClient(
-					`/wills/${activeWill.id}`,
-					{
-						method: "DELETE",
-					}
-				);
-
-				if (deleteError) {
-					console.error("Error deleting existing will:", deleteError);
-					toast.error("Failed to delete existing will. Please try again.");
-					return;
-				}
-
-				// Clear the active will from context
-				setActiveWill(null);
-			}
-
-			// Navigate to create will page
-			navigate("/app/create-will");
-		} catch (error) {
-			console.error("Error in will creation process:", error);
-			toast.error("Failed to create new will. Please try again.");
-		}
-	};
-
-	const handleContinueWill = () => {
-		setShowWillDialog(false);
+	const handleWillAction = () => {
 		if (activeWill?.id) {
-			// The will context is already populated with activeWill from checkActiveWill
-			// Just navigate to the edit page
-			navigate(`/app/create-will`);
+			// Continue existing will
+			navigate("/app/create-will");
+		} else {
+			// Create new will
+			navigate("/app/create-will");
 		}
 	};
 
@@ -294,13 +249,13 @@ export function DashboardLayout() {
 										e.preventDefault();
 										e.stopPropagation();
 										if (!e.currentTarget.getAttribute("data-state")) {
-											checkActiveWill();
+											handleWillAction();
 										}
 									}}
 									disabled={isLoadingWill}
 									data-create-button
-									aria-expanded={isLoadingWill ? undefined : showWillDialog}
-									aria-haspopup="dialog"
+									aria-expanded={false}
+									aria-haspopup="menu"
 									aria-controls="create-document-menu"
 								>
 									{isLoadingWill ? (
@@ -310,8 +265,17 @@ export function DashboardLayout() {
 										</>
 									) : (
 										<>
-											<Plus className="mr-2 h-4 w-4" />
-											Create Will
+											{activeWill ? (
+												<>
+													<Edit className="mr-2 h-4 w-4" />
+													Continue Will
+												</>
+											) : (
+												<>
+													<Plus className="mr-2 h-4 w-4" />
+													Create Will
+												</>
+											)}
 										</>
 									)}
 								</Button>
@@ -339,9 +303,9 @@ export function DashboardLayout() {
 													if (trigger instanceof HTMLElement) {
 														trigger.click();
 													}
-													// Then check will after a small delay
+													// Then handle will action after a small delay
 													setTimeout(() => {
-														checkActiveWill();
+														handleWillAction();
 													}, 0);
 												} else {
 													navigate(doc.href);
@@ -455,79 +419,6 @@ export function DashboardLayout() {
 				<main className="flex-1 p-6 overflow-auto">
 					<Outlet />
 				</main>
-
-				{/* Will Creation Dialog */}
-				<AlertDialog
-					open={showWillDialog}
-					onOpenChange={(open) => {
-						setShowWillDialog(open);
-						if (!open) {
-							// Reset focus to the Create button when dialog closes
-							const createButton = document.querySelector(
-								"[data-create-button]"
-							);
-							if (createButton instanceof HTMLElement) {
-								createButton.focus();
-							}
-						}
-					}}
-				>
-					<AlertDialogContent
-						className="bg-white"
-						onOpenAutoFocus={(e) => {
-							// Prevent default focus behavior
-							e.preventDefault();
-							// Focus the first action button
-							const dialogContent = e.currentTarget as HTMLElement;
-							const firstButton = dialogContent.querySelector(
-								"[data-first-button]"
-							);
-							if (firstButton instanceof HTMLElement) {
-								firstButton.focus();
-							}
-						}}
-					>
-						<button
-							onClick={() => setShowWillDialog(false)}
-							className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground"
-							aria-label="Close dialog"
-						>
-							<X className="h-4 w-4" />
-						</button>
-						<AlertDialogHeader>
-							<AlertDialogTitle>Active Will Found</AlertDialogTitle>
-							<AlertDialogDescription>
-								{activeWill ? (
-									<>
-										You already have an active will that was last updated on{" "}
-										{new Date(activeWill.lastUpdatedAt).toLocaleDateString()}.
-										Would you like to continue editing your existing will or
-										create a new one?
-									</>
-								) : (
-									"Would you like to create a new will?"
-								)}
-							</AlertDialogDescription>
-						</AlertDialogHeader>
-						<AlertDialogFooter>
-							{activeWill && (
-								<AlertDialogAction
-									data-first-button
-									onClick={handleContinueWill}
-									className="bg-light-green hover:bg-light-green/90 text-black cursor-pointer"
-								>
-									Continue Existing Will
-								</AlertDialogAction>
-							)}
-							<AlertDialogAction
-								onClick={handleCreateWill}
-								className="bg-primary hover:bg-primary/90 cursor-pointer"
-							>
-								Create New Will
-							</AlertDialogAction>
-						</AlertDialogFooter>
-					</AlertDialogContent>
-				</AlertDialog>
 			</div>
 		</div>
 	);
