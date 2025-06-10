@@ -6,7 +6,7 @@ export const API_CONFIG = {
 		auth: {
 			login: "/auth/login",
 			verifyOtp: "/one_time_password/{one_time_password_id}/verify",
-			resendOtp: "/one_time_password/{one_time_password_id}/resend",
+			resendOtp: "/one_time_password/{one_time_password_id}/recreate",
 			me: "/auth/me",
 			requestPasswordReset: "/password_reset_tokens",
 			resetPassword: "/users/update-password",

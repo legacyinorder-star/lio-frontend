@@ -143,7 +143,14 @@ export default function OTPVerificationPage() {
 				throw new Error(data.message || "Failed to resend OTP");
 			}
 
-			toast.success("OTP resent successfully!");
+			// Check if we received a new OTP ID in the response
+			if (data.otp_id) {
+				toast.success("New OTP code sent successfully!");
+				// Redirect to the same page with the new OTP ID
+				navigate(`/verify-otp?t=${data.otp_id}`);
+			} else {
+				toast.success("OTP resent successfully!");
+			}
 		} catch (error) {
 			console.error("Failed to resend OTP:", error);
 			toast.error(
