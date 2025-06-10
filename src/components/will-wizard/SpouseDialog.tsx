@@ -31,12 +31,14 @@ interface SpouseDialogProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	onSave: (data: SpouseData) => void;
+	initialData?: SpouseData;
 }
 
 export default function SpouseDialog({
 	open,
 	onOpenChange,
 	onSave,
+	initialData,
 }: SpouseDialogProps) {
 	const [isMounted, setIsMounted] = useState(false);
 
@@ -53,12 +55,16 @@ export default function SpouseDialog({
 		},
 	});
 
-	// Reset form when dialog opens
+	// Reset form when dialog opens and preload data if editing
 	useEffect(() => {
 		if (open) {
-			form.reset();
+			if (initialData) {
+				form.reset(initialData);
+			} else {
+				form.reset();
+			}
 		}
-	}, [open, form]);
+	}, [open, form, initialData]);
 
 	const handleSubmit = (values: SpouseData) => {
 		onSave(values);
@@ -71,11 +77,15 @@ export default function SpouseDialog({
 		return null;
 	}
 
+	const isEditing = !!initialData;
+
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent className="sm:max-w-[425px] bg-white">
 				<DialogHeader>
-					<DialogTitle>Add Partner Details</DialogTitle>
+					<DialogTitle>
+						{isEditing ? "Edit Partner Details" : "Add Partner Details"}
+					</DialogTitle>
 				</DialogHeader>
 				<Form {...form}>
 					<form
@@ -111,8 +121,11 @@ export default function SpouseDialog({
 							/>
 						</div>
 						<DialogFooter>
-							<Button type="submit" className="cursor-pointer">
-								Save
+							<Button
+								type="submit"
+								className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
+							>
+								{isEditing ? "Update" : "Save"}
 							</Button>
 						</DialogFooter>
 					</form>

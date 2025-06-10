@@ -11,8 +11,9 @@ import {
 } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import SpouseDialog, { SpouseData } from "../SpouseDialog";
-import { ArrowLeft, ArrowRight, Edit2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Edit2, User } from "lucide-react";
 
 const spouseSchema = z.object({
 	hasSpouse: z.boolean(),
@@ -91,25 +92,36 @@ export default function SpouseStep({
 					/>
 
 					{form.watch("hasSpouse") && spouseData && (
-						<div className="p-4 border rounded-lg space-y-4">
-							<div className="flex justify-between items-center">
-								<div>
-									<h3 className="font-medium">Spouse Information</h3>
-									<p className="text-sm text-muted-foreground">
-										{spouseData.firstName} {spouseData.lastName}
-									</p>
+						<Card className="border-2 border-green-100 bg-green-50/50">
+							<CardHeader className="pb-3">
+								<CardTitle className="flex items-center gap-2 text-lg">
+									<User className="h-5 w-5 text-green-600" />
+									Partner Information
+								</CardTitle>
+							</CardHeader>
+							<CardContent className="pt-0">
+								<div className="flex justify-between items-center">
+									<div className="space-y-1">
+										<p className="font-medium text-gray-900">
+											{spouseData.firstName} {spouseData.lastName}
+										</p>
+										<p className="text-sm text-muted-foreground">
+											Spouse or Civil Partner
+										</p>
+									</div>
+									<Button
+										type="button"
+										variant="outline"
+										size="sm"
+										className="cursor-pointer border-green-200 hover:bg-green-100"
+										onClick={() => setSpouseDialogOpen(true)}
+									>
+										<Edit2 className="h-4 w-4 mr-2" />
+										Edit
+									</Button>
 								</div>
-								<Button
-									type="button"
-									variant="outline"
-									size="sm"
-									onClick={() => setSpouseDialogOpen(true)}
-								>
-									<Edit2 className="h-4 w-4 mr-2" />
-									Edit
-								</Button>
-							</div>
-						</div>
+							</CardContent>
+						</Card>
 					)}
 
 					<div className="flex justify-between pt-4">
@@ -135,6 +147,7 @@ export default function SpouseStep({
 				open={spouseDialogOpen}
 				onOpenChange={setSpouseDialogOpen}
 				onSave={handleSpouseData}
+				initialData={spouseData}
 			/>
 		</div>
 	);
