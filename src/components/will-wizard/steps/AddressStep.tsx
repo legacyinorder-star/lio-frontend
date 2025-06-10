@@ -54,6 +54,7 @@ export default function AddressStep({
 				city?: string;
 				state?: string;
 				postCode?: string;
+				post_code?: string;
 				country?: string;
 			};
 			const ownerAny = activeWill.owner as WillPersonalData & {
@@ -61,6 +62,7 @@ export default function AddressStep({
 				city?: string;
 				state?: string;
 				postCode?: string;
+				post_code?: string;
 				country?: string;
 			};
 			const address =
@@ -72,7 +74,10 @@ export default function AddressStep({
 			const postCode =
 				activeWill.owner?.postCode ||
 				ownerAny?.postCode ||
-				activeWillAny.postCode;
+				activeWillAny.postCode ||
+				activeWill.owner?.post_code ||
+				ownerAny?.post_code ||
+				activeWillAny.post_code;
 			const country =
 				activeWill.owner?.country || ownerAny?.country || activeWillAny.country;
 
@@ -131,6 +136,7 @@ export default function AddressStep({
 				city?: string;
 				state?: string;
 				postCode?: string;
+				post_code?: string;
 				country?: string;
 			};
 			const ownerAny = activeWill.owner as WillPersonalData & {
@@ -138,6 +144,7 @@ export default function AddressStep({
 				city?: string;
 				state?: string;
 				postCode?: string;
+				post_code?: string;
 				country?: string;
 			};
 			const address =
@@ -149,7 +156,10 @@ export default function AddressStep({
 			const postCode =
 				activeWill.owner?.postCode ||
 				ownerAny?.postCode ||
-				activeWillAny.postCode;
+				activeWillAny.postCode ||
+				activeWill.owner?.post_code ||
+				ownerAny?.post_code ||
+				activeWillAny.post_code;
 			const country =
 				activeWill.owner?.country || ownerAny?.country || activeWillAny.country;
 
@@ -227,6 +237,7 @@ export default function AddressStep({
 						city: values.city,
 						state: values.state,
 						postCode: values.postCode,
+						post_code: values.postCode,
 						country: values.country,
 					},
 				});

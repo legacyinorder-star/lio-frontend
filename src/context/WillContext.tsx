@@ -18,6 +18,7 @@ export interface WillPersonalData {
 	city: string;
 	state: string;
 	postCode?: string;
+	post_code?: string;
 	country: string;
 }
 

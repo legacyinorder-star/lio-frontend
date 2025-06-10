@@ -216,7 +216,4 @@ export interface SpouseData {
 	firstName: string;
 	lastName: string;
 	relationship: string;
-	dateOfBirth: string;
-	phone: string;
-	address: Address;
 }
