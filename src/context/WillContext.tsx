@@ -73,6 +73,14 @@ export interface WillData {
 		lastName: string;
 		isMinor: boolean;
 	}>;
+	// Guardians data
+	guardians?: Array<{
+		id: string;
+		firstName: string;
+		lastName: string;
+		relationship: string;
+		isPrimary: boolean;
+	}>;
 	// Arrays
 	assets: WillAsset[];
 	beneficiaries: WillBeneficiary[];
