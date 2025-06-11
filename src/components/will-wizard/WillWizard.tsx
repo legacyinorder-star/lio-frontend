@@ -32,10 +32,9 @@ export default function WillWizard() {
 	const [formData, setFormData] = useState<WillFormData>({
 		firstName: "",
 		lastName: "",
-		dateOfBirth: "",
 		phone: "",
 		address: {
-			street: "",
+			address: "",
 			city: "",
 			state: "",
 			postCode: "",
@@ -111,8 +110,15 @@ export default function WillWizard() {
 				break;
 			case "hasChildren":
 				if (
-					formData.hasChildren &&
-					formData.children.some((child) => child.isMinor)
+					activeWill?.children &&
+					activeWill.children.length > 0 &&
+					activeWill.children.some((child) => {
+						// Handle both camelCase and snake_case property names
+						const childAny = child as typeof child & {
+							is_minor?: boolean;
+						};
+						return child.isMinor || childAny.is_minor || false;
+					})
 				) {
 					setCurrentQuestion("guardians");
 				} else {
@@ -158,12 +164,21 @@ export default function WillWizard() {
 				setCurrentQuestion("hasChildren");
 				break;
 			case "hasAssets":
-				setCurrentQuestion(
-					formData.hasChildren &&
-						formData.children.some((child) => child.isMinor)
-						? "guardians"
-						: "hasChildren"
-				);
+				if (
+					activeWill?.children &&
+					activeWill.children.length > 0 &&
+					activeWill.children.some((child) => {
+						// Handle both camelCase and snake_case property names
+						const childAny = child as typeof child & {
+							is_minor?: boolean;
+						};
+						return child.isMinor || childAny.is_minor || false;
+					})
+				) {
+					setCurrentQuestion("guardians");
+				} else {
+					setCurrentQuestion("hasChildren");
+				}
 				break;
 			case "gifts":
 				setCurrentQuestion("hasAssets");
@@ -217,8 +232,6 @@ export default function WillWizard() {
 				lastName: formData.spouse.lastName,
 				relationship: "Spouse",
 				type: "spouse",
-				email: "",
-				phone: formData.spouse.phone,
 				allocation: "100",
 			});
 		}
@@ -231,8 +244,6 @@ export default function WillWizard() {
 				lastName: child.lastName,
 				relationship: "Child",
 				type: "child",
-				email: "",
-				phone: "",
 				allocation: "100",
 			});
 		});
@@ -248,8 +259,7 @@ export default function WillWizard() {
 		return {
 			personal: {
 				fullName: `${formData.firstName} ${formData.lastName}`,
-				dateOfBirth: formData.dateOfBirth,
-				address: `${formData.address.street}, ${formData.address.city}, ${formData.address.state} ${formData.address.postCode}, ${formData.address.country}`,
+				address: `${formData.address.address}, ${formData.address.city}, ${formData.address.state} ${formData.address.postCode}, ${formData.address.country}`,
 				phone: formData.phone,
 				maritalStatus: formData.hasSpouse ? "Married" : "Single",
 			},
@@ -264,8 +274,6 @@ export default function WillWizard() {
 				id: ben.id,
 				fullName: `${ben.firstName} ${ben.lastName}`,
 				relationship: ben.relationship,
-				email: ben.email,
-				phone: ben.phone,
 				allocation: parseInt(ben.allocation),
 				requiresGuardian:
 					ben.type === "child" &&
@@ -280,7 +288,7 @@ export default function WillWizard() {
 				relationship: exec.relationship,
 				email: exec.email,
 				phone: exec.phone,
-				address: `${exec.address.street}, ${exec.address.city}, ${exec.address.state} ${exec.address.postCode}, ${exec.address.country}`,
+				address: `${exec.address.address}, ${exec.address.city}, ${exec.address.state} ${exec.address.postCode}, ${exec.address.country}`,
 				isPrimary: exec.isPrimary,
 				type: exec.type,
 				contactPerson: exec.contactPerson,
@@ -288,7 +296,7 @@ export default function WillWizard() {
 			})),
 			witnesses: formData.witnesses.map((wit) => ({
 				fullName: `${wit.firstName} ${wit.lastName}`,
-				address: `${wit.address.street}, ${wit.address.city}, ${wit.address.state} ${wit.address.postCode}, ${wit.address.country}`,
+				address: `${wit.address.address}, ${wit.address.city}, ${wit.address.state} ${wit.address.postCode}, ${wit.address.country}`,
 			})),
 			guardians: formData.guardians.map((guard) => ({
 				fullName: `${guard.firstName} ${guard.lastName}`,
@@ -360,7 +368,7 @@ export default function WillWizard() {
 					email: executor.email || "",
 					phone: executor.phone || "",
 					address: executor.address
-						? `${executor.address.street}, ${executor.address.city}, ${executor.address.state} ${executor.address.postCode}, ${executor.address.country}`
+						? `${executor.address.address}, ${executor.address.city}, ${executor.address.state} ${executor.address.postCode}, ${executor.address.country}`
 						: "",
 				};
 				return (
@@ -383,7 +391,7 @@ export default function WillWizard() {
 										email: data.email,
 										phone: data.phone,
 										address: {
-											street: (data.address?.split(",")[0] || "").trim(),
+											address: (data.address?.split(",")[0] || "").trim(),
 											city: (data.address?.split(",")[1] || "").trim(),
 											state: (data.address?.split(",")[2] || "")
 												.trim()

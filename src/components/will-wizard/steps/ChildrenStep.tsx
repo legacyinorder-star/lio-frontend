@@ -19,8 +19,11 @@ import { toast } from "sonner";
 import { useRelationships } from "@/hooks/useRelationships";
 
 interface ChildrenStepProps {
-	onNext: (data: { hasChildren: boolean; children: Child[] }) => void;
+	onNext: () => void;
 	onBack: () => void;
+	onUpdate: (
+		data: Partial<{ hasChildren: boolean; children: Child[] }>
+	) => void;
 	initialData?: {
 		hasChildren: boolean;
 		children: Child[];
@@ -40,6 +43,7 @@ interface PersonResponse {
 export default function ChildrenStep({
 	onNext,
 	onBack,
+	onUpdate,
 	initialData,
 }: ChildrenStepProps) {
 	const { activeWill, setActiveWill } = useWill();
@@ -96,10 +100,15 @@ export default function ChildrenStep({
 	};
 
 	const handleSubmit = () => {
-		onNext({
+		// Update the form data with current children state
+		onUpdate({
 			hasChildren,
 			children,
 		});
+
+		// Let the parent WillWizard handle navigation
+		// It will check if there are minor children and navigate to guardians or assets accordingly
+		onNext();
 	};
 
 	const handleChildFormChange =

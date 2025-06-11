@@ -91,8 +91,6 @@ export interface NewBeneficiary extends BasePerson {
 	type: BeneficiaryType;
 	organizationName?: string;
 	registrationNumber?: string;
-	email: string;
-	phone: string;
 	allocation: string;
 }
 
@@ -133,7 +131,6 @@ export interface FuneralInstructions {
 export interface WillFormData {
 	firstName: string;
 	lastName: string;
-	dateOfBirth: string;
 	phone: string;
 	address: Address;
 	hasSpouse: boolean;
