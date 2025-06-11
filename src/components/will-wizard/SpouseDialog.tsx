@@ -32,6 +32,7 @@ interface SpouseDialogProps {
 	onOpenChange: (open: boolean) => void;
 	onSave: (data: SpouseData) => void;
 	initialData?: SpouseData;
+	isSubmitting?: boolean;
 }
 
 export default function SpouseDialog({
@@ -39,6 +40,7 @@ export default function SpouseDialog({
 	onOpenChange,
 	onSave,
 	initialData,
+	isSubmitting = false,
 }: SpouseDialogProps) {
 	const [isMounted, setIsMounted] = useState(false);
 
@@ -80,7 +82,7 @@ export default function SpouseDialog({
 	const isEditing = !!initialData;
 
 	return (
-		<Dialog open={open} onOpenChange={onOpenChange}>
+		<Dialog open={open} onOpenChange={isSubmitting ? undefined : onOpenChange}>
 			<DialogContent className="sm:max-w-[425px] bg-white">
 				<DialogHeader>
 					<DialogTitle>
@@ -100,7 +102,12 @@ export default function SpouseDialog({
 									<FormItem>
 										<FormLabel>First Name</FormLabel>
 										<FormControl>
-											<Input placeholder="Jane" {...field} autoFocus />
+											<Input
+												placeholder="Jane"
+												{...field}
+												autoFocus
+												disabled={isSubmitting}
+											/>
 										</FormControl>
 										<FormMessage />
 									</FormItem>
@@ -113,7 +120,11 @@ export default function SpouseDialog({
 									<FormItem>
 										<FormLabel>Last Name</FormLabel>
 										<FormControl>
-											<Input placeholder="Doe" {...field} />
+											<Input
+												placeholder="Doe"
+												{...field}
+												disabled={isSubmitting}
+											/>
 										</FormControl>
 										<FormMessage />
 									</FormItem>
@@ -124,8 +135,16 @@ export default function SpouseDialog({
 							<Button
 								type="submit"
 								className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
+								disabled={isSubmitting}
 							>
-								{isEditing ? "Update" : "Save"}
+								{isSubmitting ? (
+									<>
+										<div className="h-4 w-4 animate-spin rounded-full border-t-2 border-b-2 border-black mr-2" />
+										Saving...
+									</>
+								) : (
+									<>{isEditing ? "Update" : "Save"}</>
+								)}
 							</Button>
 						</DialogFooter>
 					</form>

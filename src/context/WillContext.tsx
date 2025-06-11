@@ -60,6 +60,12 @@ export interface WillData {
 	userId: string;
 	// Owner data
 	owner: WillPersonalData;
+	// Spouse data
+	spouse?: {
+		id?: string;
+		firstName: string;
+		lastName: string;
+	};
 	// Arrays
 	assets: WillAsset[];
 	beneficiaries: WillBeneficiary[];

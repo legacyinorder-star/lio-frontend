@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -14,6 +14,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import SpouseDialog, { SpouseData } from "../SpouseDialog";
 import { ArrowLeft, ArrowRight, Edit2, User } from "lucide-react";
+import { useWill } from "@/context/WillContext";
+import { apiClient } from "@/utils/apiClient";
+import { toast } from "sonner";
+import { useRelationships } from "@/hooks/useRelationships";
 
 const spouseSchema = z.object({
 	hasSpouse: z.boolean(),
@@ -28,15 +32,32 @@ interface SpouseStepProps {
 	};
 }
 
+interface WillOwnerResponse {
+	id: string;
+}
+
+interface PersonResponse {
+	id: string;
+	will_id: string;
+	first_name: string;
+	last_name: string;
+	relationship_id: string;
+	is_minor: boolean;
+	created_at: string;
+}
+
 export default function SpouseStep({
 	onNext,
 	onBack,
 	initialData,
 }: SpouseStepProps) {
+	const { activeWill, setActiveWill } = useWill();
+	const { relationships } = useRelationships();
 	const [spouseDialogOpen, setSpouseDialogOpen] = useState(false);
 	const [spouseData, setSpouseData] = useState<SpouseData | undefined>(
 		initialData?.spouse
 	);
+	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	const form = useForm<z.infer<typeof spouseSchema>>({
 		resolver: zodResolver(spouseSchema),
@@ -45,6 +66,17 @@ export default function SpouseStep({
 		},
 	});
 
+	// Pre-fill spouse data from active will when component loads
+	useEffect(() => {
+		if (activeWill?.spouse) {
+			setSpouseData({
+				firstName: activeWill.spouse.firstName,
+				lastName: activeWill.spouse.lastName,
+			});
+			form.setValue("hasSpouse", true);
+		}
+	}, [activeWill, form]);
+
 	const handleSubmit = (values: z.infer<typeof spouseSchema>) => {
 		onNext({
 			hasSpouse: values.hasSpouse,
@@ -52,9 +84,97 @@ export default function SpouseStep({
 		});
 	};
 
-	const handleSpouseData = (data: SpouseData) => {
-		setSpouseData(data);
-		setSpouseDialogOpen(false);
+	const handleSpouseData = async (data: SpouseData) => {
+		setIsSubmitting(true);
+
+		try {
+			// Check if we have an active will with owner ID
+			if (!activeWill?.owner?.id) {
+				toast.error(
+					"Will owner information not found. Please start from the beginning."
+				);
+				return;
+			}
+
+			// Find the spouse relationship ID
+			const spouseRelationship = relationships.find(
+				(rel) => rel.name.toLowerCase() === "spouse"
+			);
+
+			if (!spouseRelationship) {
+				toast.error("Spouse relationship type not found. Please try again.");
+				return;
+			}
+
+			// Step 1: Update marital status to "married"
+			const maritalStatusData = {
+				marital_status: "married",
+			};
+
+			const { error: maritalError } = await apiClient<WillOwnerResponse>(
+				`/will_owner/${activeWill.owner.id}`,
+				{
+					method: "PATCH",
+					body: JSON.stringify(maritalStatusData),
+				}
+			);
+
+			if (maritalError) {
+				console.error("Error updating marital status:", maritalError);
+				toast.error("Failed to update marital status. Please try again.");
+				return;
+			}
+
+			// Step 2: Create spouse record
+			const spouseData = {
+				first_name: data.firstName,
+				last_name: data.lastName,
+				relationship_id: spouseRelationship.id,
+				will_id: activeWill.id,
+			};
+
+			const { data: personResponse, error: personError } =
+				await apiClient<PersonResponse>("/people", {
+					method: "POST",
+					body: JSON.stringify(spouseData),
+				});
+
+			if (personError) {
+				console.error("Error creating spouse record:", personError);
+				toast.error("Failed to save spouse information. Please try again.");
+				return;
+			}
+
+			// Update active will with marital status and spouse information
+			if (activeWill) {
+				setActiveWill({
+					...activeWill,
+					owner: {
+						...activeWill.owner,
+						maritalStatus: "married",
+					},
+					spouse: {
+						id: personResponse?.id,
+						firstName: data.firstName,
+						lastName: data.lastName,
+					},
+				});
+			}
+
+			// Update local state
+			setSpouseData(data);
+			setSpouseDialogOpen(false);
+
+			// Show success message
+			toast.success("Spouse information saved successfully");
+		} catch (error) {
+			console.error("Error in spouse data submission:", error);
+			toast.error(
+				"An error occurred while saving spouse information. Please try again."
+			);
+		} finally {
+			setIsSubmitting(false);
+		}
 	};
 
 	return (
@@ -115,6 +235,7 @@ export default function SpouseStep({
 										size="sm"
 										className="cursor-pointer border-green-200 hover:bg-green-100"
 										onClick={() => setSpouseDialogOpen(true)}
+										disabled={isSubmitting}
 									>
 										<Edit2 className="h-4 w-4 mr-2" />
 										Edit
@@ -130,14 +251,25 @@ export default function SpouseStep({
 							variant="outline"
 							onClick={onBack}
 							className="cursor-pointer"
+							disabled={isSubmitting}
 						>
 							<ArrowLeft className="mr-2 h-4 w-4" /> Back
 						</Button>
 						<Button
 							type="submit"
 							className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
+							disabled={isSubmitting}
 						>
-							Next <ArrowRight className="ml-2 h-4 w-4" />
+							{isSubmitting ? (
+								<>
+									<div className="h-4 w-4 animate-spin rounded-full border-t-2 border-b-2 border-black mr-2" />
+									Saving...
+								</>
+							) : (
+								<>
+									Next <ArrowRight className="ml-2 h-4 w-4" />
+								</>
+							)}
 						</Button>
 					</div>
 				</form>
@@ -148,6 +280,7 @@ export default function SpouseStep({
 				onOpenChange={setSpouseDialogOpen}
 				onSave={handleSpouseData}
 				initialData={spouseData}
+				isSubmitting={isSubmitting}
 			/>
 		</div>
 	);
