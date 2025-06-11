@@ -74,8 +74,11 @@ export default function SpouseStep({
 				lastName: activeWill.spouse.lastName,
 			});
 			form.setValue("hasSpouse", true);
+		} else if (initialData?.spouse) {
+			setSpouseData(initialData.spouse);
+			form.setValue("hasSpouse", initialData.hasSpouse);
 		}
-	}, [activeWill, form]);
+	}, [activeWill, initialData, form]);
 
 	const handleSubmit = (values: z.infer<typeof spouseSchema>) => {
 		onNext({
@@ -106,59 +109,94 @@ export default function SpouseStep({
 				return;
 			}
 
-			// Step 1: Update marital status to "married"
-			const maritalStatusData = {
-				marital_status: "married",
-			};
+			// Check if we're editing an existing spouse or creating a new one
+			const isEditing = !!activeWill.spouse?.id;
 
-			const { error: maritalError } = await apiClient<WillOwnerResponse>(
-				`/will_owner/${activeWill.owner.id}`,
-				{
-					method: "PATCH",
-					body: JSON.stringify(maritalStatusData),
+			if (isEditing && activeWill.spouse) {
+				// Update existing spouse record
+				const updateData = {
+					first_name: data.firstName,
+					last_name: data.lastName,
+				};
+
+				const { error: updateError } = await apiClient<PersonResponse>(
+					`/people/${activeWill.spouse.id}`,
+					{
+						method: "PATCH",
+						body: JSON.stringify(updateData),
+					}
+				);
+
+				if (updateError) {
+					console.error("Error updating spouse record:", updateError);
+					toast.error("Failed to update spouse information. Please try again.");
+					return;
 				}
-			);
 
-			if (maritalError) {
-				console.error("Error updating marital status:", maritalError);
-				toast.error("Failed to update marital status. Please try again.");
-				return;
-			}
-
-			// Step 2: Create spouse record
-			const spouseData = {
-				first_name: data.firstName,
-				last_name: data.lastName,
-				relationship_id: spouseRelationship.id,
-				will_id: activeWill.id,
-			};
-
-			const { data: personResponse, error: personError } =
-				await apiClient<PersonResponse>("/people", {
-					method: "POST",
-					body: JSON.stringify(spouseData),
-				});
-
-			if (personError) {
-				console.error("Error creating spouse record:", personError);
-				toast.error("Failed to save spouse information. Please try again.");
-				return;
-			}
-
-			// Update active will with marital status and spouse information
-			if (activeWill) {
+				// Update spouse information in active will
 				setActiveWill({
 					...activeWill,
-					owner: {
-						...activeWill.owner,
-						maritalStatus: "married",
-					},
 					spouse: {
-						id: personResponse?.id,
+						...activeWill.spouse,
 						firstName: data.firstName,
 						lastName: data.lastName,
 					},
 				});
+			} else {
+				// Step 1: Update marital status to "married" (only for new spouses)
+				const maritalStatusData = {
+					marital_status: "married",
+				};
+
+				const { error: maritalError } = await apiClient<WillOwnerResponse>(
+					`/will_owner/${activeWill.owner.id}`,
+					{
+						method: "PATCH",
+						body: JSON.stringify(maritalStatusData),
+					}
+				);
+
+				if (maritalError) {
+					console.error("Error updating marital status:", maritalError);
+					toast.error("Failed to update marital status. Please try again.");
+					return;
+				}
+
+				// Step 2: Create new spouse record
+				const spouseData = {
+					first_name: data.firstName,
+					last_name: data.lastName,
+					relationship_id: spouseRelationship.id,
+					will_id: activeWill.id,
+				};
+
+				const { data: personResponse, error: personError } =
+					await apiClient<PersonResponse>("/people", {
+						method: "POST",
+						body: JSON.stringify(spouseData),
+					});
+
+				if (personError) {
+					console.error("Error creating spouse record:", personError);
+					toast.error("Failed to save spouse information. Please try again.");
+					return;
+				}
+
+				// Update active will with marital status and new spouse information
+				if (activeWill) {
+					setActiveWill({
+						...activeWill,
+						owner: {
+							...activeWill.owner,
+							maritalStatus: "married",
+						},
+						spouse: {
+							id: personResponse?.id,
+							firstName: data.firstName,
+							lastName: data.lastName,
+						},
+					});
+				}
 			}
 
 			// Update local state
@@ -166,7 +204,11 @@ export default function SpouseStep({
 			setSpouseDialogOpen(false);
 
 			// Show success message
-			toast.success("Spouse information saved successfully");
+			toast.success(
+				isEditing
+					? "Spouse information updated successfully"
+					: "Spouse information saved successfully"
+			);
 		} catch (error) {
 			console.error("Error in spouse data submission:", error);
 			toast.error(
