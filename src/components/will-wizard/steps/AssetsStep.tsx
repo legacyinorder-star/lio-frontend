@@ -5,23 +5,31 @@ import * as z from "zod";
 import { Form } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight, Edit2, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Edit2, Plus, Trash2, X } from "lucide-react";
 import {
 	Dialog,
 	DialogContent,
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
+	DialogFooter,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
 import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
-import { Asset, AssetType, NewBeneficiary } from "../types/will.types";
+	Home,
+	Building2,
+	Car,
+	TrendingUp,
+	Briefcase,
+	Package,
+} from "lucide-react";
+import { Asset, AssetType } from "../types/will.types";
+import { apiClient } from "@/utils/apiClient";
+import { toast } from "sonner";
+import { useWill } from "@/context/WillContext";
+import { useRelationships } from "@/hooks/useRelationships";
+import { getFormattedRelationshipNameById } from "@/utils/relationships";
 
 const assetSchema = z.object({
 	type: z.string().min(1, "Asset type is required"),
@@ -36,37 +44,172 @@ const assetSchema = z.object({
 	),
 });
 
+// Asset type options with icons
+const ASSET_TYPES = [
+	{
+		value: "Property" as AssetType,
+		label: "Property",
+		icon: Home,
+		description: "Primary residence or vacation home",
+	},
+	{
+		value: "Investment Property" as AssetType,
+		label: "Investment Property",
+		icon: Building2,
+		description: "Rental or commercial property",
+	},
+	{
+		value: "Vehicle" as AssetType,
+		label: "Vehicle",
+		icon: Car,
+		description: "Cars, boats, or other vehicles",
+	},
+	{
+		value: "Shares & Stocks" as AssetType,
+		label: "Shares & Stocks",
+		icon: TrendingUp,
+		description: "Investment portfolio or stock holdings",
+	},
+	{
+		value: "Business Interest" as AssetType,
+		label: "Business Interest",
+		icon: Briefcase,
+		description: "Business ownership or partnership",
+	},
+	{
+		value: "Other Assets" as AssetType,
+		label: "Other Assets",
+		icon: Package,
+		description: "Other valuable assets",
+	},
+];
+
+// Asset type pill component
+const AssetTypePill = ({
+	type,
+	selected,
+	onClick,
+	className = "",
+}: {
+	type: (typeof ASSET_TYPES)[0];
+	selected?: boolean;
+	onClick?: () => void;
+	className?: string;
+}) => {
+	const Icon = type.icon;
+	return (
+		<button
+			type="button"
+			onClick={onClick}
+			className={`
+				flex items-center space-x-2 px-4 py-2 rounded-full border h-10
+				whitespace-nowrap overflow-hidden
+				${
+					selected
+						? "bg-light-green text-black border-light-green"
+						: "bg-background hover:bg-muted border-input"
+				}
+				${onClick ? "cursor-pointer" : ""}
+				${className}
+			`}
+		>
+			<Icon className="h-4 w-4 flex-shrink-0" />
+			<span className="truncate">{type.label}</span>
+		</button>
+	);
+};
+
+// Asset type selector component
+const AssetTypeSelector = ({
+	selectedType,
+	onSelect,
+	className = "",
+}: {
+	selectedType: AssetType;
+	onSelect: (type: AssetType) => void;
+	className?: string;
+}) => {
+	return (
+		<div className={`space-y-4 ${className}`}>
+			<Label>Asset Type</Label>
+			<div className="grid grid-cols-2 md:grid-cols-3 gap-2 min-w-0">
+				{ASSET_TYPES.map((type) => (
+					<AssetTypePill
+						key={type.value}
+						type={type}
+						selected={selectedType === type.value}
+						onClick={() => onSelect(type.value)}
+					/>
+				))}
+			</div>
+			<div className="text-sm text-muted-foreground">
+				{ASSET_TYPES.find((t) => t.value === selectedType)?.description}
+			</div>
+		</div>
+	);
+};
+
 interface AssetsStepProps {
 	onNext: (data: { assets: Asset[] }) => void;
 	onBack: () => void;
 	initialData?: {
 		assets: Asset[];
 	};
-	beneficiaries: NewBeneficiary[];
+}
+
+interface BeneficiaryResponse {
+	charities: Array<{
+		id: string;
+		name: string;
+		registration_number?: string;
+	}>;
+	people: Array<{
+		id: string;
+		first_name: string;
+		last_name: string;
+		relationship: string;
+		is_minor: boolean;
+	}>;
 }
 
 export default function AssetsStep({
 	onNext,
 	onBack,
 	initialData,
-	beneficiaries,
 }: AssetsStepProps) {
 	const [assets, setAssets] = useState<Asset[]>(initialData?.assets || []);
 	const [assetDialogOpen, setAssetDialogOpen] = useState(false);
 	const [editingAsset, setEditingAsset] = useState<Asset | null>(null);
+	const [beneficiaryDialogOpen, setBeneficiaryDialogOpen] = useState(false);
+	const [isLoadingBeneficiaries, setIsLoadingBeneficiaries] = useState(false);
 
 	const [assetForm, setAssetForm] = useState<Omit<Asset, "id">>({
-		type: "real_estate" as AssetType,
+		type: "Property" as AssetType,
 		description: "",
 		value: "",
 		distributionType: "equal",
 		beneficiaries: [],
 	});
 
+	// Enhanced beneficiaries state for API integration
+	const [enhancedBeneficiaries, setEnhancedBeneficiaries] = useState<
+		Array<{
+			id: string;
+			fullName: string;
+			relationship: string;
+			isMinor?: boolean;
+			type: "person" | "charity";
+			registrationNumber?: string;
+		}>
+	>([]);
+
+	const { activeWill } = useWill();
+	const { relationships } = useRelationships();
+
 	const form = useForm<z.infer<typeof assetSchema>>({
 		resolver: zodResolver(assetSchema),
 		defaultValues: {
-			type: "real_estate",
+			type: "Property",
 			description: "",
 			value: "",
 			distributionType: "equal",
@@ -80,53 +223,66 @@ export default function AssetsStep({
 
 	const handleAssetFormChange =
 		(field: keyof Omit<Asset, "id">) =>
-		(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+		(
+			e: React.ChangeEvent<
+				HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+			>
+		) => {
 			setAssetForm((prev) => ({
 				...prev,
-				[field]:
-					field === "type" ? (e.target.value as AssetType) : e.target.value,
+				[field]: e.target.value,
 			}));
 		};
 
-	const handleDistributionTypeChange = (value: "equal" | "percentage") => {
+	const handleDistributionTypeChange = (type: "equal" | "percentage") => {
 		setAssetForm((prev) => ({
 			...prev,
-			distributionType: value,
+			distributionType: type,
 			beneficiaries: prev.beneficiaries.map((b) => ({
 				...b,
-				percentage: value === "equal" ? undefined : b.percentage,
+				percentage: type === "equal" ? undefined : 0,
 			})),
 		}));
 	};
 
-	const handleBeneficiaryChange = (
+	const handleBeneficiaryPercentageChange = (
 		beneficiaryId: string,
-		percentage?: number
+		percentage: number
 	) => {
-		setAssetForm((prev) => {
-			const existingIndex = prev.beneficiaries.findIndex(
-				(b) => b.id === beneficiaryId
-			);
-			const newBeneficiaries = [...prev.beneficiaries];
+		setAssetForm((prev) => ({
+			...prev,
+			beneficiaries: prev.beneficiaries.map((b) =>
+				b.id === beneficiaryId ? { ...b, percentage } : b
+			),
+		}));
+	};
 
-			if (existingIndex >= 0) {
-				if (percentage === undefined) {
-					newBeneficiaries.splice(existingIndex, 1);
-				} else {
-					newBeneficiaries[existingIndex] = { id: beneficiaryId, percentage };
-				}
-			} else {
-				newBeneficiaries.push({ id: beneficiaryId, percentage });
-			}
+	const handleAddBeneficiary = () => {
+		setBeneficiaryDialogOpen(true);
+	};
 
-			return {
-				...prev,
-				beneficiaries: newBeneficiaries,
-			};
-		});
+	const handleRemoveBeneficiary = (beneficiaryId: string) => {
+		setAssetForm((prev) => ({
+			...prev,
+			beneficiaries: prev.beneficiaries.filter((b) => b.id !== beneficiaryId),
+		}));
 	};
 
 	const handleSaveAsset = () => {
+		if (
+			!assetForm.description ||
+			assetForm.beneficiaries.length === 0 ||
+			(assetForm.distributionType === "percentage" &&
+				Math.abs(
+					assetForm.beneficiaries.reduce(
+						(sum, b) => sum + (b.percentage || 0),
+						0
+					) - 100
+				) > 0.01)
+		) {
+			return;
+		}
+
 		if (editingAsset) {
 			setAssets((prev) =>
 				prev.map((asset) =>
@@ -136,26 +292,22 @@ export default function AssetsStep({
 		} else {
 			setAssets((prev) => [...prev, { ...assetForm, id: crypto.randomUUID() }]);
 		}
+
+		// Reset form and close dialog
 		setAssetForm({
-			type: "real_estate" as AssetType,
+			type: "Property" as AssetType,
 			description: "",
-			value: "",
 			distributionType: "equal",
 			beneficiaries: [],
+			value: "",
 		});
 		setEditingAsset(null);
 		setAssetDialogOpen(false);
 	};
 
 	const handleEditAsset = (asset: Asset) => {
+		setAssetForm(asset);
 		setEditingAsset(asset);
-		setAssetForm({
-			type: asset.type,
-			description: asset.description,
-			value: asset.value,
-			distributionType: asset.distributionType,
-			beneficiaries: asset.beneficiaries,
-		});
 		setAssetDialogOpen(true);
 	};
 
@@ -163,31 +315,105 @@ export default function AssetsStep({
 		setAssets((prev) => prev.filter((asset) => asset.id !== assetId));
 	};
 
+	// Helper function to get beneficiary name
+	const getBeneficiaryName = (beneficiaryId: string) => {
+		const beneficiary = enhancedBeneficiaries.find(
+			(b) => b.id === beneficiaryId
+		);
+		return beneficiary ? beneficiary.fullName : "";
+	};
+
+	// Fetch beneficiaries when opening asset dialog
+	const fetchBeneficiaries = async () => {
+		if (!activeWill?.id) {
+			toast.error("No active will found");
+			return;
+		}
+
+		setIsLoadingBeneficiaries(true);
+		try {
+			const { data, error } = await apiClient<BeneficiaryResponse>(
+				`/beneficiaries/${activeWill.id}`,
+				{
+					method: "GET",
+				}
+			);
+
+			if (error) {
+				toast.error("Failed to fetch beneficiaries");
+				return;
+			}
+
+			if (data) {
+				const combinedBeneficiaries = [
+					...data.charities.map((charity) => ({
+						id: charity.id,
+						fullName: charity.name,
+						relationship: "Charity",
+						type: "charity" as const,
+						registrationNumber: charity.registration_number,
+					})),
+					...data.people.map((person) => ({
+						id: person.id,
+						fullName: `${person.first_name} ${person.last_name}`,
+						relationship: person.relationship,
+						isMinor: person.is_minor,
+						type: "person" as const,
+					})),
+				];
+				setEnhancedBeneficiaries(combinedBeneficiaries);
+
+				// Pre-populate beneficiaries in asset form
+				setAssetForm((prev) => ({
+					...prev,
+					beneficiaries: combinedBeneficiaries.map((b) => ({
+						id: b.id,
+						percentage: prev.distributionType === "percentage" ? 0 : undefined,
+					})),
+				}));
+			}
+		} catch (err) {
+			toast.error("Failed to fetch beneficiaries");
+		} finally {
+			setIsLoadingBeneficiaries(false);
+		}
+	};
+
 	return (
 		<div className="space-y-4">
-			<div className="text-2xl font-semibold">Your Assets</div>
+			<div className="text-2xl font-semibold">
+				Share your assets among your loved ones
+			</div>
 			<div className="text-muted-foreground">
-				List all your assets and specify how they should be distributed.
+				Add your assets and specify how you'd like them to be distributed among
+				your beneficiaries.
+			</div>
+			<div className="text-muted-foreground">
+				Do not include cash gifts in this section.
 			</div>
 
 			<Form {...form}>
 				<form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
 					<div className="space-y-4">
 						<div className="flex justify-between items-center">
-							<h3 className="text-lg font-medium">Assets</h3>
+							<h3 className="text-lg font-medium">Your Assets</h3>
 							<Dialog open={assetDialogOpen} onOpenChange={setAssetDialogOpen}>
 								<DialogTrigger asChild>
 									<Button
 										variant="outline"
-										onClick={() => {
+										onClick={async () => {
+											// Reset asset form
 											setAssetForm({
-												type: "real_estate" as AssetType,
+												type: "Property" as AssetType,
 												description: "",
-												value: "",
 												distributionType: "equal",
 												beneficiaries: [],
+												value: "",
 											});
 											setEditingAsset(null);
+
+											// Fetch beneficiaries before opening dialog
+											await fetchBeneficiaries();
 										}}
 										className="cursor-pointer"
 									>
@@ -195,218 +421,257 @@ export default function AssetsStep({
 										Add Asset
 									</Button>
 								</DialogTrigger>
-								<DialogContent className="bg-white">
+								<DialogContent className="bg-white max-w-2xl">
 									<DialogHeader>
 										<DialogTitle>
 											{editingAsset ? "Edit Asset" : "Add Asset"}
 										</DialogTitle>
 									</DialogHeader>
 									<div className="space-y-4 py-4">
+										<AssetTypeSelector
+											selectedType={assetForm.type}
+											onSelect={(type: AssetType) => {
+												setAssetForm((prev) => ({
+													...prev,
+													type,
+												}));
+											}}
+											className="mb-4"
+										/>
 										<div className="space-y-2">
-											<Label>Asset Type</Label>
-											<Select
-												value={assetForm.type}
-												onValueChange={(value) =>
-													setAssetForm((prev) => ({
-														...prev,
-														type: value as AssetType,
-													}))
-												}
-											>
-												<SelectTrigger>
-													<SelectValue placeholder="Select asset type" />
-												</SelectTrigger>
-												<SelectContent>
-													<SelectItem value="real_estate">
-														Real Estate
-													</SelectItem>
-													<SelectItem value="vehicle">Vehicle</SelectItem>
-													<SelectItem value="bank_account">
-														Bank Account
-													</SelectItem>
-													<SelectItem value="investment">Investment</SelectItem>
-													<SelectItem value="jewelry">Jewelry</SelectItem>
-													<SelectItem value="art">Art</SelectItem>
-													<SelectItem value="other">Other</SelectItem>
-												</SelectContent>
-											</Select>
-										</div>
-										<div className="space-y-2">
-											<Label>Description</Label>
-											<Input
+											<Label htmlFor="assetDescription">Description</Label>
+											<textarea
+												id="assetDescription"
 												value={assetForm.description}
 												onChange={handleAssetFormChange("description")}
-												placeholder="Describe the asset"
+												placeholder="Describe the asset, its location and any details that may be relevant to its distribution"
+												className="w-full min-h-[100px] p-2 border rounded-md"
 											/>
 										</div>
 										<div className="space-y-2">
-											<Label>Estimated Value</Label>
-											<Input
-												type="text"
-												value={assetForm.value}
-												onChange={handleAssetFormChange("value")}
-												placeholder="$0.00"
-											/>
-										</div>
-										<div className="space-y-2">
-											<Label>Distribution Type</Label>
-											<Select
-												value={assetForm.distributionType}
-												onValueChange={(value: "equal" | "percentage") =>
-													handleDistributionTypeChange(value)
-												}
-											>
-												<SelectTrigger>
-													<SelectValue placeholder="Select distribution type" />
-												</SelectTrigger>
-												<SelectContent>
-													<SelectItem value="equal">
-														Equal Distribution
-													</SelectItem>
-													<SelectItem value="percentage">
-														Percentage Distribution
-													</SelectItem>
-												</SelectContent>
-											</Select>
-										</div>
-										<div className="space-y-2">
-											<Label>Beneficiaries</Label>
-											<div className="space-y-2">
-												{beneficiaries.map((beneficiary) => {
-													const isSelected = assetForm.beneficiaries.some(
-														(b) => b.id === beneficiary.id
-													);
-													const percentage = assetForm.beneficiaries.find(
-														(b) => b.id === beneficiary.id
-													)?.percentage;
-
-													return (
-														<div
-															key={beneficiary.id}
-															className="flex items-center space-x-2 p-2 border rounded"
-														>
-															<input
-																type="checkbox"
-																checked={isSelected}
-																onChange={(e) =>
-																	handleBeneficiaryChange(
-																		beneficiary.id,
-																		e.target.checked
-																			? assetForm.distributionType ===
-																			  "percentage"
-																				? 0
-																				: undefined
-																			: undefined
-																	)
-																}
-																className="h-4 w-4"
-															/>
-															<span className="flex-1">{`${beneficiary.firstName} ${beneficiary.lastName}`}</span>
-															{isSelected &&
-																assetForm.distributionType === "percentage" && (
-																	<Input
-																		type="number"
-																		min="0"
-																		max="100"
-																		value={percentage || 0}
-																		onChange={(e) =>
-																			handleBeneficiaryChange(
-																				beneficiary.id,
-																				parseInt(e.target.value) || 0
-																			)
-																		}
-																		className="w-20"
-																	/>
-																)}
-														</div>
-													);
-												})}
+											<Label>Distribution Method</Label>
+											<div className="flex space-x-4">
+												<Button
+													variant={
+														assetForm.distributionType === "equal"
+															? "default"
+															: "outline"
+													}
+													onClick={() => handleDistributionTypeChange("equal")}
+													className={`cursor-pointer ${
+														assetForm.distributionType === "equal"
+															? "bg-light-green text-black"
+															: ""
+													}`}
+												>
+													Equal Distribution
+												</Button>
+												<Button
+													variant={
+														assetForm.distributionType === "percentage"
+															? "default"
+															: "outline"
+													}
+													onClick={() =>
+														handleDistributionTypeChange("percentage")
+													}
+													className={`cursor-pointer ${
+														assetForm.distributionType === "percentage"
+															? "bg-light-green text-black"
+															: ""
+													}`}
+												>
+													Percentage Distribution
+												</Button>
 											</div>
 										</div>
-										<div className="flex justify-end space-x-2">
-											<Button
-												type="button"
-												variant="outline"
-												onClick={() => setAssetDialogOpen(false)}
-											>
-												Cancel
-											</Button>
-											<Button
-												type="button"
-												onClick={handleSaveAsset}
-												className="bg-light-green hover:bg-light-green/90 text-black"
-											>
-												Save
-											</Button>
+										<div className="space-y-2">
+											<div className="flex justify-between items-center">
+												<Label>Beneficiaries</Label>
+												<Button
+													variant="outline"
+													size="sm"
+													onClick={handleAddBeneficiary}
+													className="cursor-pointer"
+												>
+													<Plus className="mr-2 h-4 w-4" />
+													Add Beneficiary
+												</Button>
+											</div>
+											{assetForm.beneficiaries.length === 0 ? (
+												<p className="text-sm text-muted-foreground">
+													No beneficiaries selected
+												</p>
+											) : (
+												<div className="space-y-2">
+													<p className="text-sm text-muted-foreground mb-2">
+														All available beneficiaries have been pre-selected.
+														You can adjust their percentages or remove any as
+														needed.
+													</p>
+													{assetForm.beneficiaries.map((beneficiary) => {
+														const beneficiaryDetails =
+															enhancedBeneficiaries.find(
+																(b) => b.id === beneficiary.id
+															);
+														if (!beneficiaryDetails) return null;
+
+														return (
+															<div
+																key={beneficiary.id}
+																className="flex items-center justify-between p-2 border rounded-md"
+															>
+																<div>
+																	<span className="font-medium">
+																		{beneficiaryDetails.fullName}
+																	</span>
+																	<span className="text-sm text-muted-foreground ml-2">
+																		(
+																		{getFormattedRelationshipNameById(
+																			relationships,
+																			beneficiaryDetails.relationship
+																		)}
+																		)
+																		{beneficiaryDetails.type === "charity" &&
+																			beneficiaryDetails.registrationNumber &&
+																			` - Reg: ${beneficiaryDetails.registrationNumber}`}
+																	</span>
+																	{assetForm.distributionType ===
+																		"percentage" && (
+																		<span className="text-sm text-muted-foreground ml-2">
+																			({beneficiary.percentage}%)
+																		</span>
+																	)}
+																</div>
+																<div className="flex items-center space-x-2">
+																	{assetForm.distributionType ===
+																		"percentage" && (
+																		<Input
+																			type="number"
+																			min="0"
+																			max="100"
+																			value={beneficiary.percentage || 0}
+																			onChange={(e) => {
+																				const value = Math.min(
+																					100,
+																					Math.max(0, Number(e.target.value))
+																				);
+																				handleBeneficiaryPercentageChange(
+																					beneficiary.id,
+																					value
+																				);
+																			}}
+																			className="w-20"
+																		/>
+																	)}
+																	<Button
+																		variant="ghost"
+																		size="icon"
+																		onClick={() =>
+																			handleRemoveBeneficiary(beneficiary.id)
+																		}
+																		className="cursor-pointer"
+																	>
+																		<X className="h-4 w-4" />
+																	</Button>
+																</div>
+															</div>
+														);
+													})}
+												</div>
+											)}
 										</div>
 									</div>
+									<DialogFooter>
+										<Button
+											onClick={handleSaveAsset}
+											disabled={
+												!assetForm.description ||
+												assetForm.beneficiaries.length === 0 ||
+												(assetForm.distributionType === "percentage" &&
+													Math.abs(
+														assetForm.beneficiaries.reduce(
+															(sum, b) => sum + (b.percentage || 0),
+															0
+														) - 100
+													) > 0.01)
+											}
+											className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
+										>
+											{editingAsset ? "Save Changes" : "Add Asset"}
+										</Button>
+									</DialogFooter>
 								</DialogContent>
 							</Dialog>
 						</div>
 
-						{assets.length > 0 && (
-							<div className="space-y-2">
+						{assets.length === 0 ? (
+							<p className="text-muted-foreground text-center py-4">
+								No assets added yet. Click "Add Asset" to add your assets.
+							</p>
+						) : (
+							<div className="space-y-4">
 								{assets.map((asset) => (
-									<div
-										key={asset.id}
-										className="flex justify-between items-start p-4 border rounded-lg"
-									>
-										<div className="space-y-1">
-											<h4 className="font-medium capitalize">
-												{asset.type.replace("_", " ")}
-											</h4>
-											<p className="text-sm text-muted-foreground">
-												{asset.description}
-											</p>
-											<p className="text-sm">Value: {asset.value}</p>
-											<div className="text-sm">
-												<span className="font-medium">Distribution: </span>
-												{asset.distributionType === "equal"
-													? "Equal"
-													: "Percentage-based"}
+									<Card key={asset.id}>
+										<CardContent className="p-4">
+											<div className="flex justify-between items-start">
+												<div className="space-y-1">
+													<div className="flex items-center space-x-2">
+														{(() => {
+															const assetType = ASSET_TYPES.find(
+																(t) => t.value === asset.type
+															);
+															if (!assetType) return null;
+															const Icon = assetType.icon;
+															return (
+																<>
+																	<Icon className="h-4 w-4 text-muted-foreground" />
+																	<p className="font-medium">{asset.type}</p>
+																</>
+															);
+														})()}
+													</div>
+													<p className="text-sm">{asset.description}</p>
+													<div className="mt-2">
+														<p className="text-sm font-medium">Distribution:</p>
+														<ul className="text-sm text-muted-foreground list-disc list-inside">
+															{asset.beneficiaries.map((beneficiary) => {
+																const name = getBeneficiaryName(beneficiary.id);
+
+																if (!name) return null;
+
+																return (
+																	<li key={beneficiary.id}>
+																		{name}
+																		{asset.distributionType === "percentage" &&
+																			` (${beneficiary.percentage}%)`}
+																	</li>
+																);
+															})}
+														</ul>
+													</div>
+												</div>
+												<div className="flex space-x-2">
+													<Button
+														variant="ghost"
+														size="icon"
+														onClick={() => handleEditAsset(asset)}
+														className="cursor-pointer"
+													>
+														<Edit2 className="h-4 w-4" />
+													</Button>
+													<Button
+														variant="ghost"
+														size="icon"
+														onClick={() => handleRemoveAsset(asset.id)}
+														className="cursor-pointer"
+													>
+														<Trash2 className="h-4 w-4" />
+													</Button>
+												</div>
 											</div>
-											<div className="text-sm">
-												<span className="font-medium">Beneficiaries: </span>
-												{asset.beneficiaries
-													.map((b) => {
-														const beneficiary = beneficiaries.find(
-															(ben) => ben.id === b.id
-														);
-														return beneficiary
-															? `${beneficiary.firstName} ${
-																	beneficiary.lastName
-															  }${
-																	b.percentage !== undefined
-																		? ` (${b.percentage}%)`
-																		: ""
-															  }`
-															: "";
-													})
-													.filter(Boolean)
-													.join(", ")}
-											</div>
-										</div>
-										<div className="flex space-x-2">
-											<Button
-												type="button"
-												variant="outline"
-												size="sm"
-												onClick={() => handleEditAsset(asset)}
-											>
-												<Edit2 className="h-4 w-4 mr-2" />
-												Edit
-											</Button>
-											<Button
-												type="button"
-												variant="outline"
-												size="sm"
-												onClick={() => handleRemoveAsset(asset.id)}
-											>
-												<Trash2 className="h-4 w-4 mr-2" />
-												Remove
-											</Button>
-										</div>
-									</div>
+										</CardContent>
+									</Card>
 								))}
 							</div>
 						)}
@@ -430,6 +695,72 @@ export default function AssetsStep({
 					</div>
 				</form>
 			</Form>
+
+			{/* Beneficiary selection dialog */}
+			<Dialog
+				open={beneficiaryDialogOpen}
+				onOpenChange={setBeneficiaryDialogOpen}
+			>
+				<DialogContent className="bg-white">
+					<DialogHeader>
+						<DialogTitle>Select Beneficiary</DialogTitle>
+					</DialogHeader>
+					<div className="space-y-4 py-4">
+						{isLoadingBeneficiaries ? (
+							<div className="text-center py-4">Loading beneficiaries...</div>
+						) : (
+							<div className="space-y-2 max-h-[300px] overflow-y-auto">
+								{enhancedBeneficiaries
+									.filter(
+										(beneficiary) =>
+											!assetForm.beneficiaries.some(
+												(b: { id: string }) => b.id === beneficiary.id
+											)
+									)
+									.map((beneficiary) => (
+										<div
+											key={beneficiary.id}
+											className="flex items-center justify-between p-2 border rounded-md hover:bg-muted cursor-pointer"
+											onClick={() => {
+												setAssetForm((prev) => ({
+													...prev,
+													beneficiaries: [
+														...prev.beneficiaries,
+														{
+															id: beneficiary.id,
+															percentage:
+																prev.distributionType === "percentage"
+																	? 0
+																	: undefined,
+														},
+													],
+												}));
+												setBeneficiaryDialogOpen(false);
+											}}
+										>
+											<div>
+												<span className="font-medium">
+													{beneficiary.fullName}
+												</span>
+												<span className="text-sm text-muted-foreground ml-2">
+													(
+													{getFormattedRelationshipNameById(
+														relationships,
+														beneficiary.relationship
+													)}
+													)
+													{beneficiary.type === "charity" &&
+														beneficiary.registrationNumber &&
+														` - Reg: ${beneficiary.registrationNumber}`}
+												</span>
+											</div>
+										</div>
+									))}
+							</div>
+						)}
+					</div>
+				</DialogContent>
+			</Dialog>
 		</div>
 	);
 }
