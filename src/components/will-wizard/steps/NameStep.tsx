@@ -87,12 +87,13 @@ export default function NameStep({ data, onUpdate, onNext }: StepProps) {
 	const form = useForm<NameData>({
 		resolver: zodResolver(nameSchema),
 		defaultValues: initialValues,
-		mode: "onSubmit",
+		mode: "onChange",
 	});
 
 	const {
 		formState: { isValid },
 		setValue,
+		trigger,
 	} = form;
 
 	// Pre-fill form with active will data when component loads
@@ -120,16 +121,20 @@ export default function NameStep({ data, onUpdate, onNext }: StepProps) {
 				activeWillAny.lastName;
 
 			if (firstName || lastName) {
-				// Try using setValue instead of reset with shouldValidate: false
+				// Set values and then trigger validation
 				setValue("firstName", firstName || "", { shouldValidate: false });
 				setValue("lastName", lastName || "", { shouldValidate: false });
+				// Trigger validation after setting values
+				trigger();
 			}
 		} else if (data.firstName || data.lastName) {
-			// Try using setValue instead of reset with shouldValidate: false
+			// Set values and then trigger validation
 			setValue("firstName", data.firstName || "", { shouldValidate: false });
 			setValue("lastName", data.lastName || "", { shouldValidate: false });
+			// Trigger validation after setting values
+			trigger();
 		}
-	}, [activeWill, data, setValue]);
+	}, [activeWill, data, setValue, trigger]);
 
 	const onSubmit = async (values: NameData) => {
 		setIsSubmitting(true);
