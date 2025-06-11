@@ -13,6 +13,10 @@ import {
 	DialogTrigger,
 } from "@/components/ui/dialog";
 import { ArrowLeft, ArrowRight, Edit2, Plus, Trash2 } from "lucide-react";
+import { useWill } from "@/context/WillContext";
+import { apiClient } from "@/utils/apiClient";
+import { toast } from "sonner";
+import { useRelationships } from "@/hooks/useRelationships";
 
 interface ChildrenStepProps {
 	onNext: (data: { hasChildren: boolean; children: Child[] }) => void;
@@ -23,11 +27,23 @@ interface ChildrenStepProps {
 	};
 }
 
+interface PersonResponse {
+	id: string;
+	will_id: string;
+	first_name: string;
+	last_name: string;
+	relationship_id: string;
+	is_minor: boolean;
+	created_at: string;
+}
+
 export default function ChildrenStep({
 	onNext,
 	onBack,
 	initialData,
 }: ChildrenStepProps) {
+	const { activeWill } = useWill();
+	const { relationships } = useRelationships();
 	const [hasChildren, setHasChildren] = useState(
 		initialData?.hasChildren ?? false
 	);
@@ -36,6 +52,7 @@ export default function ChildrenStep({
 	);
 	const [childDialogOpen, setChildDialogOpen] = useState(false);
 	const [editingChild, setEditingChild] = useState<Child | null>(null);
+	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [childForm, setChildForm] = useState<Omit<Child, "id">>({
 		firstName: "",
 		lastName: "",
@@ -58,31 +75,111 @@ export default function ChildrenStep({
 			}));
 		};
 
-	const handleSaveChild = () => {
+	const handleSaveChild = async () => {
 		if (!childForm.firstName || !childForm.lastName) {
 			return;
 		}
 
-		if (editingChild) {
-			setChildren((prev) =>
-				prev.map((child) =>
-					child.id === editingChild.id ? { ...childForm, id: child.id } : child
-				)
-			);
-		} else {
-			setChildren((prev) => [
-				...prev,
-				{ ...childForm, id: crypto.randomUUID() },
-			]);
-		}
+		setIsSubmitting(true);
 
-		setChildDialogOpen(false);
-		setEditingChild(null);
-		setChildForm({
-			firstName: "",
-			lastName: "",
-			isMinor: false,
-		});
+		try {
+			// Check if we have an active will
+			if (!activeWill?.id) {
+				toast.error(
+					"Will information not found. Please start from the beginning."
+				);
+				return;
+			}
+
+			// Find the child relationship ID
+			const childRelationship = relationships.find(
+				(rel) => rel.name.toLowerCase() === "child"
+			);
+
+			if (!childRelationship) {
+				toast.error("Child relationship type not found. Please try again.");
+				return;
+			}
+
+			if (editingChild) {
+				// Update existing child record
+				const updateData = {
+					first_name: childForm.firstName,
+					last_name: childForm.lastName,
+					is_minor: childForm.isMinor,
+				};
+
+				const { error: updateError } = await apiClient<PersonResponse>(
+					`/people/${editingChild.id}`,
+					{
+						method: "PATCH",
+						body: JSON.stringify(updateData),
+					}
+				);
+
+				if (updateError) {
+					console.error("Error updating child record:", updateError);
+					toast.error("Failed to update child information. Please try again.");
+					return;
+				}
+
+				// Update local state
+				setChildren((prev) =>
+					prev.map((child) =>
+						child.id === editingChild.id
+							? { ...childForm, id: child.id }
+							: child
+					)
+				);
+
+				toast.success("Child information updated successfully");
+			} else {
+				// Create new child record
+				const childData = {
+					first_name: childForm.firstName,
+					last_name: childForm.lastName,
+					relationship_id: childRelationship.id,
+					will_id: activeWill.id,
+					is_minor: childForm.isMinor,
+				};
+
+				const { data: personResponse, error: personError } =
+					await apiClient<PersonResponse>("/people", {
+						method: "POST",
+						body: JSON.stringify(childData),
+					});
+
+				if (personError) {
+					console.error("Error creating child record:", personError);
+					toast.error("Failed to save child information. Please try again.");
+					return;
+				}
+
+				// Update local state with the new child ID
+				setChildren((prev) => [
+					...prev,
+					{ ...childForm, id: personResponse!.id },
+				]);
+
+				toast.success("Child information saved successfully");
+			}
+
+			// Reset form and close dialog
+			setChildDialogOpen(false);
+			setEditingChild(null);
+			setChildForm({
+				firstName: "",
+				lastName: "",
+				isMinor: false,
+			});
+		} catch (error) {
+			console.error("Error in child data submission:", error);
+			toast.error(
+				"An error occurred while saving child information. Please try again."
+			);
+		} finally {
+			setIsSubmitting(false);
+		}
 	};
 
 	const handleEditChild = (child: Child) => {
@@ -95,8 +192,28 @@ export default function ChildrenStep({
 		setChildDialogOpen(true);
 	};
 
-	const handleRemoveChild = (childId: string) => {
-		setChildren((prev) => prev.filter((child) => child.id !== childId));
+	const handleRemoveChild = async (childId: string) => {
+		try {
+			// Delete child record from API
+			const { error } = await apiClient(`/people/${childId}`, {
+				method: "DELETE",
+			});
+
+			if (error) {
+				console.error("Error deleting child record:", error);
+				toast.error("Failed to remove child. Please try again.");
+				return;
+			}
+
+			// Update local state
+			setChildren((prev) => prev.filter((child) => child.id !== childId));
+			toast.success("Child removed successfully");
+		} catch (error) {
+			console.error("Error removing child:", error);
+			toast.error(
+				"An error occurred while removing the child. Please try again."
+			);
+		}
 	};
 
 	return (
@@ -146,7 +263,10 @@ export default function ChildrenStep({
 				<div className="space-y-6 mt-6">
 					<div className="flex justify-between items-center">
 						<h3 className="text-lg font-medium">Your Children</h3>
-						<Dialog open={childDialogOpen} onOpenChange={setChildDialogOpen}>
+						<Dialog
+							open={childDialogOpen}
+							onOpenChange={isSubmitting ? undefined : setChildDialogOpen}
+						>
 							<DialogTrigger asChild>
 								<Button
 									variant="outline"
@@ -180,6 +300,7 @@ export default function ChildrenStep({
 												value={childForm.firstName}
 												onChange={handleChildFormChange("firstName")}
 												placeholder="John"
+												disabled={isSubmitting}
 											/>
 										</div>
 										<div className="space-y-2">
@@ -189,6 +310,7 @@ export default function ChildrenStep({
 												value={childForm.lastName}
 												onChange={handleChildFormChange("lastName")}
 												placeholder="Doe"
+												disabled={isSubmitting}
 											/>
 										</div>
 									</div>
@@ -203,6 +325,7 @@ export default function ChildrenStep({
 														isMinor: checked,
 													}))
 												}
+												disabled={isSubmitting}
 											/>
 											<Label htmlFor="isMinor" className="text-sm">
 												This child is a minor or requires a legal guardian
@@ -218,14 +341,23 @@ export default function ChildrenStep({
 											variant="outline"
 											onClick={() => setChildDialogOpen(false)}
 											className="cursor-pointer"
+											disabled={isSubmitting}
 										>
 											Cancel
 										</Button>
 										<Button
 											onClick={handleSaveChild}
 											className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
+											disabled={isSubmitting}
 										>
-											Save
+											{isSubmitting ? (
+												<>
+													<div className="h-4 w-4 animate-spin rounded-full border-t-2 border-b-2 border-black mr-2" />
+													Saving...
+												</>
+											) : (
+												<>Save</>
+											)}
 										</Button>
 									</div>
 								</div>
