@@ -18,6 +18,7 @@ import { useRelationships } from "@/hooks/useRelationships";
 import { getFormattedRelationshipNameById } from "@/utils/relationships";
 import { toast } from "sonner";
 import { apiClient } from "@/utils/apiClient";
+import { useWill } from "@/context/WillContext";
 
 interface Guardian {
 	id: string;
@@ -45,9 +46,11 @@ export default function GuardiansStep({
 	onNext,
 	onBack,
 }: StepProps) {
+	const { activeWill } = useWill();
 	const { relationships } = useRelationships();
 	const [guardianDialogOpen, setGuardianDialogOpen] = useState(false);
 	const [editingGuardian, setEditingGuardian] = useState<Guardian | null>(null);
+	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [guardianForm, setGuardianForm] = useState<Guardian>({
 		id: "",
 		firstName: "",
@@ -65,9 +68,7 @@ export default function GuardiansStep({
 		};
 
 	const handleSaveGuardian = async () => {
-		const stepData = data as GuardiansStepData;
-		const willId = stepData.willId;
-		if (!willId) {
+		if (!activeWill?.id) {
 			toast.error("No active will found");
 			return;
 		}
@@ -81,13 +82,15 @@ export default function GuardiansStep({
 			return;
 		}
 
+		setIsSubmitting(true);
+
 		try {
 			// First create the guardian person record
 			const { data: personData, error: personError } =
 				await apiClient<ApiPersonResponse>("/people", {
 					method: "POST",
 					body: JSON.stringify({
-						will_id: willId,
+						will_id: activeWill.id,
 						first_name: guardianForm.firstName,
 						last_name: guardianForm.lastName,
 						relationship_id: guardianForm.relationship,
@@ -105,7 +108,7 @@ export default function GuardiansStep({
 				await apiClient("/guardianship", {
 					method: "POST",
 					body: JSON.stringify({
-						will_id: willId,
+						will_id: activeWill.id,
 						guardian_id: personData.id,
 						is_primary: guardianForm.isPrimary,
 					}),
@@ -124,7 +127,7 @@ export default function GuardiansStep({
 				isPrimary: guardianForm.isPrimary,
 			};
 
-			const currentGuardians = stepData.guardians || [];
+			const currentGuardians = data.guardians || [];
 			const updatedGuardians = editingGuardian
 				? currentGuardians.map((g) =>
 						g.id === editingGuardian.id ? newGuardian : g
@@ -156,6 +159,8 @@ export default function GuardiansStep({
 		} catch (error) {
 			console.error("Error saving guardian:", error);
 			toast.error("An error occurred while saving guardian information");
+		} finally {
+			setIsSubmitting(false);
 		}
 	};
 
@@ -198,7 +203,7 @@ export default function GuardiansStep({
 					<h3 className="text-lg font-medium">Appointed Guardians</h3>
 					<Dialog
 						open={guardianDialogOpen}
-						onOpenChange={setGuardianDialogOpen}
+						onOpenChange={isSubmitting ? undefined : setGuardianDialogOpen}
 					>
 						<DialogTrigger asChild>
 							<Button
@@ -234,6 +239,7 @@ export default function GuardiansStep({
 											value={guardianForm.firstName}
 											onChange={handleGuardianFormChange("firstName")}
 											placeholder="John"
+											disabled={isSubmitting}
 										/>
 									</div>
 									<div className="space-y-2">
@@ -243,6 +249,7 @@ export default function GuardiansStep({
 											value={guardianForm.lastName}
 											onChange={handleGuardianFormChange("lastName")}
 											placeholder="Doe"
+											disabled={isSubmitting}
 										/>
 									</div>
 								</div>
@@ -258,6 +265,7 @@ export default function GuardiansStep({
 										label="Relationship to You"
 										required
 										excludeRelationships={["spouse", "child"]}
+										disabled={isSubmitting}
 									/>
 								</div>
 								<div className="flex items-center space-x-2">
@@ -270,6 +278,7 @@ export default function GuardiansStep({
 												isPrimary: checked,
 											}))
 										}
+										disabled={isSubmitting}
 									/>
 									<Label htmlFor="isPrimary" className="text-sm">
 										Appoint as Primary Guardian
@@ -280,14 +289,23 @@ export default function GuardiansStep({
 										variant="outline"
 										onClick={() => setGuardianDialogOpen(false)}
 										className="cursor-pointer"
+										disabled={isSubmitting}
 									>
 										Cancel
 									</Button>
 									<Button
 										onClick={handleSaveGuardian}
 										className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
+										disabled={isSubmitting}
 									>
-										Save
+										{isSubmitting ? (
+											<>
+												<div className="h-4 w-4 animate-spin rounded-full border-t-2 border-b-2 border-black mr-2" />
+												Saving...
+											</>
+										) : (
+											<>Save</>
+										)}
 									</Button>
 								</div>
 							</div>
