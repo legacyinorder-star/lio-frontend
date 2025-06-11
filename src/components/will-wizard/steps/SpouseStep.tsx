@@ -69,9 +69,14 @@ export default function SpouseStep({
 	// Pre-fill spouse data from active will when component loads
 	useEffect(() => {
 		if (activeWill?.spouse) {
+			// Transform spouse data to match the expected format
+			const spouseAny = activeWill.spouse as typeof activeWill.spouse & {
+				first_name?: string;
+				last_name?: string;
+			};
 			setSpouseData({
-				firstName: activeWill.spouse.firstName,
-				lastName: activeWill.spouse.lastName,
+				firstName: activeWill.spouse.firstName || spouseAny.first_name || "",
+				lastName: activeWill.spouse.lastName || spouseAny.last_name || "",
 			});
 			form.setValue("hasSpouse", true);
 		} else if (initialData?.spouse) {

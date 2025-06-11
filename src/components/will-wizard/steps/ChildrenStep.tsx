@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,7 +42,7 @@ export default function ChildrenStep({
 	onBack,
 	initialData,
 }: ChildrenStepProps) {
-	const { activeWill } = useWill();
+	const { activeWill, setActiveWill } = useWill();
 	const { relationships } = useRelationships();
 	const [hasChildren, setHasChildren] = useState(
 		initialData?.hasChildren ?? false
@@ -58,6 +58,42 @@ export default function ChildrenStep({
 		lastName: "",
 		isMinor: false,
 	});
+
+	// Load children from active will when component mounts
+	useEffect(() => {
+		if (activeWill?.children && activeWill.children.length > 0) {
+			// Transform children data to match the expected format
+			const transformedChildren = activeWill.children.map((child) => {
+				// Handle potential API data structure (snake_case) vs component structure (camelCase)
+				const childAny = child as typeof child & {
+					first_name?: string;
+					last_name?: string;
+					is_minor?: boolean;
+				};
+				return {
+					id: child.id,
+					firstName: child.firstName || childAny.first_name || "",
+					lastName: child.lastName || childAny.last_name || "",
+					isMinor: child.isMinor || childAny.is_minor || false,
+				};
+			});
+			setChildren(transformedChildren);
+			setHasChildren(true);
+		} else if (initialData?.children && initialData.children.length > 0) {
+			setChildren(initialData.children);
+			setHasChildren(initialData.hasChildren);
+		}
+	}, [activeWill, initialData]);
+
+	// Update active will when children state changes
+	const updateActiveWillChildren = (newChildren: Child[]) => {
+		if (activeWill) {
+			setActiveWill({
+				...activeWill,
+				children: newChildren,
+			});
+		}
+	};
 
 	const handleSubmit = () => {
 		onNext({
@@ -124,13 +160,15 @@ export default function ChildrenStep({
 				}
 
 				// Update local state
-				setChildren((prev) =>
-					prev.map((child) =>
+				setChildren((prev) => {
+					const updatedChildren = prev.map((child) =>
 						child.id === editingChild.id
 							? { ...childForm, id: child.id }
 							: child
-					)
-				);
+					);
+					updateActiveWillChildren(updatedChildren);
+					return updatedChildren;
+				});
 
 				toast.success("Child information updated successfully");
 			} else {
@@ -156,10 +194,14 @@ export default function ChildrenStep({
 				}
 
 				// Update local state with the new child ID
-				setChildren((prev) => [
-					...prev,
-					{ ...childForm, id: personResponse!.id },
-				]);
+				setChildren((prev) => {
+					const newChildren = [
+						...prev,
+						{ ...childForm, id: personResponse!.id },
+					];
+					updateActiveWillChildren(newChildren);
+					return newChildren;
+				});
 
 				toast.success("Child information saved successfully");
 			}
@@ -206,7 +248,11 @@ export default function ChildrenStep({
 			}
 
 			// Update local state
-			setChildren((prev) => prev.filter((child) => child.id !== childId));
+			setChildren((prev) => {
+				const updatedChildren = prev.filter((child) => child.id !== childId);
+				updateActiveWillChildren(updatedChildren);
+				return updatedChildren;
+			});
 			toast.success("Child removed successfully");
 		} catch (error) {
 			console.error("Error removing child:", error);
