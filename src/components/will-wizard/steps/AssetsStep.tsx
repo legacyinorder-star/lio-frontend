@@ -281,7 +281,7 @@ export default function AssetsStep({
 			distributionType: type,
 			beneficiaries: prev.beneficiaries.map((b) => ({
 				...b,
-				percentage: type === "equal" ? undefined : 0,
+				percentage: type === "equal" ? undefined : undefined,
 			})),
 		}));
 	};
