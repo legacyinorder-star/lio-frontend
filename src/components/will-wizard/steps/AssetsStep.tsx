@@ -186,6 +186,18 @@ interface BeneficiaryResponse {
 	}>;
 }
 
+interface ApiPersonResponse {
+	id: string;
+	first_name: string;
+	last_name: string;
+}
+
+interface ApiCharityResponse {
+	id: string;
+	name: string;
+	rc_number?: string;
+}
+
 export default function AssetsStep({
 	onNext,
 	onBack,
@@ -372,6 +384,116 @@ export default function AssetsStep({
 
 	const handleRemoveAsset = (assetId: string) => {
 		setAssets((prev) => prev.filter((asset) => asset.id !== assetId));
+	};
+
+	const handleAddNewBeneficiary = async () => {
+		if (!activeWill?.id) {
+			toast.error("No active will found");
+			return;
+		}
+
+		if (beneficiaryType === "individual") {
+			// Validate individual form
+			if (
+				!newBeneficiaryForm.firstName ||
+				!newBeneficiaryForm.lastName ||
+				!newBeneficiaryForm.relationshipId
+			) {
+				toast.error("Please fill in all required fields for individual");
+				return;
+			}
+
+			try {
+				// Send POST request to /people
+				const { data: personData, error: personError } =
+					await apiClient<ApiPersonResponse>("/people", {
+						method: "POST",
+						body: JSON.stringify({
+							will_id: activeWill.id,
+							relationship_id: newBeneficiaryForm.relationshipId,
+							first_name: newBeneficiaryForm.firstName,
+							last_name: newBeneficiaryForm.lastName,
+							is_minor: false, // New beneficiaries are not minors by default
+						}),
+					});
+
+				if (personError || !personData) {
+					toast.error("Failed to add individual beneficiary");
+					return;
+				}
+
+				// Add to selected beneficiaries
+				const newBeneficiary = {
+					id: personData.id,
+					percentage: undefined,
+				};
+
+				setAssetForm((prev) => ({
+					...prev,
+					beneficiaries: [...prev.beneficiaries, newBeneficiary],
+				}));
+
+				// Refresh the beneficiaries list
+				await fetchBeneficiaries();
+
+				toast.success("Individual beneficiary added successfully");
+			} catch (err) {
+				toast.error("Failed to add individual beneficiary");
+			}
+		} else {
+			// Validate charity form
+			if (!newBeneficiaryForm.charityName) {
+				toast.error("Please enter charity name");
+				return;
+			}
+
+			try {
+				// Send POST request to /charities
+				const { data: charityData, error: charityError } =
+					await apiClient<ApiCharityResponse>("/charities", {
+						method: "POST",
+						body: JSON.stringify({
+							name: newBeneficiaryForm.charityName,
+							will_id: activeWill.id,
+							rc_number: newBeneficiaryForm.registrationNumber || null,
+						}),
+					});
+
+				if (charityError || !charityData) {
+					toast.error("Failed to add charity beneficiary");
+					return;
+				}
+
+				// Add to selected beneficiaries
+				const newBeneficiary = {
+					id: charityData.id,
+					percentage: undefined,
+				};
+
+				setAssetForm((prev) => ({
+					...prev,
+					beneficiaries: [...prev.beneficiaries, newBeneficiary],
+				}));
+
+				// Refresh the beneficiaries list
+				await fetchBeneficiaries();
+
+				toast.success("Charity beneficiary added successfully");
+			} catch (err) {
+				toast.error("Failed to add charity beneficiary");
+			}
+		}
+
+		// Reset form and close modal
+		setNewBeneficiaryDialogOpen(false);
+		setNewBeneficiaryForm({
+			firstName: "",
+			lastName: "",
+			relationshipId: "",
+			charityName: "",
+			registrationNumber: "",
+		});
+		setBeneficiaryType("individual");
 	};
 
 	// Fetch beneficiaries when opening asset dialog
@@ -846,7 +968,7 @@ export default function AssetsStep({
 							<Button
 								variant="ghost"
 								onClick={() => setBeneficiaryType("individual")}
-								className={`border-b-2 transition-colors ${
+								className={`border-b-2 transition-colors cursor-pointer ${
 									beneficiaryType === "individual"
 										? "bg-light-green text-black border-light-green"
 										: "border-transparent hover:border-primary/50"
@@ -857,7 +979,7 @@ export default function AssetsStep({
 							<Button
 								variant="ghost"
 								onClick={() => setBeneficiaryType("charity")}
-								className={`border-b-2 transition-colors ${
+								className={`border-b-2 transition-colors cursor-pointer ${
 									beneficiaryType === "charity"
 										? "bg-light-green text-black border-light-green"
 										: "border-transparent hover:border-primary/50"
@@ -970,19 +1092,7 @@ export default function AssetsStep({
 							Cancel
 						</Button>
 						<Button
-							onClick={() => {
-								// TODO: Implement add beneficiary logic
-								setNewBeneficiaryDialogOpen(false);
-								setNewBeneficiaryForm({
-									firstName: "",
-									lastName: "",
-									relationshipId: "",
-									charityName: "",
-									registrationNumber: "",
-								});
-								setBeneficiaryType("individual");
-								toast.success("Beneficiary added successfully");
-							}}
+							onClick={handleAddNewBeneficiary}
 							className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
 						>
 							Add Beneficiary
