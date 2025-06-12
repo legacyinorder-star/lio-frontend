@@ -247,7 +247,7 @@ export default function AssetsStep({
 
 	const handleBeneficiaryPercentageChange = (
 		beneficiaryId: string,
-		percentage: number
+		percentage: number | undefined
 	) => {
 		setAssetForm((prev) => ({
 			...prev,
@@ -315,14 +315,6 @@ export default function AssetsStep({
 		setAssets((prev) => prev.filter((asset) => asset.id !== assetId));
 	};
 
-	// Helper function to get beneficiary name
-	const getBeneficiaryName = (beneficiaryId: string) => {
-		const beneficiary = enhancedBeneficiaries.find(
-			(b) => b.id === beneficiaryId
-		);
-		return beneficiary ? beneficiary.fullName : "";
-	};
-
 	// Fetch beneficiaries when opening asset dialog
 	const fetchBeneficiaries = async () => {
 		if (!activeWill?.id) {
@@ -363,12 +355,12 @@ export default function AssetsStep({
 				];
 				setEnhancedBeneficiaries(combinedBeneficiaries);
 
-				// Pre-populate beneficiaries in asset form
+				// Pre-populate beneficiaries in asset form without default percentage
 				setAssetForm((prev) => ({
 					...prev,
 					beneficiaries: combinedBeneficiaries.map((b) => ({
 						id: b.id,
-						percentage: prev.distributionType === "percentage" ? 0 : undefined,
+						percentage: undefined,
 					})),
 				}));
 			}
@@ -495,7 +487,7 @@ export default function AssetsStep({
 													className="cursor-pointer"
 												>
 													<Plus className="mr-2 h-4 w-4" />
-													Add Beneficiary
+													Add New Beneficiary
 												</Button>
 											</div>
 											{assetForm.beneficiaries.length === 0 ? (
@@ -550,16 +542,24 @@ export default function AssetsStep({
 																			type="number"
 																			min="0"
 																			max="100"
-																			value={beneficiary.percentage || 0}
+																			value={beneficiary.percentage ?? ""}
 																			onChange={(e) => {
-																				const value = Math.min(
-																					100,
-																					Math.max(0, Number(e.target.value))
-																				);
-																				handleBeneficiaryPercentageChange(
-																					beneficiary.id,
-																					value
-																				);
+																				const inputValue = e.target.value;
+																				if (inputValue === "") {
+																					handleBeneficiaryPercentageChange(
+																						beneficiary.id,
+																						undefined
+																					);
+																				} else {
+																					const value = Math.min(
+																						100,
+																						Math.max(0, Number(inputValue))
+																					);
+																					handleBeneficiaryPercentageChange(
+																						beneficiary.id,
+																						value
+																					);
+																				}
 																			}}
 																			className="w-20"
 																		/>
@@ -636,13 +636,28 @@ export default function AssetsStep({
 														<p className="text-sm font-medium">Distribution:</p>
 														<ul className="text-sm text-muted-foreground list-disc list-inside">
 															{asset.beneficiaries.map((beneficiary) => {
-																const name = getBeneficiaryName(beneficiary.id);
+																const beneficiaryDetails =
+																	enhancedBeneficiaries.find(
+																		(b) => b.id === beneficiary.id
+																	);
 
-																if (!name) return null;
+																if (!beneficiaryDetails) return null;
 
 																return (
 																	<li key={beneficiary.id}>
-																		{name}
+																		{beneficiaryDetails.fullName}
+																		<span className="text-muted-foreground">
+																			{" "}
+																			(
+																			{getFormattedRelationshipNameById(
+																				relationships,
+																				beneficiaryDetails.relationship
+																			)}
+																			)
+																			{beneficiaryDetails.type === "charity" &&
+																				beneficiaryDetails.registrationNumber &&
+																				` - Reg: ${beneficiaryDetails.registrationNumber}`}
+																		</span>
 																		{asset.distributionType === "percentage" &&
 																			` (${beneficiary.percentage}%)`}
 																	</li>
@@ -728,10 +743,7 @@ export default function AssetsStep({
 														...prev.beneficiaries,
 														{
 															id: beneficiary.id,
-															percentage:
-																prev.distributionType === "percentage"
-																	? 0
-																	: undefined,
+															percentage: undefined,
 														},
 													],
 												}));

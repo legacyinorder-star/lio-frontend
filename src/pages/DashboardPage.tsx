@@ -343,7 +343,7 @@ export default function DashboardPage() {
 											className="hover:bg-blue-100 text-blue-600 cursor-pointer"
 										>
 											<Edit className="h-4 w-4 mr-2" />
-											Edit
+											Continue
 										</Button>
 										<Button
 											variant="outline"
