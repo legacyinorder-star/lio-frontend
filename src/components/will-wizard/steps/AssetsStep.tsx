@@ -422,6 +422,23 @@ export default function AssetsStep({
 					return;
 				}
 
+				// Get the relationship name for display
+				const relationshipName =
+					getFormattedRelationshipNameById(
+						relationships,
+						newBeneficiaryForm.relationshipId
+					) || "Unknown Relationship";
+
+				// Add to enhanced beneficiaries list
+				const newEnhancedBeneficiary = {
+					id: personData.id,
+					fullName: `${newBeneficiaryForm.firstName} ${newBeneficiaryForm.lastName}`,
+					relationship: relationshipName,
+					type: "person" as const,
+				};
+
+				setEnhancedBeneficiaries((prev) => [...prev, newEnhancedBeneficiary]);
+
 				// Add to selected beneficiaries
 				const newBeneficiary = {
 					id: personData.id,
@@ -432,9 +449,6 @@ export default function AssetsStep({
 					...prev,
 					beneficiaries: [...prev.beneficiaries, newBeneficiary],
 				}));
-
-				// Refresh the beneficiaries list
-				await fetchBeneficiaries();
 
 				toast.success("Individual beneficiary added successfully");
 			} catch (err) {
@@ -464,6 +478,17 @@ export default function AssetsStep({
 					return;
 				}
 
+				// Add to enhanced beneficiaries list
+				const newEnhancedBeneficiary = {
+					id: charityData.id,
+					fullName: newBeneficiaryForm.charityName,
+					relationship: "Charity",
+					type: "charity" as const,
+					registrationNumber: newBeneficiaryForm.registrationNumber,
+				};
+
+				setEnhancedBeneficiaries((prev) => [...prev, newEnhancedBeneficiary]);
+
 				// Add to selected beneficiaries
 				const newBeneficiary = {
 					id: charityData.id,
@@ -474,9 +499,6 @@ export default function AssetsStep({
 					...prev,
 					beneficiaries: [...prev.beneficiaries, newBeneficiary],
 				}));
-
-				// Refresh the beneficiaries list
-				await fetchBeneficiaries();
 
 				toast.success("Charity beneficiary added successfully");
 			} catch (err) {
