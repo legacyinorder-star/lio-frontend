@@ -29,6 +29,7 @@ import {
 	DropdownMenuContent,
 	DropdownMenuItem,
 } from "@/components/ui/custom-dropdown-menu";
+import { RelationshipSelect } from "@/components/ui/relationship-select";
 import {
 	Home,
 	Building2,
@@ -198,6 +199,9 @@ export default function AssetsStep({
 	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 	const [newBeneficiaryDialogOpen, setNewBeneficiaryDialogOpen] =
 		useState(false);
+	const [beneficiaryType, setBeneficiaryType] = useState<
+		"individual" | "charity"
+	>("individual");
 
 	const [assetForm, setAssetForm] = useState<Omit<Asset, "id">>({
 		type: "Property" as AssetType,
@@ -205,6 +209,15 @@ export default function AssetsStep({
 		value: "",
 		distributionType: "equal",
 		beneficiaries: [],
+	});
+
+	// New beneficiary form state
+	const [newBeneficiaryForm, setNewBeneficiaryForm] = useState({
+		firstName: "",
+		lastName: "",
+		relationshipId: "",
+		charityName: "",
+		registrationNumber: "",
 	});
 
 	// Enhanced beneficiaries state for API integration
@@ -828,52 +841,130 @@ export default function AssetsStep({
 						<DialogTitle>Add New Beneficiary</DialogTitle>
 					</DialogHeader>
 					<div className="space-y-4 py-4">
+						{/* Tabs */}
 						<div className="flex space-x-4 border-b">
 							<Button
 								variant="ghost"
-								className="border-b-2 border-transparent hover:border-primary"
+								onClick={() => setBeneficiaryType("individual")}
+								className={`border-b-2 transition-colors ${
+									beneficiaryType === "individual"
+										? "bg-light-green text-black border-light-green"
+										: "border-transparent hover:border-primary/50"
+								}`}
 							>
 								Individual
 							</Button>
 							<Button
 								variant="ghost"
-								className="border-b-2 border-transparent hover:border-primary"
+								onClick={() => setBeneficiaryType("charity")}
+								className={`border-b-2 transition-colors ${
+									beneficiaryType === "charity"
+										? "bg-light-green text-black border-light-green"
+										: "border-transparent hover:border-primary/50"
+								}`}
 							>
 								Charity
 							</Button>
 						</div>
-						<div className="space-y-4">
-							<div className="grid grid-cols-2 gap-4">
-								<div className="space-y-2">
-									<Label htmlFor="firstName">First Name</Label>
-									<Input id="firstName" placeholder="Enter first name" />
+
+						{/* Individual Form */}
+						{beneficiaryType === "individual" && (
+							<div className="space-y-4">
+								<div className="grid grid-cols-2 gap-4">
+									<div className="space-y-2">
+										<Label htmlFor="firstName">First Name</Label>
+										<Input
+											id="firstName"
+											placeholder="Enter first name"
+											value={newBeneficiaryForm.firstName}
+											onChange={(e) =>
+												setNewBeneficiaryForm((prev) => ({
+													...prev,
+													firstName: e.target.value,
+												}))
+											}
+										/>
+									</div>
+									<div className="space-y-2">
+										<Label htmlFor="lastName">Last Name</Label>
+										<Input
+											id="lastName"
+											placeholder="Enter last name"
+											value={newBeneficiaryForm.lastName}
+											onChange={(e) =>
+												setNewBeneficiaryForm((prev) => ({
+													...prev,
+													lastName: e.target.value,
+												}))
+											}
+										/>
+									</div>
 								</div>
-								<div className="space-y-2">
-									<Label htmlFor="lastName">Last Name</Label>
-									<Input id="lastName" placeholder="Enter last name" />
-								</div>
-							</div>
-							<div className="space-y-2">
-								<Label htmlFor="relationship">Relationship</Label>
-								<Input id="relationship" placeholder="Enter relationship" />
-							</div>
-							<div className="space-y-2">
-								<Label htmlFor="charityName">Charity Name</Label>
-								<Input id="charityName" placeholder="Enter charity name" />
-							</div>
-							<div className="space-y-2">
-								<Label htmlFor="registrationNumber">Registration Number</Label>
-								<Input
-									id="registrationNumber"
-									placeholder="Enter registration number"
+								<RelationshipSelect
+									value={newBeneficiaryForm.relationshipId}
+									onValueChange={(value) =>
+										setNewBeneficiaryForm((prev) => ({
+											...prev,
+											relationshipId: value,
+										}))
+									}
+									label="Relationship"
+									placeholder="Select relationship"
+									excludeRelationships={["child", "spouse"]}
 								/>
 							</div>
-						</div>
+						)}
+
+						{/* Charity Form */}
+						{beneficiaryType === "charity" && (
+							<div className="space-y-4">
+								<div className="space-y-2">
+									<Label htmlFor="charityName">Charity Name</Label>
+									<Input
+										id="charityName"
+										placeholder="Enter charity name"
+										value={newBeneficiaryForm.charityName}
+										onChange={(e) =>
+											setNewBeneficiaryForm((prev) => ({
+												...prev,
+												charityName: e.target.value,
+											}))
+										}
+									/>
+								</div>
+								<div className="space-y-2">
+									<Label htmlFor="registrationNumber">
+										Registration Number
+									</Label>
+									<Input
+										id="registrationNumber"
+										placeholder="Enter registration number"
+										value={newBeneficiaryForm.registrationNumber}
+										onChange={(e) =>
+											setNewBeneficiaryForm((prev) => ({
+												...prev,
+												registrationNumber: e.target.value,
+											}))
+										}
+									/>
+								</div>
+							</div>
+						)}
 					</div>
 					<DialogFooter>
 						<Button
 							variant="outline"
-							onClick={() => setNewBeneficiaryDialogOpen(false)}
+							onClick={() => {
+								setNewBeneficiaryDialogOpen(false);
+								setNewBeneficiaryForm({
+									firstName: "",
+									lastName: "",
+									relationshipId: "",
+									charityName: "",
+									registrationNumber: "",
+								});
+								setBeneficiaryType("individual");
+							}}
 							className="cursor-pointer"
 						>
 							Cancel
@@ -882,6 +973,14 @@ export default function AssetsStep({
 							onClick={() => {
 								// TODO: Implement add beneficiary logic
 								setNewBeneficiaryDialogOpen(false);
+								setNewBeneficiaryForm({
+									firstName: "",
+									lastName: "",
+									relationshipId: "",
+									charityName: "",
+									registrationNumber: "",
+								});
+								setBeneficiaryType("individual");
 								toast.success("Beneficiary added successfully");
 							}}
 							className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
