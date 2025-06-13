@@ -198,6 +198,23 @@ interface ApiCharityResponse {
 	rc_number?: string;
 }
 
+interface ApiAssetResponse {
+	id: string;
+	will_id: string;
+	name: string;
+	asset_type: string;
+	description: string;
+	distribution_type: string;
+	beneficiaries: Array<{
+		id: string;
+		people_id: string;
+		charities_id: string;
+		asset_id: string;
+		percentage: number;
+		type: string;
+	}>;
+}
+
 export default function AssetsStep({
 	onNext,
 	onBack,
@@ -339,7 +356,7 @@ export default function AssetsStep({
 		}));
 	};
 
-	const handleSaveAsset = () => {
+	const handleSaveAsset = async () => {
 		if (
 			!assetForm.description ||
 			assetForm.beneficiaries.length === 0 ||
@@ -354,26 +371,92 @@ export default function AssetsStep({
 			return;
 		}
 
-		if (editingAsset) {
-			setAssets((prev) =>
-				prev.map((asset) =>
-					asset.id === editingAsset.id ? { ...assetForm, id: asset.id } : asset
-				)
-			);
-		} else {
-			setAssets((prev) => [...prev, { ...assetForm, id: crypto.randomUUID() }]);
+		if (!activeWill?.id) {
+			toast.error("No active will found");
+			return;
 		}
 
-		// Reset form and close dialog
-		setAssetForm({
-			type: "Property" as AssetType,
-			description: "",
-			distributionType: "equal",
-			beneficiaries: [],
-			value: "",
-		});
-		setEditingAsset(null);
-		setAssetDialogOpen(false);
+		// Calculate percentages for beneficiaries
+		const beneficiariesWithPercentages = assetForm.beneficiaries.map(
+			(beneficiary) => {
+				const beneficiaryDetails = enhancedBeneficiaries.find(
+					(b) => b.id === beneficiary.id
+				);
+
+				let percentage: number;
+				if (assetForm.distributionType === "equal") {
+					percentage = Math.round(100 / assetForm.beneficiaries.length);
+				} else {
+					percentage = beneficiary.percentage || 0;
+				}
+
+				return {
+					id: beneficiary.id,
+					percentage,
+					type:
+						beneficiaryDetails?.type === "charity" ? "charity" : "individual",
+				};
+			}
+		);
+
+		try {
+			// Send POST request to /assets
+			const { data: assetData, error: assetError } =
+				await apiClient<ApiAssetResponse>("/assets", {
+					method: "POST",
+					body: JSON.stringify({
+						will_id: activeWill.id,
+						name: assetForm.type,
+						asset_type: assetForm.type,
+						description: assetForm.description,
+						distribution_type: assetForm.distributionType,
+						beneficiaries: beneficiariesWithPercentages,
+					}),
+				});
+
+			if (assetError || !assetData) {
+				toast.error("Failed to save asset");
+				return;
+			}
+
+			// Update local state with the asset from API response
+			const newAsset: Asset = {
+				id: assetData.id,
+				type: assetData.asset_type as AssetType,
+				description: assetData.description,
+				value: assetForm.value, // Keep the local value field
+				distributionType: assetData.distribution_type as "equal" | "percentage",
+				beneficiaries: assetData.beneficiaries.map((b) => ({
+					id: b.id,
+					percentage: b.percentage,
+				})),
+			};
+
+			if (editingAsset) {
+				setAssets((prev) =>
+					prev.map((asset) => (asset.id === editingAsset.id ? newAsset : asset))
+				);
+			} else {
+				setAssets((prev) => [...prev, newAsset]);
+			}
+
+			toast.success(
+				editingAsset ? "Asset updated successfully" : "Asset added successfully"
+			);
+
+			// Reset form and close dialog
+			setAssetForm({
+				type: "Property" as AssetType,
+				description: "",
+				distributionType: "equal",
+				beneficiaries: [],
+				value: "",
+			});
+			setEditingAsset(null);
+			setAssetDialogOpen(false);
+		} catch (err) {
+			toast.error("Failed to save asset");
+		}
 	};
 
 	const handleEditAsset = (asset: Asset) => {
