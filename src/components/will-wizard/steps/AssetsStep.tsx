@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -38,7 +38,7 @@ import {
 	Briefcase,
 	Package,
 } from "lucide-react";
-import { Asset, AssetType } from "../types/will.types";
+import { Asset, AssetType, WillFormData } from "../types/will.types";
 import { apiClient } from "@/utils/apiClient";
 import { toast } from "sonner";
 import { useWill } from "@/context/WillContext";
@@ -48,7 +48,6 @@ import { getFormattedRelationshipNameById } from "@/utils/relationships";
 const assetSchema = z.object({
 	type: z.string().min(1, "Asset type is required"),
 	description: z.string().min(1, "Description is required"),
-	value: z.string().min(1, "Value is required"),
 	distributionType: z.enum(["equal", "percentage"]),
 	beneficiaries: z.array(
 		z.object({
@@ -164,7 +163,9 @@ const AssetTypeSelector = ({
 };
 
 interface AssetsStepProps {
-	onNext: (data: { assets: Asset[] }) => void;
+	data: Partial<WillFormData>;
+	onUpdate: (data: Partial<WillFormData>) => void;
+	onNext: () => void;
 	onBack: () => void;
 	initialData?: {
 		assets: Asset[];
@@ -174,15 +175,22 @@ interface AssetsStepProps {
 interface BeneficiaryResponse {
 	charities: Array<{
 		id: string;
+		created_at: string;
+		will_id: string;
 		name: string;
-		registration_number?: string;
+		user_id: string;
+		rc_number?: string;
 	}>;
 	people: Array<{
 		id: string;
+		user_id: string;
+		will_id: string;
+		relationship_id: string;
 		first_name: string;
 		last_name: string;
-		relationship_id: string;
 		is_minor: boolean;
+		created_at: string;
+		is_witness: boolean;
 	}>;
 }
 
@@ -207,15 +215,37 @@ interface ApiAssetResponse {
 	distribution_type: string;
 	beneficiaries: Array<{
 		id: string;
-		people_id: string;
-		charities_id: string;
+		created_at: string;
+		will_id: string;
+		people_id: string | undefined;
+		charities_id: string | undefined;
 		asset_id: string;
 		percentage: number;
-		type: string;
+		person?: {
+			id: string;
+			user_id: string;
+			will_id: string;
+			relationship_id: string;
+			first_name: string;
+			last_name: string;
+			is_minor: boolean;
+			created_at: string;
+			is_witness: boolean;
+		};
+		charity?: {
+			id: string;
+			created_at: string;
+			will_id: string;
+			name: string;
+			user_id: string;
+			rc_number?: string;
+		};
 	}>;
 }
 
 export default function AssetsStep({
+	data,
+	onUpdate,
 	onNext,
 	onBack,
 	initialData,
@@ -235,7 +265,6 @@ export default function AssetsStep({
 	const [assetForm, setAssetForm] = useState<Omit<Asset, "id">>({
 		type: "Property" as AssetType,
 		description: "",
-		value: "",
 		distributionType: "equal",
 		beneficiaries: [],
 	});
@@ -253,7 +282,8 @@ export default function AssetsStep({
 	const [enhancedBeneficiaries, setEnhancedBeneficiaries] = useState<
 		Array<{
 			id: string;
-			fullName: string;
+			firstName: string;
+			lastName: string;
 			relationship: string;
 			isMinor?: boolean;
 			type: "person" | "charity";
@@ -261,22 +291,56 @@ export default function AssetsStep({
 		}>
 	>([]);
 
-	const { activeWill } = useWill();
+	const { activeWill, setActiveWill } = useWill();
 	const { relationships } = useRelationships();
+
+	// Load assets from activeWill context
+	useEffect(() => {
+		const loadAssetsFromContext = async () => {
+			if (activeWill?.assets && activeWill.assets.length > 0) {
+				// Convert WillAsset format to Asset format
+				const convertedAssets: Asset[] = activeWill.assets.map((willAsset) => ({
+					id: willAsset.id,
+					type: willAsset.type as AssetType,
+					description: willAsset.description,
+					distributionType: willAsset.distributionType,
+					beneficiaries: willAsset.beneficiaries.map((beneficiary) => ({
+						id: beneficiary.id,
+						percentage: beneficiary.percentage,
+					})),
+				}));
+				setAssets(convertedAssets);
+			} else if (
+				activeWill?.id &&
+				(!activeWill.assets || activeWill.assets.length === 0)
+			) {
+				// Load assets from API if we have an activeWill but no assets
+				await loadAssetsFromAPI();
+			} else if (data.assets && data.assets.length > 0) {
+				// Use assets from WillWizard data
+				setAssets(data.assets);
+			} else {
+				// If no assets in context or data, use initialData or empty array
+				setAssets(initialData?.assets || []);
+			}
+		};
+
+		loadAssetsFromContext();
+	}, [activeWill, data.assets, initialData]);
 
 	const form = useForm<z.infer<typeof assetSchema>>({
 		resolver: zodResolver(assetSchema),
 		defaultValues: {
 			type: "Property",
 			description: "",
-			value: "",
 			distributionType: "equal",
 			beneficiaries: [],
 		},
 	});
 
 	const handleSubmit = () => {
-		onNext({ assets });
+		onUpdate({ assets });
+		onNext();
 	};
 
 	const handleAssetFormChange =
@@ -339,8 +403,10 @@ export default function AssetsStep({
 	const filteredBeneficiaries = enhancedBeneficiaries.filter(
 		(beneficiary) =>
 			!assetForm.beneficiaries.some((b) => b.id === beneficiary.id) &&
-			(beneficiary.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-				beneficiary.relationship
+			(beneficiary.firstName
+				.toLowerCase()
+				.includes(searchQuery.toLowerCase()) ||
+				beneficiary.lastName
 					.toLowerCase()
 					.includes(searchQuery.toLowerCase()) ||
 				(beneficiary.registrationNumber &&
@@ -424,7 +490,6 @@ export default function AssetsStep({
 				id: assetData.id,
 				type: assetData.asset_type as AssetType,
 				description: assetData.description,
-				value: assetForm.value, // Keep the local value field
 				distributionType: assetData.distribution_type as "equal" | "percentage",
 				beneficiaries: assetData.beneficiaries.map((b) => ({
 					id: b.id,
@@ -432,12 +497,50 @@ export default function AssetsStep({
 				})),
 			};
 
+			// Map beneficiary details for the will context using the nested objects
+			const mappedBeneficiaries = await fetchAndMapBeneficiaryDetails(
+				assetData.beneficiaries
+			);
+
 			if (editingAsset) {
-				setAssets((prev) =>
-					prev.map((asset) => (asset.id === editingAsset.id ? newAsset : asset))
+				const updatedAssets = assets.map((asset) =>
+					asset.id === editingAsset.id ? newAsset : asset
 				);
+				setAssets(updatedAssets);
+
+				// Update will context with mapped beneficiaries
+				const updatedWillAssets = activeWill.assets.map((willAsset) =>
+					willAsset.id === editingAsset.id
+						? {
+								...willAsset,
+								beneficiaries: mappedBeneficiaries,
+						  }
+						: willAsset
+				);
+
+				setActiveWill({
+					...activeWill,
+					assets: updatedWillAssets,
+				});
 			} else {
-				setAssets((prev) => [...prev, newAsset]);
+				const updatedAssets = [...assets, newAsset];
+				setAssets(updatedAssets);
+
+				// Add new asset to will context with mapped beneficiaries
+				const newWillAsset = {
+					id: assetData.id,
+					type: assetData.asset_type,
+					description: assetData.description,
+					distributionType: assetData.distribution_type as
+						| "equal"
+						| "percentage",
+					beneficiaries: mappedBeneficiaries,
+				};
+
+				setActiveWill({
+					...activeWill,
+					assets: [...activeWill.assets, newWillAsset],
+				});
 			}
 
 			toast.success(
@@ -450,7 +553,6 @@ export default function AssetsStep({
 				description: "",
 				distributionType: "equal",
 				beneficiaries: [],
-				value: "",
 			});
 			setEditingAsset(null);
 			setAssetDialogOpen(false);
@@ -466,7 +568,19 @@ export default function AssetsStep({
 	};
 
 	const handleRemoveAsset = (assetId: string) => {
-		setAssets((prev) => prev.filter((asset) => asset.id !== assetId));
+		const updatedAssets = assets.filter((asset) => asset.id !== assetId);
+		setAssets(updatedAssets);
+
+		// Update will context by removing the asset
+		if (activeWill) {
+			const updatedWillAssets = activeWill.assets.filter(
+				(willAsset) => willAsset.id !== assetId
+			);
+			setActiveWill({
+				...activeWill,
+				assets: updatedWillAssets,
+			});
+		}
 	};
 
 	const handleAddNewBeneficiary = async () => {
@@ -515,7 +629,8 @@ export default function AssetsStep({
 				// Add to enhanced beneficiaries list
 				const newEnhancedBeneficiary = {
 					id: personData.id,
-					fullName: `${newBeneficiaryForm.firstName} ${newBeneficiaryForm.lastName}`,
+					firstName: newBeneficiaryForm.firstName,
+					lastName: newBeneficiaryForm.lastName,
 					relationship: relationshipName,
 					type: "person" as const,
 				};
@@ -564,7 +679,8 @@ export default function AssetsStep({
 				// Add to enhanced beneficiaries list
 				const newEnhancedBeneficiary = {
 					id: charityData.id,
-					fullName: newBeneficiaryForm.charityName,
+					firstName: newBeneficiaryForm.charityName,
+					lastName: "",
 					relationship: "Charity",
 					type: "charity" as const,
 					registrationNumber: newBeneficiaryForm.registrationNumber,
@@ -626,14 +742,16 @@ export default function AssetsStep({
 				const combinedBeneficiaries = [
 					...data.charities.map((charity) => ({
 						id: charity.id,
-						fullName: charity.name,
+						firstName: charity.name,
+						lastName: "",
 						relationship: "Charity",
 						type: "charity" as const,
-						registrationNumber: charity.registration_number,
+						registrationNumber: charity.rc_number,
 					})),
 					...data.people.map((person) => ({
 						id: person.id,
-						fullName: `${person.first_name} ${person.last_name}`,
+						firstName: person.first_name,
+						lastName: person.last_name,
 						relationship:
 							getFormattedRelationshipNameById(
 								relationships,
@@ -658,6 +776,161 @@ export default function AssetsStep({
 		}
 	};
 
+	// Function to fetch beneficiary details and map them to the correct structure
+	const fetchAndMapBeneficiaryDetails = async (
+		assetBeneficiaries: Array<{
+			id: string;
+			created_at: string;
+			will_id: string;
+			people_id: string | undefined;
+			charities_id: string | undefined;
+			asset_id: string;
+			percentage: number;
+			person?: {
+				id: string;
+				user_id: string;
+				will_id: string;
+				relationship_id: string;
+				first_name: string;
+				last_name: string;
+				is_minor: boolean;
+				created_at: string;
+				is_witness: boolean;
+			};
+			charity?: {
+				id: string;
+				created_at: string;
+				will_id: string;
+				name: string;
+				user_id: string;
+				rc_number?: string;
+			};
+		}>
+	) => {
+		// Map the asset beneficiaries to the correct structure using the nested objects
+		return assetBeneficiaries.map((assetBeneficiary) => {
+			// Determine if this is a person or charity based on which object is present
+			const isCharity = assetBeneficiary.charity !== undefined;
+			const isPerson = assetBeneficiary.person !== undefined;
+
+			if (isCharity && assetBeneficiary.charity) {
+				// Use the charity object directly
+				const charity = assetBeneficiary.charity;
+				return {
+					id: assetBeneficiary.id,
+					percentage: assetBeneficiary.percentage,
+					type: "charity" as const,
+					charity: {
+						id: charity.id,
+						name: charity.name,
+						registrationNumber: charity.rc_number,
+					},
+				};
+			} else if (isPerson && assetBeneficiary.person) {
+				// Use the person object directly
+				const person = assetBeneficiary.person;
+				return {
+					id: assetBeneficiary.id,
+					percentage: assetBeneficiary.percentage,
+					type: "individual" as const,
+					person: {
+						id: person.id,
+						firstName: person.first_name,
+						lastName: person.last_name,
+						relationship:
+							getFormattedRelationshipNameById(
+								relationships,
+								person.relationship_id
+							) || "Unknown Relationship",
+						isMinor: person.is_minor,
+					},
+				};
+			} else {
+				// Fallback for unknown beneficiary type
+				return {
+					id: assetBeneficiary.id,
+					percentage: assetBeneficiary.percentage,
+					type: "individual" as const,
+					person: {
+						id: assetBeneficiary.id,
+						firstName: "Unknown",
+						lastName: "Beneficiary",
+						relationship: "Unknown Relationship",
+						isMinor: false,
+					},
+				};
+			}
+		});
+	};
+
+	// Function to load assets from API and update will context
+	const loadAssetsFromAPI = async () => {
+		if (!activeWill?.id) return;
+
+		try {
+			// Fetch assets from API
+			const { data: assetsData, error } = await apiClient<ApiAssetResponse[]>(
+				`/assets?will_id=${activeWill.id}`,
+				{
+					method: "GET",
+				}
+			);
+
+			if (error || !assetsData) {
+				toast.error("Failed to fetch assets");
+				return;
+			}
+
+			// Process each asset and its beneficiaries
+			const processedAssets = await Promise.all(
+				assetsData.map(async (assetData) => {
+					// Map beneficiary details for this asset using the nested objects
+					const mappedBeneficiaries = await fetchAndMapBeneficiaryDetails(
+						assetData.beneficiaries
+					);
+
+					// Create Asset format for local state
+					const asset: Asset = {
+						id: assetData.id,
+						type: assetData.asset_type as AssetType,
+						description: assetData.description,
+						distributionType: assetData.distribution_type as
+							| "equal"
+							| "percentage",
+						beneficiaries: assetData.beneficiaries.map((b) => ({
+							id: b.id,
+							percentage: b.percentage,
+						})),
+					};
+
+					// Create WillAsset format for context
+					const willAsset = {
+						id: assetData.id,
+						type: assetData.asset_type,
+						description: assetData.description,
+						distributionType: assetData.distribution_type as
+							| "equal"
+							| "percentage",
+						beneficiaries: mappedBeneficiaries,
+					};
+
+					return { asset, willAsset };
+				})
+			);
+
+			// Update local state
+			setAssets(processedAssets.map((p) => p.asset));
+
+			// Update will context
+			setActiveWill({
+				...activeWill,
+				assets: processedAssets.map((p) => p.willAsset),
+			});
+		} catch (err) {
+			toast.error("Failed to load assets from API");
+		}
+	};
+
 	return (
 		<div className="space-y-4">
 			<div className="text-2xl font-semibold">
@@ -672,7 +945,7 @@ export default function AssetsStep({
 			</div>
 
 			<Form {...form}>
-				<form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+				<div className="space-y-6">
 					<div className="space-y-4">
 						<div className="flex justify-between items-center">
 							<h3 className="text-lg font-medium">Your Assets</h3>
@@ -687,7 +960,6 @@ export default function AssetsStep({
 												description: "",
 												distributionType: "equal",
 												beneficiaries: [],
-												value: "",
 											});
 											setEditingAsset(null);
 
@@ -827,7 +1099,8 @@ export default function AssetsStep({
 																						}
 																						className="cursor-pointer"
 																					>
-																						{beneficiary.fullName} (
+																						{beneficiary.firstName}{" "}
+																						{beneficiary.lastName} (
 																						{beneficiary.relationship})
 																						{beneficiary.type === "charity" &&
 																							beneficiary.registrationNumber &&
@@ -867,7 +1140,9 @@ export default function AssetsStep({
 																	>
 																		<div>
 																			<span className="font-medium">
-																				{beneficiaryDetails.fullName}
+																				{beneficiaryDetails.type === "charity"
+																					? beneficiaryDetails.firstName
+																					: `${beneficiaryDetails.firstName} ${beneficiaryDetails.lastName}`}
 																			</span>
 																			<span className="text-sm text-muted-foreground ml-2">
 																				({beneficiaryDetails.relationship})
@@ -986,31 +1261,86 @@ export default function AssetsStep({
 													<p className="text-sm">{asset.description}</p>
 													<div className="mt-2">
 														<p className="text-sm font-medium">Distribution:</p>
-														<ul className="text-sm text-muted-foreground list-disc list-inside">
-															{asset.beneficiaries.map((beneficiary) => {
-																const beneficiaryDetails =
-																	enhancedBeneficiaries.find(
-																		(b) => b.id === beneficiary.id
+														{asset.distributionType === "equal" ? (
+															<p className="text-sm text-muted-foreground">
+																Equal Distribution
+															</p>
+														) : (
+															<ul className="text-sm text-muted-foreground list-disc list-inside">
+																{asset.beneficiaries.map((beneficiary) => {
+																	// Get beneficiary details from activeWill context
+																	const willAsset = activeWill?.assets.find(
+																		(willAsset) => willAsset.id === asset.id
 																	);
+																	const willBeneficiary =
+																		willAsset?.beneficiaries.find(
+																			(wb) => wb.id === beneficiary.id
+																		);
 
-																if (!beneficiaryDetails) return null;
+																	if (!willBeneficiary) {
+																		// Fallback to enhancedBeneficiaries if not found in context
+																		const beneficiaryDetails =
+																			enhancedBeneficiaries.find(
+																				(b) => b.id === beneficiary.id
+																			);
 
-																return (
-																	<li key={beneficiary.id}>
-																		{beneficiaryDetails.fullName}
-																		<span className="text-muted-foreground">
-																			{" "}
-																			({beneficiaryDetails.relationship})
-																			{beneficiaryDetails.type === "charity" &&
-																				beneficiaryDetails.registrationNumber &&
-																				` - Reg: ${beneficiaryDetails.registrationNumber}`}
-																		</span>
-																		{asset.distributionType === "percentage" &&
-																			` (${beneficiary.percentage}%)`}
-																	</li>
-																);
-															})}
-														</ul>
+																		if (!beneficiaryDetails) return null;
+
+																		return (
+																			<li key={beneficiary.id}>
+																				{beneficiaryDetails.type === "charity"
+																					? beneficiaryDetails.firstName
+																					: `${beneficiaryDetails.firstName} ${beneficiaryDetails.lastName}`}
+																				<span className="text-muted-foreground">
+																					{" "}
+																					({beneficiaryDetails.relationship})
+																					{beneficiaryDetails.type ===
+																						"charity" &&
+																						beneficiaryDetails.registrationNumber &&
+																						` - Reg: ${beneficiaryDetails.registrationNumber}`}
+																				</span>
+																				{` (${beneficiary.percentage}%)`}
+																			</li>
+																		);
+																	}
+
+																	// Use WillContext structure
+																	const beneficiaryName =
+																		willBeneficiary.type === "individual"
+																			? willBeneficiary.person
+																				? `${willBeneficiary.person.firstName} ${willBeneficiary.person.lastName}`
+																				: "Unknown Person"
+																			: willBeneficiary.charity
+																			? willBeneficiary.charity.name
+																			: "Unknown Charity";
+
+																	const relationship =
+																		willBeneficiary.type === "individual"
+																			? willBeneficiary.person?.relationship ||
+																			  "Unknown Relationship"
+																			: "Charity";
+
+																	const registrationNumber =
+																		willBeneficiary.type === "charity"
+																			? willBeneficiary.charity
+																					?.registrationNumber
+																			: undefined;
+
+																	return (
+																		<li key={beneficiary.id}>
+																			{beneficiaryName}
+																			<span className="text-muted-foreground">
+																				{" "}
+																				({relationship})
+																				{registrationNumber &&
+																					` - Reg: ${registrationNumber}`}
+																			</span>
+																			{` (${willBeneficiary.percentage}%)`}
+																		</li>
+																	);
+																})}
+															</ul>
+														)}
 													</div>
 												</div>
 												<div className="flex space-x-2">
@@ -1049,13 +1379,14 @@ export default function AssetsStep({
 							<ArrowLeft className="mr-2 h-4 w-4" /> Back
 						</Button>
 						<Button
-							type="submit"
+							type="button"
+							onClick={handleSubmit}
 							className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
 						>
 							Next <ArrowRight className="ml-2 h-4 w-4" />
 						</Button>
 					</div>
-				</form>
+				</div>
 			</Form>
 
 			{/* New Beneficiary Modal */}

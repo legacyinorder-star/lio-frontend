@@ -22,10 +22,34 @@ export interface WillPersonalData {
 	country: string;
 }
 
+export interface WillPerson {
+	id: string;
+	firstName: string;
+	lastName: string;
+	relationship: string;
+	isMinor: boolean;
+}
+
+export interface WillCharity {
+	id: string;
+	name: string;
+	registrationNumber?: string;
+}
+
+export interface WillAssetBeneficiary {
+	id: string;
+	percentage: number;
+	type: "individual" | "charity";
+	person?: WillPerson;
+	charity?: WillCharity;
+}
+
 export interface WillAsset {
+	id: string;
 	type: string;
 	description: string;
-	value: string;
+	distributionType: "equal" | "percentage";
+	beneficiaries: WillAssetBeneficiary[];
 }
 
 export interface WillBeneficiary {

@@ -66,7 +66,6 @@ export interface Asset {
 		id: string;
 		percentage?: number;
 	}[];
-	value: string;
 }
 
 export type AssetTypeOption = {

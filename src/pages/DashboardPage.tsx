@@ -93,7 +93,6 @@ export default function DashboardPage() {
 				assets: (will.assets || []).map((asset) => ({
 					type: asset.type,
 					description: asset.description,
-					value: asset.value,
 					distributionType: "equal" as const, // Default to equal distribution
 					beneficiaries: [], // Not available in WillData
 				})),

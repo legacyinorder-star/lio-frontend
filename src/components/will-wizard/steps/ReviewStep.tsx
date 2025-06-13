@@ -16,7 +16,6 @@ export interface ReviewStepProps {
 		assets: Array<{
 			type: string;
 			description: string;
-			value: string;
 			distributionType: "equal" | "percentage";
 			beneficiaries: Array<{
 				id: string;

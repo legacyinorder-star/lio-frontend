@@ -266,7 +266,6 @@ export default function WillWizard() {
 			assets: formData.assets.map((asset) => ({
 				type: asset.type,
 				description: asset.description,
-				value: asset.value,
 				distributionType: asset.distributionType,
 				beneficiaries: asset.beneficiaries,
 			})),

@@ -277,7 +277,6 @@ interface WillPDFProps {
 		assets: Array<{
 			type: string;
 			description: string;
-			value: string;
 			distributionType?: "equal" | "percentage";
 			beneficiaries?: Array<{
 				id?: string;
@@ -353,7 +352,6 @@ const WillPDF: React.FC<WillPDFProps> = ({ data, additionalText }) => {
 	const getAssetDistributionText = (_asset: {
 		type: string;
 		description: string;
-		value: string;
 		distributionType?: "equal" | "percentage";
 		beneficiaries?: { id?: string; percentage?: number }[];
 	}) => {
