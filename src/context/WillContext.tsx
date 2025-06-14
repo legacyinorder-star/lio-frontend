@@ -26,6 +26,7 @@ export interface WillPerson {
 	firstName: string;
 	lastName: string;
 	relationship: string;
+	relationshipId?: string;
 	isMinor: boolean;
 }
 

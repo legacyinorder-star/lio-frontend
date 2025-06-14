@@ -181,6 +181,12 @@ export function mapWillDataFromAPI(apiData: unknown): WillData {
 											relationship:
 												((beneficiary.person as Record<string, unknown>)
 													.relationship as string) || "",
+											relationshipId:
+												((beneficiary.person as Record<string, unknown>)
+													.relationshipId as string) ||
+												((beneficiary.person as Record<string, unknown>)
+													.relationship_id as string) ||
+												"",
 											isMinor:
 												((beneficiary.person as Record<string, unknown>)
 													.isMinor as boolean) ||
@@ -348,6 +354,7 @@ export function mapAssetBeneficiariesFromAPI(
 								relationships,
 								assetBeneficiary.person.relationship_id
 							) || "Unknown Relationship",
+						relationshipId: assetBeneficiary.person.relationship_id,
 						isMinor: assetBeneficiary.person.is_minor,
 					},
 				};
@@ -361,6 +368,7 @@ export function mapAssetBeneficiariesFromAPI(
 						firstName: "Unknown",
 						lastName: "Person",
 						relationship: "Unknown Relationship",
+						relationshipId: "",
 						isMinor: false,
 					},
 				};
@@ -407,6 +415,7 @@ export function mapAssetBeneficiariesFromAPI(
 				firstName: "Unknown",
 				lastName: "Beneficiary",
 				relationship: "Unknown Relationship",
+				relationshipId: "",
 				isMinor: false,
 			},
 		};

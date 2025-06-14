@@ -45,6 +45,7 @@ export interface EnhancedBeneficiary {
 	firstName: string;
 	lastName: string;
 	relationship: string;
+	relationshipId?: string;
 	isMinor?: boolean;
 	type: "person" | "charity";
 	registrationNumber?: string;
@@ -98,6 +99,7 @@ export function useBeneficiaryManagement() {
 								relationships,
 								person.relationship_id
 							) || "Unknown Relationship",
+						relationshipId: person.relationship_id,
 						isMinor: person.is_minor,
 						type: "person" as const,
 					})),
@@ -152,6 +154,7 @@ export function useBeneficiaryManagement() {
 				firstName: firstName,
 				lastName: lastName,
 				relationship: relationshipName,
+				relationshipId: relationshipId,
 				type: "person",
 			};
 
