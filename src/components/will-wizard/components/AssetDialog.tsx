@@ -7,7 +7,6 @@ import {
 	DialogContent,
 	DialogHeader,
 	DialogTitle,
-	DialogTrigger,
 	DialogFooter,
 } from "@/components/ui/dialog";
 import {
@@ -18,10 +17,9 @@ import {
 import { ChevronsUpDown, Plus, X } from "lucide-react";
 import { Asset, AssetType } from "../types/will.types";
 import { AssetTypeSelector } from "./AssetTypeSelector";
-import {
-	useBeneficiaryManagement,
-	EnhancedBeneficiary,
-} from "@/hooks/useBeneficiaryManagement";
+import { useBeneficiaryManagement } from "@/hooks/useBeneficiaryManagement";
+import { useRelationships } from "@/hooks/useRelationships";
+import { getFormattedRelationshipNameById } from "@/utils/relationships";
 
 interface AssetDialogProps {
 	open: boolean;
@@ -55,6 +53,7 @@ export function AssetDialog({
 	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 	const { enhancedBeneficiaries, isLoadingBeneficiaries, fetchBeneficiaries } =
 		useBeneficiaryManagement();
+	const { relationships } = useRelationships();
 
 	// Initialize form when editing
 	useEffect(() => {
@@ -177,8 +176,9 @@ export function AssetDialog({
 				return {
 					id: beneficiary.id,
 					percentage,
-					type:
-						beneficiaryDetails?.type === "charity" ? "charity" : "individual",
+					type: (beneficiaryDetails?.type === "charity"
+						? "charity"
+						: "individual") as "charity" | "individual",
 				};
 			}
 		);
@@ -317,7 +317,13 @@ export function AssetDialog({
 																className="cursor-pointer"
 															>
 																{beneficiary.firstName} {beneficiary.lastName} (
-																{beneficiary.relationship})
+																{beneficiary.relationshipId
+																	? getFormattedRelationshipNameById(
+																			relationships,
+																			beneficiary.relationshipId
+																	  ) || beneficiary.relationship
+																	: beneficiary.relationship}
+																)
 																{beneficiary.type === "charity" &&
 																	beneficiary.registrationNumber &&
 																	` - Reg: ${beneficiary.registrationNumber}`}
@@ -347,6 +353,13 @@ export function AssetDialog({
 											);
 											if (!beneficiaryDetails) return null;
 
+											const relationship = beneficiaryDetails.relationshipId
+												? getFormattedRelationshipNameById(
+														relationships,
+														beneficiaryDetails.relationshipId
+												  ) || beneficiaryDetails.relationship
+												: beneficiaryDetails.relationship;
+
 											return (
 												<div
 													key={beneficiary.id}
@@ -359,7 +372,7 @@ export function AssetDialog({
 																: `${beneficiaryDetails.firstName} ${beneficiaryDetails.lastName}`}
 														</span>
 														<span className="text-sm text-muted-foreground ml-2">
-															({beneficiaryDetails.relationship})
+															({relationship})
 															{beneficiaryDetails.type === "charity" &&
 																beneficiaryDetails.registrationNumber &&
 																` - Reg: ${beneficiaryDetails.registrationNumber}`}

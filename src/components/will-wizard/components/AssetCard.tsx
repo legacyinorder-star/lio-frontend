@@ -5,6 +5,8 @@ import { Asset } from "../types/will.types";
 import { ASSET_TYPES } from "./AssetTypeSelector";
 import { useWill } from "@/context/WillContext";
 import { EnhancedBeneficiary } from "@/hooks/useBeneficiaryManagement";
+import { useRelationships } from "@/hooks/useRelationships";
+import { getFormattedRelationshipNameById } from "@/utils/relationships";
 
 interface AssetCardProps {
 	asset: Asset;
@@ -20,6 +22,7 @@ export function AssetCard({
 	enhancedBeneficiaries,
 }: AssetCardProps) {
 	const { activeWill } = useWill();
+	const { relationships } = useRelationships();
 
 	return (
 		<Card>
@@ -62,6 +65,13 @@ export function AssetCard({
 
 										if (!beneficiaryDetails) return null;
 
+										const relationship = beneficiaryDetails.relationshipId
+											? getFormattedRelationshipNameById(
+													relationships,
+													beneficiaryDetails.relationshipId
+											  ) || beneficiaryDetails.relationship
+											: beneficiaryDetails.relationship;
+
 										return (
 											<li key={beneficiary.id}>
 												{beneficiaryDetails.type === "charity"
@@ -69,7 +79,7 @@ export function AssetCard({
 													: `${beneficiaryDetails.firstName} ${beneficiaryDetails.lastName}`}
 												<span className="text-muted-foreground">
 													{" "}
-													({beneficiaryDetails.relationship})
+													({relationship})
 													{beneficiaryDetails.type === "charity" &&
 														beneficiaryDetails.registrationNumber &&
 														` - Reg: ${beneficiaryDetails.registrationNumber}`}
@@ -92,8 +102,13 @@ export function AssetCard({
 										: "Unknown Charity";
 
 									const relationship = isIndividual
-										? willBeneficiary.person?.relationship ||
-										  "Unknown Relationship"
+										? willBeneficiary.person?.relationshipId
+											? getFormattedRelationshipNameById(
+													relationships,
+													willBeneficiary.person.relationshipId
+											  ) || "Unknown Relationship"
+											: willBeneficiary.person?.relationship ||
+											  "Unknown Relationship"
 										: "Charity";
 
 									const registrationNumber = !isIndividual
