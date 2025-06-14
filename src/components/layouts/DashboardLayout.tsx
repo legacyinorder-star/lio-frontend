@@ -33,6 +33,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { apiClient } from "@/utils/apiClient";
 import { useWill } from "@/context/WillContext";
+import { mapWillDataFromAPI } from "../../utils/dataTransform";
 
 export function DashboardLayout() {
 	const navigate = useNavigate();
@@ -80,14 +81,15 @@ export function DashboardLayout() {
 
 			if (error) {
 				console.error("Error loading active will:", error);
-				// Don't show error toast for this, just silently fail
 				return;
 			}
 
 			// Handle both array and single object responses
 			const willData = Array.isArray(data) ? data[0] : data;
 			if (willData) {
-				setActiveWill(willData);
+				// Transform API data to camelCase format
+				const transformedWillData = mapWillDataFromAPI(willData);
+				setActiveWill(transformedWillData);
 			}
 		} catch (error) {
 			console.error("Error loading active will:", error);

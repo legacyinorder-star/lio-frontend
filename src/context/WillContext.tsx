@@ -18,7 +18,6 @@ export interface WillPersonalData {
 	city: string;
 	state: string;
 	postCode?: string;
-	post_code?: string;
 	country: string;
 }
 
@@ -39,14 +38,15 @@ export interface WillCharity {
 export interface WillAssetBeneficiary {
 	id: string;
 	percentage: number;
-	type: "individual" | "charity";
+	peopleId?: string;
+	charitiesId?: string;
 	person?: WillPerson;
 	charity?: WillCharity;
 }
 
 export interface WillAsset {
 	id: string;
-	type: string;
+	assetType: string;
 	description: string;
 	distributionType: "equal" | "percentage";
 	beneficiaries: WillAssetBeneficiary[];

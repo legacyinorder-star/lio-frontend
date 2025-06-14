@@ -59,7 +59,7 @@ export type AssetType =
 
 export interface Asset {
 	id: string;
-	type: AssetType;
+	assetType: AssetType;
 	description: string;
 	distributionType: "equal" | "percentage";
 	beneficiaries: {

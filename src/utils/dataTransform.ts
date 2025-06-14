@@ -1,0 +1,423 @@
+// Utility functions to convert snake_case API responses to camelCase for React components
+import {
+	WillData,
+	WillAssetBeneficiary,
+	WillBeneficiary,
+	WillExecutor,
+	WillWitness,
+} from "../context/WillContext";
+
+/**
+ * Converts a snake_case string to camelCase
+ */
+export function snakeToCamel(str: string): string {
+	return str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+}
+
+/**
+ * Recursively converts all object keys from snake_case to camelCase
+ */
+export function convertKeysToCamelCase<T>(obj: unknown): T {
+	if (obj === null || obj === undefined) {
+		return obj as T;
+	}
+
+	if (Array.isArray(obj)) {
+		return obj.map(convertKeysToCamelCase) as T;
+	}
+
+	if (typeof obj === "object") {
+		const converted: Record<string, unknown> = {};
+		for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
+			const camelKey = snakeToCamel(key);
+			converted[camelKey] = convertKeysToCamelCase(value);
+		}
+		return converted as T;
+	}
+
+	return obj as T;
+}
+
+/**
+ * Maps API will data to WillContext format with proper camelCase conversion
+ */
+export function mapWillDataFromAPI(apiData: unknown): WillData {
+	const converted = convertKeysToCamelCase<Record<string, unknown>>(apiData);
+
+	return {
+		id: (converted.id as string) || "",
+		lastUpdatedAt:
+			(converted.lastUpdatedAt as string) ||
+			(converted.updatedAt as string) ||
+			new Date().toISOString(),
+		createdAt: (converted.createdAt as string) || new Date().toISOString(),
+		status: (converted.status as string) || "draft",
+		userId: (converted.userId as string) || (converted.user_id as string) || "",
+
+		// Owner data
+		owner: {
+			id: (converted.owner as Record<string, unknown>)?.id as string,
+			firstName:
+				((converted.owner as Record<string, unknown>)?.firstName as string) ||
+				((converted.owner as Record<string, unknown>)?.first_name as string) ||
+				"",
+			lastName:
+				((converted.owner as Record<string, unknown>)?.lastName as string) ||
+				((converted.owner as Record<string, unknown>)?.last_name as string) ||
+				"",
+			maritalStatus:
+				((converted.owner as Record<string, unknown>)
+					?.maritalStatus as string) ||
+				((converted.owner as Record<string, unknown>)
+					?.marital_status as string) ||
+				"",
+			address:
+				((converted.owner as Record<string, unknown>)?.address as string) || "",
+			city:
+				((converted.owner as Record<string, unknown>)?.city as string) || "",
+			state:
+				((converted.owner as Record<string, unknown>)?.state as string) || "",
+			postCode:
+				((converted.owner as Record<string, unknown>)?.postCode as string) ||
+				((converted.owner as Record<string, unknown>)?.post_code as string) ||
+				"",
+			country:
+				((converted.owner as Record<string, unknown>)?.country as string) || "",
+		},
+
+		// Spouse data
+		spouse: converted.spouse
+			? {
+					id: (converted.spouse as Record<string, unknown>).id as string,
+					firstName:
+						((converted.spouse as Record<string, unknown>)
+							.firstName as string) ||
+						((converted.spouse as Record<string, unknown>)
+							.first_name as string) ||
+						"",
+					lastName:
+						((converted.spouse as Record<string, unknown>)
+							.lastName as string) ||
+						((converted.spouse as Record<string, unknown>)
+							.last_name as string) ||
+						"",
+			  }
+			: undefined,
+
+		// Children data
+		children:
+			(converted.children as Array<Record<string, unknown>>)?.map(
+				(child: Record<string, unknown>) => ({
+					id: child.id as string,
+					firstName:
+						(child.firstName as string) || (child.first_name as string) || "",
+					lastName:
+						(child.lastName as string) || (child.last_name as string) || "",
+					isMinor:
+						(child.isMinor as boolean) || (child.is_minor as boolean) || false,
+				})
+			) || [],
+
+		// Guardians data
+		guardians:
+			(converted.guardians as Array<Record<string, unknown>>)?.map(
+				(guardian: Record<string, unknown>) => ({
+					id: guardian.id as string,
+					firstName:
+						(guardian.firstName as string) ||
+						(guardian.first_name as string) ||
+						"",
+					lastName:
+						(guardian.lastName as string) ||
+						(guardian.last_name as string) ||
+						"",
+					relationship: (guardian.relationship as string) || "",
+					isPrimary:
+						(guardian.isPrimary as boolean) ||
+						(guardian.is_primary as boolean) ||
+						false,
+				})
+			) || [],
+
+		// Assets data
+		assets:
+			(converted.assets as Array<Record<string, unknown>>)?.map(
+				(asset: Record<string, unknown>) => ({
+					id: asset.id as string,
+					assetType:
+						(asset.assetType as string) || (asset.asset_type as string) || "",
+					description: (asset.description as string) || "",
+					distributionType:
+						(asset.distributionType as "equal" | "percentage") ||
+						(asset.distribution_type as "equal" | "percentage") ||
+						"equal",
+					beneficiaries:
+						(asset.beneficiaries as Array<Record<string, unknown>>)?.map(
+							(beneficiary: Record<string, unknown>) => ({
+								id: beneficiary.id as string,
+								percentage: (beneficiary.percentage as number) || 0,
+								peopleId:
+									(beneficiary.peopleId as string) ||
+									(beneficiary.people_id as string),
+								charitiesId:
+									(beneficiary.charitiesId as string) ||
+									(beneficiary.charities_id as string),
+								person: beneficiary.person
+									? {
+											id: (beneficiary.person as Record<string, unknown>)
+												.id as string,
+											firstName:
+												((beneficiary.person as Record<string, unknown>)
+													.firstName as string) ||
+												((beneficiary.person as Record<string, unknown>)
+													.first_name as string) ||
+												"",
+											lastName:
+												((beneficiary.person as Record<string, unknown>)
+													.lastName as string) ||
+												((beneficiary.person as Record<string, unknown>)
+													.last_name as string) ||
+												"",
+											relationship:
+												((beneficiary.person as Record<string, unknown>)
+													.relationship as string) || "",
+											isMinor:
+												((beneficiary.person as Record<string, unknown>)
+													.isMinor as boolean) ||
+												((beneficiary.person as Record<string, unknown>)
+													.is_minor as boolean) ||
+												false,
+									  }
+									: undefined,
+								charity: beneficiary.charity
+									? {
+											id: (beneficiary.charity as Record<string, unknown>)
+												.id as string,
+											name:
+												((beneficiary.charity as Record<string, unknown>)
+													.name as string) || "",
+											registrationNumber:
+												((beneficiary.charity as Record<string, unknown>)
+													.registrationNumber as string) ||
+												((beneficiary.charity as Record<string, unknown>)
+													.rc_number as string),
+									  }
+									: undefined,
+							})
+						) || [],
+				})
+			) || [],
+
+		// Other arrays
+		beneficiaries:
+			(converted.beneficiaries as Array<Record<string, unknown>>)?.map(
+				(beneficiary: Record<string, unknown>): WillBeneficiary => ({
+					firstName:
+						(beneficiary.firstName as string) ||
+						(beneficiary.first_name as string) ||
+						"",
+					lastName:
+						(beneficiary.lastName as string) ||
+						(beneficiary.last_name as string) ||
+						"",
+					relationship: (beneficiary.relationship as string) || "",
+					allocation: (beneficiary.allocation as number) || 0,
+				})
+			) || [],
+		executors:
+			(converted.executors as Array<Record<string, unknown>>)?.map(
+				(executor: Record<string, unknown>): WillExecutor => ({
+					firstName:
+						(executor.firstName as string) || (executor.first_name as string),
+					lastName:
+						(executor.lastName as string) || (executor.last_name as string),
+					companyName:
+						(executor.companyName as string) ||
+						(executor.company_name as string),
+					relationship: executor.relationship as string,
+					address: {
+						address:
+							((executor.address as Record<string, unknown>)
+								?.address as string) || "",
+						city:
+							((executor.address as Record<string, unknown>)?.city as string) ||
+							"",
+						state:
+							((executor.address as Record<string, unknown>)
+								?.state as string) || "",
+						postCode:
+							((executor.address as Record<string, unknown>)
+								?.postCode as string) ||
+							((executor.address as Record<string, unknown>)
+								?.post_code as string),
+						country:
+							((executor.address as Record<string, unknown>)
+								?.country as string) || "",
+					},
+					isPrimary:
+						(executor.isPrimary as boolean) ||
+						(executor.is_primary as boolean) ||
+						false,
+					type: (executor.type as "individual" | "corporate") || "individual",
+					contactPerson:
+						(executor.contactPerson as string) ||
+						(executor.contact_person as string),
+				})
+			) || [],
+		witnesses:
+			(converted.witnesses as Array<Record<string, unknown>>)?.map(
+				(witness: Record<string, unknown>): WillWitness => ({
+					firstName:
+						(witness.firstName as string) ||
+						(witness.first_name as string) ||
+						"",
+					lastName:
+						(witness.lastName as string) || (witness.last_name as string) || "",
+					address: {
+						address:
+							((witness.address as Record<string, unknown>)
+								?.address as string) || "",
+						city:
+							((witness.address as Record<string, unknown>)?.city as string) ||
+							"",
+						state:
+							((witness.address as Record<string, unknown>)?.state as string) ||
+							"",
+						postCode:
+							((witness.address as Record<string, unknown>)
+								?.postCode as string) ||
+							((witness.address as Record<string, unknown>)
+								?.post_code as string),
+						country:
+							((witness.address as Record<string, unknown>)
+								?.country as string) || "",
+					},
+				})
+			) || [],
+	};
+}
+
+/**
+ * Maps asset beneficiary data from API response to WillContext format
+ */
+export function mapAssetBeneficiariesFromAPI(
+	assetBeneficiaries: Array<{
+		id: string;
+		created_at: string;
+		will_id: string;
+		people_id: string | undefined;
+		charities_id: string | undefined;
+		asset_id: string;
+		percentage: number;
+		person?: {
+			id: string;
+			user_id: string;
+			will_id: string;
+			relationship_id: string;
+			first_name: string;
+			last_name: string;
+			is_minor: boolean;
+			created_at: string;
+			is_witness: boolean;
+		};
+		charity?: {
+			id: string;
+			created_at: string;
+			will_id: string;
+			name: string;
+			user_id: string;
+			rc_number?: string;
+		};
+	}>,
+	relationships: Array<{ id: string; name: string }>
+): WillAssetBeneficiary[] {
+	return assetBeneficiaries.map((assetBeneficiary) => {
+		// Check if people_id is set (individual)
+		if (assetBeneficiary.people_id && assetBeneficiary.people_id !== null) {
+			if (assetBeneficiary.person) {
+				return {
+					id: assetBeneficiary.id,
+					percentage: assetBeneficiary.percentage,
+					peopleId: assetBeneficiary.people_id,
+					person: {
+						id: assetBeneficiary.person.id,
+						firstName: assetBeneficiary.person.first_name,
+						lastName: assetBeneficiary.person.last_name,
+						relationship:
+							getFormattedRelationshipNameById(
+								relationships,
+								assetBeneficiary.person.relationship_id
+							) || "Unknown Relationship",
+						isMinor: assetBeneficiary.person.is_minor,
+					},
+				};
+			} else {
+				return {
+					id: assetBeneficiary.id,
+					percentage: assetBeneficiary.percentage,
+					peopleId: assetBeneficiary.people_id,
+					person: {
+						id: assetBeneficiary.people_id,
+						firstName: "Unknown",
+						lastName: "Person",
+						relationship: "Unknown Relationship",
+						isMinor: false,
+					},
+				};
+			}
+		}
+
+		// Check if charities_id is set (charity)
+		if (
+			assetBeneficiary.charities_id &&
+			assetBeneficiary.charities_id !== null
+		) {
+			if (assetBeneficiary.charity) {
+				return {
+					id: assetBeneficiary.id,
+					percentage: assetBeneficiary.percentage,
+					charitiesId: assetBeneficiary.charities_id,
+					charity: {
+						id: assetBeneficiary.charity.id,
+						name: assetBeneficiary.charity.name,
+						registrationNumber: assetBeneficiary.charity.rc_number,
+					},
+				};
+			} else {
+				return {
+					id: assetBeneficiary.id,
+					percentage: assetBeneficiary.percentage,
+					charitiesId: assetBeneficiary.charities_id,
+					charity: {
+						id: assetBeneficiary.charities_id,
+						name: "Unknown Charity",
+						registrationNumber: undefined,
+					},
+				};
+			}
+		}
+
+		// Ultimate fallback
+		return {
+			id: assetBeneficiary.id,
+			percentage: assetBeneficiary.percentage,
+			peopleId: assetBeneficiary.id,
+			person: {
+				id: assetBeneficiary.id,
+				firstName: "Unknown",
+				lastName: "Beneficiary",
+				relationship: "Unknown Relationship",
+				isMinor: false,
+			},
+		};
+	});
+}
+
+// Helper function (you'll need to import this from your existing utils)
+function getFormattedRelationshipNameById(
+	relationships: Array<{ id: string; name: string }>,
+	id: string
+): string {
+	const relationship = relationships.find((r) => r.id === id);
+	return relationship ? relationship.name : "Unknown Relationship";
+}
