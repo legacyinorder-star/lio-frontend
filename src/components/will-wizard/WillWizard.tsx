@@ -16,6 +16,7 @@ import SpouseStep from "./steps/SpouseStep";
 import ChildrenStep from "./steps/ChildrenStep";
 import AssetsStep from "./steps/AssetsStep";
 import GiftsStep from "./steps/GiftsStep";
+import ResiduaryStep from "./steps/ResiduaryStep";
 import WitnessesStep from "./steps/WitnessesStep";
 import FuneralInstructionsStep from "./steps/FuneralInstructionsStep";
 import AdditionalInstructionsStep from "./steps/AdditionalInstructionsStep";
@@ -132,6 +133,9 @@ export default function WillWizard() {
 				setCurrentQuestion("gifts");
 				break;
 			case "gifts":
+				setCurrentQuestion("residuary");
+				break;
+			case "residuary":
 				setCurrentQuestion("executors");
 				break;
 			case "executors":
@@ -183,8 +187,11 @@ export default function WillWizard() {
 			case "gifts":
 				setCurrentQuestion("hasAssets");
 				break;
-			case "executors":
+			case "residuary":
 				setCurrentQuestion("gifts");
+				break;
+			case "executors":
+				setCurrentQuestion("residuary");
 				break;
 			case "witnesses":
 				setCurrentQuestion("executors");
@@ -351,6 +358,9 @@ export default function WillWizard() {
 
 			case "gifts":
 				return <GiftsStep {...commonProps} />;
+
+			case "residuary":
+				return <ResiduaryStep {...commonProps} />;
 
 			case "executors": {
 				const executor = formData.executors[0] || {};

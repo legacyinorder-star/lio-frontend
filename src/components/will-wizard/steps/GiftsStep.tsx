@@ -38,14 +38,21 @@ import { useRelationships } from "@/hooks/useRelationships";
 import { getFormattedRelationshipNameById } from "@/utils/relationships";
 import { NewBeneficiaryDialog } from "../components/NewBeneficiaryDialog";
 import { useGiftManagement } from "@/hooks/useGiftManagement";
+import { useWill } from "@/context/WillContext";
 
-const giftSchema = z.object({
-	type: z.enum(["Cash", "Item", "Other"]),
-	description: z.string().min(1, "Description is required"),
-	value: z.number().optional(),
-	currency: z.string().optional(),
-	beneficiaryId: z.string().min(1, "Beneficiary is required"),
-});
+const giftSchema = z
+	.object({
+		type: z.enum(["Cash", "Item", "Other"]),
+		description: z.string().min(1, "Description is required"),
+		value: z.number().optional(),
+		currency: z.string().optional(),
+		peopleId: z.string().optional(),
+		charitiesId: z.string().optional(),
+	})
+	.refine((data) => data.peopleId || data.charitiesId, {
+		message: "Either peopleId or charitiesId is required",
+		path: ["peopleId"],
+	});
 
 // Gift type options with icons
 const GIFT_TYPES = [
@@ -159,6 +166,7 @@ export default function GiftsStep({
 		addCharityBeneficiary,
 	} = useBeneficiaryManagement();
 	const { relationships } = useRelationships();
+	const { activeWill } = useWill();
 	const { gifts, saveGift, removeGift } = useGiftManagement(
 		initialData?.gifts || [],
 		enhancedBeneficiaries
@@ -171,7 +179,8 @@ export default function GiftsStep({
 			description: "",
 			value: undefined,
 			currency: "USD",
-			beneficiaryId: "",
+			peopleId: "",
+			charitiesId: "",
 		},
 	});
 
@@ -205,7 +214,10 @@ export default function GiftsStep({
 		}
 	}, [giftDialogOpen]);
 
-	const handleSubmit = () => {
+	const handleSubmit = (e: React.FormEvent) => {
+		e.preventDefault();
+		// The form validation is not needed for the Next button since we're just passing the gifts
+		// The form validation is only used for the gift dialog
 		onNext({ gifts });
 	};
 
@@ -335,7 +347,42 @@ export default function GiftsStep({
 	// Helper function to get beneficiary from gift
 	const getBeneficiaryFromGift = (gift: GiftType) => {
 		const beneficiaryId = getBeneficiaryIdFromGift(gift);
-		return enhancedBeneficiaries.find((b) => b.id === beneficiaryId);
+
+		// First try to find in enhancedBeneficiaries
+		const enhancedBeneficiary = enhancedBeneficiaries.find(
+			(b) => b.id === beneficiaryId
+		);
+		if (enhancedBeneficiary) {
+			return enhancedBeneficiary;
+		}
+
+		// Fallback to will context if enhancedBeneficiaries is empty
+		if (activeWill?.gifts) {
+			const willGift = activeWill.gifts.find((wg) => wg.id === gift.id);
+			if (willGift) {
+				if (willGift.person) {
+					return {
+						id: willGift.person.id,
+						firstName: willGift.person.firstName,
+						lastName: willGift.person.lastName,
+						relationship: willGift.person.relationship,
+						relationshipId: willGift.person.relationshipId,
+						type: "person" as const,
+					};
+				} else if (willGift.charity) {
+					return {
+						id: willGift.charity.id,
+						firstName: willGift.charity.name,
+						lastName: "",
+						relationship: "Charity",
+						registrationNumber: willGift.charity.registrationNumber,
+						type: "charity" as const,
+					};
+				}
+			}
+		}
+
+		return null;
 	};
 
 	return (
@@ -348,11 +395,12 @@ export default function GiftsStep({
 			</div>
 
 			<Form {...form}>
-				<form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+				<form onSubmit={handleSubmit} className="space-y-6">
 					<div className="space-y-4">
 						<div className="flex justify-between items-center">
 							<h3 className="text-lg font-medium">Your Gifts</h3>
 							<Button
+								type="button"
 								variant="outline"
 								onClick={() => {
 									setGiftForm({

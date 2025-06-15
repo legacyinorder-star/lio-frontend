@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { toast } from "sonner";
 import { apiClient } from "@/utils/apiClient";
 import { useWill } from "@/context/WillContext";
@@ -57,12 +57,19 @@ export function useBeneficiaryManagement() {
 	>([]);
 	const [isLoadingBeneficiaries, setIsLoadingBeneficiaries] = useState(false);
 	const { activeWill } = useWill();
-	const { relationships } = useRelationships();
+	const { relationships, isLoading: isLoadingRelationships } =
+		useRelationships();
 
 	// Fetch beneficiaries when opening asset dialog
-	const fetchBeneficiaries = async () => {
+	const fetchBeneficiaries = useCallback(async () => {
 		if (!activeWill?.id) {
 			toast.error("No active will found");
+			return;
+		}
+
+		// Wait for relationships to be loaded if they're still loading
+		if (isLoadingRelationships) {
+			console.log("Waiting for relationships to load...");
 			return;
 		}
 
@@ -81,6 +88,9 @@ export function useBeneficiaryManagement() {
 			}
 
 			if (data) {
+				console.log("API beneficiary data:", data);
+				console.log("Available relationships:", relationships);
+
 				const combinedBeneficiaries = [
 					...data.charities.map((charity) => ({
 						id: charity.id,
@@ -90,19 +100,28 @@ export function useBeneficiaryManagement() {
 						type: "charity" as const,
 						registrationNumber: charity.rc_number,
 					})),
-					...data.people.map((person) => ({
-						id: person.id,
-						firstName: person.first_name,
-						lastName: person.last_name,
-						relationship:
-							getFormattedRelationshipNameById(
-								relationships,
-								person.relationship_id
-							) || "Unknown Relationship",
-						relationshipId: person.relationship_id,
-						isMinor: person.is_minor,
-						type: "person" as const,
-					})),
+					...data.people.map((person) => {
+						const relationshipName = getFormattedRelationshipNameById(
+							relationships,
+							person.relationship_id
+						);
+
+						console.log(`Person ${person.first_name} ${person.last_name}:`, {
+							relationship_id: person.relationship_id,
+							formatted_relationship: relationshipName,
+							relationships_available: relationships.length,
+						});
+
+						return {
+							id: person.id,
+							firstName: person.first_name,
+							lastName: person.last_name,
+							relationship: relationshipName || "Unknown Relationship",
+							relationshipId: person.relationship_id,
+							isMinor: person.is_minor,
+							type: "person" as const,
+						};
+					}),
 				];
 				setEnhancedBeneficiaries(combinedBeneficiaries);
 			}
@@ -111,7 +130,15 @@ export function useBeneficiaryManagement() {
 		} finally {
 			setIsLoadingBeneficiaries(false);
 		}
-	};
+	}, [activeWill?.id, relationships, isLoadingRelationships]);
+
+	// Refetch beneficiaries when relationships finish loading
+	useEffect(() => {
+		if (!isLoadingRelationships && relationships.length > 0 && activeWill?.id) {
+			console.log("Relationships loaded, refetching beneficiaries...");
+			fetchBeneficiaries();
+		}
+	}, [isLoadingRelationships, relationships.length, activeWill?.id]);
 
 	// Add new individual beneficiary
 	const addIndividualBeneficiary = async (
