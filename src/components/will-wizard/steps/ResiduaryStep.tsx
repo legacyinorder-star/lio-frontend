@@ -22,6 +22,7 @@ import {
 import { NewBeneficiaryDialog } from "../components/NewBeneficiaryDialog";
 import { apiClient } from "@/utils/apiClient";
 import { toast } from "sonner";
+import type { WillResiduary } from "@/context/WillContext";
 
 interface ResiduaryApiResponse {
 	id: string;
@@ -35,6 +36,7 @@ interface ResiduaryApiResponse {
 		will_id: string;
 		people_id: string | null;
 		charities_id: string | null;
+		percentage: number;
 		person?: {
 			id: string;
 			user_id: string;
@@ -89,8 +91,13 @@ export default function ResiduaryStep({
 	>(new Set());
 	const [isLoadingResiduary, setIsLoadingResiduary] = useState(false);
 	const [hasLoadedResiduary, setHasLoadedResiduary] = useState(false);
+	const [existingResiduaryId, setExistingResiduaryId] = useState<string | null>(
+		null
+	);
+	const [hasExistingData, setHasExistingData] = useState(false);
+	const [isSubmitting, setIsSubmitting] = useState(false);
 
-	const { activeWill } = useWill();
+	const { activeWill, setActiveWill } = useWill();
 	const { relationships } = useRelationships();
 	const {
 		enhancedBeneficiaries,
@@ -123,6 +130,10 @@ export default function ResiduaryStep({
 			if (data) {
 				console.log("Loaded existing residuary data:", data);
 
+				// Set existing data flags
+				setExistingResiduaryId(data.id);
+				setHasExistingData(true);
+
 				// Set distribution type
 				setIsEqualDistribution(data.distribution_type === "equal");
 
@@ -138,7 +149,7 @@ export default function ResiduaryStep({
 						processedBeneficiaries.push({
 							id: beneficiary.id,
 							beneficiaryId: beneficiaryId,
-							percentage: 0, // We'll need to get this from the API response if available
+							percentage: beneficiary.percentage || 0,
 						});
 					}
 				});
@@ -158,7 +169,41 @@ export default function ResiduaryStep({
 	// Check for existing residuary data when component mounts
 	useEffect(() => {
 		if (activeWill?.id && !hasLoadedResiduary) {
-			fetchResiduaryData();
+			// Check if there's existing residuary data in the will context
+			if (activeWill.residuary) {
+				setExistingResiduaryId(activeWill.residuary.id);
+				setHasExistingData(true);
+				setIsEqualDistribution(
+					activeWill.residuary.distribution_type === "equal"
+				);
+
+				// Process beneficiaries from will context
+				const processedBeneficiaries: ResiduaryBeneficiary[] = [];
+				const selectedIds = new Set<string>();
+
+				activeWill.residuary.beneficiaries.forEach((beneficiary) => {
+					const beneficiaryId = beneficiary.peopleId || beneficiary.charitiesId;
+					if (beneficiaryId) {
+						selectedIds.add(beneficiaryId);
+						processedBeneficiaries.push({
+							id: beneficiary.id,
+							beneficiaryId: beneficiaryId,
+							percentage: beneficiary.percentage,
+						});
+					}
+				});
+
+				setResiduaryBeneficiaries(processedBeneficiaries);
+				setSelectedBeneficiaries(selectedIds);
+				setHasLoadedResiduary(true);
+				console.log(
+					"Found existing residuary data in will context:",
+					activeWill.residuary
+				);
+			} else {
+				// No data in context, check API
+				fetchResiduaryData();
+			}
 		}
 	}, [activeWill?.id, hasLoadedResiduary]);
 
@@ -294,8 +339,116 @@ export default function ResiduaryStep({
 		setSearchQuery("");
 	};
 
-	const handleSubmit = () => {
-		onNext({ residuaryBeneficiaries });
+	const handleSubmit = async () => {
+		setIsSubmitting(true);
+		try {
+			// Prepare the payload
+			const payload = {
+				will_id: activeWill?.id,
+				distribution_type: isEqualDistribution ? "equal" : "manual",
+				beneficiaries: {
+					charities: [] as Array<{ id: string; percentage: number }>,
+					people: [] as Array<{ id: string; percentage: number }>,
+				},
+			};
+
+			// Separate beneficiaries into people and charities with percentages
+			residuaryBeneficiaries.forEach((beneficiary) => {
+				// Check if it's a charity by looking in enhancedBeneficiaries
+				const enhancedBeneficiary = enhancedBeneficiaries.find(
+					(b) => b.id === beneficiary.beneficiaryId
+				);
+				const beneficiaryData = {
+					id: beneficiary.beneficiaryId,
+					percentage: beneficiary.percentage,
+				};
+
+				if (enhancedBeneficiary?.type === "charity") {
+					payload.beneficiaries.charities.push(beneficiaryData);
+				} else {
+					payload.beneficiaries.people.push(beneficiaryData);
+				}
+			});
+
+			let response;
+			if (hasExistingData && existingResiduaryId) {
+				// Update existing residuary data
+				console.log("Updating existing residuary data with PATCH");
+				response = await apiClient(`/residuary/${existingResiduaryId}`, {
+					method: "PATCH",
+					body: JSON.stringify(payload),
+				});
+			} else {
+				// Create new residuary data
+				console.log("Creating new residuary data with POST");
+				response = await apiClient("/residuary", {
+					method: "POST",
+					body: JSON.stringify(payload),
+				});
+			}
+
+			if (response.error) {
+				toast.error("Failed to save residuary data");
+				return;
+			}
+
+			// Update the active Will state with the residuary information
+			if (activeWill) {
+				const residuaryData: WillResiduary = {
+					id: existingResiduaryId || "",
+					distribution_type: payload.distribution_type as "equal" | "manual",
+					beneficiaries: residuaryBeneficiaries.map((beneficiary) => {
+						// Find the enhanced beneficiary to determine type and get full data
+						const enhancedBeneficiary = enhancedBeneficiaries.find(
+							(b) => b.id === beneficiary.beneficiaryId
+						);
+
+						if (enhancedBeneficiary?.type === "charity") {
+							return {
+								id: beneficiary.id,
+								percentage: beneficiary.percentage,
+								charitiesId: beneficiary.beneficiaryId,
+								charity: {
+									id: beneficiary.beneficiaryId,
+									name: enhancedBeneficiary.firstName, // Charity name is stored in firstName
+									registrationNumber: enhancedBeneficiary.registrationNumber,
+								},
+							};
+						} else {
+							return {
+								id: beneficiary.id,
+								percentage: beneficiary.percentage,
+								peopleId: beneficiary.beneficiaryId,
+								person: {
+									id: beneficiary.beneficiaryId,
+									firstName: enhancedBeneficiary?.firstName || "",
+									lastName: enhancedBeneficiary?.lastName || "",
+									relationship: enhancedBeneficiary?.relationship || "",
+									relationshipId: enhancedBeneficiary?.relationshipId,
+									isMinor: false, // Default value, should be updated if available
+								},
+							};
+						}
+					}),
+				};
+
+				const updatedWill = {
+					...activeWill,
+					residuary: residuaryData,
+				};
+
+				// Update the will context
+				setActiveWill(updatedWill);
+			}
+
+			toast.success("Residuary data saved successfully");
+			onNext({ residuaryBeneficiaries });
+		} catch (error) {
+			console.error("Error saving residuary data:", error);
+			toast.error("Failed to save residuary data");
+		} finally {
+			setIsSubmitting(false);
+		}
 	};
 
 	// Get available beneficiaries from the will context
@@ -757,12 +910,22 @@ export default function ResiduaryStep({
 								onClick={handleSubmit}
 								className="flex items-center gap-2 bg-light-green hover:bg-light-green/90 text-black cursor-pointer"
 								disabled={
+									isSubmitting ||
 									selectedBeneficiaries.size === 0 ||
 									(!isEqualDistribution && totalAllocation !== 100)
 								}
 							>
-								Next
-								<ArrowRight className="h-4 w-4" />
+								{isSubmitting ? (
+									<>
+										<div className="h-4 w-4 animate-spin rounded-full border-t-2 border-b-2 border-black"></div>
+										Saving...
+									</>
+								) : (
+									<>
+										Next
+										<ArrowRight className="h-4 w-4" />
+									</>
+								)}
 							</Button>
 						</div>
 					</div>

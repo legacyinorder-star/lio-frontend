@@ -89,6 +89,19 @@ export interface WillWitness {
 	address: Address;
 }
 
+export interface WillResiduary {
+	id: string;
+	distribution_type: "equal" | "manual";
+	beneficiaries: Array<{
+		id: string;
+		percentage: number;
+		peopleId?: string;
+		charitiesId?: string;
+		person?: WillPerson;
+		charity?: WillCharity;
+	}>;
+}
+
 export interface WillData {
 	id: string;
 	lastUpdatedAt: string;
@@ -124,6 +137,8 @@ export interface WillData {
 	beneficiaries: WillBeneficiary[];
 	executors: WillExecutor[];
 	witnesses: WillWitness[];
+	// Residuary estate
+	residuary?: WillResiduary;
 }
 
 interface WillContextType {
