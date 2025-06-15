@@ -1,60 +1,168 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Form } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight, Edit2, Plus, Trash2 } from "lucide-react";
+import {
+	ArrowLeft,
+	ArrowRight,
+	Edit2,
+	Plus,
+	Trash2,
+	DollarSign,
+	Gift,
+	Package,
+} from "lucide-react";
 import {
 	Dialog,
 	DialogContent,
 	DialogHeader,
 	DialogTitle,
-	DialogTrigger,
+	DialogFooter,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
-import { Gift, GiftType, NewBeneficiary } from "../types/will.types";
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+} from "@/components/ui/custom-dropdown-menu";
+import { ChevronsUpDown, X } from "lucide-react";
+import {
+	Gift as GiftType,
+	GiftType as GiftTypeEnum,
+} from "../types/will.types";
+import { useBeneficiaryManagement } from "@/hooks/useBeneficiaryManagement";
+import { useRelationships } from "@/hooks/useRelationships";
+import { getFormattedRelationshipNameById } from "@/utils/relationships";
+import { NewBeneficiaryDialog } from "../components/NewBeneficiaryDialog";
+import { useGiftManagement } from "@/hooks/useGiftManagement";
 
 const giftSchema = z.object({
 	type: z.enum(["Cash", "Item", "Other"]),
 	description: z.string().min(1, "Description is required"),
 	value: z.number().optional(),
+	currency: z.string().optional(),
 	beneficiaryId: z.string().min(1, "Beneficiary is required"),
 });
 
+// Gift type options with icons
+const GIFT_TYPES = [
+	{
+		value: "Cash" as GiftTypeEnum,
+		label: "Cash",
+		icon: DollarSign,
+		description: "Monetary gifts or cash bequests",
+	},
+	{
+		value: "Item" as GiftTypeEnum,
+		label: "Item",
+		icon: Package,
+		description: "Personal items or possessions",
+	},
+	{
+		value: "Other" as GiftTypeEnum,
+		label: "Other",
+		icon: Gift,
+		description: "Other specific gifts or bequests",
+	},
+];
+
+// Currency options
+const CURRENCIES = [
+	{ code: "USD", symbol: "$", name: "US Dollar" },
+	{ code: "EUR", symbol: "€", name: "Euro" },
+	{ code: "GBP", symbol: "£", name: "British Pound" },
+	{ code: "CAD", symbol: "C$", name: "Canadian Dollar" },
+	{ code: "AUD", symbol: "A$", name: "Australian Dollar" },
+	{ code: "NGN", symbol: "₦", name: "Nigerian Naira" },
+	{ code: "SAR", symbol: "﷼", name: "Saudi Riyal" },
+	{ code: "AED", symbol: "د.إ", name: "UAE Dirham" },
+	{ code: "QAR", symbol: "ر.ق", name: "Qatari Riyal" },
+	{ code: "JPY", symbol: "¥", name: "Japanese Yen" },
+	{ code: "CHF", symbol: "CHF", name: "Swiss Franc" },
+	{ code: "CNY", symbol: "¥", name: "Chinese Yuan" },
+	{ code: "INR", symbol: "₹", name: "Indian Rupee" },
+	{ code: "BRL", symbol: "R$", name: "Brazilian Real" },
+];
+
+// Gift type pill component
+const GiftTypePill = ({
+	type,
+	selected,
+	onClick,
+	className = "",
+}: {
+	type: (typeof GIFT_TYPES)[0];
+	selected?: boolean;
+	onClick?: () => void;
+	className?: string;
+}) => {
+	const Icon = type.icon;
+	return (
+		<button
+			type="button"
+			onClick={onClick}
+			className={`
+				flex items-center space-x-2 px-4 py-2 rounded-full border h-10
+				whitespace-nowrap overflow-hidden
+				${
+					selected
+						? "bg-light-green text-black border-light-green"
+						: "bg-background hover:bg-muted border-input"
+				}
+				${onClick ? "cursor-pointer" : ""}
+				${className}
+			`}
+		>
+			<Icon className="h-4 w-4 flex-shrink-0" />
+			<span className="truncate">{type.label}</span>
+		</button>
+	);
+};
+
 interface GiftsStepProps {
-	onNext: (data: { gifts: Gift[] }) => void;
+	onNext: (data: { gifts: GiftType[] }) => void;
 	onBack: () => void;
 	initialData?: {
-		gifts: Gift[];
+		gifts: GiftType[];
 	};
-	beneficiaries: NewBeneficiary[];
 }
 
 export default function GiftsStep({
 	onNext,
 	onBack,
 	initialData,
-	beneficiaries,
 }: GiftsStepProps) {
-	const [gifts, setGifts] = useState<Gift[]>(initialData?.gifts || []);
 	const [giftDialogOpen, setGiftDialogOpen] = useState(false);
-	const [editingGift, setEditingGift] = useState<Gift | null>(null);
+	const [editingGift, setEditingGift] = useState<GiftType | null>(null);
+	const [newBeneficiaryDialogOpen, setNewBeneficiaryDialogOpen] =
+		useState(false);
 
-	const [giftForm, setGiftForm] = useState<Omit<Gift, "id">>({
+	const [giftForm, setGiftForm] = useState<Omit<GiftType, "id">>({
 		type: "Cash",
 		description: "",
 		value: undefined,
-		beneficiaryId: "",
+		currency: "USD",
+		peopleId: "",
+		charitiesId: "",
 	});
+	const [searchQuery, setSearchQuery] = useState("");
+	const [isBeneficiaryDropdownOpen, setIsBeneficiaryDropdownOpen] =
+		useState(false);
+
+	const {
+		enhancedBeneficiaries,
+		fetchBeneficiaries,
+		addIndividualBeneficiary,
+		addCharityBeneficiary,
+	} = useBeneficiaryManagement();
+	const { relationships } = useRelationships();
+	const { gifts, saveGift, removeGift } = useGiftManagement(
+		initialData?.gifts || [],
+		enhancedBeneficiaries
+	);
 
 	const form = useForm<z.infer<typeof giftSchema>>({
 		resolver: zodResolver(giftSchema),
@@ -62,61 +170,172 @@ export default function GiftsStep({
 			type: "Cash",
 			description: "",
 			value: undefined,
+			currency: "USD",
 			beneficiaryId: "",
 		},
 	});
+
+	// Initialize form when editing
+	useEffect(() => {
+		if (editingGift) {
+			setGiftForm({
+				type: editingGift.type,
+				description: editingGift.description,
+				value: editingGift.value,
+				currency: editingGift.currency,
+				peopleId: editingGift.peopleId || "",
+				charitiesId: editingGift.charitiesId || "",
+			});
+		} else {
+			setGiftForm({
+				type: "Cash",
+				description: "",
+				value: undefined,
+				currency: "USD",
+				peopleId: "",
+				charitiesId: "",
+			});
+		}
+	}, [editingGift]);
+
+	// Fetch beneficiaries when dialog opens
+	useEffect(() => {
+		if (giftDialogOpen) {
+			fetchBeneficiaries();
+		}
+	}, [giftDialogOpen]);
 
 	const handleSubmit = () => {
 		onNext({ gifts });
 	};
 
 	const handleGiftFormChange =
-		(field: keyof Omit<Gift, "id">) =>
-		(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+		(field: keyof Omit<GiftType, "id">) =>
+		(
+			e: React.ChangeEvent<
+				HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+			>
+		) => {
 			setGiftForm((prev) => ({
 				...prev,
 				[field]: field === "value" ? Number(e.target.value) : e.target.value,
 			}));
 		};
 
-	const handleSaveGift = () => {
-		if (!giftForm.description || !giftForm.beneficiaryId) {
+	const handleSelectBeneficiary = (beneficiaryId: string) => {
+		if (!beneficiaryId) return;
+
+		// Determine if it's a person or charity based on the beneficiary type
+		const beneficiary = enhancedBeneficiaries.find(
+			(b) => b.id === beneficiaryId
+		);
+		if (beneficiary) {
+			setGiftForm((prev) => ({
+				...prev,
+				peopleId: beneficiary.type === "person" ? beneficiaryId : "",
+				charitiesId: beneficiary.type === "charity" ? beneficiaryId : "",
+			}));
+		}
+
+		// Close dropdown and clear search
+		setSearchQuery("");
+		setIsBeneficiaryDropdownOpen(false);
+	};
+
+	const handleSaveGift = async () => {
+		if (
+			!giftForm.description ||
+			(!giftForm.peopleId && !giftForm.charitiesId)
+		) {
 			return;
 		}
 
-		if (editingGift) {
-			setGifts((prev) =>
-				prev.map((gift) =>
-					gift.id === editingGift.id ? { ...giftForm, id: gift.id } : gift
-				)
-			);
-		} else {
-			setGifts((prev) => [...prev, { ...giftForm, id: crypto.randomUUID() }]);
-		}
+		const savedGift = await saveGift(giftForm, editingGift?.id);
 
-		setGiftForm({
-			type: "Cash",
-			description: "",
-			value: undefined,
-			beneficiaryId: "",
-		});
-		setEditingGift(null);
-		setGiftDialogOpen(false);
+		if (savedGift) {
+			setGiftForm({
+				type: "Cash",
+				description: "",
+				value: undefined,
+				currency: "USD",
+				peopleId: "",
+				charitiesId: "",
+			});
+			setEditingGift(null);
+			setGiftDialogOpen(false);
+		}
 	};
 
-	const handleEditGift = (gift: Gift) => {
+	const handleEditGift = (gift: GiftType) => {
 		setEditingGift(gift);
 		setGiftForm({
 			type: gift.type,
 			description: gift.description,
 			value: gift.value,
-			beneficiaryId: gift.beneficiaryId,
+			currency: gift.currency,
+			peopleId: gift.peopleId || "",
+			charitiesId: gift.charitiesId || "",
 		});
 		setGiftDialogOpen(true);
 	};
 
 	const handleRemoveGift = (giftId: string) => {
-		setGifts((prev) => prev.filter((gift) => gift.id !== giftId));
+		removeGift(giftId);
+	};
+
+	const handleAddNewBeneficiary = () => {
+		setNewBeneficiaryDialogOpen(true);
+	};
+
+	const handleAddIndividualBeneficiary = async (
+		firstName: string,
+		lastName: string,
+		relationshipId: string
+	) => {
+		await addIndividualBeneficiary(firstName, lastName, relationshipId);
+	};
+
+	const handleAddCharityBeneficiary = async (
+		charityName: string,
+		registrationNumber?: string
+	) => {
+		await addCharityBeneficiary(charityName, registrationNumber);
+	};
+
+	// Filter beneficiaries based on search query
+	const filteredBeneficiaries = enhancedBeneficiaries.filter(
+		(beneficiary) =>
+			beneficiary.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+			beneficiary.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+			(beneficiary.registrationNumber &&
+				beneficiary.registrationNumber
+					.toLowerCase()
+					.includes(searchQuery.toLowerCase()))
+	);
+
+	// Helper function to get beneficiary ID from form
+	const getBeneficiaryIdFromForm = () => {
+		return giftForm.peopleId || giftForm.charitiesId || "";
+	};
+
+	// Helper function to get selected beneficiary from form
+	const getSelectedBeneficiaryFromForm = () => {
+		const beneficiaryId = getBeneficiaryIdFromForm();
+		return enhancedBeneficiaries.find((b) => b.id === beneficiaryId);
+	};
+
+	// Get selected beneficiary details
+	const selectedBeneficiary = getSelectedBeneficiaryFromForm();
+
+	// Helper function to get beneficiary ID from Gift
+	const getBeneficiaryIdFromGift = (gift: GiftType) => {
+		return gift.peopleId || gift.charitiesId || "";
+	};
+
+	// Helper function to get beneficiary from gift
+	const getBeneficiaryFromGift = (gift: GiftType) => {
+		const beneficiaryId = getBeneficiaryIdFromGift(gift);
+		return enhancedBeneficiaries.find((b) => b.id === beneficiaryId);
 	};
 
 	return (
@@ -133,114 +352,25 @@ export default function GiftsStep({
 					<div className="space-y-4">
 						<div className="flex justify-between items-center">
 							<h3 className="text-lg font-medium">Your Gifts</h3>
-							<Dialog open={giftDialogOpen} onOpenChange={setGiftDialogOpen}>
-								<DialogTrigger asChild>
-									<Button
-										variant="outline"
-										onClick={() => {
-											setGiftForm({
-												type: "Cash",
-												description: "",
-												value: undefined,
-												beneficiaryId: "",
-											});
-											setEditingGift(null);
-										}}
-										className="cursor-pointer"
-									>
-										<Plus className="mr-2 h-4 w-4" />
-										Add Gift
-									</Button>
-								</DialogTrigger>
-								<DialogContent className="bg-white">
-									<DialogHeader>
-										<DialogTitle>
-											{editingGift ? "Edit Gift" : "Add Gift"}
-										</DialogTitle>
-									</DialogHeader>
-									<div className="space-y-4 py-4">
-										<div className="space-y-2">
-											<Label>Gift Type</Label>
-											<Select
-												value={giftForm.type}
-												onValueChange={(value: GiftType) =>
-													setGiftForm((prev) => ({ ...prev, type: value }))
-												}
-											>
-												<SelectTrigger>
-													<SelectValue placeholder="Select gift type" />
-												</SelectTrigger>
-												<SelectContent>
-													<SelectItem value="Cash">Cash</SelectItem>
-													<SelectItem value="Item">Item</SelectItem>
-													<SelectItem value="Other">Other</SelectItem>
-												</SelectContent>
-											</Select>
-										</div>
-										<div className="space-y-2">
-											<Label>Description</Label>
-											<Input
-												value={giftForm.description}
-												onChange={handleGiftFormChange("description")}
-												placeholder="Describe the gift"
-											/>
-										</div>
-										{giftForm.type === "Cash" && (
-											<div className="space-y-2">
-												<Label>Value</Label>
-												<Input
-													type="number"
-													value={giftForm.value || ""}
-													onChange={handleGiftFormChange("value")}
-													placeholder="$0.00"
-												/>
-											</div>
-										)}
-										<div className="space-y-2">
-											<Label>Beneficiary</Label>
-											<Select
-												value={giftForm.beneficiaryId}
-												onValueChange={(value) =>
-													setGiftForm((prev) => ({
-														...prev,
-														beneficiaryId: value,
-													}))
-												}
-											>
-												<SelectTrigger>
-													<SelectValue placeholder="Select beneficiary" />
-												</SelectTrigger>
-												<SelectContent>
-													{beneficiaries.map((beneficiary) => (
-														<SelectItem
-															key={beneficiary.id}
-															value={beneficiary.id}
-														>
-															{`${beneficiary.firstName} ${beneficiary.lastName}`}
-														</SelectItem>
-													))}
-												</SelectContent>
-											</Select>
-										</div>
-										<div className="flex justify-end space-x-2">
-											<Button
-												type="button"
-												variant="outline"
-												onClick={() => setGiftDialogOpen(false)}
-											>
-												Cancel
-											</Button>
-											<Button
-												type="button"
-												onClick={handleSaveGift}
-												className="bg-light-green hover:bg-light-green/90 text-black"
-											>
-												Save
-											</Button>
-										</div>
-									</div>
-								</DialogContent>
-							</Dialog>
+							<Button
+								variant="outline"
+								onClick={() => {
+									setGiftForm({
+										type: "Cash",
+										description: "",
+										value: undefined,
+										currency: "USD",
+										peopleId: "",
+										charitiesId: "",
+									});
+									setEditingGift(null);
+									setGiftDialogOpen(true);
+								}}
+								className="cursor-pointer"
+							>
+								<Plus className="mr-2 h-4 w-4" />
+								Add Gift
+							</Button>
 						</div>
 
 						{gifts.length === 0 ? (
@@ -250,55 +380,67 @@ export default function GiftsStep({
 							</p>
 						) : (
 							<div className="space-y-4">
-								{gifts.map((gift) => (
-									<div
-										key={gift.id}
-										className="flex justify-between items-start p-4 border rounded-lg"
-									>
-										<div className="space-y-1">
-											<div className="flex items-center space-x-2">
-												<p className="font-medium">{gift.type}</p>
-												{gift.type === "Cash" && gift.value && (
-													<span className="text-sm text-muted-foreground">
-														${gift.value.toLocaleString()}
-													</span>
-												)}
+								{gifts.map((gift) => {
+									const beneficiary = getBeneficiaryFromGift(gift);
+									const relationship = beneficiary?.relationshipId
+										? getFormattedRelationshipNameById(
+												relationships,
+												beneficiary.relationshipId
+										  ) || beneficiary.relationship
+										: beneficiary?.relationship || "Unknown";
+
+									// Get currency symbol for display
+									const currencyInfo = gift.currency
+										? CURRENCIES.find((c) => c.code === gift.currency)
+										: null;
+
+									return (
+										<div
+											key={gift.id}
+											className="flex justify-between items-start p-4 border rounded-lg"
+										>
+											<div className="space-y-1">
+												<div className="flex items-center space-x-2">
+													<p className="font-medium">{gift.type}</p>
+													{gift.type === "Cash" && gift.value && (
+														<span className="text-sm text-muted-foreground">
+															{currencyInfo?.symbol || gift.currency || "$"}
+															{gift.value.toLocaleString()}
+														</span>
+													)}
+												</div>
+												<p className="text-sm">{gift.description}</p>
+												<p className="text-sm text-muted-foreground">
+													To: {beneficiary?.firstName} {beneficiary?.lastName} (
+													{relationship})
+													{beneficiary?.type === "charity" &&
+														beneficiary.registrationNumber &&
+														` - Reg: ${beneficiary.registrationNumber}`}
+												</p>
 											</div>
-											<p className="text-sm">{gift.description}</p>
-											<p className="text-sm text-muted-foreground">
-												To:{" "}
-												{
-													beneficiaries.find((b) => b.id === gift.beneficiaryId)
-														?.firstName
-												}{" "}
-												{
-													beneficiaries.find((b) => b.id === gift.beneficiaryId)
-														?.lastName
-												}
-											</p>
+											<div className="flex space-x-2">
+												<Button
+													type="button"
+													variant="outline"
+													size="sm"
+													onClick={() => handleEditGift(gift)}
+												>
+													<Edit2 className="h-4 w-4 mr-2" />
+													Edit
+												</Button>
+												<Button
+													type="button"
+													variant="outline"
+													size="sm"
+													onClick={() => handleRemoveGift(gift.id)}
+												>
+													<Trash2 className="h-4 w-4 mr-2" />
+													Remove
+												</Button>
+											</div>
 										</div>
-										<div className="flex space-x-2">
-											<Button
-												type="button"
-												variant="outline"
-												size="sm"
-												onClick={() => handleEditGift(gift)}
-											>
-												<Edit2 className="h-4 w-4 mr-2" />
-												Edit
-											</Button>
-											<Button
-												type="button"
-												variant="outline"
-												size="sm"
-												onClick={() => handleRemoveGift(gift.id)}
-											>
-												<Trash2 className="h-4 w-4 mr-2" />
-												Remove
-											</Button>
-										</div>
-									</div>
-								))}
+									);
+								})}
 							</div>
 						)}
 					</div>
@@ -321,6 +463,253 @@ export default function GiftsStep({
 					</div>
 				</form>
 			</Form>
+
+			{/* Gift Dialog */}
+			<Dialog open={giftDialogOpen} onOpenChange={setGiftDialogOpen}>
+				<DialogContent className="bg-white max-w-2xl">
+					<DialogHeader>
+						<DialogTitle>{editingGift ? "Edit Gift" : "Add Gift"}</DialogTitle>
+					</DialogHeader>
+					<div className="space-y-4 py-4">
+						{/* Gift Type Selector */}
+						<div className="space-y-4">
+							<Label>Gift Type</Label>
+							<div className="grid grid-cols-3 gap-2 min-w-0">
+								{GIFT_TYPES.map((type) => (
+									<GiftTypePill
+										key={type.value}
+										type={type}
+										selected={giftForm.type === type.value}
+										onClick={() =>
+											setGiftForm((prev) => ({ ...prev, type: type.value }))
+										}
+									/>
+								))}
+							</div>
+							<div className="text-sm text-muted-foreground">
+								{GIFT_TYPES.find((t) => t.value === giftForm.type)?.description}
+							</div>
+						</div>
+
+						{/* Description */}
+						<div className="space-y-2">
+							<Label htmlFor="giftDescription">Description</Label>
+							<textarea
+								id="giftDescription"
+								value={giftForm.description}
+								onChange={handleGiftFormChange("description")}
+								placeholder="Describe the gift, its location and any details that may be relevant"
+								className="w-full min-h-[100px] p-2 border rounded-md"
+							/>
+						</div>
+
+						{/* Value and Currency (only for Cash gifts) */}
+						{giftForm.type === "Cash" && (
+							<div className="space-y-2">
+								<div className="flex space-x-[0rem]">
+									{/* Currency Selection */}
+									<div className="w-48">
+										<Label>Currency</Label>
+										<DropdownMenu>
+											<Button
+												type="button"
+												variant="outline"
+												className="w-full justify-between"
+												aria-expanded={isBeneficiaryDropdownOpen}
+											>
+												{(() => {
+													const selectedCurrency = CURRENCIES.find(
+														(c) => c.code === giftForm.currency
+													);
+													return selectedCurrency ? (
+														<span>
+															{selectedCurrency.symbol} -{" "}
+															{selectedCurrency.name}
+														</span>
+													) : (
+														<span className="text-muted-foreground">
+															Select currency
+														</span>
+													);
+												})()}
+												<ChevronsUpDown className="h-4 w-4" />
+											</Button>
+											<DropdownMenuContent className="w-[300px] max-h-[300px] overflow-y-auto">
+												<div className="space-y-1">
+													{CURRENCIES.map((currency) => (
+														<DropdownMenuItem
+															key={currency.code}
+															onSelect={() =>
+																setGiftForm((prev) => ({
+																	...prev,
+																	currency: currency.code,
+																}))
+															}
+															className="cursor-pointer"
+														>
+															{currency.symbol} - {currency.name}
+														</DropdownMenuItem>
+													))}
+												</div>
+											</DropdownMenuContent>
+										</DropdownMenu>
+									</div>
+
+									{/* Value Input */}
+									<div className="flex-1 w-full">
+										<Label htmlFor="giftValue">Value</Label>
+										<Input
+											id="giftValue"
+											type="number"
+											value={giftForm.value || ""}
+											onChange={handleGiftFormChange("value")}
+											placeholder="0.00"
+										/>
+									</div>
+								</div>
+							</div>
+						)}
+
+						{/* Beneficiary Selection */}
+						<div className="space-y-2">
+							<div className="flex justify-between items-center">
+								<Label>Beneficiary</Label>
+								<Button
+									type="button"
+									variant="outline"
+									size="sm"
+									onClick={handleAddNewBeneficiary}
+									className="cursor-pointer"
+								>
+									<Plus className="mr-2 h-4 w-4" />
+									Add New Beneficiary
+								</Button>
+							</div>
+							<div className="w-[600px]">
+								<DropdownMenu
+									className="w-[600px] max-h-[300px]"
+									onOpenChange={setIsBeneficiaryDropdownOpen}
+								>
+									<Button
+										type="button"
+										variant="outline"
+										className="w-full justify-between"
+										aria-expanded={isBeneficiaryDropdownOpen}
+									>
+										{selectedBeneficiary ? (
+											<span>
+												{selectedBeneficiary.firstName}{" "}
+												{selectedBeneficiary.lastName} (
+												{selectedBeneficiary.relationshipId
+													? getFormattedRelationshipNameById(
+															relationships,
+															selectedBeneficiary.relationshipId
+													  ) || selectedBeneficiary.relationship
+													: selectedBeneficiary.relationship}
+												)
+												{selectedBeneficiary.type === "charity" &&
+													selectedBeneficiary.registrationNumber &&
+													` - Reg: ${selectedBeneficiary.registrationNumber}`}
+											</span>
+										) : (
+											<span className="text-muted-foreground">
+												Select beneficiary
+											</span>
+										)}
+										<ChevronsUpDown className="h-4 w-4" />
+									</Button>
+									<DropdownMenuContent className="w-[600px] max-h-[300px] overflow-y-auto">
+										<div className="p-2">
+											<Input
+												placeholder="Search beneficiaries..."
+												value={searchQuery}
+												onChange={(e) => setSearchQuery(e.target.value)}
+												className="mb-2"
+											/>
+											{filteredBeneficiaries.length === 0 ? (
+												<div className="text-sm text-muted-foreground p-2">
+													No beneficiaries found.
+												</div>
+											) : (
+												<div className="space-y-1">
+													{filteredBeneficiaries.map((beneficiary) => (
+														<DropdownMenuItem
+															key={beneficiary.id}
+															onSelect={() =>
+																handleSelectBeneficiary(beneficiary.id)
+															}
+															className="cursor-pointer"
+														>
+															{beneficiary.firstName} {beneficiary.lastName} (
+															{beneficiary.relationshipId
+																? getFormattedRelationshipNameById(
+																		relationships,
+																		beneficiary.relationshipId
+																  ) || beneficiary.relationship
+																: beneficiary.relationship}
+															)
+															{beneficiary.type === "charity" &&
+																beneficiary.registrationNumber &&
+																` - Reg: ${beneficiary.registrationNumber}`}
+														</DropdownMenuItem>
+													))}
+												</div>
+											)}
+										</div>
+									</DropdownMenuContent>
+								</DropdownMenu>
+
+								{selectedBeneficiary && (
+									<Button
+										type="button"
+										variant="ghost"
+										size="icon"
+										onClick={() =>
+											setGiftForm((prev) => ({
+												...prev,
+												peopleId: "",
+												charitiesId: "",
+											}))
+										}
+										className="absolute right-2 top-1/2 transform -translate-y-1/2"
+									>
+										<X className="h-4 w-4" />
+									</Button>
+								)}
+							</div>
+						</div>
+					</div>
+					<DialogFooter>
+						<Button
+							type="button"
+							variant="outline"
+							className="cursor-pointer"
+							onClick={() => setGiftDialogOpen(false)}
+						>
+							Cancel
+						</Button>
+						<Button
+							type="button"
+							onClick={handleSaveGift}
+							disabled={
+								!giftForm.description ||
+								(!giftForm.peopleId && !giftForm.charitiesId)
+							}
+							className="bg-light-green hover:bg-light-green/90 text-black cursor-pointer"
+						>
+							{editingGift ? "Save Changes" : "Add Gift"}
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
+
+			{/* New Beneficiary Dialog */}
+			<NewBeneficiaryDialog
+				open={newBeneficiaryDialogOpen}
+				onOpenChange={setNewBeneficiaryDialogOpen}
+				onAddIndividual={handleAddIndividualBeneficiary}
+				onAddCharity={handleAddCharityBeneficiary}
+			/>
 		</div>
 	);
 }

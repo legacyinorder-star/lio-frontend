@@ -264,7 +264,7 @@ export default function WillWizard() {
 				maritalStatus: formData.hasSpouse ? "Married" : "Single",
 			},
 			assets: formData.assets.map((asset) => ({
-				type: asset.type,
+				type: asset.assetType,
 				description: asset.description,
 				distributionType: asset.distributionType,
 				beneficiaries: asset.beneficiaries,
@@ -347,14 +347,10 @@ export default function WillWizard() {
 				return <GuardiansStep {...commonProps} />;
 
 			case "hasAssets":
-				return (
-					<AssetsStep {...commonProps} beneficiaries={getBeneficiaries()} />
-				);
+				return <AssetsStep {...commonProps} />;
 
 			case "gifts":
-				return (
-					<GiftsStep {...commonProps} beneficiaries={getBeneficiaries()} />
-				);
+				return <GiftsStep {...commonProps} />;
 
 			case "executors": {
 				const executor = formData.executors[0] || {};

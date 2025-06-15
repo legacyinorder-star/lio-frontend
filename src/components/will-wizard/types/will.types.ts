@@ -101,7 +101,9 @@ export interface Gift {
 	type: GiftType;
 	description: string;
 	value?: number;
-	beneficiaryId: string;
+	currency?: string;
+	peopleId?: string;
+	charitiesId?: string;
 }
 
 // Executor Types
