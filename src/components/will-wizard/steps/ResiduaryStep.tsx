@@ -20,6 +20,42 @@ import {
 	DropdownMenuItem,
 } from "@/components/ui/custom-dropdown-menu";
 import { NewBeneficiaryDialog } from "../components/NewBeneficiaryDialog";
+import { apiClient } from "@/utils/apiClient";
+import { toast } from "sonner";
+
+interface ResiduaryApiResponse {
+	id: string;
+	created_at: string;
+	will_id: string;
+	distribution_type: string;
+	beneficiaries: Array<{
+		id: string;
+		created_at: string;
+		residuary_id: string;
+		will_id: string;
+		people_id: string | null;
+		charities_id: string | null;
+		person?: {
+			id: string;
+			user_id: string;
+			will_id: string;
+			relationship_id: string;
+			first_name: string;
+			last_name: string;
+			is_minor: boolean;
+			created_at: string;
+			is_witness: boolean;
+		};
+		charity?: {
+			id: string;
+			created_at: string;
+			will_id: string;
+			name: string;
+			rc_number: string;
+			user_id: string;
+		};
+	}>;
+}
 
 interface ResiduaryBeneficiary {
 	id: string;
@@ -51,6 +87,8 @@ export default function ResiduaryStep({
 	const [selectedBeneficiaries, setSelectedBeneficiaries] = useState<
 		Set<string>
 	>(new Set());
+	const [isLoadingResiduary, setIsLoadingResiduary] = useState(false);
+	const [hasLoadedResiduary, setHasLoadedResiduary] = useState(false);
 
 	const { activeWill } = useWill();
 	const { relationships } = useRelationships();
@@ -61,12 +99,84 @@ export default function ResiduaryStep({
 		addCharityBeneficiary,
 	} = useBeneficiaryManagement();
 
-	// Fetch beneficiaries when component mounts
+	// Function to fetch existing residuary data
+	const fetchResiduaryData = async () => {
+		if (!activeWill?.id) return;
+
+		setIsLoadingResiduary(true);
+		try {
+			const { data, error } = await apiClient<ResiduaryApiResponse>(
+				`/residuary/${activeWill.id}`,
+				{
+					method: "GET",
+				}
+			);
+
+			if (error) {
+				// If 404, no residuary data exists - this is normal
+				if (error.includes("404")) {
+					console.log("No existing residuary data found");
+					return;
+				}
+			}
+
+			if (data) {
+				console.log("Loaded existing residuary data:", data);
+
+				// Set distribution type
+				setIsEqualDistribution(data.distribution_type === "equal");
+
+				// Process beneficiaries
+				const processedBeneficiaries: ResiduaryBeneficiary[] = [];
+				const selectedIds = new Set<string>();
+
+				data.beneficiaries.forEach((beneficiary) => {
+					const beneficiaryId =
+						beneficiary.people_id || beneficiary.charities_id;
+					if (beneficiaryId) {
+						selectedIds.add(beneficiaryId);
+						processedBeneficiaries.push({
+							id: beneficiary.id,
+							beneficiaryId: beneficiaryId,
+							percentage: 0, // We'll need to get this from the API response if available
+						});
+					}
+				});
+
+				setResiduaryBeneficiaries(processedBeneficiaries);
+				setSelectedBeneficiaries(selectedIds);
+			}
+		} catch (err) {
+			console.error("Error fetching residuary data:", err);
+			toast.error("Failed to fetch residuary data");
+		} finally {
+			setIsLoadingResiduary(false);
+			setHasLoadedResiduary(true);
+		}
+	};
+
+	// Check for existing residuary data when component mounts
 	useEffect(() => {
-		if (activeWill?.id) {
+		if (activeWill?.id && !hasLoadedResiduary) {
+			fetchResiduaryData();
+		}
+	}, [activeWill?.id, hasLoadedResiduary]);
+
+	// Fetch beneficiaries when component mounts (only if no residuary data exists)
+	useEffect(() => {
+		if (
+			activeWill?.id &&
+			hasLoadedResiduary &&
+			selectedBeneficiaries.size === 0
+		) {
 			fetchBeneficiaries();
 		}
-	}, [activeWill?.id, fetchBeneficiaries]);
+	}, [
+		activeWill?.id,
+		hasLoadedResiduary,
+		selectedBeneficiaries.size,
+		fetchBeneficiaries,
+	]);
 
 	// Debug logging to help identify relationship issues
 	useEffect(() => {
@@ -431,221 +541,241 @@ export default function ResiduaryStep({
 				</p>
 			</div>
 
-			<div className="space-y-4">
-				{/* Distribution Mode Toggle */}
-				<div className="flex items-center justify-between p-4 border rounded-lg bg-gray-50">
-					<div>
-						<h3 className="font-medium">Distribution Mode</h3>
-						<p className="text-sm text-muted-foreground">
-							{isEqualDistribution
-								? "Equal distribution among all beneficiaries"
-								: "Manual allocation with custom percentages"}
-						</p>
-					</div>
-					<div className="flex gap-2">
-						<Button
-							variant={isEqualDistribution ? "default" : "outline"}
-							size="sm"
-							onClick={() => setIsEqualDistribution(true)}
-							className={`flex items-center gap-2 ${
-								isEqualDistribution
-									? "bg-light-green hover:bg-light-green/90 text-black"
-									: ""
-							}`}
-						>
-							<Share2 className="h-4 w-4" />
-							Equal
-						</Button>
-						<Button
-							variant={!isEqualDistribution ? "default" : "outline"}
-							size="sm"
-							onClick={() => setIsEqualDistribution(false)}
-							className={`flex items-center gap-2 ${
-								!isEqualDistribution
-									? "bg-light-green hover:bg-light-green/90 text-black"
-									: ""
-							}`}
-						>
-							<Edit3 className="h-4 w-4" />
-							Manual
-						</Button>
+			{/* Loading State */}
+			{isLoadingResiduary && (
+				<div className="flex items-center justify-center p-8">
+					<div className="text-center">
+						<div className="h-8 w-8 animate-spin rounded-full border-t-2 border-b-2 border-light-green mx-auto mb-4"></div>
+						<p className="text-muted-foreground">Loading residuary data...</p>
 					</div>
 				</div>
+			)}
 
-				{/* Beneficiary Selection */}
+			{/* Main Content - only show when not loading */}
+			{!isLoadingResiduary && (
 				<div className="space-y-4">
-					<div className="flex justify-between items-center">
-						<h3 className="text-lg font-medium">Select Beneficiaries</h3>
-						<Button
-							variant="outline"
-							size="sm"
-							onClick={handleAddNewBeneficiary}
-							className="cursor-pointer"
-						>
-							<Plus className="mr-2 h-4 w-4" />
-							Add New Beneficiary
-						</Button>
-					</div>
-
-					{/* Beneficiary Select Dropdown */}
-					<div className="w-full">
-						<DropdownMenu
-							onOpenChange={setIsDropdownOpen}
-							className="w-full max-h-[300px]"
-						>
-							<Button
-								variant="outline"
-								role="combobox"
-								aria-expanded={isDropdownOpen}
-								className="w-full justify-between"
-							>
-								{searchQuery || "Search and select beneficiaries..."}
-								<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-							</Button>
-							<DropdownMenuContent className="w-[700px] max-h-[300px] overflow-y-auto">
-								<div className="p-2">
-									<Input
-										placeholder="Search beneficiaries..."
-										value={searchQuery}
-										onChange={(e) => setSearchQuery(e.target.value)}
-										className="mb-2"
-									/>
-									{filteredBeneficiaries.length === 0 ? (
-										<div className="text-sm text-muted-foreground p-2">
-											No beneficiaries found.
-										</div>
-									) : (
-										<div className="space-y-1">
-											{filteredBeneficiaries.map((beneficiary) => (
-												<DropdownMenuItem
-													key={beneficiary.id}
-													onSelect={() =>
-														handleSelectBeneficiary(beneficiary.id)
-													}
-													className="cursor-pointer"
-												>
-													{beneficiary.fullName} ({beneficiary.relationship})
-												</DropdownMenuItem>
-											))}
-										</div>
-									)}
-								</div>
-							</DropdownMenuContent>
-						</DropdownMenu>
-					</div>
-
-					{/* Combined Selected Beneficiaries and Allocation List */}
-					{selectedBeneficiaries.size === 0 ? (
-						<p className="text-sm text-muted-foreground">
-							No beneficiaries selected. Use the dropdown above to add
-							beneficiaries.
-						</p>
-					) : (
-						<div className="space-y-2">
-							<p className="text-sm text-muted-foreground mb-2">
-								Selected beneficiaries for residuary estate:
-							</p>
-							<div className="grid gap-4">
-								{getAllPotentialBeneficiaries()
-									.filter((beneficiary) =>
-										selectedBeneficiaries.has(beneficiary.id)
-									)
-									.map((beneficiary) => {
-										const existingAllocation =
-											residuaryBeneficiaries.find(
-												(b) => b.beneficiaryId === beneficiary.id
-											)?.percentage || "";
-
-										return (
-											<div
-												key={beneficiary.id}
-												className="flex items-center justify-between p-4 border rounded-lg"
-											>
-												<div>
-													<p className="font-medium">{beneficiary.fullName}</p>
-													<p className="text-sm text-muted-foreground">
-														{beneficiary.relationship}
-													</p>
-												</div>
-												<div className="flex items-center gap-4">
-													<Input
-														type="number"
-														value={existingAllocation}
-														onChange={(e) =>
-															handleResiduaryBeneficiaryChange(
-																beneficiary.id,
-																Number(e.target.value) || 0
-															)
-														}
-														className="w-24"
-														min="0"
-														max="100"
-														disabled={isEqualDistribution}
-														placeholder="0"
-													/>
-													<span className="text-sm">%</span>
-													<Button
-														variant="ghost"
-														size="icon"
-														onClick={() =>
-															handleRemoveResiduaryBeneficiary(beneficiary.id)
-														}
-														className="cursor-pointer"
-													>
-														<X className="h-4 w-4" />
-													</Button>
-												</div>
-											</div>
-										);
-									})}
+					<div className="space-y-4">
+						{/* Distribution Mode Toggle */}
+						<div className="flex items-center justify-between p-4 border rounded-lg bg-gray-50">
+							<div>
+								<h3 className="font-medium">Distribution Mode</h3>
+								<p className="text-sm text-muted-foreground">
+									{isEqualDistribution
+										? "Equal distribution among all beneficiaries"
+										: "Manual allocation with custom percentages"}
+								</p>
+							</div>
+							<div className="flex gap-2">
+								<Button
+									variant={isEqualDistribution ? "default" : "outline"}
+									size="sm"
+									onClick={() => setIsEqualDistribution(true)}
+									className={`flex items-center gap-2 ${
+										isEqualDistribution
+											? "bg-light-green hover:bg-light-green/90 text-black"
+											: ""
+									}`}
+								>
+									<Share2 className="h-4 w-4" />
+									Equal
+								</Button>
+								<Button
+									variant={!isEqualDistribution ? "default" : "outline"}
+									size="sm"
+									onClick={() => setIsEqualDistribution(false)}
+									className={`flex items-center gap-2 ${
+										!isEqualDistribution
+											? "bg-light-green hover:bg-light-green/90 text-black"
+											: ""
+									}`}
+								>
+									<Edit3 className="h-4 w-4" />
+									Manual
+								</Button>
 							</div>
 						</div>
-					)}
-				</div>
 
-				{/* Total allocation warning */}
-				{!isEqualDistribution &&
-					totalAllocation !== 100 &&
-					selectedBeneficiaries.size > 0 && (
-						<div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-							<p className="text-sm text-yellow-800">
-								Total allocation must equal 100%. Current total:{" "}
-								{totalAllocation}%
-							</p>
+						{/* Beneficiary Selection */}
+						<div className="space-y-4">
+							<div className="flex justify-between items-center">
+								<h3 className="text-lg font-medium">Select Beneficiaries</h3>
+								<Button
+									variant="outline"
+									size="sm"
+									onClick={handleAddNewBeneficiary}
+									className="cursor-pointer"
+								>
+									<Plus className="mr-2 h-4 w-4" />
+									Add New Beneficiary
+								</Button>
+							</div>
+
+							{/* Beneficiary Select Dropdown */}
+							<div className="w-full">
+								<DropdownMenu
+									onOpenChange={setIsDropdownOpen}
+									className="w-full max-h-[300px]"
+								>
+									<Button
+										variant="outline"
+										role="combobox"
+										aria-expanded={isDropdownOpen}
+										className="w-full justify-between"
+									>
+										{searchQuery || "Search and select beneficiaries..."}
+										<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+									</Button>
+									<DropdownMenuContent className="w-[700px] max-h-[300px] overflow-y-auto">
+										<div className="p-2">
+											<Input
+												placeholder="Search beneficiaries..."
+												value={searchQuery}
+												onChange={(e) => setSearchQuery(e.target.value)}
+												className="mb-2"
+											/>
+											{filteredBeneficiaries.length === 0 ? (
+												<div className="text-sm text-muted-foreground p-2">
+													No beneficiaries found.
+												</div>
+											) : (
+												<div className="space-y-1">
+													{filteredBeneficiaries.map((beneficiary) => (
+														<DropdownMenuItem
+															key={beneficiary.id}
+															onSelect={() =>
+																handleSelectBeneficiary(beneficiary.id)
+															}
+															className="cursor-pointer"
+														>
+															{beneficiary.fullName} ({beneficiary.relationship}
+															)
+														</DropdownMenuItem>
+													))}
+												</div>
+											)}
+										</div>
+									</DropdownMenuContent>
+								</DropdownMenu>
+							</div>
+
+							{/* Combined Selected Beneficiaries and Allocation List */}
+							{selectedBeneficiaries.size === 0 ? (
+								<p className="text-sm text-muted-foreground">
+									No beneficiaries selected. Use the dropdown above to add
+									beneficiaries.
+								</p>
+							) : (
+								<div className="space-y-2">
+									<p className="text-sm text-muted-foreground mb-2">
+										Selected beneficiaries for residuary estate:
+									</p>
+									<div className="grid gap-4">
+										{getAllPotentialBeneficiaries()
+											.filter((beneficiary) =>
+												selectedBeneficiaries.has(beneficiary.id)
+											)
+											.map((beneficiary) => {
+												const existingAllocation =
+													residuaryBeneficiaries.find(
+														(b) => b.beneficiaryId === beneficiary.id
+													)?.percentage || "";
+
+												return (
+													<div
+														key={beneficiary.id}
+														className="flex items-center justify-between p-4 border rounded-lg"
+													>
+														<div>
+															<p className="font-medium">
+																{beneficiary.fullName}
+															</p>
+															<p className="text-sm text-muted-foreground">
+																{beneficiary.relationship}
+															</p>
+														</div>
+														<div className="flex items-center gap-4">
+															<Input
+																type="number"
+																value={existingAllocation}
+																onChange={(e) =>
+																	handleResiduaryBeneficiaryChange(
+																		beneficiary.id,
+																		Number(e.target.value) || 0
+																	)
+																}
+																className="w-24"
+																min="0"
+																max="100"
+																disabled={isEqualDistribution}
+																placeholder="0"
+															/>
+															<span className="text-sm">%</span>
+															<Button
+																variant="ghost"
+																size="icon"
+																onClick={() =>
+																	handleRemoveResiduaryBeneficiary(
+																		beneficiary.id
+																	)
+																}
+																className="cursor-pointer"
+															>
+																<X className="h-4 w-4" />
+															</Button>
+														</div>
+													</div>
+												);
+											})}
+									</div>
+								</div>
+							)}
 						</div>
-					)}
 
-				{/* Navigation buttons */}
-				<div className="flex justify-between pt-6">
-					<Button
-						variant="outline"
-						onClick={onBack}
-						className="flex items-center gap-2 cursor-pointer"
-					>
-						<ArrowLeft className="h-4 w-4" />
-						Back
-					</Button>
-					<Button
-						onClick={handleSubmit}
-						className="flex items-center gap-2 bg-light-green hover:bg-light-green/90 text-black cursor-pointer"
-						disabled={
-							selectedBeneficiaries.size === 0 ||
-							(!isEqualDistribution && totalAllocation !== 100)
-						}
-					>
-						Next
-						<ArrowRight className="h-4 w-4" />
-					</Button>
+						{/* Total allocation warning */}
+						{!isEqualDistribution &&
+							totalAllocation !== 100 &&
+							selectedBeneficiaries.size > 0 && (
+								<div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+									<p className="text-sm text-yellow-800">
+										Total allocation must equal 100%. Current total:{" "}
+										{totalAllocation}%
+									</p>
+								</div>
+							)}
+
+						{/* Navigation buttons */}
+						<div className="flex justify-between pt-6">
+							<Button
+								variant="outline"
+								onClick={onBack}
+								className="flex items-center gap-2 cursor-pointer"
+							>
+								<ArrowLeft className="h-4 w-4" />
+								Back
+							</Button>
+							<Button
+								onClick={handleSubmit}
+								className="flex items-center gap-2 bg-light-green hover:bg-light-green/90 text-black cursor-pointer"
+								disabled={
+									selectedBeneficiaries.size === 0 ||
+									(!isEqualDistribution && totalAllocation !== 100)
+								}
+							>
+								Next
+								<ArrowRight className="h-4 w-4" />
+							</Button>
+						</div>
+					</div>
+
+					{/* New Beneficiary Dialog */}
+					<NewBeneficiaryDialog
+						open={newBeneficiaryDialogOpen}
+						onOpenChange={setNewBeneficiaryDialogOpen}
+						onAddIndividual={handleAddIndividualBeneficiary}
+						onAddCharity={handleAddCharityBeneficiary}
+					/>
 				</div>
-			</div>
-
-			{/* New Beneficiary Dialog */}
-			<NewBeneficiaryDialog
-				open={newBeneficiaryDialogOpen}
-				onOpenChange={setNewBeneficiaryDialogOpen}
-				onAddIndividual={handleAddIndividualBeneficiary}
-				onAddCharity={handleAddCharityBeneficiary}
-			/>
+			)}
 		</div>
 	);
 }

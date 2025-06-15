@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { apiClient } from "@/utils/apiClient";
 import { useWill } from "@/context/WillContext";
@@ -59,6 +59,7 @@ export function useBeneficiaryManagement() {
 	const { activeWill } = useWill();
 	const { relationships, isLoading: isLoadingRelationships } =
 		useRelationships();
+	const hasFetchedBeneficiaries = useRef(false);
 
 	// Fetch beneficiaries when opening asset dialog
 	const fetchBeneficiaries = useCallback(async () => {
@@ -134,11 +135,21 @@ export function useBeneficiaryManagement() {
 
 	// Refetch beneficiaries when relationships finish loading
 	useEffect(() => {
-		if (!isLoadingRelationships && relationships.length > 0 && activeWill?.id) {
-			console.log("Relationships loaded, refetching beneficiaries...");
+		if (
+			!isLoadingRelationships &&
+			relationships.length > 0 &&
+			activeWill?.id &&
+			!hasFetchedBeneficiaries.current
+		) {
+			hasFetchedBeneficiaries.current = true;
 			fetchBeneficiaries();
 		}
 	}, [isLoadingRelationships, relationships.length, activeWill?.id]);
+
+	// Reset fetch flag when will changes
+	useEffect(() => {
+		hasFetchedBeneficiaries.current = false;
+	}, [activeWill?.id]);
 
 	// Add new individual beneficiary
 	const addIndividualBeneficiary = async (
