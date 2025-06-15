@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
 	Form,
@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/card";
 import { toast } from "sonner";
 import { API_CONFIG, getApiUrl } from "@/config/api";
+import { useAuth } from "@/hooks/useAuth";
 
 const formSchema = z.object({
 	email: z.string().email("Invalid email address"),
@@ -30,6 +31,20 @@ const formSchema = z.object({
 
 export default function RequestPasswordResetPage() {
 	const [isLoading, setIsLoading] = useState(false);
+	const { user } = useAuth();
+	const navigate = useNavigate();
+
+	// Redirect if user is already logged in
+	useEffect(() => {
+		if (user) {
+			// Redirect based on user role
+			if (user.role === "admin") {
+				navigate("/admin/dashboard");
+			} else {
+				navigate("/app/dashboard");
+			}
+		}
+	}, [user, navigate]);
 
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),

@@ -1,8 +1,11 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/ui/header";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function HomePage() {
+	const { user } = useAuth();
+
 	return (
 		<div className="flex min-h-screen w-full flex-col">
 			<Header />
@@ -33,7 +36,9 @@ export default function HomePage() {
 											variant="outline"
 											className="flex items-center justify-center bg-transparent border border-black rounded-lg text-black"
 										>
-											<Link to="/login">Sign In</Link>
+											<Link to={user ? "/app/dashboard" : "/login"}>
+												{user ? "Dashboard" : "Sign In"}
+											</Link>
 										</Button>
 
 										<Button

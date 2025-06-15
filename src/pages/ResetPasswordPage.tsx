@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/card";
 import { toast } from "sonner";
 import { API_CONFIG, getApiUrl } from "@/config/api";
+import { useAuth } from "@/hooks/useAuth";
 
 const formSchema = z
 	.object({
@@ -46,6 +47,19 @@ export default function ResetPasswordPage() {
 	const [isLoading, setIsLoading] = useState(false);
 	const [userId, setUserId] = useState<string | null>(null);
 	const token = searchParams.get("token");
+	const { user } = useAuth();
+
+	// Redirect if user is already logged in
+	useEffect(() => {
+		if (user) {
+			// Redirect based on user role
+			if (user.role === "admin") {
+				navigate("/admin/dashboard");
+			} else {
+				navigate("/app/dashboard");
+			}
+		}
+	}, [user, navigate]);
 
 	useEffect(() => {
 		if (!token) {
