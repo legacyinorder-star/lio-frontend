@@ -292,12 +292,8 @@ export default function WillWizard() {
 						: undefined,
 				companyName: exec.type === "corporate" ? exec.companyName : undefined,
 				relationship: exec.relationship,
-				email: exec.email,
-				phone: exec.phone,
-				address: `${exec.address.address}, ${exec.address.city}, ${exec.address.state} ${exec.address.postCode}, ${exec.address.country}`,
 				isPrimary: exec.isPrimary,
 				type: exec.type,
-				contactPerson: exec.contactPerson,
 				registrationNumber: exec.registrationNumber,
 			})),
 			witnesses: formData.witnesses.map((wit) => ({
@@ -313,12 +309,16 @@ export default function WillWizard() {
 				type: gift.type,
 				description: gift.description,
 				value: gift.value?.toString(),
-				beneficiaryId: gift.beneficiaryId,
+				currency: gift.currency,
+				beneficiaryId: gift.peopleId || gift.charitiesId,
 				beneficiaryName:
-					getBeneficiaries().find((b) => b.id === gift.beneficiaryId)
-						?.firstName +
+					getBeneficiaries().find(
+						(b) => b.id === (gift.peopleId || gift.charitiesId)
+					)?.firstName +
 					" " +
-					getBeneficiaries().find((b) => b.id === gift.beneficiaryId)?.lastName,
+					getBeneficiaries().find(
+						(b) => b.id === (gift.peopleId || gift.charitiesId)
+					)?.lastName,
 			})),
 			residuaryBeneficiaries: formData.residuaryBeneficiaries,
 			funeralInstructions: formData.funeralInstructions,
@@ -363,54 +363,52 @@ export default function WillWizard() {
 				return <ResiduaryStep {...commonProps} />;
 
 			case "executors": {
-				const executor = formData.executors[0] || {};
-				const executorData: Partial<ExecutorData> = {
-					fullName:
-						executor.type === "individual"
-							? `${executor.firstName || ""} ${executor.lastName || ""}`.trim()
-							: "",
-					relationship: executor.relationship || "",
-					email: executor.email || "",
-					phone: executor.phone || "",
-					address: executor.address
-						? `${executor.address.address}, ${executor.address.city}, ${executor.address.state} ${executor.address.postCode}, ${executor.address.country}`
-						: "",
-				};
+				// Convert formData.executors to ExecutorData format for ExecutorStep
+				const executorData: ExecutorData = formData.executors.map(
+					(executor) => ({
+						id: executor.id,
+						type: executor.type,
+						firstName: executor.firstName,
+						lastName: executor.lastName,
+						relationshipId: executor.relationship,
+						name: executor.companyName,
+						rc_number: executor.registrationNumber,
+						isPrimary: executor.isPrimary,
+					})
+				);
+
 				return (
 					<ExecutorStep
 						data={executorData}
-						onUpdate={(data) => {
-							const [firstName, ...lastNameParts] = (data.fullName || "").split(
-								" "
-							);
-							const lastName = lastNameParts.join(" ");
+						onUpdate={(data: ExecutorData) => {
+							// Convert ExecutorData back to WillFormData.executors format
+							const convertedExecutors = data.map((executor) => ({
+								id: executor.id,
+								type: executor.type,
+								firstName: executor.firstName || "",
+								lastName: executor.lastName || "",
+								relationship: executor.relationshipId || "",
+								companyName: executor.name || "",
+								registrationNumber: executor.rc_number || "",
+								contactPerson: "",
+								isPrimary: executor.isPrimary,
+								address: {
+									address: "",
+									city: "",
+									state: "",
+									postCode: "",
+									country: "",
+								},
+								email: "",
+								phone: "",
+							}));
 							setFormData((prev) => ({
 								...prev,
-								executors: [
-									{
-										...prev.executors[0],
-										type: "individual",
-										firstName,
-										lastName,
-										relationship: data.relationship,
-										email: data.email,
-										phone: data.phone,
-										address: {
-											address: (data.address?.split(",")[0] || "").trim(),
-											city: (data.address?.split(",")[1] || "").trim(),
-											state: (data.address?.split(",")[2] || "")
-												.trim()
-												.split(" ")[0],
-											postCode: (data.address?.split(",")[2] || "")
-												.trim()
-												.split(" ")[1],
-											country: (data.address?.split(",")[3] || "").trim(),
-										},
-										isPrimary: true,
-									},
-								],
+								executors: convertedExecutors,
 							}));
 						}}
+						onNext={handleNext}
+						onBack={handleBack}
 					/>
 				);
 			}
