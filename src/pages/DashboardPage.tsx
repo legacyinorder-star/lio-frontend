@@ -9,6 +9,7 @@ import { pdf } from "@react-pdf/renderer";
 import WillPDF from "@/components/will-wizard/WillPDF";
 import { apiClient } from "@/utils/apiClient";
 import { type WillData } from "@/context/WillContext";
+import { mapWillDataFromAPI } from "@/utils/dataTransform";
 
 export default function DashboardPage() {
 	const navigate = useNavigate();
@@ -29,13 +30,19 @@ export default function DashboardPage() {
 		// Fetch wills from API
 		const fetchWills = async () => {
 			try {
-				const { data, error } = await apiClient<WillData[]>("/wills");
+				const { data, error } = await apiClient<unknown[]>("/wills");
 				if (error) {
 					console.error("Error fetching wills:", error);
 					toast.error("Failed to load wills. Please try again.");
 					return;
 				}
-				setWills(Array.isArray(data) ? data : []);
+
+				// Transform API response from snake_case to camelCase
+				const transformedWills = Array.isArray(data)
+					? data.map((willData) => mapWillDataFromAPI(willData))
+					: [];
+
+				setWills(transformedWills);
 			} catch (error) {
 				console.error("Error fetching wills:", error);
 				toast.error("Failed to load wills. Please try again.");
@@ -91,7 +98,7 @@ export default function DashboardPage() {
 					maritalStatus: will.owner.maritalStatus,
 				},
 				assets: (will.assets || []).map((asset) => ({
-					type: asset.type,
+					type: asset.assetType,
 					description: asset.description,
 					distributionType: "equal" as const, // Default to equal distribution
 					beneficiaries: [], // Not available in WillData
