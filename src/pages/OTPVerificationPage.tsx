@@ -29,20 +29,8 @@ export default function OTPVerificationPage() {
 	const [searchParams] = useSearchParams();
 	const [isLoading, setIsLoading] = useState(false);
 	const [isResending, setIsResending] = useState(false);
-	const { setUser, user } = useAuth();
+	const { setUser } = useAuth();
 	const otpId = searchParams.get("t");
-
-	// Redirect if user is already logged in
-	useEffect(() => {
-		if (user) {
-			// Redirect based on user role
-			if (user.role === "admin") {
-				navigate("/admin/dashboard");
-			} else {
-				navigate("/app/dashboard");
-			}
-		}
-	}, [user, navigate]);
 
 	useEffect(() => {
 		if (!otpId) {

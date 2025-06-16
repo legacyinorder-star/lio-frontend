@@ -18,8 +18,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import type { ApiError } from "@/types/api";
 import { AuthPageHeader } from "@/components/auth/auth-page-header";
 import { Eye, EyeOff } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
-import { useEffect } from "react";
 
 const formSchema = z
 	.object({
@@ -45,19 +43,6 @@ export default function SignupPage() {
 	const [isLoading, setIsLoading] = useState(false);
 	const [showPassword, setShowPassword] = useState(false);
 	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-	const { user } = useAuth();
-
-	// Redirect if user is already logged in
-	useEffect(() => {
-		if (user) {
-			// Redirect based on user role
-			if (user.role === "admin") {
-				navigate("/admin/dashboard");
-			} else {
-				navigate("/app/dashboard");
-			}
-		}
-	}, [user, navigate]);
 
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
