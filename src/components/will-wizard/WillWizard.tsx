@@ -423,7 +423,7 @@ export default function WillWizard() {
 				return <AdditionalInstructionsStep {...commonProps} />;
 
 			case "review":
-				return <ReviewStep data={getReviewData()} />;
+				return <ReviewStep data={getReviewData()} onBack={handleBack} />;
 
 			default:
 				return null;

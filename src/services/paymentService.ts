@@ -8,6 +8,13 @@ export interface CreatePaymentIntentRequest {
 	description: string;
 }
 
+export interface CreatePaymentIntentWithPriceRequest {
+	willId: string;
+	priceId: string;
+	currency: string;
+	description: string;
+}
+
 export interface CreatePaymentIntentResponse {
 	clientSecret: string;
 	paymentIntentId: string;
@@ -29,6 +36,24 @@ export interface PaymentStatus {
 export class PaymentService {
 	static async createPaymentIntent(
 		request: CreatePaymentIntentRequest
+	): Promise<CreatePaymentIntentResponse> {
+		const { data, error } = await apiClient<CreatePaymentIntentResponse>(
+			"/payments/create-payment-intent",
+			{
+				method: "POST",
+				body: JSON.stringify(request),
+			}
+		);
+
+		if (error || !data) {
+			throw new Error(error || "Failed to create payment intent");
+		}
+
+		return data;
+	}
+
+	static async createPaymentIntentWithPrice(
+		request: CreatePaymentIntentWithPriceRequest
 	): Promise<CreatePaymentIntentResponse> {
 		const { data, error } = await apiClient<CreatePaymentIntentResponse>(
 			"/payments/create-payment-intent",
@@ -103,5 +128,9 @@ export class PaymentService {
 
 	static getWillPriceInCents(): number {
 		return Math.round(STRIPE_CONFIG.willPrice * 100);
+	}
+
+	static getWillPriceId(): string {
+		return STRIPE_CONFIG.willPriceId;
 	}
 }

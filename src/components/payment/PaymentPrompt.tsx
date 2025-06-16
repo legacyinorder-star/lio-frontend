@@ -83,7 +83,7 @@ export default function PaymentPrompt({
 				finalWillId = data.id;
 			}
 
-			// Navigate to payment page
+			// Navigate to payment page with price ID
 			const paymentUrl = `/app/payment?willId=${finalWillId}&amount=${PaymentService.getWillPrice()}&description=Will Creation Service`;
 			navigate(paymentUrl);
 		} catch (error) {

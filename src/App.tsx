@@ -25,6 +25,7 @@ import { RelationshipsProvider } from "@/context/RelationshipsContext";
 import PaymentPage from "@/pages/PaymentPage";
 import PaymentSuccessPage from "@/pages/PaymentSuccessPage";
 import PaymentCancelPage from "@/pages/PaymentCancelPage";
+import WillSuccessPage from "@/pages/WillSuccessPage";
 
 function App() {
 	return (
@@ -93,6 +94,10 @@ function App() {
 										<PaymentCancelPage />
 									</ProtectedRoute>
 								}
+							/>
+							<Route
+								path="/app/will-wizard/success"
+								element={<WillSuccessPage />}
 							/>
 
 							{/* 404 - This must be the last route to catch all unknown URLs */}
