@@ -549,6 +549,7 @@ export default function WitnessesStep({
 								type="submit"
 								className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
 								disabled={witnesses.length !== 2}
+								onClick={handleSubmit}
 							>
 								Next <ArrowRight className="ml-2 h-4 w-4" />
 							</Button>

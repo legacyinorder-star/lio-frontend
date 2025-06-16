@@ -124,8 +124,7 @@ export interface Executor {
 
 // Funeral Instructions Types
 export interface FuneralInstructions {
-	disposition: "cremation" | "burial" | null;
-	location?: string;
+	instructions: string;
 }
 
 // Main Form Data Type
