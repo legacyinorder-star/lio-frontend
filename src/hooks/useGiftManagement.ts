@@ -3,10 +3,7 @@ import { toast } from "sonner";
 import { apiClient } from "@/utils/apiClient";
 import { useWill, WillGift } from "@/context/WillContext";
 import { Gift, GiftType } from "@/components/will-wizard/types/will.types";
-import {
-	useBeneficiaryManagement,
-	EnhancedBeneficiary,
-} from "@/hooks/useBeneficiaryManagement";
+import { EnhancedBeneficiary } from "@/hooks/useBeneficiaryManagement";
 import { useRelationships } from "../context/RelationshipsContext";
 
 interface ApiGiftResponse {
@@ -48,13 +45,11 @@ export function useGiftManagement(
 	const [gifts, setGifts] = useState<Gift[]>(initialGifts);
 	const [isLoadingGifts, setIsLoadingGifts] = useState(false);
 	const { activeWill, setActiveWill } = useWill();
-	const { enhancedBeneficiaries } = useBeneficiaryManagement();
 	const hasLoadedInitialGifts = useRef(false);
 	const { relationships } = useRelationships();
 
-	// Use provided beneficiaries or fall back to enhancedBeneficiaries
-	const availableBeneficiaries =
-		beneficiaries.length > 0 ? beneficiaries : enhancedBeneficiaries;
+	// Use provided beneficiaries parameter
+	const availableBeneficiaries = beneficiaries;
 
 	// Load gifts from activeWill context
 	useEffect(() => {
