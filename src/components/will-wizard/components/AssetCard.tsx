@@ -59,6 +59,7 @@ export function AssetCard({
 
 									if (!willBeneficiary) {
 										// Fallback to enhancedBeneficiaries if not found in context
+										console.log("using the fallback");
 										const beneficiaryDetails = enhancedBeneficiaries.find(
 											(b) => b.id === beneficiary.id
 										);
