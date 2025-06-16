@@ -1,4 +1,3 @@
-import * as React from "react";
 import {
 	Select,
 	SelectContent,
@@ -87,12 +86,7 @@ export function RelationshipSelect({
 					{required && <span className="text-destructive">*</span>}
 				</Label>
 			)}
-			<Select
-				className="bg-white"
-				value={value}
-				onValueChange={onValueChange}
-				disabled={disabled}
-			>
+			<Select value={value} onValueChange={onValueChange} disabled={disabled}>
 				<SelectTrigger>
 					<SelectValue placeholder={placeholder} />
 				</SelectTrigger>

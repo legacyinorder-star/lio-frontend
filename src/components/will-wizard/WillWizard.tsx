@@ -55,8 +55,7 @@ export default function WillWizard() {
 		witnesses: [],
 		additionalInstructions: "",
 		funeralInstructions: {
-			disposition: null,
-			location: "",
+			instructions: "",
 		},
 	});
 
@@ -266,6 +265,7 @@ export default function WillWizard() {
 		return {
 			personal: {
 				fullName: `${formData.firstName} ${formData.lastName}`,
+				dateOfBirth: "", // Add empty dateOfBirth for now
 				address: `${formData.address.address}, ${formData.address.city}, ${formData.address.state} ${formData.address.postCode}, ${formData.address.country}`,
 				phone: formData.phone,
 				maritalStatus: formData.hasSpouse ? "Married" : "Single",
@@ -292,6 +292,7 @@ export default function WillWizard() {
 						: undefined,
 				companyName: exec.type === "corporate" ? exec.companyName : undefined,
 				relationship: exec.relationship,
+				address: `${exec.address.address}, ${exec.address.city}, ${exec.address.state} ${exec.address.postCode}, ${exec.address.country}`,
 				isPrimary: exec.isPrimary,
 				type: exec.type,
 				registrationNumber: exec.registrationNumber,
@@ -306,11 +307,10 @@ export default function WillWizard() {
 				isPrimary: guard.isPrimary,
 			})),
 			gifts: formData.gifts.map((gift) => ({
-				type: gift.type,
+				type: gift.type as string,
 				description: gift.description,
 				value: gift.value?.toString(),
-				currency: gift.currency,
-				beneficiaryId: gift.peopleId || gift.charitiesId,
+				beneficiaryId: gift.peopleId || gift.charitiesId || "",
 				beneficiaryName:
 					getBeneficiaries().find(
 						(b) => b.id === (gift.peopleId || gift.charitiesId)

@@ -3918,9 +3918,13 @@ export default function WillWizard() {
 								additionalInstructions: formData.additionalInstructions,
 								funeralInstructions: formData.funeralInstructions.disposition
 									? {
-											disposition: formData.funeralInstructions.disposition,
-											location:
-												formData.funeralInstructions.location || undefined,
+											instructions: `Disposition: ${
+												formData.funeralInstructions.disposition
+											}${
+												formData.funeralInstructions.location
+													? `\nLocation: ${formData.funeralInstructions.location}`
+													: ""
+											}`,
 									  }
 									: undefined,
 							}}

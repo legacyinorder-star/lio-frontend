@@ -196,6 +196,7 @@ export default function NameStep({ data, onUpdate, onNext }: StepProps) {
 							country: "",
 						},
 						assets: [],
+						gifts: [],
 						beneficiaries: [],
 						executors: [],
 						witnesses: [],

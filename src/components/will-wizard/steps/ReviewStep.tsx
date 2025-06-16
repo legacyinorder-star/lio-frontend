@@ -67,8 +67,7 @@ export interface ReviewStepProps {
 			percentage: number;
 		}>;
 		funeralInstructions?: {
-			disposition: "cremation" | "burial" | null;
-			location?: string;
+			instructions: string;
 		};
 		additionalInstructions?: string;
 	};
@@ -378,27 +377,12 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 				</div>
 
 				{/* Funeral Instructions */}
-				{data.funeralInstructions?.disposition && (
+				{data.funeralInstructions?.instructions && (
 					<div className="space-y-4">
 						<h3 className="text-lg font-semibold">Funeral Instructions</h3>
 						<div className="rounded-lg border border-gray-200 p-4">
-							<div className="grid grid-cols-2 gap-4">
-								<div>
-									<label className="block text-sm font-medium text-gray-700">
-										Disposition Preference
-									</label>
-									<p className="mt-1 capitalize">
-										{data.funeralInstructions.disposition}
-									</p>
-								</div>
-								{data.funeralInstructions.location && (
-									<div>
-										<label className="block text-sm font-medium text-gray-700">
-											Preferred Location
-										</label>
-										<p className="mt-1">{data.funeralInstructions.location}</p>
-									</div>
-								)}
+							<div className="whitespace-pre-wrap">
+								{data.funeralInstructions.instructions}
 							</div>
 						</div>
 					</div>
