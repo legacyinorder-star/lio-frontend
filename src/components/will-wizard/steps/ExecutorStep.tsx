@@ -14,6 +14,40 @@ import {
 	DialogDescription,
 } from "@/components/ui/dialog";
 import { ArrowLeft, ArrowRight, Plus, Trash2, Edit2 } from "lucide-react";
+import { apiClient } from "@/utils/apiClient";
+import { useWill } from "@/context/WillContext";
+import { toast } from "sonner";
+import { useRelationships } from "@/hooks/useRelationships";
+import { getFormattedRelationshipNameById } from "@/utils/relationships";
+
+// API response interface
+interface ExecutorApiResponse {
+	id: string;
+	created_at: string;
+	will_id: string;
+	corporate_executor_id?: string;
+	executor_id?: string;
+	is_primary: boolean;
+	person?: {
+		id: string;
+		user_id: string;
+		will_id: string;
+		relationship_id: string;
+		first_name: string;
+		last_name: string;
+		is_minor: boolean;
+		created_at: string;
+		is_witness: boolean;
+	};
+	corporate_executor?: {
+		id: string;
+		created_at: string;
+		user_id: string;
+		name: string;
+		will_id: string;
+		rc_number: string;
+	};
+}
 
 // Add this type after the other type definitions
 interface Executor {
@@ -51,7 +85,12 @@ export default function ExecutorStep({
 			? data.filter((executor): executor is Executor => executor !== undefined)
 			: []
 	);
+	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [isLoadingExecutors, setIsLoadingExecutors] = useState(false);
+	const [hasLoadedExecutors, setHasLoadedExecutors] = useState(false);
 	const prevExecutorsRef = useRef<Executor[]>([]);
+	const { activeWill } = useWill();
+	const { relationships } = useRelationships();
 
 	const [executorForm, setExecutorForm] = useState<Executor>({
 		id: "",
@@ -63,6 +102,74 @@ export default function ExecutorStep({
 		rc_number: "",
 		isPrimary: false,
 	});
+
+	// Function to load existing executors
+	const loadExecutors = async () => {
+		if (!activeWill?.id || hasLoadedExecutors) return;
+
+		setIsLoadingExecutors(true);
+		try {
+			const { data, error } = await apiClient<ExecutorApiResponse[]>(
+				`/executors/get-by-will/${activeWill.id}`,
+				{
+					method: "GET",
+				}
+			);
+
+			if (error) {
+				// If 404, no executors exist - this is normal
+				if (error.includes("404")) {
+					console.log("No existing executors found");
+					setHasLoadedExecutors(true);
+					return;
+				}
+				toast.error("Failed to load executors");
+				return;
+			}
+
+			if (data && data.length > 0) {
+				// Convert API response to Executor format
+				const loadedExecutors: Executor[] = data.map((apiExecutor) => {
+					if (apiExecutor.person) {
+						// Individual executor
+						return {
+							id: apiExecutor.id,
+							type: "individual" as const,
+							firstName: apiExecutor.person.first_name,
+							lastName: apiExecutor.person.last_name,
+							relationshipId: apiExecutor.person.relationship_id,
+							isPrimary: apiExecutor.is_primary,
+						};
+					} else if (apiExecutor.corporate_executor) {
+						// Corporate executor
+						return {
+							id: apiExecutor.id,
+							type: "corporate" as const,
+							name: apiExecutor.corporate_executor.name,
+							rc_number: apiExecutor.corporate_executor.rc_number,
+							isPrimary: apiExecutor.is_primary,
+						};
+					}
+					// Fallback (shouldn't happen)
+					return {
+						id: apiExecutor.id,
+						type: "individual" as const,
+						isPrimary: apiExecutor.is_primary,
+					};
+				});
+
+				setExecutors(loadedExecutors);
+				console.log("Loaded executors:", loadedExecutors);
+			}
+
+			setHasLoadedExecutors(true);
+		} catch (err) {
+			console.error("Error loading executors:", err);
+			toast.error("Failed to load executors");
+		} finally {
+			setIsLoadingExecutors(false);
+		}
+	};
 
 	// Helper function to check if form is valid
 	const isFormValid = () => {
@@ -87,47 +194,145 @@ export default function ExecutorStep({
 		};
 	};
 
-	const handleSaveExecutor = () => {
-		if (!isFormValid()) {
+	const handleSaveExecutor = async () => {
+		if (!isFormValid() || !activeWill?.id) {
 			return;
 		}
 
-		// If this is a primary executor, ensure no other primary exists
-		if (executorForm.isPrimary) {
-			setExecutors((prev) =>
-				prev.map((e) => ({
-					...e,
-					isPrimary: false,
-				}))
-			);
-		}
+		setIsSubmitting(true);
+		try {
+			let executorId = executorForm.id;
 
-		if (editingExecutor) {
-			setExecutors((prev) =>
-				prev.map((executor) =>
-					executor.id === editingExecutor.id ? executorForm : executor
-				)
-			);
-		} else {
-			setExecutors((prev) => [
-				...prev,
-				{ ...executorForm, id: crypto.randomUUID() },
-			]);
-		}
+			// For individual executors, create person first then executor
+			if (executorForm.type === "individual") {
+				// Create person via /people endpoint
+				const personPayload = {
+					will_id: activeWill.id,
+					first_name: executorForm.firstName,
+					last_name: executorForm.lastName,
+					relationship_id: executorForm.relationshipId,
+					is_minor: false,
+					is_witness: false,
+				};
 
-		// Reset form and close dialog
-		setExecutorForm({
-			id: "",
-			type: "individual",
-			firstName: "",
-			lastName: "",
-			relationshipId: "",
-			name: "",
-			rc_number: "",
-			isPrimary: false,
-		});
-		setEditingExecutor(null);
-		setExecutorDialogOpen(false);
+				const { data: personData, error: personError } = await apiClient<{
+					id: string;
+				}>("/people", {
+					method: "POST",
+					body: JSON.stringify(personPayload),
+				});
+
+				if (personError || !personData) {
+					toast.error("Failed to create person record");
+					return;
+				}
+
+				// Create executor via /executors endpoint
+				const executorPayload = {
+					will_id: activeWill.id,
+					executor_id: personData.id,
+					is_primary: executorForm.isPrimary,
+				};
+
+				const { data: executorData, error: executorError } = await apiClient<{
+					id: string;
+				}>("/executors", {
+					method: "POST",
+					body: JSON.stringify(executorPayload),
+				});
+
+				if (executorError || !executorData) {
+					toast.error("Failed to create executor record");
+					return;
+				}
+
+				executorId = executorData.id;
+			} else {
+				// For corporate executors, create corporate executor first then executor
+				const corporateExecutorPayload = {
+					will_id: activeWill.id,
+					name: executorForm.name,
+					rc_number: executorForm.rc_number,
+				};
+
+				const { data: corporateExecutorData, error: corporateExecutorError } =
+					await apiClient<{
+						id: string;
+					}>("/corporate_executors", {
+						method: "POST",
+						body: JSON.stringify(corporateExecutorPayload),
+					});
+
+				if (corporateExecutorError || !corporateExecutorData) {
+					toast.error("Failed to create corporate executor record");
+					return;
+				}
+
+				// Create executor via /executors endpoint
+				const executorPayload = {
+					will_id: activeWill.id,
+					corporate_executor_id: corporateExecutorData.id,
+					is_primary: executorForm.isPrimary,
+				};
+
+				const { data: executorData, error: executorError } = await apiClient<{
+					id: string;
+				}>("/executors", {
+					method: "POST",
+					body: JSON.stringify(executorPayload),
+				});
+
+				if (executorError || !executorData) {
+					toast.error("Failed to create executor record");
+					return;
+				}
+
+				executorId = executorData.id;
+			}
+
+			// If this is a primary executor, ensure no other primary exists
+			if (executorForm.isPrimary) {
+				setExecutors((prev) =>
+					prev.map((e) => ({
+						...e,
+						isPrimary: false,
+					}))
+				);
+			}
+
+			if (editingExecutor) {
+				setExecutors((prev) =>
+					prev.map((executor) =>
+						executor.id === editingExecutor.id
+							? { ...executorForm, id: executorId }
+							: executor
+					)
+				);
+			} else {
+				setExecutors((prev) => [...prev, { ...executorForm, id: executorId }]);
+			}
+
+			// Reset form and close dialog
+			setExecutorForm({
+				id: "",
+				type: "individual",
+				firstName: "",
+				lastName: "",
+				relationshipId: "",
+				name: "",
+				rc_number: "",
+				isPrimary: false,
+			});
+			setEditingExecutor(null);
+			setExecutorDialogOpen(false);
+
+			toast.success("Executor added successfully");
+		} catch (error) {
+			console.error("Error saving executor:", error);
+			toast.error("Failed to save executor");
+		} finally {
+			setIsSubmitting(false);
+		}
 	};
 
 	const handleEditExecutor = (executor: Executor) => {
@@ -141,6 +346,11 @@ export default function ExecutorStep({
 			prev.filter((executor) => executor.id !== executorId)
 		);
 	};
+
+	// Load executors when component mounts or activeWill changes
+	useEffect(() => {
+		loadExecutors();
+	}, [activeWill?.id]);
 
 	// Update parent component when executors change
 	useEffect(() => {
@@ -266,11 +476,9 @@ export default function ExecutorStep({
 											</div>
 										</div>
 										<div className="space-y-2">
-											<Label htmlFor="executorRelationship">
-												Relationship to You
-											</Label>
 											<RelationshipSelect
 												value={executorForm.relationshipId || ""}
+												label="Relationship to You"
 												onValueChange={(value) => {
 													const event = {
 														target: { value },
@@ -292,18 +500,16 @@ export default function ExecutorStep({
 												placeholder="Enter company name"
 											/>
 										</div>
-										<div className="grid grid-cols-2 gap-4">
-											<div className="space-y-2">
-												<Label htmlFor="registrationNumber">
-													Registration Number
-												</Label>
-												<Input
-													id="registrationNumber"
-													value={executorForm.rc_number}
-													onChange={handleExecutorFormChange("rc_number")}
-													placeholder="Enter company registration number"
-												/>
-											</div>
+										<div className="space-y-2">
+											<Label htmlFor="registrationNumber">
+												Registration Number
+											</Label>
+											<Input
+												id="registrationNumber"
+												value={executorForm.rc_number}
+												onChange={handleExecutorFormChange("rc_number")}
+												placeholder="Enter company registration number"
+											/>
 										</div>
 									</>
 								)}
@@ -327,16 +533,17 @@ export default function ExecutorStep({
 									<Button
 										variant="outline"
 										onClick={() => setExecutorDialogOpen(false)}
+										disabled={isSubmitting}
 										className="cursor-pointer"
 									>
 										Cancel
 									</Button>
 									<Button
 										onClick={handleSaveExecutor}
-										disabled={!isFormValid()}
+										disabled={!isFormValid() || isSubmitting}
 										className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
 									>
-										Save
+										{isSubmitting ? "Saving..." : "Save"}
 									</Button>
 								</div>
 							</div>
@@ -344,7 +551,11 @@ export default function ExecutorStep({
 					</Dialog>
 				</div>
 
-				{executors.length === 0 ? (
+				{isLoadingExecutors ? (
+					<p className="text-muted-foreground text-center py-4">
+						Loading executors...
+					</p>
+				) : executors.length === 0 ? (
 					<p className="text-muted-foreground text-center py-4">
 						No executors added yet. Click "Add Executor" to appoint executors
 						for your estate.
@@ -356,31 +567,41 @@ export default function ExecutorStep({
 								<CardContent className="p-4">
 									<div className="flex justify-between items-start">
 										<div className="space-y-1">
-											<p className="font-medium">
-												{executor.type === "individual" ? (
-													<>
-														{executor.firstName} {executor.lastName}
-														<span className="text-sm text-muted-foreground ml-2">
-															({executor.relationshipId})
+											{executor.type === "individual" ? (
+												<p className="font-medium">
+													{executor.firstName} {executor.lastName}
+													<span className="text-sm text-muted-foreground ml-2">
+														(
+														{getFormattedRelationshipNameById(
+															relationships,
+															executor.relationshipId || ""
+														) || executor.relationshipId}
+														)
+													</span>
+													{executor.isPrimary && (
+														<span className="ml-2 text-sm text-primary">
+															(Primary Executor)
 														</span>
-													</>
-												) : (
-													<>
+													)}
+												</p>
+											) : (
+												<div className="space-y-1">
+													<p className="font-medium">
 														{executor.name}
 														<span className="text-sm text-muted-foreground ml-2">
 															(Corporate Executor)
 														</span>
-														<div className="text-sm text-muted-foreground">
-															RC Number: {executor.rc_number}
-														</div>
-													</>
-												)}
-												{executor.isPrimary && (
-													<span className="ml-2 text-sm text-primary">
-														(Primary Executor)
-													</span>
-												)}
-											</p>
+														{executor.isPrimary && (
+															<span className="ml-2 text-sm text-primary">
+																(Primary Executor)
+															</span>
+														)}
+													</p>
+													<p className="text-sm text-muted-foreground">
+														RC Number: {executor.rc_number}
+													</p>
+												</div>
+											)}
 										</div>
 										<div className="flex space-x-2">
 											<Button
