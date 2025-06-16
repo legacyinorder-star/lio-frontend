@@ -33,7 +33,7 @@ export async function apiClient<T = unknown>(
 		} else if (authenticated) {
 			// If authentication is required but no token is available
 			removeAuthData(); // Clear auth data
-			window.location.href = "/login"; // Redirect to login page
+			// Don't redirect here - let the calling component handle it
 			return {
 				data: null,
 				error: "Authentication required",
@@ -69,7 +69,7 @@ export async function apiClient<T = unknown>(
 			if (response.status === 401) {
 				toast.error("Session expired. Please log in again.");
 				removeAuthData(); // Clear auth data
-				window.location.href = "/login"; // Redirect to login page
+				// Don't redirect here - let the calling component handle it
 			} else if (response.status === 403) {
 				toast.error("You don't have permission to perform this action.");
 			} else if (response.status >= 500) {
