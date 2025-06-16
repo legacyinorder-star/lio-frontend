@@ -84,8 +84,12 @@ export default function SignupPage() {
 			console.log(data);
 
 			if (data.otp_id) {
-				// Navigate to OTP verification with the OTP ID
-				navigate(`/verify-otp?t=${data.otp_id}`);
+				// Navigate to OTP verification with the OTP ID and OTP code if available
+				if (data.otp) {
+					navigate(`/verify-otp?t=${data.otp_id}&otp=${data.otp}`);
+				} else {
+					navigate(`/verify-otp?t=${data.otp_id}`);
+				}
 			} else {
 				throw new Error("OTP ID not received from server");
 			}
