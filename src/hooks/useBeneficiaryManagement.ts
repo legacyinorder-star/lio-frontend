@@ -107,12 +107,6 @@ export function useBeneficiaryManagement() {
 							person.relationship_id
 						);
 
-						console.log(`Person ${person.first_name} ${person.last_name}:`, {
-							relationship_id: person.relationship_id,
-							formatted_relationship: relationshipName,
-							relationships_available: relationships.length,
-						});
-
 						return {
 							id: person.id,
 							firstName: person.first_name,

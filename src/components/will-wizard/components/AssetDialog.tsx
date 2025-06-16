@@ -17,7 +17,7 @@ import {
 import { ChevronsUpDown, Plus, X } from "lucide-react";
 import { Asset, AssetType } from "../types/will.types";
 import { AssetTypeSelector } from "./AssetTypeSelector";
-import { useBeneficiaryManagement } from "@/hooks/useBeneficiaryManagement";
+import { EnhancedBeneficiary } from "@/hooks/useBeneficiaryManagement";
 import { useRelationships } from "@/hooks/useRelationships";
 import { getFormattedRelationshipNameById } from "@/utils/relationships";
 
@@ -34,6 +34,8 @@ interface AssetDialogProps {
 	) => void;
 	editingAsset?: Asset | null;
 	onAddNewBeneficiary: () => void;
+	enhancedBeneficiaries: EnhancedBeneficiary[];
+	isLoadingBeneficiaries: boolean;
 }
 
 export function AssetDialog({
@@ -42,6 +44,8 @@ export function AssetDialog({
 	onSave,
 	editingAsset,
 	onAddNewBeneficiary,
+	enhancedBeneficiaries,
+	isLoadingBeneficiaries,
 }: AssetDialogProps) {
 	const [assetForm, setAssetForm] = useState<Omit<Asset, "id">>({
 		assetType: "Property" as AssetType,
@@ -51,8 +55,6 @@ export function AssetDialog({
 	});
 	const [searchQuery, setSearchQuery] = useState("");
 	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-	const { enhancedBeneficiaries, isLoadingBeneficiaries, fetchBeneficiaries } =
-		useBeneficiaryManagement();
 	const { relationships } = useRelationships();
 
 	// Initialize form when editing
@@ -73,13 +75,6 @@ export function AssetDialog({
 			});
 		}
 	}, [editingAsset]);
-
-	// Fetch beneficiaries when dialog opens
-	useEffect(() => {
-		if (open) {
-			fetchBeneficiaries();
-		}
-	}, [open]);
 
 	const handleAssetFormChange =
 		(field: keyof Omit<Asset, "id">) =>

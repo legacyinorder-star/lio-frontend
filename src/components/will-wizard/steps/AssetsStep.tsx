@@ -25,7 +25,6 @@ const assetSchema = z.object({
 });
 
 interface AssetsStepProps {
-	data: Partial<WillFormData>;
 	onUpdate: (data: Partial<WillFormData>) => void;
 	onNext: () => void;
 	onBack: () => void;
@@ -35,7 +34,6 @@ interface AssetsStepProps {
 }
 
 export default function AssetsStep({
-	data,
 	onUpdate,
 	onNext,
 	onBack,
@@ -47,11 +45,13 @@ export default function AssetsStep({
 		useState(false);
 
 	// Use custom hooks
-	const { assets, setAssets, isLoadingAssets, saveAsset, removeAsset } =
-		useAssetManagement(initialData?.assets || []);
+	const { assets, saveAsset, removeAsset } = useAssetManagement(
+		initialData?.assets || []
+	);
 
 	const {
 		enhancedBeneficiaries,
+		isLoadingBeneficiaries,
 		addIndividualBeneficiary,
 		addCharityBeneficiary,
 	} = useBeneficiaryManagement();
@@ -110,14 +110,31 @@ export default function AssetsStep({
 		lastName: string,
 		relationshipId: string
 	) => {
-		await addIndividualBeneficiary(firstName, lastName, relationshipId);
+		const newBeneficiary = await addIndividualBeneficiary(
+			firstName,
+			lastName,
+			relationshipId
+		);
+
+		if (newBeneficiary) {
+			// Close the dialog after successful addition
+			setNewBeneficiaryDialogOpen(false);
+		}
 	};
 
 	const handleAddCharityBeneficiary = async (
 		charityName: string,
 		registrationNumber?: string
 	) => {
-		await addCharityBeneficiary(charityName, registrationNumber);
+		const newBeneficiary = await addCharityBeneficiary(
+			charityName,
+			registrationNumber
+		);
+
+		if (newBeneficiary) {
+			// Close the dialog after successful addition
+			setNewBeneficiaryDialogOpen(false);
+		}
 	};
 
 	return (
@@ -145,6 +162,7 @@ export default function AssetsStep({
 									setAssetDialogOpen(true);
 								}}
 								className="cursor-pointer"
+								disabled={isLoadingBeneficiaries}
 							>
 								<Plus className="mr-2 h-4 w-4" />
 								Add Asset
@@ -197,6 +215,8 @@ export default function AssetsStep({
 				onSave={handleSaveAsset}
 				editingAsset={editingAsset}
 				onAddNewBeneficiary={handleAddNewBeneficiary}
+				enhancedBeneficiaries={enhancedBeneficiaries}
+				isLoadingBeneficiaries={isLoadingBeneficiaries}
 			/>
 
 			{/* New Beneficiary Dialog */}

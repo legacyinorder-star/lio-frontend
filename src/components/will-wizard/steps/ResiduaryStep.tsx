@@ -101,7 +101,6 @@ export default function ResiduaryStep({
 	const { relationships } = useRelationships();
 	const {
 		enhancedBeneficiaries,
-		fetchBeneficiaries,
 		addIndividualBeneficiary,
 		addCharityBeneficiary,
 	} = useBeneficiaryManagement();
@@ -206,22 +205,6 @@ export default function ResiduaryStep({
 			}
 		}
 	}, [activeWill?.id, hasLoadedResiduary]);
-
-	// Fetch beneficiaries when component mounts (only if no residuary data exists)
-	useEffect(() => {
-		if (
-			activeWill?.id &&
-			hasLoadedResiduary &&
-			selectedBeneficiaries.size === 0
-		) {
-			fetchBeneficiaries();
-		}
-	}, [
-		activeWill?.id,
-		hasLoadedResiduary,
-		selectedBeneficiaries.size,
-		fetchBeneficiaries,
-	]);
 
 	// Debug logging to help identify relationship issues
 	useEffect(() => {
@@ -669,8 +652,6 @@ export default function ResiduaryStep({
 		relationshipId: string
 	) => {
 		await addIndividualBeneficiary(firstName, lastName, relationshipId);
-		// Refresh beneficiaries after adding
-		await fetchBeneficiaries();
 	};
 
 	const handleAddCharityBeneficiary = async (
@@ -678,8 +659,6 @@ export default function ResiduaryStep({
 		registrationNumber?: string
 	) => {
 		await addCharityBeneficiary(charityName, registrationNumber);
-		// Refresh beneficiaries after adding
-		await fetchBeneficiaries();
 	};
 
 	return (

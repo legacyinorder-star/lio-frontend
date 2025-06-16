@@ -161,7 +161,6 @@ export default function GiftsStep({
 
 	const {
 		enhancedBeneficiaries,
-		fetchBeneficiaries,
 		addIndividualBeneficiary,
 		addCharityBeneficiary,
 	} = useBeneficiaryManagement();
@@ -206,13 +205,6 @@ export default function GiftsStep({
 			});
 		}
 	}, [editingGift]);
-
-	// Fetch beneficiaries when dialog opens
-	useEffect(() => {
-		if (giftDialogOpen) {
-			fetchBeneficiaries();
-		}
-	}, [giftDialogOpen]);
 
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
