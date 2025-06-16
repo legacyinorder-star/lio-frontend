@@ -50,7 +50,7 @@ export function useAssetManagement(initialAssets: Asset[] = []) {
 	const { relationships } = useRelationships();
 	const hasLoadedInitialAssets = useRef(false);
 
-	// Load assets from activeWill context
+	// Load assets from activeWill context or API
 	useEffect(() => {
 		const loadAssetsFromContext = async () => {
 			if (activeWill?.assets && activeWill.assets.length > 0) {
@@ -69,11 +69,20 @@ export function useAssetManagement(initialAssets: Asset[] = []) {
 			} else if (initialAssets.length > 0 && !hasLoadedInitialAssets.current) {
 				setAssets(initialAssets);
 				hasLoadedInitialAssets.current = true;
+			} else if (
+				activeWill?.id &&
+				relationships.length > 0 &&
+				!hasLoadedInitialAssets.current
+			) {
+				// If no assets in context but we have an active will and relationships are loaded,
+				// try to load from API
+				loadAssetsFromAPI();
+				hasLoadedInitialAssets.current = true;
 			}
 		};
 
 		loadAssetsFromContext();
-	}, [activeWill]);
+	}, [activeWill, relationships.length]);
 
 	// Function to map beneficiary details from API response to WillContext structure
 	const mapBeneficiaryDetails = (

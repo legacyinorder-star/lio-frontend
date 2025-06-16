@@ -6,6 +6,7 @@ import {
 	WillExecutor,
 	WillWitness,
 } from "../context/WillContext";
+import { getFormattedRelationshipNameById } from "./relationships";
 
 /**
  * Converts a snake_case string to camelCase
@@ -479,13 +480,4 @@ export function mapAssetBeneficiariesFromAPI(
 			},
 		};
 	});
-}
-
-// Helper function (you'll need to import this from your existing utils)
-function getFormattedRelationshipNameById(
-	relationships: Array<{ id: string; name: string }>,
-	id: string
-): string {
-	const relationship = relationships.find((r) => r.id === id);
-	return relationship ? relationship.name : "Unknown Relationship";
 }
