@@ -2,7 +2,6 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, Download, ArrowRight } from "lucide-react";
-import { toast } from "sonner";
 import { useState } from "react";
 import { useWill } from "@/context/WillContext";
 import { downloadWillPDF } from "@/utils/willDownload";
