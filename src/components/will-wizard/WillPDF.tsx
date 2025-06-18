@@ -401,13 +401,14 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 			<Page size="A4" style={styles.page}>
 				<View style={styles.centeredTitle}>
 					<View style={styles.titleContainer}>
-						<Text style={styles.datedText}>DATED</Text>
-						<Text style={styles.datedText}>{formatDate(new Date())}</Text>
+						<Text style={styles.willTitle}>THE</Text>
 						<Text style={styles.willTitle}>LAST WILL & TESTAMENT</Text>
 						<Text style={styles.testatorName}>OF</Text>
 						<Text style={styles.testatorName}>
 							{data.personal.fullName.toUpperCase()}
 						</Text>
+						<Text style={styles.datedText}>DATED</Text>
+						<Text style={styles.datedText}>{formatDate(new Date())}</Text>
 					</View>
 				</View>
 
