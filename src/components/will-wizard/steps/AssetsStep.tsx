@@ -7,10 +7,11 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight, Plus } from "lucide-react";
 import { Asset, WillFormData } from "../types/will.types";
 import { useAssetManagement } from "@/hooks/useAssetManagement";
-import { useBeneficiaryManagement } from "@/hooks/useBeneficiaryManagement";
+import { useWillData } from "@/hooks/useWillData";
 import { AssetDialog } from "../components/AssetDialog";
 import { NewBeneficiaryDialog } from "../components/NewBeneficiaryDialog";
 import { AssetCard } from "../components/AssetCard";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 const assetSchema = z.object({
 	assetType: z.string().min(1, "Asset type is required"),
@@ -50,11 +51,13 @@ export default function AssetsStep({
 	);
 
 	const {
-		enhancedBeneficiaries,
-		isLoadingBeneficiaries,
+		allBeneficiaries: enhancedBeneficiaries,
+		isLoading: isLoadingBeneficiaries,
+		isReady: isBeneficiariesReady,
+		relationships,
 		addIndividualBeneficiary,
 		addCharityBeneficiary,
-	} = useBeneficiaryManagement();
+	} = useWillData();
 
 	const form = useForm<z.infer<typeof assetSchema>>({
 		resolver: zodResolver(assetSchema),
@@ -65,6 +68,16 @@ export default function AssetsStep({
 			beneficiaries: [],
 		},
 	});
+
+	// Show loading state if data is not ready
+	if (!isBeneficiariesReady || isLoadingBeneficiaries) {
+		return (
+			<LoadingSpinner
+				message="Loading beneficiaries and relationships..."
+				className="min-h-[400px]"
+			/>
+		);
+	}
 
 	const handleSubmit = () => {
 		onUpdate({ assets });
@@ -217,6 +230,7 @@ export default function AssetsStep({
 				onAddNewBeneficiary={handleAddNewBeneficiary}
 				enhancedBeneficiaries={enhancedBeneficiaries}
 				isLoadingBeneficiaries={isLoadingBeneficiaries}
+				relationships={relationships}
 			/>
 
 			{/* New Beneficiary Dialog */}

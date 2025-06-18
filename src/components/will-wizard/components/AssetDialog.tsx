@@ -17,9 +17,9 @@ import {
 import { ChevronsUpDown, Plus, X } from "lucide-react";
 import { Asset, AssetType } from "../types/will.types";
 import { AssetTypeSelector } from "./AssetTypeSelector";
-import { EnhancedBeneficiary } from "@/hooks/useBeneficiaryManagement";
-import { useRelationships } from "@/hooks/useRelationships";
+import { EnhancedBeneficiary } from "@/hooks/useWillData";
 import { getFormattedRelationshipNameById } from "@/utils/relationships";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface AssetDialogProps {
 	open: boolean;
@@ -36,6 +36,7 @@ interface AssetDialogProps {
 	onAddNewBeneficiary: () => void;
 	enhancedBeneficiaries: EnhancedBeneficiary[];
 	isLoadingBeneficiaries: boolean;
+	relationships: Array<{ id: string; name: string }>;
 }
 
 export function AssetDialog({
@@ -46,6 +47,7 @@ export function AssetDialog({
 	onAddNewBeneficiary,
 	enhancedBeneficiaries,
 	isLoadingBeneficiaries,
+	relationships,
 }: AssetDialogProps) {
 	const [assetForm, setAssetForm] = useState<Omit<Asset, "id">>({
 		assetType: "Property" as AssetType,
@@ -55,7 +57,6 @@ export function AssetDialog({
 	});
 	const [searchQuery, setSearchQuery] = useState("");
 	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-	const { relationships } = useRelationships();
 
 	// Initialize form when editing
 	useEffect(() => {
@@ -271,7 +272,7 @@ export function AssetDialog({
 							</Button>
 						</div>
 						{isLoadingBeneficiaries ? (
-							<div className="text-center py-4">Loading beneficiaries...</div>
+							<LoadingSpinner message="Loading beneficiaries..." />
 						) : (
 							<div className="space-y-4">
 								{/* Beneficiary Select Box */}

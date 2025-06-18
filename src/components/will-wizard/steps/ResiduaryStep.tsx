@@ -11,8 +11,7 @@ import {
 	ChevronsUpDown,
 } from "lucide-react";
 import { useWill } from "@/context/WillContext";
-import { useBeneficiaryManagement } from "@/hooks/useBeneficiaryManagement";
-import { useRelationships } from "@/hooks/useRelationships";
+import { useWillData } from "@/hooks/useWillData";
 import { getFormattedRelationshipNameById } from "@/utils/relationships";
 import {
 	DropdownMenu,
@@ -20,6 +19,7 @@ import {
 	DropdownMenuItem,
 } from "@/components/ui/custom-dropdown-menu";
 import { NewBeneficiaryDialog } from "../components/NewBeneficiaryDialog";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { apiClient } from "@/utils/apiClient";
 import { toast } from "sonner";
 import type { WillResiduary } from "@/context/WillContext";
@@ -58,12 +58,14 @@ export default function ResiduaryStep({
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	const { activeWill, setActiveWill } = useWill();
-	const { relationships } = useRelationships();
 	const {
-		enhancedBeneficiaries,
+		allBeneficiaries: enhancedBeneficiaries,
+		isLoading: isLoadingBeneficiaries,
+		isReady: isBeneficiariesReady,
+		relationships,
 		addIndividualBeneficiary,
 		addCharityBeneficiary,
-	} = useBeneficiaryManagement();
+	} = useWillData();
 
 	// Initialize data from will context only - no API calls needed
 	const initializeFromWillContext = () => {
@@ -107,7 +109,7 @@ export default function ResiduaryStep({
 			console.log("Enhanced beneficiaries:", enhancedBeneficiaries);
 			console.log("Relationships available:", relationships);
 
-			// Check for beneficiaries with empty relationships
+			// Check for beneficiaries with empty relationships - should be much fewer now
 			const emptyRelationships = enhancedBeneficiaries.filter(
 				(b) =>
 					!b.relationship ||
@@ -529,6 +531,16 @@ export default function ResiduaryStep({
 		(sum, b) => sum + b.percentage,
 		0
 	);
+
+	// Show loading state if data is not ready
+	if (!isBeneficiariesReady || isLoadingBeneficiaries) {
+		return (
+			<LoadingSpinner
+				message="Loading beneficiaries and relationships..."
+				className="min-h-[400px]"
+			/>
+		);
+	}
 
 	const handleAddNewBeneficiary = () => {
 		setNewBeneficiaryDialogOpen(true);
