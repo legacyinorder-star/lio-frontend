@@ -38,15 +38,14 @@ import { mapWillDataFromAPI } from "../../utils/dataTransform";
 export function DashboardLayout() {
 	const navigate = useNavigate();
 	const location = useLocation();
-	const { user } = useAuth();
+	const { user, isLoading } = useAuth();
 	const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
-	const [isLoading, setIsLoading] = useState(true);
 	const [isLoadingWill, setIsLoadingWill] = useState(false);
 	const { activeWill, setActiveWill } = useWill();
 
 	useEffect(() => {
-		// Set a small delay to ensure auth state is properly loaded
-		const checkAuthTimer = setTimeout(() => {
+		// Only check auth once loading is complete
+		if (!isLoading) {
 			if (!user) {
 				toast.error("Please log in to access this page");
 				navigate("/login", { state: { from: location } });
@@ -60,12 +59,8 @@ export function DashboardLayout() {
 				last_name: user.last_name,
 				role: user.role,
 			});
-
-			setIsLoading(false);
-		}, 500); // Short delay to ensure auth context is fully loaded
-
-		return () => clearTimeout(checkAuthTimer);
-	}, [user, navigate, location]);
+		}
+	}, [user, isLoading, navigate, location]);
 
 	// Load active will on component mount
 	useEffect(() => {

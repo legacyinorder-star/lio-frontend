@@ -1,5 +1,5 @@
 import { getApiUrl } from "@/config/api";
-import { getAuthToken, removeAuthData } from "./auth";
+import { getAuthToken, removeAuthData, isTokenExpired } from "./auth";
 import { toast } from "sonner";
 
 interface ApiOptions extends RequestInit {
@@ -28,12 +28,28 @@ export async function apiClient<T = unknown>(
 	// Add authentication token if required
 	if (authenticated) {
 		const token = getAuthToken();
+
 		if (token) {
+			// Check if token is expired before making the request
+			if (isTokenExpired(token)) {
+				toast.error("Your session has expired. Please log in again.");
+				removeAuthData();
+				// Force redirect to login
+				window.location.href = "/login";
+				return {
+					data: null,
+					error: "Token expired",
+					status: 401,
+				};
+			}
+
 			headers.set("Authorization", `Bearer ${token}`);
-		} else if (authenticated) {
+		} else {
 			// If authentication is required but no token is available
-			removeAuthData(); // Clear auth data
-			// Don't redirect here - let the calling component handle it
+			removeAuthData(); // Clean up any stale auth data
+			toast.error("Authentication required. Please log in.");
+			// Force redirect to login
+			window.location.href = "/login";
 			return {
 				data: null,
 				error: "Authentication required",
@@ -65,15 +81,27 @@ export async function apiClient<T = unknown>(
 					? String(data.message)
 					: `Request failed with status ${response.status}`;
 
-			// Show toast for common error codes
+			// Handle different error codes
 			if (response.status === 401) {
 				toast.error("Session expired. Please log in again.");
 				removeAuthData(); // Clear auth data
-				// Don't redirect here - let the calling component handle it
+				// Force redirect to login immediately
+				window.location.href = "/login";
+
+				return {
+					data: null,
+					error: "Authentication required",
+					status: 401,
+				};
 			} else if (response.status === 403) {
 				toast.error("You don't have permission to perform this action.");
 			} else if (response.status >= 500) {
 				toast.error("Server error. Please try again later.");
+			} else if (response.status === 429) {
+				toast.error("Too many requests. Please wait a moment and try again.");
+			} else if (response.status >= 400) {
+				// Show the specific error message for client errors
+				toast.error(message);
 			}
 
 			return {
@@ -91,6 +119,18 @@ export async function apiClient<T = unknown>(
 	} catch (error) {
 		console.error("API request failed:", error);
 		const message = error instanceof Error ? error.message : "Network error";
+
+		// Don't show network error toasts for every failed request
+		// Let components handle this based on context
+		if (error instanceof TypeError && error.message.includes("fetch")) {
+			// Network connectivity issue
+			return {
+				data: null,
+				error: "Network error: Unable to connect to server",
+				status: 0,
+			};
+		}
+
 		toast.error("Connection error. Please check your internet connection.");
 
 		return {

@@ -30,12 +30,12 @@ import {
 export function AdminLayout() {
 	const navigate = useNavigate();
 	const location = useLocation();
-	const { user, logout } = useAuth();
-	const [isLoading, setIsLoading] = useState(true);
+	const { user, logout, isLoading } = useAuth();
+	const [isAuthLoading, setIsAuthLoading] = useState(true);
 
 	useEffect(() => {
-		// Set a small delay to ensure auth state is properly loaded
-		const checkAuthTimer = setTimeout(() => {
+		// Only check auth once loading is complete
+		if (!isLoading) {
 			if (!user) {
 				toast.error("Please log in to access the admin area");
 				navigate("/login", { state: { from: location } });
@@ -49,11 +49,9 @@ export function AdminLayout() {
 				return;
 			}
 
-			setIsLoading(false);
-		}, 500); // Short delay to ensure auth context is fully loaded
-
-		return () => clearTimeout(checkAuthTimer);
-	}, [user, navigate, location]);
+			setIsAuthLoading(false);
+		}
+	}, [user, isLoading, navigate, location]);
 
 	const getInitials = (name: string) => {
 		return name
@@ -102,7 +100,7 @@ export function AdminLayout() {
 	];
 
 	// Show loading state instead of null
-	if (isLoading || !user) {
+	if (isAuthLoading || !user) {
 		return (
 			<div className="flex items-center justify-center h-screen">
 				<div className="flex flex-col items-center gap-4">

@@ -1,7 +1,7 @@
-import { ReactNode, useEffect } from "react";
+import { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { getAuthToken, getUserDetails } from "@/utils/auth";
+import { getAuthToken, getUserDetails, isTokenExpired } from "@/utils/auth";
 import { toast } from "sonner";
 
 interface ProtectedRouteProps {
@@ -13,35 +13,42 @@ export default function ProtectedRoute({
 	children,
 	requiredRole,
 }: ProtectedRouteProps) {
-	const { user } = useAuth();
+	const { user, isLoading } = useAuth();
 	const location = useLocation();
 
-	// Check if we have a user from context first (this comes from useAuth hook)
-	// If not, then try to get from localStorage as a fallback
-	const isAuthenticated = !!user || (!!getAuthToken() && !!getUserDetails());
+	// Show loading state while auth is initializing
+	if (isLoading) {
+		return (
+			<div className="min-h-screen flex items-center justify-center">
+				<div className="text-center">
+					<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+					<p className="text-muted-foreground">Loading...</p>
+				</div>
+			</div>
+		);
+	}
 
-	// Get user role from context or localStorage
-	const userRole = user?.role || getUserDetails()?.role || "";
+	// Single source of truth for authentication
+	const token = getAuthToken();
+	const userDetails = getUserDetails();
+
+	// Check authentication status
+	const isAuthenticated = user && token && !isTokenExpired(token);
+
+	// Get user role with fallback
+	const userRole = user?.role || userDetails?.role || "";
 	const hasRequiredRole = !requiredRole || userRole === requiredRole;
 
-	useEffect(() => {
-		if (!isAuthenticated) {
-			// No valid authentication
-			toast.error("Please log in to access this page");
-		} else if (requiredRole && userRole !== requiredRole) {
-			// User is logged in but doesn't have the required role
-			toast.error(`You need ${requiredRole} permissions to access this page`);
-		}
-	}, [isAuthenticated, requiredRole, userRole]);
-
+	// Handle unauthenticated users
 	if (!isAuthenticated) {
-		// Redirect to the login page with a return URL
+		// Only show toast for role-related errors, not general auth errors
+		// (since apiClient and auth context handle those)
 		return <Navigate to="/login" state={{ from: location }} replace />;
 	}
 
-	if (isAuthenticated && !hasRequiredRole) {
-		// User is authenticated but lacks the required role
-		// Redirect to user dashboard
+	// Handle users without required role
+	if (!hasRequiredRole) {
+		toast.error(`You need ${requiredRole} permissions to access this page`);
 		return <Navigate to="/app/dashboard" state={{ from: location }} replace />;
 	}
 
