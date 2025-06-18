@@ -354,6 +354,8 @@ export function useWillData() {
 	return {
 		// Data
 		allBeneficiaries: state.allBeneficiaries,
+		relationships,
+		relationshipResolver,
 
 		// Loading states
 		isLoading: state.isLoading,
@@ -367,8 +369,5 @@ export function useWillData() {
 		refetch: loadAllBeneficiaryData,
 		addIndividualBeneficiary,
 		addCharityBeneficiary,
-
-		// Utility
-		relationships,
 	};
 }

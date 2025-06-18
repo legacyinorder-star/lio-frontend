@@ -17,8 +17,11 @@ import { ArrowLeft, ArrowRight, Plus, Trash2, Edit2 } from "lucide-react";
 import { apiClient } from "@/utils/apiClient";
 import { useWill } from "@/context/WillContext";
 import { toast } from "sonner";
-import { useRelationships } from "@/hooks/useRelationships";
+
 import { getFormattedRelationshipNameById } from "@/utils/relationships";
+import { useWillData } from "@/hooks/useWillData";
+import { useDataLoading } from "@/context/DataLoadingContext";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 // API response interface
 interface ExecutorApiResponse {
@@ -90,7 +93,8 @@ export default function ExecutorStep({
 	const [hasLoadedExecutors, setHasLoadedExecutors] = useState(false);
 	const prevExecutorsRef = useRef<Executor[]>([]);
 	const { activeWill } = useWill();
-	const { relationships } = useRelationships();
+	const { relationships, isLoading: isDataLoading, isReady } = useWillData();
+	const { updateLoadingState } = useDataLoading();
 
 	const [executorForm, setExecutorForm] = useState<Executor>({
 		id: "",
@@ -102,6 +106,16 @@ export default function ExecutorStep({
 		rc_number: "",
 		isPrimary: false,
 	});
+
+	// Update loading state for executors
+	useEffect(() => {
+		updateLoadingState("executors", isLoadingExecutors);
+	}, [isLoadingExecutors, updateLoadingState]);
+
+	// Show loading spinner if data is not ready
+	if (isDataLoading || !isReady) {
+		return <LoadingSpinner message="Loading executor data..." />;
+	}
 
 	// Function to load existing executors
 	const loadExecutors = async () => {

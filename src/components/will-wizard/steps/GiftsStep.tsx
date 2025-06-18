@@ -33,12 +33,13 @@ import {
 	Gift as GiftType,
 	GiftType as GiftTypeEnum,
 } from "../types/will.types";
-import { useBeneficiaryManagement } from "@/hooks/useBeneficiaryManagement";
-import { useRelationships } from "@/hooks/useRelationships";
+import { useWillData } from "@/hooks/useWillData";
+import { useDataLoading } from "@/context/DataLoadingContext";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { useWill } from "@/context/WillContext";
+import { useGiftManagement } from "@/hooks/useGiftManagement";
 import { getFormattedRelationshipNameById } from "@/utils/relationships";
 import { NewBeneficiaryDialog } from "../components/NewBeneficiaryDialog";
-import { useGiftManagement } from "@/hooks/useGiftManagement";
-import { useWill } from "@/context/WillContext";
 
 const giftSchema = z
 	.object({
@@ -142,11 +143,6 @@ export default function GiftsStep({
 	onBack,
 	initialData,
 }: GiftsStepProps) {
-	const [giftDialogOpen, setGiftDialogOpen] = useState(false);
-	const [editingGift, setEditingGift] = useState<GiftType | null>(null);
-	const [newBeneficiaryDialogOpen, setNewBeneficiaryDialogOpen] =
-		useState(false);
-
 	const [giftForm, setGiftForm] = useState<Omit<GiftType, "id">>({
 		type: "Cash",
 		description: "",
@@ -155,16 +151,23 @@ export default function GiftsStep({
 		peopleId: "",
 		charitiesId: "",
 	});
+	const [editingGift, setEditingGift] = useState<GiftType | null>(null);
+	const [giftDialogOpen, setGiftDialogOpen] = useState(false);
+	const [newBeneficiaryDialogOpen, setNewBeneficiaryDialogOpen] =
+		useState(false);
 	const [searchQuery, setSearchQuery] = useState("");
 	const [isBeneficiaryDropdownOpen, setIsBeneficiaryDropdownOpen] =
 		useState(false);
 
 	const {
-		enhancedBeneficiaries,
+		allBeneficiaries: enhancedBeneficiaries,
+		relationships,
 		addIndividualBeneficiary,
 		addCharityBeneficiary,
-	} = useBeneficiaryManagement();
-	const { relationships } = useRelationships();
+		isLoading: isDataLoading,
+		isReady,
+	} = useWillData();
+	const { updateLoadingState } = useDataLoading();
 	const { activeWill } = useWill();
 	const { gifts, saveGift, removeGift } = useGiftManagement(
 		initialData?.gifts || [],
@@ -182,6 +185,11 @@ export default function GiftsStep({
 			charitiesId: "",
 		},
 	});
+
+	// Update loading state for gifts
+	useEffect(() => {
+		updateLoadingState("gifts", isDataLoading);
+	}, [isDataLoading, updateLoadingState]);
 
 	// Initialize form when editing
 	useEffect(() => {
@@ -205,6 +213,11 @@ export default function GiftsStep({
 			});
 		}
 	}, [editingGift]);
+
+	// Show loading spinner if data is not ready
+	if (isDataLoading || !isReady) {
+		return <LoadingSpinner message="Loading gifts data..." />;
+	}
 
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();

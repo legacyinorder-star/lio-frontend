@@ -5,8 +5,7 @@ import { Asset } from "../types/will.types";
 import { ASSET_TYPES } from "./AssetTypeSelector";
 import { useWill } from "@/context/WillContext";
 import { EnhancedBeneficiary } from "@/hooks/useBeneficiaryManagement";
-import { useRelationships } from "@/hooks/useRelationships";
-import { getFormattedRelationshipNameById } from "@/utils/relationships";
+import { useWillData } from "@/hooks/useWillData";
 
 interface AssetCardProps {
 	asset: Asset;
@@ -22,7 +21,7 @@ export function AssetCard({
 	enhancedBeneficiaries,
 }: AssetCardProps) {
 	const { activeWill } = useWill();
-	const { relationships } = useRelationships();
+	const { relationshipResolver } = useWillData();
 
 	return (
 		<Card>
@@ -67,8 +66,7 @@ export function AssetCard({
 										if (!beneficiaryDetails) return null;
 
 										const relationship = beneficiaryDetails.relationshipId
-											? getFormattedRelationshipNameById(
-													relationships,
+											? relationshipResolver?.getFormattedRelationshipName(
 													beneficiaryDetails.relationshipId
 											  ) || beneficiaryDetails.relationship
 											: beneficiaryDetails.relationship;
@@ -104,8 +102,7 @@ export function AssetCard({
 
 									const relationship = isIndividual
 										? willBeneficiary.person?.relationshipId
-											? getFormattedRelationshipNameById(
-													relationships,
+											? relationshipResolver?.getFormattedRelationshipName(
 													willBeneficiary.person.relationshipId
 											  ) || "Unknown Relationship"
 											: willBeneficiary.person?.relationship ||
