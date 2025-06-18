@@ -47,12 +47,23 @@ interface DecodedToken {
 
 export const isTokenExpired = (token: string): boolean => {
 	try {
-		// Check if the token is in the expected format (three parts separated by dots)
+		// Check token format (JWT has 3 parts, JWE has 5 parts)
 		const parts = token.split(".");
-		if (parts.length !== 3) {
-			console.warn("Token does not have the expected JWT format");
+		const isJWT = parts.length === 3;
+		const isJWE = parts.length === 5;
+
+		if (!isJWT && !isJWE) {
+			console.warn("Token does not have the expected JWT or JWE format");
 			return true;
 		}
+
+		// For JWE tokens, we can't decode them client-side since they're encrypted
+		// We'll rely on server-side validation through API calls
+		if (isJWE) {
+			return false; // Assume valid, let server validate
+		}
+
+		// Continue with JWT validation for standard JWT tokens
 
 		const base64Url = parts[1];
 

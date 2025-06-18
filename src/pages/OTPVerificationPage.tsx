@@ -72,6 +72,32 @@ export default function OTPVerificationPage() {
 				throw new Error(data.message || "OTP Verification failed");
 			}
 
+			// Validate the token format before proceeding
+			if (!data.authToken) {
+				throw new Error("No authentication token received from server");
+			}
+
+			// Token format validation (supports both JWT and JWE)
+			const tokenParts = data.authToken.split(".");
+			const isJWT = tokenParts.length === 3; // Standard JWT format
+			const isJWE = tokenParts.length === 5; // JSON Web Encryption format
+
+			if (!isJWT && !isJWE) {
+				console.error("Invalid token format received:", {
+					token: data.authToken,
+					parts: tokenParts,
+					partsLength: tokenParts.length,
+					expectedFormats: "JWT (3 parts) or JWE (5 parts)",
+				});
+				throw new Error("Invalid token format received from server");
+			}
+
+			console.log("Token validation successful:", {
+				format: isJWE ? "JWE (encrypted)" : "JWT",
+				partsLength: tokenParts.length,
+				tokenPreview: `${data.authToken.substring(0, 20)}...`,
+			});
+
 			// Store auth token
 			setAuthToken(data.authToken);
 
@@ -95,23 +121,29 @@ export default function OTPVerificationPage() {
 			setUserDetails(userDetails);
 
 			// Convert UserDetails to User type for auth context
-			setUser({
+			const userData = {
 				id: userDetails.id,
 				email: userDetails.email,
 				first_name: userDetails.first_name || "",
 				last_name: userDetails.last_name || "",
 				role: userDetails.role,
 				token: data.authToken,
-			});
+			};
+
+			// Update auth context
+			setUser(userData);
 
 			toast.success("OTP verified successfully!");
 
-			// Redirect based on user role
-			if (userDetails.role === "admin") {
-				navigate("/admin/dashboard");
-			} else {
-				navigate("/app/dashboard");
-			}
+			// Small delay to ensure auth context is updated before navigation
+			setTimeout(() => {
+				// Redirect based on user role
+				if (userDetails.role === "admin") {
+					navigate("/admin/dashboard");
+				} else {
+					navigate("/app/dashboard");
+				}
+			}, 100);
 		} catch (error) {
 			console.error("OTP verification failed:", error);
 			console.log(error);
@@ -210,7 +242,7 @@ export default function OTPVerificationPage() {
 									/>
 									<Button
 										type="submit"
-										className="w-full py-[12px] px-[12px] rounded-lg bg-light-green font-[1rem] font-[600]"
+										className="w-full py-[12px] px-[12px] rounded-lg bg-light-green font-[1rem] font-[600] cursor-pointer"
 										disabled={isLoading}
 									>
 										{isLoading ? "Verifying..." : "Verify OTP"}
@@ -231,17 +263,6 @@ export default function OTPVerificationPage() {
 							</p>
 						</div>
 					</CardContent>
-					{/* <CardFooter className="flex flex-col space-y-4">
-						<div className="text-sm text-center text-muted-foreground">
-							Didn't receive the code?{" "}
-							<button
-								className="text-primary hover:underline"
-								onClick={handleResendOTP}
-							>
-								Resend
-							</button>
-						</div>
-					</CardFooter> */}
 				</Card>
 			</div>
 		</div>

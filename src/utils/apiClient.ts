@@ -31,11 +31,27 @@ export async function apiClient<T = unknown>(
 
 		if (token) {
 			// Check if token is expired before making the request
-			if (isTokenExpired(token)) {
+			// Skip client-side expiration check for JWE tokens (they're encrypted)
+			const parts = token.split(".");
+			const isJWE = parts.length === 5;
+
+			if (!isJWE && isTokenExpired(token)) {
 				toast.error("Your session has expired. Please log in again.");
 				removeAuthData();
-				// Force redirect to login
-				window.location.href = "/login";
+
+				// Prevent redirect loops on auth pages
+				const currentPath = window.location.pathname;
+				const authPages = [
+					"/login",
+					"/signup",
+					"/verify-otp",
+					"/request-password-reset",
+					"/reset-password",
+				];
+
+				if (!authPages.includes(currentPath)) {
+					window.location.href = "/login";
+				}
 				return {
 					data: null,
 					error: "Token expired",
@@ -48,8 +64,20 @@ export async function apiClient<T = unknown>(
 			// If authentication is required but no token is available
 			removeAuthData(); // Clean up any stale auth data
 			toast.error("Authentication required. Please log in.");
-			// Force redirect to login
-			window.location.href = "/login";
+
+			// Prevent redirect loops on auth pages
+			const currentPath = window.location.pathname;
+			const authPages = [
+				"/login",
+				"/signup",
+				"/verify-otp",
+				"/request-password-reset",
+				"/reset-password",
+			];
+
+			if (!authPages.includes(currentPath)) {
+				window.location.href = "/login";
+			}
 			return {
 				data: null,
 				error: "Authentication required",
@@ -85,8 +113,20 @@ export async function apiClient<T = unknown>(
 			if (response.status === 401) {
 				toast.error("Session expired. Please log in again.");
 				removeAuthData(); // Clear auth data
-				// Force redirect to login immediately
-				window.location.href = "/login";
+
+				// Prevent redirect loops on auth pages
+				const currentPath = window.location.pathname;
+				const authPages = [
+					"/login",
+					"/signup",
+					"/verify-otp",
+					"/request-password-reset",
+					"/reset-password",
+				];
+
+				if (!authPages.includes(currentPath)) {
+					window.location.href = "/login";
+				}
 
 				return {
 					data: null,

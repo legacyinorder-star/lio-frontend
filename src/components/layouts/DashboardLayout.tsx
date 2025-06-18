@@ -34,6 +34,7 @@ import { toast } from "sonner";
 import { apiClient } from "@/utils/apiClient";
 import { useWill } from "@/context/WillContext";
 import { mapWillDataFromAPI } from "../../utils/dataTransform";
+import { SessionStatus } from "@/components/ui/session-status";
 
 export function DashboardLayout() {
 	const navigate = useNavigate();
@@ -211,6 +212,7 @@ export function DashboardLayout() {
 						<div className="flex items-center space-x-4"></div>
 
 						<div className="flex items-center space-x-4">
+							<SessionStatus showInDropdown compact />
 							<Button
 								variant="ghost"
 								size="icon"
