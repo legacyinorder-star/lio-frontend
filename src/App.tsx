@@ -5,6 +5,7 @@ import SignUpPage from "@/pages/SignUpPage";
 import LoginPage from "@/pages/LoginPage";
 import DashboardPage from "@/pages/DashboardPage";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import PublicRoute from "@/components/PublicRoute";
 import { DashboardLayout } from "@/components/layouts/DashboardLayout";
 import OTPVerificationPage from "./pages/OTPVerificationPage";
 import WillWizard from "@/components/will-wizard/WillWizard";
@@ -34,9 +35,30 @@ function App() {
 				<RelationshipsProvider>
 					<Router>
 						<Routes>
-							<Route path="/" element={<HomePage />} />
-							<Route path="/signup" element={<SignUpPage />} />
-							<Route path="/login" element={<LoginPage />} />
+							<Route
+								path="/"
+								element={
+									<PublicRoute>
+										<HomePage />
+									</PublicRoute>
+								}
+							/>
+							<Route
+								path="/signup"
+								element={
+									<PublicRoute>
+										<SignUpPage />
+									</PublicRoute>
+								}
+							/>
+							<Route
+								path="/login"
+								element={
+									<PublicRoute>
+										<LoginPage />
+									</PublicRoute>
+								}
+							/>
 							<Route path="/logout" element={<LogoutPage />} />
 							<Route
 								path="/app"
@@ -65,10 +87,28 @@ function App() {
 							</Route>
 							<Route
 								path="/request-password-reset"
-								element={<RequestPasswordResetPage />}
+								element={
+									<PublicRoute>
+										<RequestPasswordResetPage />
+									</PublicRoute>
+								}
 							/>
-							<Route path="/reset-password" element={<ResetPasswordPage />} />
-							<Route path="/verify-otp" element={<OTPVerificationPage />} />
+							<Route
+								path="/reset-password"
+								element={
+									<PublicRoute>
+										<ResetPasswordPage />
+									</PublicRoute>
+								}
+							/>
+							<Route
+								path="/verify-otp"
+								element={
+									<PublicRoute>
+										<OTPVerificationPage />
+									</PublicRoute>
+								}
+							/>
 
 							{/* Payment Routes */}
 							<Route
@@ -97,7 +137,11 @@ function App() {
 							/>
 							<Route
 								path="/app/will-wizard/success"
-								element={<WillSuccessPage />}
+								element={
+									<ProtectedRoute>
+										<WillSuccessPage />
+									</ProtectedRoute>
+								}
 							/>
 
 							{/* 404 - This must be the last route to catch all unknown URLs */}

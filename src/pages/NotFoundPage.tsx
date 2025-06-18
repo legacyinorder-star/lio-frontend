@@ -1,8 +1,11 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Home } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function NotFoundPage() {
+	const { user } = useAuth();
+
 	return (
 		<div className="flex flex-col items-center justify-center min-h-screen bg-background text-center px-4">
 			<div className="max-w-md space-y-6">
@@ -22,9 +25,17 @@ export default function NotFoundPage() {
 							Back to Home
 						</Link>
 					</Button>
-					<Button variant="outline" asChild>
-						<Link to="/app/dashboard">Go to Dashboard</Link>
-					</Button>
+					{user && (
+						<Button variant="outline" asChild>
+							<Link
+								to={
+									user.role === "admin" ? "/admin/dashboard" : "/app/dashboard"
+								}
+							>
+								Go to Dashboard
+							</Link>
+						</Button>
+					)}
 				</div>
 			</div>
 		</div>
