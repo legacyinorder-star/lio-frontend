@@ -4,14 +4,15 @@ import { Edit2, Trash2 } from "lucide-react";
 import { Asset } from "../types/will.types";
 import { ASSET_TYPES } from "./AssetTypeSelector";
 import { useWill } from "@/context/WillContext";
-import { EnhancedBeneficiary } from "@/hooks/useBeneficiaryManagement";
-import { useWillData } from "@/hooks/useWillData";
+import { EnhancedBeneficiary } from "@/hooks/useWillData";
+import { RelationshipResolver } from "@/utils/relationshipResolver";
 
 interface AssetCardProps {
 	asset: Asset;
 	onEdit: (asset: Asset) => void;
 	onRemove: (assetId: string) => void;
 	enhancedBeneficiaries: EnhancedBeneficiary[];
+	relationshipResolver: RelationshipResolver;
 }
 
 export function AssetCard({
@@ -19,9 +20,9 @@ export function AssetCard({
 	onEdit,
 	onRemove,
 	enhancedBeneficiaries,
+	relationshipResolver,
 }: AssetCardProps) {
 	const { activeWill } = useWill();
-	const { relationshipResolver } = useWillData();
 
 	return (
 		<Card>

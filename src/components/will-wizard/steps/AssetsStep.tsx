@@ -55,6 +55,7 @@ export default function AssetsStep({
 		isLoading: isLoadingBeneficiaries,
 		isReady: isBeneficiariesReady,
 		relationships,
+		relationshipResolver,
 		addIndividualBeneficiary,
 		addCharityBeneficiary,
 	} = useWillData();
@@ -195,6 +196,7 @@ export default function AssetsStep({
 										onEdit={handleEditAsset}
 										onRemove={handleRemoveAsset}
 										enhancedBeneficiaries={enhancedBeneficiaries}
+										relationshipResolver={relationshipResolver}
 									/>
 								))}
 							</div>
