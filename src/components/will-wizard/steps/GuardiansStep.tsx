@@ -417,6 +417,7 @@ export default function GuardiansStep({
 										required
 										excludeRelationships={["spouse", "child"]}
 										disabled={isSubmitting}
+										useOnlyRelationships={true}
 									/>
 								</div>
 								<div className="flex items-center space-x-2">

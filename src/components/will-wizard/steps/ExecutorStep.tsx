@@ -500,6 +500,7 @@ export default function ExecutorStep({
 													handleExecutorFormChange("relationshipId")(event);
 												}}
 												required
+												useOnlyRelationships={true}
 											/>
 										</div>
 									</>

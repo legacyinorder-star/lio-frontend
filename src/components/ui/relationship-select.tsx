@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { useWillData } from "@/hooks/useWillData";
+import { useRelationships } from "@/hooks/useRelationships";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface RelationshipSelectProps {
@@ -20,6 +21,7 @@ interface RelationshipSelectProps {
 	error?: string;
 	className?: string;
 	excludeRelationships?: string[];
+	useOnlyRelationships?: boolean;
 }
 
 const RelationshipSelect = forwardRef<
@@ -37,18 +39,22 @@ const RelationshipSelect = forwardRef<
 			error,
 			className = "",
 			excludeRelationships = [],
+			useOnlyRelationships = false,
 			...props
 		},
 		ref
 	) => {
+		const relationshipsData = useRelationships();
+		const willData = useWillData();
+
 		const {
 			relationships,
 			isLoading,
 			error: fetchError,
-			isReady,
-		} = useWillData();
+		} = useOnlyRelationships ? relationshipsData : willData;
 
-		// Filter out excluded relationships
+		const isReady = useOnlyRelationships ? !isLoading : willData.isReady;
+
 		const filteredRelationships = relationships.filter(
 			(relationship) =>
 				!excludeRelationships.includes(relationship.name.toLowerCase())
@@ -101,7 +107,7 @@ const RelationshipSelect = forwardRef<
 					<SelectTrigger ref={ref} {...props}>
 						<SelectValue placeholder={placeholder} />
 					</SelectTrigger>
-					<SelectContent>
+					<SelectContent className="bg-white">
 						{filteredRelationships.map((relationship) => (
 							<SelectItem key={relationship.id} value={relationship.id}>
 								{relationship.name
