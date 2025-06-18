@@ -4,6 +4,7 @@ import React, {
 	useState,
 	useEffect,
 	useMemo,
+	useCallback,
 } from "react";
 import { useWill } from "@/context/WillContext";
 import { useRelationships } from "@/hooks/useRelationships";
@@ -80,15 +81,18 @@ export const DataLoadingProvider: React.FC<{ children: React.ReactNode }> = ({
 	}, [loadingStates]);
 
 	// Function to update individual loading states
-	const updateLoadingState = (key: keyof LoadingStates, isLoading: boolean) => {
-		setLoadingStates((prev) => ({
-			...prev,
-			[key]: isLoading,
-		}));
-	};
+	const updateLoadingState = useCallback(
+		(key: keyof LoadingStates, isLoading: boolean) => {
+			setLoadingStates((prev) => ({
+				...prev,
+				[key]: isLoading,
+			}));
+		},
+		[]
+	);
 
 	// Function to reset all loading states (useful when will changes)
-	const resetLoadingStates = () => {
+	const resetLoadingStates = useCallback(() => {
 		setLoadingStates({
 			relationships: Boolean(isLoadingRelationships),
 			beneficiaries: false,
@@ -98,31 +102,36 @@ export const DataLoadingProvider: React.FC<{ children: React.ReactNode }> = ({
 			executors: false,
 			witnesses: false,
 		});
-	};
+	}, [isLoadingRelationships]);
 
 	// Reset loading states when will changes
 	useEffect(() => {
 		if (activeWill?.id) {
 			resetLoadingStates();
 		}
-	}, [activeWill?.id, isLoadingRelationships, resetLoadingStates]);
+	}, [activeWill?.id, resetLoadingStates]);
 
-	// Debug logging
-	useEffect(() => {
-		console.log("DataLoading states:", {
+	// Debug logging (memoized to prevent excessive logging)
+	const debugInfo = useMemo(
+		() => ({
 			loadingStates,
 			isDataReady,
 			allDataLoaded,
 			relationshipsCount: relationships.length,
 			activeWillId: activeWill?.id,
-		});
-	}, [
-		loadingStates,
-		isDataReady,
-		allDataLoaded,
-		relationships.length,
-		activeWill?.id,
-	]);
+		}),
+		[
+			loadingStates,
+			isDataReady,
+			allDataLoaded,
+			relationships.length,
+			activeWill?.id,
+		]
+	);
+
+	useEffect(() => {
+		console.log("DataLoading states:", debugInfo);
+	}, [debugInfo]);
 
 	return (
 		<DataLoadingContext.Provider
