@@ -68,7 +68,7 @@ interface SavedWill {
 			beneficiaryId: string;
 			percentage: number;
 		}>;
-		additionalInstructions?: string;
+		// additionalInstructions?: string;
 	};
 	status: string;
 }
@@ -162,7 +162,7 @@ export const transformActiveWillToPDFData = (will: WillData) => {
 				beneficiaryId: beneficiary.person?.id || beneficiary.charity?.id || "",
 				percentage: beneficiary.percentage,
 			})) || [],
-		additionalInstructions: "", // Not available in WillData
+		// additionalInstructions: "", // Not available in WillData
 	};
 };
 
@@ -226,7 +226,7 @@ export const downloadWillPDF = async (
 		const pdfDoc = pdf(
 			<WillPDF
 				data={willData}
-				additionalText="This is a sample additional text that can be customized based on the user's input."
+				// additionalText="This is a sample additional text that can be customized based on the user's input."
 			/>
 		);
 

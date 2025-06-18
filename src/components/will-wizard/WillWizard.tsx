@@ -19,7 +19,6 @@ import GiftsStep from "./steps/GiftsStep";
 import ResiduaryStep from "./steps/ResiduaryStep";
 import WitnessesStep from "./steps/WitnessesStep";
 import FuneralInstructionsStep from "./steps/FuneralInstructionsStep";
-import AdditionalInstructionsStep from "./steps/AdditionalInstructionsStep";
 import ReviewStep from "./steps/ReviewStep";
 import ExecutorStep from "./steps/ExecutorStep";
 import GuardiansStep from "./steps/GuardiansStep";
@@ -53,7 +52,6 @@ export default function WillWizard() {
 		residuaryBeneficiaries: [],
 		executors: [],
 		witnesses: [],
-		additionalInstructions: "",
 		funeralInstructions: {
 			instructions: "",
 		},
@@ -144,9 +142,6 @@ export default function WillWizard() {
 				setCurrentQuestion("funeralInstructions");
 				break;
 			case "funeralInstructions":
-				setCurrentQuestion("additionalInstructions");
-				break;
-			case "additionalInstructions":
 				setCurrentQuestion("review");
 				break;
 		}
@@ -198,17 +193,14 @@ export default function WillWizard() {
 			case "funeralInstructions":
 				setCurrentQuestion("witnesses");
 				break;
-			case "additionalInstructions":
-				setCurrentQuestion("funeralInstructions");
-				break;
 			case "review":
-				setCurrentQuestion("additionalInstructions");
+				setCurrentQuestion("funeralInstructions");
 				break;
 		}
 	};
 
 	// Calculate progress
-	const totalQuestions = 12; // Update this if you add/remove questions
+	const totalQuestions = 11; // Update this if you add/remove questions
 	const questionOrder: QuestionType[] = [
 		"name",
 		"address",
@@ -220,7 +212,6 @@ export default function WillWizard() {
 		"executors",
 		"witnesses",
 		"funeralInstructions",
-		"additionalInstructions",
 		"review",
 	];
 	const progress = questionOrder.indexOf(currentQuestion) + 1;
@@ -322,7 +313,6 @@ export default function WillWizard() {
 			})),
 			residuaryBeneficiaries: formData.residuaryBeneficiaries,
 			funeralInstructions: formData.funeralInstructions,
-			additionalInstructions: formData.additionalInstructions,
 		};
 	};
 
@@ -418,9 +408,6 @@ export default function WillWizard() {
 
 			case "funeralInstructions":
 				return <FuneralInstructionsStep {...commonProps} />;
-
-			case "additionalInstructions":
-				return <AdditionalInstructionsStep {...commonProps} />;
 
 			case "review":
 				return <ReviewStep data={getReviewData()} onBack={handleBack} />;

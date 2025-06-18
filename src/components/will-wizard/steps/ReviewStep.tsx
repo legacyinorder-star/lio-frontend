@@ -71,7 +71,6 @@ export interface ReviewStepProps {
 		funeralInstructions?: {
 			instructions: string;
 		};
-		additionalInstructions?: string;
 	};
 	onSave?: () => void;
 	onBack?: () => void;
@@ -608,20 +607,6 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 						<div className="rounded-lg border border-gray-200 p-4 bg-gray-50">
 							<div className="whitespace-pre-wrap text-gray-900">
 								{data.funeralInstructions.instructions}
-							</div>
-						</div>
-					</div>
-				)}
-
-				{/* Additional Instructions */}
-				{data.additionalInstructions && (
-					<div className="space-y-4">
-						<h3 className="text-lg font-semibold border-b pb-2">
-							Additional Instructions
-						</h3>
-						<div className="rounded-lg border border-gray-200 p-4 bg-gray-50">
-							<div className="whitespace-pre-wrap text-gray-900">
-								{data.additionalInstructions}
 							</div>
 						</div>
 					</div>

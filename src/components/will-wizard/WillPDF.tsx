@@ -249,20 +249,6 @@ const styles = StyleSheet.create({
 		width: "60%",
 		marginBottom: 5,
 	},
-	additionalInstructionsSection: {
-		marginTop: 20,
-		marginBottom: 20,
-	},
-	additionalInstructionsTitle: {
-		fontSize: 14,
-		fontWeight: "bold",
-		marginBottom: 10,
-	},
-	additionalInstructionsText: {
-		fontSize: 12,
-		lineHeight: 1.5,
-		marginBottom: 10,
-	},
 });
 
 interface WillPDFProps {
@@ -327,12 +313,10 @@ interface WillPDFProps {
 			beneficiaryId: string;
 			percentage: number;
 		}>;
-		additionalInstructions?: string;
 	};
-	additionalText?: string;
 }
 
-const WillPDF: React.FC<WillPDFProps> = ({ data, additionalText }) => {
+const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 	// Find primary executor
 	const primaryExecutor = data.executors.find((exec) => exec.isPrimary);
 	// Get additional executors (excluding primary)
@@ -656,25 +640,6 @@ const WillPDF: React.FC<WillPDFProps> = ({ data, additionalText }) => {
 							</Text>
 						</View>
 					)}
-
-				{/* Add Additional Instructions section */}
-				{(data.additionalInstructions || additionalText) && (
-					<View style={styles.additionalInstructionsSection}>
-						<Text style={styles.additionalInstructionsTitle}>
-							Additional Instructions and Information
-						</Text>
-						{data.additionalInstructions && (
-							<Text style={styles.additionalInstructionsText}>
-								{data.additionalInstructions}
-							</Text>
-						)}
-						{additionalText && (
-							<Text style={styles.additionalInstructionsText}>
-								{additionalText}
-							</Text>
-						)}
-					</View>
-				)}
 
 				<View style={styles.distributionSection}>
 					<Text style={styles.distributionTitle}>

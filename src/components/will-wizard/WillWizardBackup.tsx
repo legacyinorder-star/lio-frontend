@@ -54,7 +54,6 @@ type QuestionType =
 	| "executors"
 	| "witnesses"
 	| "funeralInstructions"
-	| "additionalInstructions"
 	| "review";
 
 // Define the address type
@@ -177,7 +176,7 @@ interface WillFormData {
 	}>;
 	executors: Executor[];
 	witnesses: Witness[];
-	additionalInstructions: string;
+	// additionalInstructions: string;
 	funeralInstructions: {
 		disposition: "cremation" | "burial" | null;
 		location?: string;
@@ -372,7 +371,7 @@ export default function WillWizard() {
 		residuaryBeneficiaries: [],
 		executors: [],
 		witnesses: [],
-		additionalInstructions: "",
+		// additionalInstructions: "",
 		funeralInstructions: {
 			disposition: null,
 			location: "",
@@ -872,8 +871,8 @@ export default function WillWizard() {
 		} else if (currentQuestion === "witnesses") {
 			setCurrentQuestion("funeralInstructions");
 		} else if (currentQuestion === "funeralInstructions") {
-			setCurrentQuestion("additionalInstructions");
-		} else if (currentQuestion === "additionalInstructions") {
+			setCurrentQuestion("review");
+		} else if (currentQuestion === "review") {
 			setCurrentQuestion("review");
 		}
 	};
@@ -927,11 +926,8 @@ export default function WillWizard() {
 			case "funeralInstructions":
 				setCurrentQuestion("witnesses");
 				break;
-			case "additionalInstructions":
-				setCurrentQuestion("funeralInstructions");
-				break;
 			case "review":
-				setCurrentQuestion("additionalInstructions");
+				setCurrentQuestion("funeralInstructions");
 				break;
 			default:
 				break;
@@ -1424,14 +1420,14 @@ export default function WillWizard() {
 	};
 
 	// Add handler for additional instructions
-	const handleAdditionalInstructionsChange = (
-		e: React.ChangeEvent<HTMLTextAreaElement>
-	) => {
-		setFormData((prev) => ({
-			...prev,
-			additionalInstructions: e.target.value,
-		}));
-	};
+	// const handleAdditionalInstructionsChange = (
+	// 	e: React.ChangeEvent<HTMLTextAreaElement>
+	// ) => {
+	// 	setFormData((prev) => ({
+	// 		...prev,
+	// 		additionalInstructions: e.target.value,
+	// 	}));
+	// };
 
 	// Render different content based on current question
 	const renderQuestion = () => {
@@ -3745,50 +3741,6 @@ export default function WillWizard() {
 					</div>
 				);
 
-			case "additionalInstructions":
-				return (
-					<div className="space-y-4">
-						<div className="text-2xl font-semibold">
-							Additional Instructions or Information
-						</div>
-						<div className="text-muted-foreground">
-							You can provide any additional instructions, wishes, or
-							information that you would like to include in your will. This
-							could include funeral arrangements, specific bequests of personal
-							items, or any other matters you want to address.
-						</div>
-						<div className="space-y-4 mt-6">
-							<div className="space-y-2">
-								<Label htmlFor="additionalInstructions">
-									Additional Instructions
-								</Label>
-								<textarea
-									id="additionalInstructions"
-									value={formData.additionalInstructions}
-									onChange={handleAdditionalInstructionsChange}
-									placeholder="Enter any additional instructions or information you would like to include in your will..."
-									className="w-full min-h-[200px] p-2 border rounded-md"
-								/>
-							</div>
-						</div>
-						<div className="flex justify-between pt-4">
-							<Button
-								variant="outline"
-								onClick={handleBack}
-								className="cursor-pointer"
-							>
-								<ArrowLeft className="mr-2 h-4 w-4" /> Back
-							</Button>
-							<Button
-								onClick={handleNext}
-								className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
-							>
-								Next <ArrowRight className="ml-2 h-4 w-4" />
-							</Button>
-						</div>
-					</div>
-				);
-
 			case "review":
 				return (
 					<div className="space-y-4">
@@ -3915,7 +3867,7 @@ export default function WillWizard() {
 										percentage: ben.percentage,
 									})
 								),
-								additionalInstructions: formData.additionalInstructions,
+								// additionalInstructions: formData.additionalInstructions,
 								funeralInstructions: formData.funeralInstructions.disposition
 									? {
 											instructions: `Disposition: ${
@@ -3984,8 +3936,6 @@ export default function WillWizard() {
 				return 10;
 			case "funeralInstructions":
 				return 11;
-			case "additionalInstructions":
-				return 12;
 			case "review":
 				return 13;
 			default:

@@ -11,7 +11,6 @@ export type QuestionType =
 	| "executors"
 	| "witnesses"
 	| "funeralInstructions"
-	| "additionalInstructions"
 	| "review";
 
 // Common Types
@@ -149,7 +148,6 @@ export interface WillFormData {
 	}>;
 	executors: Executor[];
 	witnesses: Witness[];
-	additionalInstructions: string;
 	funeralInstructions: FuneralInstructions;
 }
 
