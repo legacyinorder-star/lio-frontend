@@ -13,6 +13,17 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+	AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Witness } from "../types/will.types";
 import { apiClient } from "@/utils/apiClient";
@@ -46,6 +57,8 @@ export default function WitnessesStep({
 }: WitnessesStepProps) {
 	const [witnesses, setWitnesses] = useState<Witness[]>(data?.witnesses || []);
 	const [witnessDialogOpen, setWitnessDialogOpen] = useState(false);
+	const [skipDialogOpen, setSkipDialogOpen] = useState(false);
+	const [isSkipping, setIsSkipping] = useState(false);
 	const [editingWitness, setEditingWitness] = useState<Witness | null>(null);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [isLoadingWitnesses, setIsLoadingWitnesses] = useState(false);
@@ -157,10 +170,51 @@ export default function WitnessesStep({
 		loadWitnesses();
 	}, [activeWill?.id]);
 
-	const handleSkip = () => {
+	const handleSkip = async () => {
+		setIsSkipping(true);
+
+		// Delete all existing witnesses if any
+		if (witnesses.length > 0) {
+			try {
+				// Send DELETE request for each witness
+				const deletePromises = witnesses.map(async (witness) => {
+					const { error } = await apiClient(`/witnesses/${witness.id}`, {
+						method: "DELETE",
+					});
+
+					if (error) {
+						console.error(`Failed to delete witness ${witness.id}:`, error);
+						throw new Error(
+							`Failed to delete witness: ${witness.firstName} ${witness.lastName}`
+						);
+					}
+				});
+
+				// Wait for all delete operations to complete
+				await Promise.all(deletePromises);
+
+				// Clear local state
+				setWitnesses([]);
+
+				toast.success("All witnesses removed successfully");
+			} catch (err) {
+				console.error("Error deleting witnesses:", err);
+				toast.error("Failed to remove some witnesses. Please try again.");
+				setIsSkipping(false);
+				setSkipDialogOpen(false);
+				return; // Don't proceed if deletion failed
+			}
+		}
+
 		// Update with empty witnesses array and proceed
 		onUpdate({ witnesses: [] });
+		setIsSkipping(false);
+		setSkipDialogOpen(false);
 		onNext();
+	};
+
+	const handleConfirmSkip = () => {
+		setSkipDialogOpen(true);
 	};
 
 	// Individual form handlers
@@ -356,10 +410,30 @@ export default function WitnessesStep({
 
 	return (
 		<div className="space-y-4">
-			<div className="text-2xl font-semibold">Add Witnesses</div>
-			<div className="text-muted-foreground">
-				Your will needs to be signed by two witnesses who are not beneficiaries.
-				Please provide their information below.
+			<div className="text-2xl font-semibold">Add Witnesses (Optional)</div>
+			<div className="text-muted-foreground space-y-2">
+				<p>
+					Your will needs to be signed by two witnesses who are not
+					beneficiaries when you execute it. However, you don't need to provide
+					their information now.
+				</p>
+				<p>
+					<strong>You can:</strong>
+				</p>
+				<ul className="list-disc list-inside ml-4 space-y-1">
+					<li>
+						Add witness information now if you already know who will witness
+						your will
+					</li>
+					<li>
+						Skip this step and have people sign as witnesses when you're ready
+						to execute your will
+					</li>
+				</ul>
+				<p className="text-sm text-amber-600 font-medium">
+					Note: The witnesses must be present when you sign your will for it to
+					be legally valid.
+				</p>
 			</div>
 
 			<Form {...form}>
@@ -480,10 +554,15 @@ export default function WitnessesStep({
 								Loading witnesses...
 							</p>
 						) : witnesses.length === 0 ? (
-							<p className="text-muted-foreground text-center py-4">
-								No witnesses added yet. Click "Add Witness" to add witness
-								information.
-							</p>
+							<div className="text-center py-8 border-2 border-dashed border-gray-200 rounded-lg">
+								<p className="text-muted-foreground mb-2">
+									No witnesses added yet.
+								</p>
+								<p className="text-sm text-muted-foreground">
+									You can add witness information now or skip this step and add
+									witnesses later when you're ready to execute your will.
+								</p>
+							</div>
 						) : (
 							<div className="space-y-4">
 								{witnesses.map((witness) => (
@@ -537,14 +616,60 @@ export default function WitnessesStep({
 							<ArrowLeft className="mr-2 h-4 w-4" /> Back
 						</Button>
 						<div className="flex space-x-2">
-							<Button
-								type="button"
-								variant="outline"
-								onClick={handleSkip}
-								className="cursor-pointer"
+							<AlertDialog
+								open={skipDialogOpen}
+								onOpenChange={setSkipDialogOpen}
 							>
-								Skip
-							</Button>
+								<AlertDialogTrigger asChild>
+									<Button
+										type="button"
+										variant="outline"
+										onClick={handleConfirmSkip}
+										className="cursor-pointer"
+									>
+										Skip
+									</Button>
+								</AlertDialogTrigger>
+								<AlertDialogContent>
+									<AlertDialogHeader>
+										<AlertDialogTitle>Skip Adding Witnesses?</AlertDialogTitle>
+										<AlertDialogDescription className="space-y-2">
+											<p>
+												Are you sure you want to skip adding witness
+												information?
+											</p>
+											<p>If you continue without adding witnesses:</p>
+											<ul className="list-disc list-inside ml-4 space-y-1 text-sm">
+												<li>
+													Any witnesses you've already added will be removed
+												</li>
+												<li>
+													You can add witnesses later when you're ready to
+													execute your will
+												</li>
+												<li>
+													Your will will still be generated, but you'll need to
+													find witnesses when signing
+												</li>
+											</ul>
+										</AlertDialogDescription>
+									</AlertDialogHeader>
+									<AlertDialogFooter>
+										<AlertDialogCancel disabled={isSkipping}>
+											Cancel
+										</AlertDialogCancel>
+										<AlertDialogAction
+											onClick={handleSkip}
+											disabled={isSkipping}
+											className="bg-light-green hover:bg-light-green/90 text-black cursor-pointer"
+										>
+											{isSkipping
+												? "Removing witnesses..."
+												: "Yes, Skip Witnesses"}
+										</AlertDialogAction>
+									</AlertDialogFooter>
+								</AlertDialogContent>
+							</AlertDialog>
 							<Button
 								type="submit"
 								className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
