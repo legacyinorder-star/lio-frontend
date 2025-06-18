@@ -1,6 +1,7 @@
 import { getApiUrl } from "@/config/api";
-import { getAuthToken, removeAuthData, isTokenExpired } from "./auth";
+import { getAuthToken, isTokenExpired } from "./auth";
 import { toast } from "sonner";
+import { handleAuthError, AUTH_ERROR_CODES } from "./authErrorHandler";
 
 interface ApiOptions extends RequestInit {
 	authenticated?: boolean;
@@ -36,22 +37,7 @@ export async function apiClient<T = unknown>(
 			const isJWE = parts.length === 5;
 
 			if (!isJWE && isTokenExpired(token)) {
-				toast.error("Your session has expired. Please log in again.");
-				removeAuthData();
-
-				// Prevent redirect loops on auth pages
-				const currentPath = window.location.pathname;
-				const authPages = [
-					"/login",
-					"/signup",
-					"/verify-otp",
-					"/request-password-reset",
-					"/reset-password",
-				];
-
-				if (!authPages.includes(currentPath)) {
-					window.location.href = "/login";
-				}
+				handleAuthError(AUTH_ERROR_CODES.TOKEN_EXPIRED);
 				return {
 					data: null,
 					error: "Token expired",
@@ -62,22 +48,7 @@ export async function apiClient<T = unknown>(
 			headers.set("Authorization", `Bearer ${token}`);
 		} else {
 			// If authentication is required but no token is available
-			removeAuthData(); // Clean up any stale auth data
-			toast.error("Authentication required. Please log in.");
-
-			// Prevent redirect loops on auth pages
-			const currentPath = window.location.pathname;
-			const authPages = [
-				"/login",
-				"/signup",
-				"/verify-otp",
-				"/request-password-reset",
-				"/reset-password",
-			];
-
-			if (!authPages.includes(currentPath)) {
-				window.location.href = "/login";
-			}
+			handleAuthError(AUTH_ERROR_CODES.UNAUTHORIZED);
 			return {
 				data: null,
 				error: "Authentication required",
@@ -109,36 +80,20 @@ export async function apiClient<T = unknown>(
 					? String(data.message)
 					: `Request failed with status ${response.status}`;
 
-			// Handle different error codes
+			// Handle different error codes using centralized error handler
 			if (response.status === 401) {
-				toast.error("Session expired. Please log in again.");
-				removeAuthData(); // Clear auth data
-
-				// Prevent redirect loops on auth pages
-				const currentPath = window.location.pathname;
-				const authPages = [
-					"/login",
-					"/signup",
-					"/verify-otp",
-					"/request-password-reset",
-					"/reset-password",
-				];
-
-				if (!authPages.includes(currentPath)) {
-					window.location.href = "/login";
-				}
-
+				handleAuthError(AUTH_ERROR_CODES.UNAUTHORIZED);
 				return {
 					data: null,
 					error: "Authentication required",
 					status: 401,
 				};
 			} else if (response.status === 403) {
-				toast.error("You don't have permission to perform this action.");
+				handleAuthError(AUTH_ERROR_CODES.FORBIDDEN);
 			} else if (response.status >= 500) {
-				toast.error("Server error. Please try again later.");
+				handleAuthError(AUTH_ERROR_CODES.SERVER_ERROR);
 			} else if (response.status === 429) {
-				toast.error("Too many requests. Please wait a moment and try again.");
+				handleAuthError(AUTH_ERROR_CODES.RATE_LIMITED);
 			} else if (response.status >= 400) {
 				// Show the specific error message for client errors
 				toast.error(message);

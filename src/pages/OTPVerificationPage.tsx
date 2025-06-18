@@ -137,7 +137,15 @@ export default function OTPVerificationPage() {
 
 			// Small delay to ensure auth context is updated before navigation
 			setTimeout(() => {
-				// Redirect based on user role
+				// Check for return URL first
+				const returnUrl = localStorage.getItem("returnUrl");
+				if (returnUrl && returnUrl !== "/login") {
+					localStorage.removeItem("returnUrl");
+					navigate(returnUrl);
+					return;
+				}
+
+				// Default redirect based on user role
 				if (userDetails.role === "admin") {
 					navigate("/admin/dashboard");
 				} else {

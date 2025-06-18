@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
 	Form,
@@ -33,6 +33,7 @@ interface LoginResponse {
 
 export default function LoginPage() {
 	const navigate = useNavigate();
+	const location = useLocation();
 	const [isLoading, setIsLoading] = useState(false);
 	const [apiAvailable, setApiAvailable] = useState<boolean | null>(null);
 	const isOnline = useOnlineStatus();
@@ -127,6 +128,16 @@ export default function LoginPage() {
 
 			const { otp_id, otp } = data as LoginResponse;
 			toast.success("Welcome back! Please enter your OTP.");
+
+			// Store return URL if it exists in location state
+			const locationState = location.state as {
+				from?: { pathname: string };
+			} | null;
+			const returnUrl =
+				locationState?.from?.pathname || localStorage.getItem("returnUrl");
+			if (returnUrl && returnUrl !== "/login") {
+				localStorage.setItem("returnUrl", returnUrl);
+			}
 
 			// Pass both OTP ID and OTP code to verification page
 			if (otp) {
