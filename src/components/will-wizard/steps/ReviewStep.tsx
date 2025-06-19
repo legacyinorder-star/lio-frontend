@@ -10,9 +10,7 @@ export interface ReviewStepProps {
 	data: {
 		personal: {
 			fullName: string;
-			dateOfBirth: string;
 			address: string;
-			phone: string;
 			maritalStatus: string;
 		};
 		assets: Array<{
@@ -28,22 +26,15 @@ export interface ReviewStepProps {
 			id: string;
 			fullName: string;
 			relationship: string;
-			email?: string;
-			phone?: string;
 			allocation: number;
-			dateOfBirth?: string;
 			requiresGuardian?: boolean;
 		}>;
 		executors: Array<{
 			fullName?: string;
 			companyName?: string;
 			relationship?: string;
-			email?: string;
-			phone?: string;
-			address: string;
 			isPrimary: boolean;
 			type: "individual" | "corporate";
-			contactPerson?: string;
 			registrationNumber?: string;
 		}>;
 		witnesses: Array<{
@@ -54,7 +45,6 @@ export interface ReviewStepProps {
 			fullName: string;
 			relationship: string;
 			isPrimary: boolean;
-			address?: string;
 		}>;
 		gifts: Array<{
 			type: string;
@@ -205,24 +195,6 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 							</label>
 							<p className="mt-1 text-gray-900">{data.personal.fullName}</p>
 						</div>
-						{data.personal.dateOfBirth && (
-							<div>
-								<label className="block text-sm font-medium text-gray-700">
-									Date of Birth
-								</label>
-								<p className="mt-1 text-gray-900">
-									{data.personal.dateOfBirth}
-								</p>
-							</div>
-						)}
-						<div>
-							<label className="block text-sm font-medium text-gray-700">
-								Phone Number
-							</label>
-							<p className="mt-1 text-gray-900">
-								{data.personal.phone || "Not provided"}
-							</p>
-						</div>
 						<div>
 							<label className="block text-sm font-medium text-gray-700">
 								Marital Status
@@ -323,14 +295,6 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 												{guardian.relationship}
 											</p>
 										</div>
-										{guardian.address && (
-											<div>
-												<label className="block text-sm font-medium text-gray-700">
-													Address
-												</label>
-												<p className="mt-1 text-gray-900">{guardian.address}</p>
-											</div>
-										)}
 									</div>
 								</div>
 							))}
@@ -539,28 +503,6 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 													</p>
 												</div>
 											)}
-										{executor.email && (
-											<div>
-												<label className="block text-sm font-medium text-gray-700">
-													Email
-												</label>
-												<p className="mt-1 text-gray-900">{executor.email}</p>
-											</div>
-										)}
-										{executor.phone && (
-											<div>
-												<label className="block text-sm font-medium text-gray-700">
-													Phone
-												</label>
-												<p className="mt-1 text-gray-900">{executor.phone}</p>
-											</div>
-										)}
-										<div className="md:col-span-2">
-											<label className="block text-sm font-medium text-gray-700">
-												Address
-											</label>
-											<p className="mt-1 text-gray-900">{executor.address}</p>
-										</div>
 									</div>
 								</div>
 							))}

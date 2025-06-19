@@ -634,24 +634,26 @@ export default function WitnessesStep({
 									<AlertDialogHeader>
 										<AlertDialogTitle>Skip Adding Witnesses?</AlertDialogTitle>
 										<AlertDialogDescription className="space-y-2">
-											<p>
-												Are you sure you want to skip adding witness
-												information?
-											</p>
-											<p>If you continue without adding witnesses:</p>
-											<ul className="list-disc list-inside ml-4 space-y-1 text-sm">
-												<li>
-													Any witnesses you've already added will be removed
-												</li>
-												<li>
-													You can add witnesses later when you're ready to
-													execute your will
-												</li>
-												<li>
-													Your will will still be generated, but you'll need to
-													find witnesses when signing
-												</li>
-											</ul>
+											<div>
+												<p>
+													Are you sure you want to skip adding witness
+													information?
+												</p>
+												<p>If you continue without adding witnesses:</p>
+												<ul className="list-disc list-inside ml-4 space-y-1 text-sm">
+													<li>
+														Any witnesses you've already added will be removed
+													</li>
+													<li>
+														You can add witnesses later when you're ready to
+														sign and execute your will
+													</li>
+													<li>
+														Your will will still be generated, but you'll need
+														to find witnesses when signing
+													</li>
+												</ul>
+											</div>
 										</AlertDialogDescription>
 									</AlertDialogHeader>
 									<AlertDialogFooter>
