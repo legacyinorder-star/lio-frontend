@@ -200,7 +200,7 @@ export default function WillWizard() {
 	};
 
 	// Calculate progress
-	const totalQuestions = 11; // Update this if you add/remove questions
+	const totalQuestions = 12; // Update this if you add/remove questions
 	const questionOrder: QuestionType[] = [
 		"name",
 		"address",
@@ -209,6 +209,7 @@ export default function WillWizard() {
 		"guardians",
 		"hasAssets",
 		"gifts",
+		"residuary",
 		"executors",
 		"witnesses",
 		"funeralInstructions",
