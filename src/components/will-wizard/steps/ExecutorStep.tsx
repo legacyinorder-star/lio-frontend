@@ -13,6 +13,16 @@ import {
 	DialogTrigger,
 	DialogDescription,
 } from "@/components/ui/dialog";
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { ArrowLeft, ArrowRight, Plus, Trash2, Edit2 } from "lucide-react";
 import { apiClient } from "@/utils/apiClient";
 import { useWill } from "@/context/WillContext";
@@ -93,6 +103,10 @@ export default function ExecutorStep({
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [isLoadingExecutors, setIsLoadingExecutors] = useState(false);
 	const [hasLoadedExecutors, setHasLoadedExecutors] = useState(false);
+	const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+	const [executorToDelete, setExecutorToDelete] = useState<Executor | null>(
+		null
+	);
 	const prevExecutorsRef = useRef<Executor[]>([]);
 	const { activeWill } = useWill();
 	const { relationships, isLoading: isDataLoading, isReady } = useWillData();
@@ -474,10 +488,63 @@ export default function ExecutorStep({
 		setExecutorDialogOpen(true);
 	};
 
-	const handleRemoveExecutor = (executorId: string) => {
-		setExecutors((prev) =>
-			prev.filter((executor) => executor.id !== executorId)
-		);
+	const handleRemoveExecutor = (executor: Executor) => {
+		setExecutorToDelete(executor);
+		setConfirmDeleteOpen(true);
+	};
+
+	const confirmRemoveExecutor = async () => {
+		if (!executorToDelete) return;
+
+		try {
+			// Send DELETE request to /executors/{id}
+			const { error: executorError } = await apiClient(
+				`/executors/${executorToDelete.id}`,
+				{
+					method: "DELETE",
+				}
+			);
+
+			if (executorError) {
+				toast.error("Failed to remove executor");
+				return;
+			}
+
+			// If it's a corporate executor, also delete the corporate executor record
+			if (
+				executorToDelete.type === "corporate" &&
+				executorToDelete.corporateExecutorId
+			) {
+				const { error: corporateError } = await apiClient(
+					`/corporate_executors/${executorToDelete.corporateExecutorId}`,
+					{
+						method: "DELETE",
+					}
+				);
+
+				if (corporateError) {
+					toast.error("Failed to remove corporate executor record");
+					return;
+				}
+			}
+
+			// Remove from local state after successful API calls
+			setExecutors((prev) =>
+				prev.filter((executor) => executor.id !== executorToDelete.id)
+			);
+
+			toast.success("Executor removed successfully");
+			setExecutorToDelete(null);
+			setConfirmDeleteOpen(false);
+		} catch (err) {
+			toast.error("Failed to remove executor");
+			console.error("Error removing executor:", err);
+		}
+	};
+
+	const cancelRemoveExecutor = () => {
+		setExecutorToDelete(null);
+		setConfirmDeleteOpen(false);
 	};
 
 	// Load executors when component mounts or activeWill changes
@@ -756,7 +823,7 @@ export default function ExecutorStep({
 											<Button
 												variant="ghost"
 												size="icon"
-												onClick={() => handleRemoveExecutor(executor.id)}
+												onClick={() => handleRemoveExecutor(executor)}
 												className="cursor-pointer"
 											>
 												<Trash2 className="h-4 w-4" />
@@ -802,6 +869,40 @@ export default function ExecutorStep({
 					</div>
 				)}
 
+				{/* Validation message for no primary executor */}
+				{executors.length > 0 &&
+					executors.filter((executor) => executor.isPrimary).length === 0 && (
+						<div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-4">
+							<div className="flex items-start">
+								<div className="flex-shrink-0">
+									<svg
+										className="h-5 w-5 text-yellow-400"
+										viewBox="0 0 20 20"
+										fill="currentColor"
+									>
+										<path
+											fillRule="evenodd"
+											d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+											clipRule="evenodd"
+										/>
+									</svg>
+								</div>
+								<div className="ml-3">
+									<h3 className="text-sm font-medium text-yellow-800">
+										No Primary Executor Selected
+									</h3>
+									<div className="mt-2 text-sm text-yellow-700">
+										<p>
+											You must designate one executor as the primary executor.
+											Please check the "Primary Executor" option for one of your
+											executors to continue.
+										</p>
+									</div>
+								</div>
+							</div>
+						</div>
+					)}
+
 				<div className="flex justify-between pt-4">
 					<Button variant="outline" onClick={onBack} className="cursor-pointer">
 						<ArrowLeft className="mr-2 h-4 w-4" /> Back
@@ -810,7 +911,8 @@ export default function ExecutorStep({
 						onClick={onNext}
 						disabled={
 							executors.length === 0 ||
-							executors.filter((executor) => executor.isPrimary).length > 1
+							executors.filter((executor) => executor.isPrimary).length > 1 ||
+							executors.filter((executor) => executor.isPrimary).length === 0
 						}
 						className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
 					>
@@ -818,6 +920,69 @@ export default function ExecutorStep({
 					</Button>
 				</div>
 			</div>
+
+			{/* Confirm Delete Dialog */}
+			<AlertDialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>Remove Executor</AlertDialogTitle>
+						<AlertDialogDescription>
+							Are you sure you want to remove this executor? This action cannot
+							be undone.
+						</AlertDialogDescription>
+						{executorToDelete && (
+							<div className="mt-2 p-2 bg-muted rounded text-sm space-y-1">
+								{executorToDelete.type === "individual" ? (
+									<div>
+										<strong>Individual Executor:</strong>{" "}
+										{executorToDelete.firstName} {executorToDelete.lastName}
+										{executorToDelete.relationshipId && (
+											<span className="text-muted-foreground ml-1">
+												(
+												{getFormattedRelationshipNameById(
+													relationships,
+													executorToDelete.relationshipId
+												) || executorToDelete.relationshipId}
+												)
+											</span>
+										)}
+										{executorToDelete.isPrimary && (
+											<span className="ml-2 text-primary text-xs">
+												(Primary Executor)
+											</span>
+										)}
+									</div>
+								) : (
+									<div>
+										<strong>Corporate Executor:</strong> {executorToDelete.name}
+										{executorToDelete.rc_number && (
+											<div className="text-muted-foreground">
+												RC Number: {executorToDelete.rc_number}
+											</div>
+										)}
+										{executorToDelete.isPrimary && (
+											<span className="ml-2 text-primary text-xs">
+												(Primary Executor)
+											</span>
+										)}
+									</div>
+								)}
+							</div>
+						)}
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel onClick={cancelRemoveExecutor}>
+							Cancel
+						</AlertDialogCancel>
+						<AlertDialogAction
+							onClick={confirmRemoveExecutor}
+							className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+						>
+							Remove Executor
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 		</div>
 	);
 }
