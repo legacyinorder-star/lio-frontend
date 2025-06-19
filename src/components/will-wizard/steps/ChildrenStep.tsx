@@ -40,6 +40,18 @@ interface PersonResponse {
 	created_at: string;
 }
 
+interface ChildApiResponse {
+	id: string;
+	user_id: string;
+	will_id: string;
+	relationship_id: string;
+	first_name: string;
+	last_name: string;
+	is_minor: boolean;
+	created_at: string;
+	is_witness: boolean;
+}
+
 export default function ChildrenStep({
 	onNext,
 	onBack,
@@ -62,32 +74,62 @@ export default function ChildrenStep({
 		lastName: "",
 		isMinor: false,
 	});
+	const [isLoadingChildren, setIsLoadingChildren] = useState(false);
 
-	// Load children from active will when component mounts
-	useEffect(() => {
-		if (activeWill?.children && activeWill.children.length > 0) {
-			// Transform children data to match the expected format
-			const transformedChildren = activeWill.children.map((child) => {
-				// Handle potential API data structure (snake_case) vs component structure (camelCase)
-				const childAny = child as typeof child & {
-					first_name?: string;
-					last_name?: string;
-					is_minor?: boolean;
-				};
-				return {
+	// Load children from API when component mounts
+	const loadChildren = async (willId: string) => {
+		setIsLoadingChildren(true);
+		try {
+			const { data, error } = await apiClient<ChildApiResponse[]>(
+				`/people/children/get-by-will/${willId}`
+			);
+
+			if (error) {
+				console.error("Error loading children:", error);
+				return;
+			}
+
+			if (data && data.length > 0) {
+				// Transform API data to component format
+				const transformedChildren: Child[] = data.map((child) => ({
 					id: child.id,
-					firstName: child.firstName || childAny.first_name || "",
-					lastName: child.lastName || childAny.last_name || "",
-					isMinor: child.isMinor || childAny.is_minor || false,
-				};
-			});
-			setChildren(transformedChildren);
-			setHasChildren(true);
+					firstName: child.first_name,
+					lastName: child.last_name,
+					isMinor: child.is_minor,
+				}));
+
+				setChildren(transformedChildren);
+				setHasChildren(true);
+
+				// Update active will context with loaded children
+				updateActiveWillChildren(transformedChildren);
+			} else {
+				// No children found, check initialData as fallback
+				if (initialData?.children && initialData.children.length > 0) {
+					setChildren(initialData.children);
+					setHasChildren(initialData.hasChildren);
+				}
+			}
+		} catch (error) {
+			console.error("Error loading children:", error);
+			// Fall back to initialData if API call fails
+			if (initialData?.children && initialData.children.length > 0) {
+				setChildren(initialData.children);
+				setHasChildren(initialData.hasChildren);
+			}
+		} finally {
+			setIsLoadingChildren(false);
+		}
+	};
+
+	useEffect(() => {
+		if (activeWill?.id) {
+			loadChildren(activeWill.id);
 		} else if (initialData?.children && initialData.children.length > 0) {
 			setChildren(initialData.children);
 			setHasChildren(initialData.hasChildren);
 		}
-	}, [activeWill, initialData]);
+	}, [activeWill?.id, initialData]);
 
 	// Update active will when children state changes
 	const updateActiveWillChildren = (newChildren: Child[]) => {
@@ -168,16 +210,10 @@ export default function ChildrenStep({
 					return;
 				}
 
-				// Update local state
-				setChildren((prev) => {
-					const updatedChildren = prev.map((child) =>
-						child.id === editingChild.id
-							? { ...childForm, id: child.id }
-							: child
-					);
-					updateActiveWillChildren(updatedChildren);
-					return updatedChildren;
-				});
+				// Reload children from API to get the latest data
+				if (activeWill?.id) {
+					await loadChildren(activeWill.id);
+				}
 
 				toast.success("Child information updated successfully");
 			} else {
@@ -190,7 +226,7 @@ export default function ChildrenStep({
 					is_minor: childForm.isMinor,
 				};
 
-				const { data: personResponse, error: personError } =
+				const { data: _personResponse, error: personError } =
 					await apiClient<PersonResponse>("/people", {
 						method: "POST",
 						body: JSON.stringify(childData),
@@ -202,15 +238,10 @@ export default function ChildrenStep({
 					return;
 				}
 
-				// Update local state with the new child ID
-				setChildren((prev) => {
-					const newChildren = [
-						...prev,
-						{ ...childForm, id: personResponse!.id },
-					];
-					updateActiveWillChildren(newChildren);
-					return newChildren;
-				});
+				// Reload children from API to get the latest data
+				if (activeWill?.id) {
+					await loadChildren(activeWill.id);
+				}
 
 				toast.success("Child information saved successfully");
 			}
@@ -256,12 +287,10 @@ export default function ChildrenStep({
 				return;
 			}
 
-			// Update local state
-			setChildren((prev) => {
-				const updatedChildren = prev.filter((child) => child.id !== childId);
-				updateActiveWillChildren(updatedChildren);
-				return updatedChildren;
-			});
+			// Reload children from API to get the latest data
+			if (activeWill?.id) {
+				await loadChildren(activeWill.id);
+			}
 			toast.success("Child removed successfully");
 		} catch (error) {
 			console.error("Error removing child:", error);
@@ -334,7 +363,7 @@ export default function ChildrenStep({
 										setEditingChild(null);
 									}}
 									className="cursor-pointer"
-									disabled={children.length >= 5}
+									disabled={children.length >= 5 || isLoadingChildren}
 								>
 									<Plus className="mr-2 h-4 w-4" />
 									Add Child
@@ -420,7 +449,14 @@ export default function ChildrenStep({
 						</Dialog>
 					</div>
 
-					{children.length === 0 ? (
+					{isLoadingChildren ? (
+						<div className="flex items-center justify-center py-8">
+							<div className="flex flex-col items-center gap-4">
+								<div className="h-8 w-8 animate-spin rounded-full border-t-2 border-b-2 border-primary"></div>
+								<p className="text-muted-foreground">Loading children...</p>
+							</div>
+						</div>
+					) : children.length === 0 ? (
 						<p className="text-muted-foreground text-center py-4">
 							No children added yet. Click "Add Child" to add your children.
 						</p>
@@ -446,6 +482,7 @@ export default function ChildrenStep({
 													size="icon"
 													onClick={() => handleEditChild(child)}
 													className="cursor-pointer"
+													disabled={isLoadingChildren}
 												>
 													<Edit2 className="h-4 w-4" />
 												</Button>
@@ -454,6 +491,7 @@ export default function ChildrenStep({
 													size="icon"
 													onClick={() => handleRemoveChild(child.id)}
 													className="cursor-pointer"
+													disabled={isLoadingChildren}
 												>
 													<Trash2 className="h-4 w-4" />
 												</Button>
@@ -478,12 +516,13 @@ export default function ChildrenStep({
 								variant="outline"
 								onClick={() => setHasChildren(false)}
 								className="cursor-pointer"
+								disabled={isLoadingChildren}
 							>
 								No Children
 							</Button>
 							<Button
 								onClick={handleSubmit}
-								disabled={children.length === 0}
+								disabled={children.length === 0 || isLoadingChildren}
 								className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
 							>
 								Next <ArrowRight className="ml-2 h-4 w-4" />
