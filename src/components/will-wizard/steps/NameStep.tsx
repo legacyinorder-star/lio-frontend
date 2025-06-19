@@ -13,11 +13,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { StepProps } from "../types/will.types";
-import {
-	useWill,
-	type WillData,
-	type WillPersonalData,
-} from "@/context/WillContext";
+import { useWill } from "@/context/WillContext";
 import { apiClient } from "@/utils/apiClient";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
@@ -34,48 +30,51 @@ interface WillOwnerResponse {
 	id: string;
 }
 
-export default function NameStep({ data, onUpdate, onNext }: StepProps) {
+interface NameStepProps extends StepProps {
+	willOwnerData?: {
+		firstName: string;
+		lastName: string;
+	} | null;
+	onWillOwnerDataSave?: (data: {
+		firstName: string;
+		lastName: string;
+	}) => Promise<boolean>;
+}
+
+export default function NameStep({
+	data,
+	onUpdate,
+	onNext,
+	willOwnerData,
+	onWillOwnerDataSave,
+}: NameStepProps) {
 	const { activeWill, setActiveWill } = useWill();
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	// Determine the initial values for the form
 	const getInitialValues = () => {
-		// Priority: activeWill > data prop > empty strings
-		if (activeWill) {
-			const activeWillAny = activeWill as WillData & {
-				first_name?: string;
-				last_name?: string;
-				firstName?: string;
-				lastName?: string;
+		// Priority: willOwnerData prop > activeWill > data prop > empty strings
+		if (willOwnerData) {
+			return {
+				firstName: willOwnerData.firstName || "",
+				lastName: willOwnerData.lastName || "",
 			};
-			const ownerAny = activeWill.owner as WillPersonalData & {
-				first_name?: string;
-				last_name?: string;
-			};
-			const firstName =
-				activeWill.owner?.firstName ||
-				ownerAny?.first_name ||
-				activeWillAny.first_name ||
-				activeWillAny.firstName;
-			const lastName =
-				activeWill.owner?.lastName ||
-				ownerAny?.last_name ||
-				activeWillAny.last_name ||
-				activeWillAny.lastName;
-
-			if (firstName || lastName) {
-				return {
-					firstName: firstName || "",
-					lastName: lastName || "",
-				};
-			}
 		}
+
+		if (activeWill?.owner) {
+			return {
+				firstName: activeWill.owner.firstName || "",
+				lastName: activeWill.owner.lastName || "",
+			};
+		}
+
 		if (data.firstName || data.lastName) {
 			return {
 				firstName: data.firstName || "",
 				lastName: data.lastName || "",
 			};
 		}
+
 		return {
 			firstName: "",
 			lastName: "",
@@ -96,111 +95,133 @@ export default function NameStep({ data, onUpdate, onNext }: StepProps) {
 		trigger,
 	} = form;
 
-	// Pre-fill form with active will data when component loads
+	// Pre-fill form when willOwnerData changes
 	useEffect(() => {
-		if (activeWill) {
-			const activeWillAny = activeWill as WillData & {
-				first_name?: string;
-				last_name?: string;
-				firstName?: string;
-				lastName?: string;
-			};
-			const ownerAny = activeWill.owner as WillPersonalData & {
-				first_name?: string;
-				last_name?: string;
-			};
-			const firstName =
-				activeWill.owner?.firstName ||
-				ownerAny?.first_name ||
-				activeWillAny.first_name ||
-				activeWillAny.firstName;
-			const lastName =
-				activeWill.owner?.lastName ||
-				ownerAny?.last_name ||
-				activeWillAny.last_name ||
-				activeWillAny.lastName;
-
-			if (firstName || lastName) {
-				// Set values and then trigger validation
-				setValue("firstName", firstName || "", { shouldValidate: false });
-				setValue("lastName", lastName || "", { shouldValidate: false });
-				// Trigger validation after setting values
-				trigger();
-			}
-		} else if (data.firstName || data.lastName) {
-			// Set values and then trigger validation
-			setValue("firstName", data.firstName || "", { shouldValidate: false });
-			setValue("lastName", data.lastName || "", { shouldValidate: false });
-			// Trigger validation after setting values
+		if (willOwnerData) {
+			setValue("firstName", willOwnerData.firstName || "", {
+				shouldValidate: false,
+			});
+			setValue("lastName", willOwnerData.lastName || "", {
+				shouldValidate: false,
+			});
 			trigger();
 		}
-	}, [activeWill, data, setValue, trigger]);
+	}, [willOwnerData?.firstName, willOwnerData?.lastName, setValue, trigger]);
+
+	// Separate effect for activeWill owner data
+	useEffect(() => {
+		if (!willOwnerData && activeWill?.owner) {
+			setValue("firstName", activeWill.owner.firstName || "", {
+				shouldValidate: false,
+			});
+			setValue("lastName", activeWill.owner.lastName || "", {
+				shouldValidate: false,
+			});
+			trigger();
+		}
+	}, [
+		willOwnerData,
+		activeWill?.owner?.firstName,
+		activeWill?.owner?.lastName,
+		setValue,
+		trigger,
+	]);
+
+	// Separate effect for data prop
+	useEffect(() => {
+		if (
+			!willOwnerData &&
+			!activeWill?.owner &&
+			(data.firstName || data.lastName)
+		) {
+			setValue("firstName", data.firstName || "", { shouldValidate: false });
+			setValue("lastName", data.lastName || "", { shouldValidate: false });
+			trigger();
+		}
+	}, [
+		willOwnerData,
+		activeWill?.owner,
+		data.firstName,
+		data.lastName,
+		setValue,
+		trigger,
+	]);
 
 	const onSubmit = async (values: NameData) => {
 		setIsSubmitting(true);
 
 		try {
-			// Prepare the request data
-			const requestData = {
-				first_name: values.firstName,
-				last_name: values.lastName,
-				...(activeWill?.id && { will_id: activeWill.id }),
-			};
+			// If we have the new save function and an existing will, use it
+			if (onWillOwnerDataSave && activeWill?.id) {
+				const success = await onWillOwnerDataSave({
+					firstName: values.firstName,
+					lastName: values.lastName,
+				});
 
-			// Make POST request to /will_owner
-			const { data: responseData, error } = await apiClient<WillOwnerResponse>(
-				"/will_owner",
-				{
-					method: "POST",
-					body: JSON.stringify(requestData),
+				if (!success) {
+					toast.error("Failed to save name information. Please try again.");
+					return;
 				}
-			);
+			} else {
+				// Fall back to original approach for new wills
+				const requestData = {
+					first_name: values.firstName,
+					last_name: values.lastName,
+					...(activeWill?.id && { will_id: activeWill.id }),
+				};
 
-			if (error) {
-				console.error("Error saving will owner:", error);
-				toast.error("Failed to save name information. Please try again.");
-				return;
-			}
+				const { data: responseData, error } =
+					await apiClient<WillOwnerResponse>("/will_owner", {
+						method: "POST",
+						body: JSON.stringify(requestData),
+					});
 
-			// Extract will_id from response and update only specific fields
-			if (responseData && responseData.will_id) {
-				if (activeWill) {
-					// Update existing will with new id and name data
-					setActiveWill({
-						...activeWill,
-						id: responseData.will_id,
-						owner: {
-							...activeWill.owner,
-							id: responseData.id,
-							firstName: values.firstName,
-							lastName: values.lastName,
-						},
-					});
-				} else {
-					// Create new will with minimal data
-					setActiveWill({
-						id: responseData.will_id,
-						lastUpdatedAt: new Date().toISOString(),
-						createdAt: new Date().toISOString(),
-						status: "draft",
-						userId: "",
-						owner: {
-							id: responseData.id,
-							firstName: values.firstName,
-							lastName: values.lastName,
-							maritalStatus: "",
-							address: "",
-							city: "",
-							state: "",
-							postCode: "",
-							country: "",
-						},
-						assets: [],
-						gifts: [],
-						beneficiaries: [],
-						executors: [],
-						witnesses: [],
-					});
+				if (error) {
+					console.error("Error saving will owner:", error);
+					toast.error("Failed to save name information. Please try again.");
+					return;
+				}
+
+				// Extract will_id from response and update only specific fields
+				if (responseData && responseData.will_id) {
+					if (activeWill) {
+						// Update existing will with new id and name data
+						setActiveWill({
+							...activeWill,
+							id: responseData.will_id,
+							owner: {
+								...activeWill.owner,
+								id: responseData.id,
+								firstName: values.firstName,
+								lastName: values.lastName,
+							},
+						});
+					} else {
+						// Create new will with minimal data
+						setActiveWill({
+							id: responseData.will_id,
+							lastUpdatedAt: new Date().toISOString(),
+							createdAt: new Date().toISOString(),
+							status: "draft",
+							userId: "",
+							owner: {
+								id: responseData.id,
+								firstName: values.firstName,
+								lastName: values.lastName,
+								maritalStatus: "",
+								address: "",
+								city: "",
+								state: "",
+								postCode: "",
+								country: "",
+							},
+							assets: [],
+							gifts: [],
+							beneficiaries: [],
+							executors: [],
+							witnesses: [],
+						});
+					}
 				}
 			}
 

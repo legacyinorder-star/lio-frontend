@@ -51,7 +51,7 @@ export function AdminLayout() {
 
 			setIsAuthLoading(false);
 		}
-	}, [user, isLoading, navigate, location]);
+	}, [user, isLoading, navigate]);
 
 	const getInitials = (name: string) => {
 		return name

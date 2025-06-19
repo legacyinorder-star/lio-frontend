@@ -142,7 +142,6 @@ export function useSessionActivity(options: SessionActivityOptions = {}) {
 		}
 	}, [
 		shouldTrackActivity,
-		lastActivity,
 		warningThresholdMinutes,
 		timeoutMinutes,
 		enableWarnings,
@@ -151,19 +150,25 @@ export function useSessionActivity(options: SessionActivityOptions = {}) {
 
 	// Set up periodic status updates
 	useEffect(() => {
-		if (shouldTrackActivity) {
-			// Update immediately
+		if (!shouldTrackActivity) return;
+
+		// Update immediately
+		updateSessionStatus();
+
+		// Then update every check interval
+		const interval = setInterval(() => {
 			updateSessionStatus();
+		}, checkIntervalMinutes * 60 * 1000);
 
-			// Then update every check interval
-			const interval = setInterval(
-				updateSessionStatus,
-				checkIntervalMinutes * 60 * 1000
-			);
+		return () => clearInterval(interval);
+	}, [shouldTrackActivity, checkIntervalMinutes]);
 
-			return () => clearInterval(interval);
+	// Separate effect to update when lastActivity changes
+	useEffect(() => {
+		if (shouldTrackActivity && lastActivity) {
+			updateSessionStatus();
 		}
-	}, [shouldTrackActivity, updateSessionStatus, checkIntervalMinutes]);
+	}, [shouldTrackActivity, lastActivity]);
 
 	// Format time helpers
 	const formatTime = useCallback((seconds: number): string => {

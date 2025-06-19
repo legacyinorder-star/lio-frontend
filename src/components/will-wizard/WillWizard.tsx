@@ -8,6 +8,10 @@ import {
 	type WillData,
 	type WillPersonalData,
 } from "@/context/WillContext";
+import { useWillOwnerData } from "@/hooks/useWillOwnerData";
+import { apiClient } from "@/utils/apiClient";
+import { useRelationships } from "@/hooks/useRelationships";
+import { toast } from "sonner";
 
 // Import step components
 import NameStep from "./steps/NameStep";
@@ -23,10 +27,29 @@ import ReviewStep from "./steps/ReviewStep";
 import ExecutorStep from "./steps/ExecutorStep";
 import GuardiansStep from "./steps/GuardiansStep";
 
+// Spouse API response interface
+interface PersonResponse {
+	id: string;
+	will_id: string;
+	first_name: string;
+	last_name: string;
+	relationship_id: string;
+	is_minor: boolean;
+	created_at: string;
+}
+
 export default function WillWizard() {
 	// Track the current question being shown
 	const [currentQuestion, setCurrentQuestion] = useState<QuestionType>("name");
-	const { activeWill } = useWill();
+	const { activeWill, setActiveWill } = useWill();
+	const { relationships } = useRelationships();
+	const {
+		willOwnerData,
+		spouseData,
+		isLoading: _isLoadingOwnerData,
+		loadWillOwnerData,
+		saveWillOwnerData,
+	} = useWillOwnerData();
 
 	// Data collection
 	const [formData, setFormData] = useState<WillFormData>({
@@ -57,9 +80,63 @@ export default function WillWizard() {
 		},
 	});
 
+	// Load will owner data when activeWill changes
+	useEffect(() => {
+		if (activeWill?.id && !willOwnerData) {
+			loadWillOwnerData(activeWill.id);
+		}
+	}, [activeWill?.id, willOwnerData, loadWillOwnerData]);
+
+	// Update activeWill context when willOwnerData changes
+	useEffect(() => {
+		if (
+			willOwnerData &&
+			activeWill &&
+			willOwnerData.id !== activeWill.owner?.id
+		) {
+			setActiveWill({
+				...activeWill,
+				owner: {
+					...activeWill.owner,
+					id: willOwnerData.id,
+					firstName: willOwnerData.firstName,
+					lastName: willOwnerData.lastName,
+					maritalStatus: willOwnerData.maritalStatus,
+					address: willOwnerData.address,
+					city: willOwnerData.city,
+					state: willOwnerData.state,
+					postCode: willOwnerData.postCode,
+					country: willOwnerData.country,
+				},
+				...(spouseData && {
+					spouse: {
+						id: spouseData.id,
+						firstName: spouseData.firstName,
+						lastName: spouseData.lastName,
+					},
+				}),
+			});
+		}
+	}, [
+		willOwnerData?.id,
+		willOwnerData?.firstName,
+		willOwnerData?.lastName,
+		willOwnerData?.maritalStatus,
+		willOwnerData?.address,
+		willOwnerData?.city,
+		willOwnerData?.state,
+		willOwnerData?.postCode,
+		willOwnerData?.country,
+		spouseData?.id,
+		spouseData?.firstName,
+		spouseData?.lastName,
+		activeWill?.owner?.id,
+		setActiveWill,
+	]);
+
 	// Load active will data into formData when component mounts or activeWill changes
 	useEffect(() => {
-		if (activeWill) {
+		if (activeWill?.owner) {
 			// Check if the structure is different than expected
 			const activeWillAny = activeWill as WillData & {
 				first_name?: string;
@@ -82,7 +159,11 @@ export default function WillWizard() {
 				activeWillAny.last_name ||
 				activeWillAny.lastName;
 
-			if (firstName || lastName) {
+			// Only update if the names are different from current formData
+			if (
+				(firstName || lastName) &&
+				(firstName !== formData.firstName || lastName !== formData.lastName)
+			) {
 				setFormData((prev) => {
 					const updated = {
 						...prev,
@@ -93,7 +174,105 @@ export default function WillWizard() {
 				});
 			}
 		}
-	}, [activeWill]);
+	}, [
+		activeWill?.owner?.firstName,
+		activeWill?.owner?.lastName,
+		formData.firstName,
+		formData.lastName,
+	]);
+
+	// Handle spouse data saving
+	const handleSpouseDataSave = async (data: {
+		firstName: string;
+		lastName: string;
+	}): Promise<boolean> => {
+		if (!activeWill?.id || !willOwnerData?.id) {
+			toast.error(
+				"Will information not found. Please start from the beginning."
+			);
+			return false;
+		}
+
+		try {
+			// Find the spouse relationship ID
+			const spouseRelationship = relationships.find(
+				(rel) => rel.name.toLowerCase() === "spouse"
+			);
+
+			if (!spouseRelationship) {
+				toast.error("Spouse relationship type not found. Please try again.");
+				return false;
+			}
+
+			// Check if we're editing an existing spouse or creating a new one
+			const isEditing = !!spouseData?.id;
+
+			if (isEditing && spouseData) {
+				// Update existing spouse record
+				const updateData = {
+					first_name: data.firstName,
+					last_name: data.lastName,
+				};
+
+				const { error: updateError } = await apiClient<PersonResponse>(
+					`/people/${spouseData.id}`,
+					{
+						method: "PATCH",
+						body: JSON.stringify(updateData),
+					}
+				);
+
+				if (updateError) {
+					console.error("Error updating spouse record:", updateError);
+					return false;
+				}
+			} else {
+				// Step 1: Update marital status to "married" (only for new spouses)
+				const success = await saveWillOwnerData({ maritalStatus: "married" });
+				if (!success) {
+					return false;
+				}
+
+				// Step 2: Create new spouse record
+				const spouseRequestData = {
+					first_name: data.firstName,
+					last_name: data.lastName,
+					relationship_id: spouseRelationship.id,
+					will_id: activeWill.id,
+				};
+
+				const { data: personResponse, error: personError } =
+					await apiClient<PersonResponse>("/people", {
+						method: "POST",
+						body: JSON.stringify(spouseRequestData),
+					});
+
+				if (personError) {
+					console.error("Error creating spouse record:", personError);
+					return false;
+				}
+
+				// Update activeWill with new spouse information
+				if (activeWill && personResponse) {
+					setActiveWill({
+						...activeWill,
+						spouse: {
+							id: personResponse.id,
+							firstName: data.firstName,
+							lastName: data.lastName,
+						},
+					});
+				}
+			}
+
+			// Reload will owner data to get updated spouse information
+			await loadWillOwnerData(activeWill.id);
+			return true;
+		} catch (error) {
+			console.error("Error in handleSpouseDataSave:", error);
+			return false;
+		}
+	};
 
 	const handleNext = () => {
 		switch (currentQuestion) {
@@ -330,13 +509,32 @@ export default function WillWizard() {
 
 		switch (currentQuestion) {
 			case "name":
-				return <NameStep {...commonProps} />;
+				return (
+					<NameStep
+						{...commonProps}
+						willOwnerData={willOwnerData}
+						onWillOwnerDataSave={saveWillOwnerData}
+					/>
+				);
 
 			case "address":
-				return <AddressStep {...commonProps} />;
+				return (
+					<AddressStep
+						{...commonProps}
+						willOwnerData={willOwnerData}
+						onWillOwnerDataSave={saveWillOwnerData}
+					/>
+				);
 
 			case "hasSpouse":
-				return <SpouseStep {...commonProps} />;
+				return (
+					<SpouseStep
+						{...commonProps}
+						willOwnerData={willOwnerData}
+						spouseData={spouseData}
+						onSpouseDataSave={handleSpouseDataSave}
+					/>
+				);
 
 			case "hasChildren":
 				return <ChildrenStep {...commonProps} />;

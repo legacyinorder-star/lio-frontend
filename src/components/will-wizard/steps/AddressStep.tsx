@@ -13,11 +13,7 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { StepProps, Address } from "../types/will.types";
-import {
-	useWill,
-	type WillData,
-	type WillPersonalData,
-} from "@/context/WillContext";
+import { useWill } from "@/context/WillContext";
 import { apiClient } from "@/utils/apiClient";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
@@ -32,8 +28,21 @@ const addressSchema = z.object({
 
 type AddressData = z.infer<typeof addressSchema>;
 
-interface WillOwnerResponse {
-	id: string;
+interface AddressStepProps extends StepProps {
+	willOwnerData?: {
+		address: string;
+		city: string;
+		state: string;
+		postCode: string;
+		country: string;
+	} | null;
+	onWillOwnerDataSave?: (data: {
+		address: string;
+		city: string;
+		state: string;
+		postCode: string;
+		country: string;
+	}) => Promise<boolean>;
 }
 
 export default function AddressStep({
@@ -41,70 +50,45 @@ export default function AddressStep({
 	onUpdate,
 	onNext,
 	onBack,
-}: StepProps) {
-	const { activeWill, setActiveWill } = useWill();
+	willOwnerData,
+	onWillOwnerDataSave,
+}: AddressStepProps) {
+	const { activeWill } = useWill();
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	// Determine the initial values for the form
 	const getInitialValues = () => {
-		// Priority: activeWill > data prop > empty strings
-		if (activeWill) {
-			const activeWillAny = activeWill as WillData & {
-				address?: string;
-				city?: string;
-				state?: string;
-				postCode?: string;
-				post_code?: string;
-				country?: string;
-			};
-			const ownerAny = activeWill.owner as WillPersonalData & {
-				address?: string;
-				city?: string;
-				state?: string;
-				postCode?: string;
-				post_code?: string;
-				country?: string;
-			};
-			const address =
-				activeWill.owner?.address || ownerAny?.address || activeWillAny.address;
-			const city =
-				activeWill.owner?.city || ownerAny?.city || activeWillAny.city;
-			const state =
-				activeWill.owner?.state || ownerAny?.state || activeWillAny.state;
-			const postCode =
-				activeWill.owner?.postCode ||
-				ownerAny?.postCode ||
-				activeWillAny.postCode ||
-				ownerAny?.post_code ||
-				activeWillAny.post_code;
-			const country =
-				activeWill.owner?.country || ownerAny?.country || activeWillAny.country;
-
-			if (address || city || state || postCode || country) {
-				return {
-					address: address || "",
-					city: city || "",
-					state: state || "",
-					postCode: postCode || "",
-					country: country || "",
-				};
-			}
-		}
-		if (
-			data.address?.address ||
-			data.address?.city ||
-			data.address?.state ||
-			data.address?.postCode ||
-			data.address?.country
-		) {
+		// Priority: willOwnerData prop > activeWill > data prop > empty strings
+		if (willOwnerData) {
 			return {
-				address: data.address?.address || "",
-				city: data.address?.city || "",
-				state: data.address?.state || "",
-				postCode: data.address?.postCode || "",
-				country: data.address?.country || "",
+				address: willOwnerData.address || "",
+				city: willOwnerData.city || "",
+				state: willOwnerData.state || "",
+				postCode: willOwnerData.postCode || "",
+				country: willOwnerData.country || "",
 			};
 		}
+
+		if (activeWill?.owner) {
+			return {
+				address: activeWill.owner.address || "",
+				city: activeWill.owner.city || "",
+				state: activeWill.owner.state || "",
+				postCode: activeWill.owner.postCode || "",
+				country: activeWill.owner.country || "",
+			};
+		}
+
+		if (data.address) {
+			return {
+				address: data.address.address || "",
+				city: data.address.city || "",
+				state: data.address.state || "",
+				postCode: data.address.postCode || "",
+				country: data.address.country || "",
+			};
+		}
+
 		return {
 			address: "",
 			city: "",
@@ -127,117 +111,98 @@ export default function AddressStep({
 		setValue,
 	} = form;
 
-	// Pre-fill form with active will data when component loads
+	// Pre-fill form when willOwnerData changes
 	useEffect(() => {
-		if (activeWill) {
-			const activeWillAny = activeWill as WillData & {
-				address?: string;
-				city?: string;
-				state?: string;
-				postCode?: string;
-				post_code?: string;
-				country?: string;
-			};
-			const ownerAny = activeWill.owner as WillPersonalData & {
-				address?: string;
-				city?: string;
-				state?: string;
-				postCode?: string;
-				post_code?: string;
-				country?: string;
-			};
-			const address =
-				activeWill.owner?.address || ownerAny?.address || activeWillAny.address;
-			const city =
-				activeWill.owner?.city || ownerAny?.city || activeWillAny.city;
-			const state =
-				activeWill.owner?.state || ownerAny?.state || activeWillAny.state;
-			const postCode =
-				activeWill.owner?.postCode ||
-				ownerAny?.postCode ||
-				activeWillAny.postCode ||
-				ownerAny?.post_code ||
-				activeWillAny.post_code;
-			const country =
-				activeWill.owner?.country || ownerAny?.country || activeWillAny.country;
-
-			if (address || city || state || postCode || country) {
-				setValue("address", address || "", { shouldValidate: false });
-				setValue("city", city || "", { shouldValidate: false });
-				setValue("state", state || "", { shouldValidate: false });
-				setValue("postCode", postCode || "", { shouldValidate: false });
-				setValue("country", country || "", { shouldValidate: false });
-			}
-		} else if (
-			data.address?.address ||
-			data.address?.city ||
-			data.address?.state ||
-			data.address?.postCode ||
-			data.address?.country
-		) {
-			setValue("address", data.address?.address || "", {
+		if (willOwnerData) {
+			setValue("address", willOwnerData.address || "", {
 				shouldValidate: false,
 			});
-			setValue("city", data.address?.city || "", { shouldValidate: false });
-			setValue("state", data.address?.state || "", { shouldValidate: false });
-			setValue("postCode", data.address?.postCode || "", {
+			setValue("city", willOwnerData.city || "", { shouldValidate: false });
+			setValue("state", willOwnerData.state || "", { shouldValidate: false });
+			setValue("postCode", willOwnerData.postCode || "", {
 				shouldValidate: false,
 			});
-			setValue("country", data.address?.country || "", {
+			setValue("country", willOwnerData.country || "", {
+				shouldValidate: false,
+			});
+		} else if (activeWill?.owner) {
+			setValue("address", activeWill.owner.address || "", {
+				shouldValidate: false,
+			});
+			setValue("city", activeWill.owner.city || "", { shouldValidate: false });
+			setValue("state", activeWill.owner.state || "", {
+				shouldValidate: false,
+			});
+			setValue("postCode", activeWill.owner.postCode || "", {
+				shouldValidate: false,
+			});
+			setValue("country", activeWill.owner.country || "", {
+				shouldValidate: false,
+			});
+		} else if (data.address) {
+			setValue("address", data.address.address || "", {
+				shouldValidate: false,
+			});
+			setValue("city", data.address.city || "", { shouldValidate: false });
+			setValue("state", data.address.state || "", { shouldValidate: false });
+			setValue("postCode", data.address.postCode || "", {
+				shouldValidate: false,
+			});
+			setValue("country", data.address.country || "", {
 				shouldValidate: false,
 			});
 		}
-	}, [activeWill, data, setValue]);
+	}, [willOwnerData, activeWill, data, setValue]);
 
 	const onSubmit = async (values: AddressData) => {
 		setIsSubmitting(true);
 
 		try {
-			// Check if we have an active will with owner ID
-			if (!activeWill?.owner?.id) {
-				toast.error(
-					"Will owner information not found. Please start from the beginning."
-				);
-				return;
-			}
-
-			// Prepare the request data - convert street back to address for API
-			const requestData = {
-				address: values.address,
-				city: values.city,
-				state: values.state,
-				post_code: values.postCode,
-				country: values.country,
-			};
-
-			// Make PATCH request to /will_owner/{will_owner_id}
-			const { error } = await apiClient<WillOwnerResponse>(
-				`/will_owner/${activeWill.owner.id}`,
-				{
-					method: "PATCH",
-					body: JSON.stringify(requestData),
-				}
-			);
-
-			if (error) {
-				console.error("Error updating will owner address:", error);
-				toast.error("Failed to save address information. Please try again.");
-				return;
-			}
-
-			// Update active will with address data
-			if (activeWill) {
-				setActiveWill({
-					...activeWill,
-					owner: {
-						...activeWill.owner,
-						address: values.address,
-						city: values.city,
-						state: values.state,
-						postCode: values.postCode,
-						country: values.country,
-					} as WillPersonalData & { post_code?: string },
+			// If we have the new save function and will owner data, use it
+			if (onWillOwnerDataSave && willOwnerData) {
+				const success = await onWillOwnerDataSave({
+					address: values.address,
+					city: values.city,
+					state: values.state,
+					postCode: values.postCode,
+					country: values.country,
 				});
+
+				if (!success) {
+					toast.error("Failed to save address information. Please try again.");
+					return;
+				}
+			} else {
+				// Fall back to original approach if no willOwnerData
+				if (!activeWill?.owner?.id) {
+					toast.error(
+						"Will owner information not found. Please start from the beginning."
+					);
+					return;
+				}
+
+				// Prepare the request data with snake_case keys
+				const requestData = {
+					address: values.address,
+					city: values.city,
+					state: values.state,
+					post_code: values.postCode,
+					country: values.country,
+				};
+
+				const { error } = await apiClient(
+					`/will_owner/${activeWill.owner.id}`,
+					{
+						method: "PATCH",
+						body: JSON.stringify(requestData),
+					}
+				);
+
+				if (error) {
+					console.error("Error updating will owner address:", error);
+					toast.error("Failed to save address information. Please try again.");
+					return;
+				}
 			}
 
 			// Update local form data - convert to Address type expected by form
