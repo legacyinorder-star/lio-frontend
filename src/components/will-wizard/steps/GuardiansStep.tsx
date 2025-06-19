@@ -26,12 +26,33 @@ interface Guardian {
 	lastName: string;
 	relationship: string;
 	isPrimary: boolean;
+	guardianshipId?: string; // Store the guardianship record ID for API operations
 }
 
 interface ApiPersonResponse {
 	id: string;
 	first_name: string;
 	last_name: string;
+}
+
+// API response interface for guardianship endpoint
+interface GuardianshipApiResponse {
+	id: string;
+	will_id: string;
+	created_at: string;
+	is_primary: boolean;
+	guardian_id: string;
+	person: {
+		id: string;
+		user_id: string;
+		will_id: string;
+		relationship_id: string;
+		first_name: string;
+		last_name: string;
+		is_minor: boolean;
+		created_at: string;
+		is_witness: boolean;
+	};
 }
 
 export default function GuardiansStep({
@@ -46,6 +67,8 @@ export default function GuardiansStep({
 	const [editingGuardian, setEditingGuardian] = useState<Guardian | null>(null);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [isDeleting, setIsDeleting] = useState(false);
+	const [isLoadingGuardians, setIsLoadingGuardians] = useState(false);
+	const [hasLoadedGuardians, setHasLoadedGuardians] = useState(false);
 	const [guardianForm, setGuardianForm] = useState<Guardian>({
 		id: "",
 		firstName: "",
@@ -54,32 +77,58 @@ export default function GuardiansStep({
 		isPrimary: false,
 	});
 
-	// Load guardians from active will when component mounts
-	useEffect(() => {
-		if (activeWill?.guardians && activeWill.guardians.length > 0) {
-			// Check if guardians are already loaded in form data to prevent infinite loop
-			const currentGuardians = data.guardians || [];
-			if (currentGuardians.length === 0) {
-				// Transform guardians data to match the expected format
-				const transformedGuardians = activeWill.guardians.map((guardian) => {
-					// Handle potential API data structure (snake_case) vs component structure (camelCase)
-					const guardianAny = guardian as typeof guardian & {
-						first_name?: string;
-						last_name?: string;
-						is_primary?: boolean;
-					};
-					return {
-						id: guardian.id,
-						firstName: guardian.firstName || guardianAny.first_name || "",
-						lastName: guardian.lastName || guardianAny.last_name || "",
-						relationship: guardian.relationship,
-						isPrimary: guardian.isPrimary || guardianAny.is_primary || false,
-					};
-				});
-				onUpdate({ guardians: transformedGuardians });
+	// Load guardians from API when component mounts
+	const loadGuardians = async () => {
+		if (!activeWill?.id || hasLoadedGuardians) return;
+
+		setIsLoadingGuardians(true);
+		try {
+			const { data: apiData, error } = await apiClient<
+				GuardianshipApiResponse[]
+			>(`/guardianship/get-by-will/${activeWill.id}`, {
+				method: "GET",
+			});
+
+			if (error) {
+				// If 404, no guardians exist - this is normal
+				if (error.includes("404")) {
+					console.log("No existing guardians found");
+					setHasLoadedGuardians(true);
+					return;
+				}
+				toast.error("Failed to load guardians");
+				return;
 			}
+
+			if (apiData && apiData.length > 0) {
+				// Transform API response to Guardian format
+				const loadedGuardians: Guardian[] = apiData.map((guardianship) => ({
+					id: guardianship.person.id,
+					firstName: guardianship.person.first_name,
+					lastName: guardianship.person.last_name,
+					relationship: guardianship.person.relationship_id,
+					isPrimary: guardianship.is_primary,
+					guardianshipId: guardianship.id, // Store guardianship record ID
+				}));
+
+				onUpdate({ guardians: loadedGuardians });
+				updateActiveWillGuardians(loadedGuardians);
+				console.log("Loaded guardians:", loadedGuardians);
+			}
+
+			setHasLoadedGuardians(true);
+		} catch (err) {
+			console.error("Error loading guardians:", err);
+			toast.error("Failed to load guardians");
+		} finally {
+			setIsLoadingGuardians(false);
 		}
-	}, [activeWill]); // Remove onUpdate from dependency array
+	};
+
+	// Load guardians when component mounts or activeWill changes
+	useEffect(() => {
+		loadGuardians();
+	}, [activeWill?.id]);
 
 	// Update active will when guardians state changes
 	const updateActiveWillGuardians = (newGuardians: Guardian[]) => {
@@ -137,20 +186,22 @@ export default function GuardiansStep({
 					return;
 				}
 
-				// Then update the guardianship record
-				const { error: guardianshipError } = await apiClient(
-					`/guardianship/${editingGuardian.id}`,
-					{
-						method: "PATCH",
-						body: JSON.stringify({
-							is_primary: guardianForm.isPrimary,
-						}),
-					}
-				);
+				// Then update the guardianship record using guardianshipId
+				if (editingGuardian.guardianshipId) {
+					const { error: guardianshipError } = await apiClient(
+						`/guardianship/${editingGuardian.guardianshipId}`,
+						{
+							method: "PATCH",
+							body: JSON.stringify({
+								is_primary: guardianForm.isPrimary,
+							}),
+						}
+					);
 
-				if (guardianshipError) {
-					toast.error("Failed to update guardianship information");
-					return;
+					if (guardianshipError) {
+						toast.error("Failed to update guardianship information");
+						return;
+					}
 				}
 
 				// Update local state
@@ -264,7 +315,7 @@ export default function GuardiansStep({
 		setGuardianDialogOpen(true);
 	};
 
-	const handleRemoveGuardian = async (guardianId: string) => {
+	const handleRemoveGuardian = async (guardian: Guardian) => {
 		if (!activeWill?.id) {
 			toast.error("No active will found");
 			return;
@@ -273,21 +324,23 @@ export default function GuardiansStep({
 		setIsDeleting(true);
 
 		try {
-			// First delete the guardianship record
-			const { error: guardianshipError } = await apiClient(
-				`/guardianship/${guardianId}`,
-				{
-					method: "DELETE",
-				}
-			);
+			// First delete the guardianship record using guardianshipId
+			if (guardian.guardianshipId) {
+				const { error: guardianshipError } = await apiClient(
+					`/guardianship/${guardian.guardianshipId}`,
+					{
+						method: "DELETE",
+					}
+				);
 
-			if (guardianshipError) {
-				toast.error("Failed to delete guardianship record");
-				return;
+				if (guardianshipError) {
+					toast.error("Failed to delete guardianship record");
+					return;
+				}
 			}
 
 			// Then delete the person record
-			const { error: personError } = await apiClient(`/people/${guardianId}`, {
+			const { error: personError } = await apiClient(`/people/${guardian.id}`, {
 				method: "DELETE",
 			});
 
@@ -299,7 +352,7 @@ export default function GuardiansStep({
 			// Update local state
 			const currentGuardians = data.guardians || [];
 			const updatedGuardians = currentGuardians.filter(
-				(g) => g.id !== guardianId
+				(g) => g.id !== guardian.id
 			);
 			onUpdate({ guardians: updatedGuardians });
 			updateActiveWillGuardians(updatedGuardians);
@@ -466,10 +519,16 @@ export default function GuardiansStep({
 				</div>
 
 				{currentGuardians.length === 0 ? (
-					<p className="text-muted-foreground text-center py-4">
-						No guardians added yet. Click "Add Guardian" to appoint guardians
-						for your children.
-					</p>
+					isLoadingGuardians ? (
+						<p className="text-muted-foreground text-center py-4">
+							Loading guardians...
+						</p>
+					) : (
+						<p className="text-muted-foreground text-center py-4">
+							No guardians added yet. Click "Add Guardian" to appoint guardians
+							for your children.
+						</p>
+					)
 				) : (
 					<div className="space-y-4">
 						{currentGuardians.map((guardian) => (
@@ -505,7 +564,7 @@ export default function GuardiansStep({
 											<Button
 												variant="ghost"
 												size="icon"
-												onClick={() => handleRemoveGuardian(guardian.id)}
+												onClick={() => handleRemoveGuardian(guardian)}
 												className="cursor-pointer"
 												disabled={isDeleting}
 											>
