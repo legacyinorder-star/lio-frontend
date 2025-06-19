@@ -50,12 +50,20 @@ export function useSessionActivity(options: SessionActivityOptions = {}) {
 
 	const shouldTrackActivity = user && !isOnAuthPage;
 
-	// Reset warning flag when user becomes active again
+	// Reset warning flag when user becomes active again (only if they're out of warning period)
 	useEffect(() => {
 		if (shouldTrackActivity && lastActivity) {
-			warningShownRef.current = false;
+			const now = Date.now();
+			const lastActivityTime = lastActivity.getTime();
+			const timeSinceActivity = now - lastActivityTime;
+			const warningThresholdMs = warningThresholdMinutes * 60 * 1000;
+
+			// Only reset warning flag if user is now below the warning threshold
+			if (timeSinceActivity < warningThresholdMs) {
+				warningShownRef.current = false;
+			}
 		}
-	}, [shouldTrackActivity, lastActivity]);
+	}, [shouldTrackActivity, lastActivity, warningThresholdMinutes]);
 
 	// Track session start time
 	useEffect(() => {
