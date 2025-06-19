@@ -67,39 +67,149 @@ export default function ResiduaryStep({
 		addCharityBeneficiary,
 	} = useWillData();
 
-	// Initialize data from will context only - no API calls needed
-	const initializeFromWillContext = () => {
-		if (!activeWill?.residuary || hasLoadedResiduary) return;
+	// Load residuary data from API
+	const loadResiduaryFromAPI = async () => {
+		if (!activeWill?.id || hasLoadedResiduary) return;
 
-		console.log("Initializing from will context:", activeWill.residuary);
+		try {
+			console.log("Loading residuary data from API...");
+			const { data, error } = await apiClient<{
+				id: string;
+				created_at: string;
+				will_id: string;
+				distribution_type: string;
+				beneficiaries: Array<{
+					id: string;
+					created_at: string;
+					residuary_id: string;
+					will_id: string;
+					people_id: string | null;
+					charities_id: string | null;
+					percentage: string;
+					charity?: {
+						id: string;
+						created_at: string;
+						will_id: string;
+						name: string;
+						rc_number: string;
+						user_id: string;
+					};
+					person?: {
+						id: string;
+						user_id: string;
+						will_id: string;
+						relationship_id: string;
+						first_name: string;
+						last_name: string;
+						is_minor: boolean;
+						created_at: string;
+						is_witness: boolean;
+					};
+				}>;
+			}>(`/residuary/get-by-will/${activeWill.id}`, {
+				method: "GET",
+			});
 
-		setIsEqualDistribution(activeWill.residuary.distribution_type === "equal");
-
-		// Process beneficiaries from will context
-		const processedBeneficiaries: ResiduaryBeneficiary[] = [];
-		const selectedIds = new Set<string>();
-
-		activeWill.residuary.beneficiaries.forEach((beneficiary) => {
-			const beneficiaryId = beneficiary.peopleId || beneficiary.charitiesId;
-			if (beneficiaryId) {
-				selectedIds.add(beneficiaryId);
-				processedBeneficiaries.push({
-					id: beneficiary.id,
-					beneficiaryId: beneficiaryId,
-					percentage: beneficiary.percentage,
-				});
+			if (error) {
+				// If 404, no residuary exists - this is normal
+				if (error.includes("404")) {
+					console.log("No existing residuary found");
+					setHasLoadedResiduary(true);
+					return;
+				}
+				toast.error("Failed to load residuary data");
+				return;
 			}
-		});
 
-		setResiduaryBeneficiaries(processedBeneficiaries);
-		setSelectedBeneficiaries(selectedIds);
-		setHasLoadedResiduary(true);
+			if (data) {
+				console.log("Loaded residuary data:", data);
+
+				// Set distribution type
+				setIsEqualDistribution(data.distribution_type === "equal");
+
+				// Process beneficiaries from API response
+				const processedBeneficiaries: ResiduaryBeneficiary[] = [];
+				const selectedIds = new Set<string>();
+
+				data.beneficiaries.forEach((beneficiary) => {
+					const beneficiaryId =
+						beneficiary.people_id || beneficiary.charities_id;
+					if (beneficiaryId) {
+						selectedIds.add(beneficiaryId);
+						processedBeneficiaries.push({
+							id: beneficiary.id,
+							beneficiaryId: beneficiaryId,
+							percentage: parseInt(beneficiary.percentage) || 0,
+						});
+					}
+				});
+
+				setResiduaryBeneficiaries(processedBeneficiaries);
+				setSelectedBeneficiaries(selectedIds);
+
+				// Update WillContext with loaded data
+				if (activeWill) {
+					const residuaryData: WillResiduary = {
+						id: data.id,
+						distribution_type: data.distribution_type as "equal" | "manual",
+						beneficiaries: data.beneficiaries.map((beneficiary) => {
+							if (beneficiary.charity) {
+								return {
+									id: beneficiary.id,
+									percentage: parseInt(beneficiary.percentage) || 0,
+									charitiesId: beneficiary.charities_id!,
+									charity: {
+										id: beneficiary.charity.id,
+										name: beneficiary.charity.name,
+										registrationNumber: beneficiary.charity.rc_number,
+									},
+								};
+							} else if (beneficiary.person) {
+								return {
+									id: beneficiary.id,
+									percentage: parseInt(beneficiary.percentage) || 0,
+									peopleId: beneficiary.people_id!,
+									person: {
+										id: beneficiary.person.id,
+										firstName: beneficiary.person.first_name,
+										lastName: beneficiary.person.last_name,
+										relationship: "", // Will be resolved by relationship resolver
+										relationshipId: beneficiary.person.relationship_id,
+										isMinor: beneficiary.person.is_minor,
+									},
+								};
+							}
+							// Fallback
+							return {
+								id: beneficiary.id,
+								percentage: parseInt(beneficiary.percentage) || 0,
+								peopleId:
+									beneficiary.people_id || beneficiary.charities_id || "",
+							};
+						}),
+					};
+
+					const updatedWill = {
+						...activeWill,
+						residuary: residuaryData,
+					};
+
+					setActiveWill(updatedWill);
+				}
+			}
+
+			setHasLoadedResiduary(true);
+		} catch (err) {
+			console.error("Error loading residuary data:", err);
+			toast.error("Failed to load residuary data");
+			setHasLoadedResiduary(true);
+		}
 	};
 
-	// Initialize from will context when component mounts
+	// Load residuary data when component mounts
 	useEffect(() => {
 		if (activeWill?.id && !hasLoadedResiduary) {
-			initializeFromWillContext();
+			loadResiduaryFromAPI();
 		}
 	}, [activeWill?.id, hasLoadedResiduary]);
 
@@ -252,66 +362,14 @@ export default function ResiduaryStep({
 
 			// Always use POST to save residuary data
 			console.log("Saving residuary data with POST");
-			const { data: responseData, error } = await apiClient<{ id: string }>(
-				"/residuary",
-				{
-					method: "POST",
-					body: JSON.stringify(payload),
-				}
-			);
+			const { error } = await apiClient<{ id: string }>("/residuary", {
+				method: "POST",
+				body: JSON.stringify(payload),
+			});
 
 			if (error) {
 				toast.error("Failed to save residuary data");
 				return;
-			}
-
-			// Update the active Will state with the residuary information
-			if (activeWill && responseData) {
-				const residuaryData: WillResiduary = {
-					id: responseData.id || "",
-					distribution_type: payload.distribution_type as "equal" | "manual",
-					beneficiaries: residuaryBeneficiaries.map((beneficiary) => {
-						// Find the enhanced beneficiary to determine type and get full data
-						const enhancedBeneficiary = enhancedBeneficiaries.find(
-							(b) => b.id === beneficiary.beneficiaryId
-						);
-
-						if (enhancedBeneficiary?.type === "charity") {
-							return {
-								id: beneficiary.id,
-								percentage: beneficiary.percentage,
-								charitiesId: beneficiary.beneficiaryId,
-								charity: {
-									id: beneficiary.beneficiaryId,
-									name: enhancedBeneficiary.firstName, // Charity name is stored in firstName
-									registrationNumber: enhancedBeneficiary.registrationNumber,
-								},
-							};
-						} else {
-							return {
-								id: beneficiary.id,
-								percentage: beneficiary.percentage,
-								peopleId: beneficiary.beneficiaryId,
-								person: {
-									id: beneficiary.beneficiaryId,
-									firstName: enhancedBeneficiary?.firstName || "",
-									lastName: enhancedBeneficiary?.lastName || "",
-									relationship: enhancedBeneficiary?.relationship || "",
-									relationshipId: enhancedBeneficiary?.relationshipId,
-									isMinor: false, // Default value, should be updated if available
-								},
-							};
-						}
-					}),
-				};
-
-				const updatedWill = {
-					...activeWill,
-					residuary: residuaryData,
-				};
-
-				// Update the will context
-				setActiveWill(updatedWill);
 			}
 
 			toast.success("Residuary data saved successfully");

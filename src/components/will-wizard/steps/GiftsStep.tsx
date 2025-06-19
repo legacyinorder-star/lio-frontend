@@ -22,6 +22,16 @@ import {
 	DialogTitle,
 	DialogFooter,
 } from "@/components/ui/dialog";
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import {
 	DropdownMenu,
@@ -40,6 +50,8 @@ import { useWill } from "@/context/WillContext";
 import { useGiftManagement } from "@/hooks/useGiftManagement";
 import { getFormattedRelationshipNameById } from "@/utils/relationships";
 import { NewBeneficiaryDialog } from "../components/NewBeneficiaryDialog";
+import { toast } from "sonner";
+import { apiClient } from "@/utils/apiClient";
 
 const giftSchema = z
 	.object({
@@ -158,6 +170,8 @@ export default function GiftsStep({
 	const [searchQuery, setSearchQuery] = useState("");
 	const [isBeneficiaryDropdownOpen, setIsBeneficiaryDropdownOpen] =
 		useState(false);
+	const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+	const [giftToDelete, setGiftToDelete] = useState<GiftType | null>(null);
 
 	const {
 		allBeneficiaries: enhancedBeneficiaries,
@@ -296,8 +310,39 @@ export default function GiftsStep({
 		setGiftDialogOpen(true);
 	};
 
-	const handleRemoveGift = (giftId: string) => {
-		removeGift(giftId);
+	const handleRemoveGift = (gift: GiftType) => {
+		setGiftToDelete(gift);
+		setConfirmDeleteOpen(true);
+	};
+
+	const confirmRemoveGift = async () => {
+		if (giftToDelete) {
+			try {
+				// Send DELETE request to API
+				const { error } = await apiClient(`/gifts/${giftToDelete.id}`, {
+					method: "DELETE",
+				});
+
+				if (error) {
+					toast.error("Failed to remove gift");
+					return;
+				}
+
+				// Remove from local state after successful API call
+				await removeGift(giftToDelete.id);
+				toast.success("Gift removed successfully");
+				setGiftToDelete(null);
+				setConfirmDeleteOpen(false);
+			} catch (err) {
+				toast.error("Failed to remove gift");
+				console.error("Error removing gift:", err);
+			}
+		}
+	};
+
+	const cancelRemoveGift = () => {
+		setGiftToDelete(null);
+		setConfirmDeleteOpen(false);
 	};
 
 	const handleAddNewBeneficiary = () => {
@@ -485,7 +530,7 @@ export default function GiftsStep({
 													type="button"
 													variant="outline"
 													size="sm"
-													onClick={() => handleRemoveGift(gift.id)}
+													onClick={() => handleRemoveGift(gift)}
 												>
 													<Trash2 className="h-4 w-4 mr-2" />
 													Remove
@@ -763,6 +808,57 @@ export default function GiftsStep({
 				onAddIndividual={handleAddIndividualBeneficiary}
 				onAddCharity={handleAddCharityBeneficiary}
 			/>
+
+			{/* Confirm Delete Dialog */}
+			<AlertDialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>Remove Gift</AlertDialogTitle>
+						<AlertDialogDescription>
+							Are you sure you want to remove this gift? This action cannot be
+							undone.
+						</AlertDialogDescription>
+						{giftToDelete && (
+							<div className="mt-2 p-2 bg-muted rounded text-sm space-y-1">
+								<div>
+									<strong>{giftToDelete.type}:</strong>{" "}
+									{giftToDelete.description}
+								</div>
+								{(() => {
+									const beneficiary = getBeneficiaryFromGift(giftToDelete);
+									const relationship = beneficiary?.relationshipId
+										? getFormattedRelationshipNameById(
+												relationships,
+												beneficiary.relationshipId
+										  ) || beneficiary.relationship
+										: beneficiary?.relationship || "Unknown";
+
+									return beneficiary ? (
+										<div className="text-muted-foreground">
+											<strong>To:</strong> {beneficiary.firstName}{" "}
+											{beneficiary.lastName} ({relationship})
+											{beneficiary.type === "charity" &&
+												beneficiary.registrationNumber &&
+												` - Reg: ${beneficiary.registrationNumber}`}
+										</div>
+									) : null;
+								})()}
+							</div>
+						)}
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel onClick={cancelRemoveGift}>
+							Cancel
+						</AlertDialogCancel>
+						<AlertDialogAction
+							onClick={confirmRemoveGift}
+							className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+						>
+							Remove Gift
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 		</div>
 	);
 }

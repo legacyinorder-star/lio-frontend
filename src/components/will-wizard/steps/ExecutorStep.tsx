@@ -112,11 +112,6 @@ export default function ExecutorStep({
 		updateLoadingState("executors", isLoadingExecutors);
 	}, [isLoadingExecutors, updateLoadingState]);
 
-	// Show loading spinner if data is not ready
-	if (isDataLoading || !isReady) {
-		return <LoadingSpinner message="Loading executor data..." />;
-	}
-
 	// Function to load existing executors
 	const loadExecutors = async () => {
 		if (!activeWill?.id || hasLoadedExecutors) return;
@@ -376,6 +371,11 @@ export default function ExecutorStep({
 			onUpdate(executors);
 		}
 	}, [executors, onUpdate]);
+
+	// Show loading spinner if data is not ready
+	if (isDataLoading || !isReady) {
+		return <LoadingSpinner message="Loading executor data..." />;
+	}
 
 	return (
 		<div className="space-y-4">
