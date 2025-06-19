@@ -107,6 +107,7 @@ export default function ExecutorStep({
 	const [executorToDelete, setExecutorToDelete] = useState<Executor | null>(
 		null
 	);
+	const [useLegacyInOrder, setUseLegacyInOrder] = useState(false);
 	const prevExecutorsRef = useRef<Executor[]>([]);
 	const { activeWill } = useWill();
 	const { relationships, isLoading: isDataLoading, isReady } = useWillData();
@@ -533,6 +534,14 @@ export default function ExecutorStep({
 				prev.filter((executor) => executor.id !== executorToDelete.id)
 			);
 
+			// If removing Legacy In Order, update checkbox state
+			if (
+				executorToDelete.type === "corporate" &&
+				executorToDelete.name === "Legacy In Order"
+			) {
+				setUseLegacyInOrder(false);
+			}
+
 			toast.success("Executor removed successfully");
 			setExecutorToDelete(null);
 			setConfirmDeleteOpen(false);
@@ -543,14 +552,133 @@ export default function ExecutorStep({
 	};
 
 	const cancelRemoveExecutor = () => {
+		// If canceling removal of Legacy In Order, revert checkbox state
+		if (
+			executorToDelete &&
+			executorToDelete.type === "corporate" &&
+			executorToDelete.name === "Legacy In Order"
+		) {
+			setUseLegacyInOrder(true);
+		}
+
 		setExecutorToDelete(null);
 		setConfirmDeleteOpen(false);
+	};
+
+	// Handle Legacy In Order checkbox change
+	const handleLegacyInOrderChange = async (checked: boolean) => {
+		if (checked) {
+			// Check if Legacy In Order is already added
+			const existingLegacyExecutor = executors.find(
+				(executor) =>
+					executor.type === "corporate" && executor.name === "Legacy In Order"
+			);
+
+			if (existingLegacyExecutor) {
+				toast.error("Legacy In Order is already added as an executor");
+				return;
+			}
+
+			if (!activeWill?.id) {
+				toast.error("Will ID is required");
+				return;
+			}
+
+			setIsSubmitting(true);
+			try {
+				// Create corporate executor record using normal flow
+				const corporateExecutorPayload = {
+					will_id: activeWill.id,
+					name: "Legacy In Order",
+					rc_number: "RC123456", // Replace with actual RC number
+				};
+
+				const { data: corporateExecutorData, error: corporateExecutorError } =
+					await apiClient<{
+						id: string;
+					}>("/corporate_executors", {
+						method: "POST",
+						body: JSON.stringify(corporateExecutorPayload),
+					});
+
+				if (corporateExecutorError || !corporateExecutorData) {
+					toast.error("Failed to create Legacy In Order executor record");
+					return;
+				}
+
+				// Create executor record as primary
+				const executorPayload = {
+					will_id: activeWill.id,
+					corporate_executor_id: corporateExecutorData.id,
+					is_primary: true,
+				};
+
+				const { data: executorData, error: executorError } = await apiClient<{
+					id: string;
+				}>("/executors", {
+					method: "POST",
+					body: JSON.stringify(executorPayload),
+				});
+
+				if (executorError || !executorData) {
+					toast.error("Failed to create executor record");
+					return;
+				}
+
+				// Set all other executors as non-primary since Legacy In Order is primary
+				setExecutors((prev) =>
+					prev.map((e) => ({
+						...e,
+						isPrimary: false,
+					}))
+				);
+
+				// Add Legacy In Order to local state
+				const newExecutor: Executor = {
+					id: executorData.id,
+					type: "corporate",
+					name: "Legacy In Order",
+					rc_number: "RC123456", // Replace with actual RC number
+					corporateExecutorId: corporateExecutorData.id,
+					isPrimary: true,
+				};
+
+				setExecutors((prev) => [...prev, newExecutor]);
+				toast.success("Legacy In Order added as primary executor");
+			} catch (error) {
+				console.error("Error adding Legacy In Order executor:", error);
+				toast.error("Failed to add Legacy In Order executor");
+			} finally {
+				setIsSubmitting(false);
+			}
+		} else {
+			// Don't immediately change state - let the confirmation dialog handle it
+			// Find Legacy In Order executor and trigger removal confirmation
+			const legacyExecutor = executors.find(
+				(executor) =>
+					executor.type === "corporate" && executor.name === "Legacy In Order"
+			);
+
+			if (legacyExecutor) {
+				// Don't change useLegacyInOrder state here - let the dialog handle it
+				handleRemoveExecutor(legacyExecutor);
+			}
+		}
 	};
 
 	// Load executors when component mounts or activeWill changes
 	useEffect(() => {
 		loadExecutors();
 	}, [activeWill?.id]);
+
+	// Update checkbox state based on whether Legacy In Order is already added
+	useEffect(() => {
+		const hasLegacyInOrder = executors.some(
+			(executor) =>
+				executor.type === "corporate" && executor.name === "Legacy In Order"
+		);
+		setUseLegacyInOrder(hasLegacyInOrder);
+	}, [executors]);
 
 	// Update parent component when executors change
 	useEffect(() => {
@@ -578,6 +706,63 @@ export default function ExecutorStep({
 				should appoint at least one executor, and it's recommended to have a
 				backup executor in case the primary executor is unable to serve.
 			</div>
+
+			{/* Legacy In Order Recommendation Section */}
+			<div className="bg-green-50 border border-green-200 rounded-lg p-4 mt-6">
+				<div className="space-y-3">
+					<div className="flex items-start">
+						<div className="flex-shrink-0">
+							<svg
+								className="h-5 w-5 text-green-400 mt-0.5"
+								fill="none"
+								viewBox="0 0 24 24"
+								stroke="currentColor"
+							>
+								<path
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									strokeWidth={2}
+									d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+								/>
+							</svg>
+						</div>
+						<div className="ml-3 flex-1">
+							<h3 className="text-sm font-medium text-green-800">
+								Recommended: Legacy In Order Professional Executor Service
+							</h3>
+							<div className="mt-2 text-sm text-green-700">
+								<p>
+									Legacy In Order offers professional executor services to
+									ensure your will is executed properly and efficiently. Our
+									experienced team handles all legal requirements, asset
+									distribution, and administrative tasks.
+								</p>
+								<ul className="mt-2 list-disc list-inside space-y-1">
+									<li>Licensed and bonded professional executors</li>
+									<li>Experienced in estate administration</li>
+									<li>Available 24/7 for estate matters</li>
+									<li>Transparent fee structure</li>
+								</ul>
+							</div>
+							<div className="mt-3 flex items-center space-x-2">
+								<Checkbox
+									id="useLegacyInOrder"
+									checked={useLegacyInOrder}
+									onCheckedChange={handleLegacyInOrderChange}
+									disabled={isSubmitting}
+								/>
+								<Label
+									htmlFor="useLegacyInOrder"
+									className="text-sm font-medium text-green-800"
+								>
+									Appoint Legacy In Order as my Primary Executor
+								</Label>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
 			<div className="space-y-6 mt-6">
 				<div className="flex justify-between items-center">
 					<h3 className="text-lg font-medium">Appointed Executors</h3>
