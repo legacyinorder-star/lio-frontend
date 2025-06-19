@@ -60,9 +60,11 @@ interface Executor {
 	firstName?: string;
 	lastName?: string;
 	relationshipId?: string;
+	personId?: string; // Store the person ID for editing
 	// Corporate executor fields
 	name?: string;
 	rc_number?: string;
+	corporateExecutorId?: string; // Store the corporate executor ID for editing
 	isPrimary: boolean;
 }
 
@@ -104,6 +106,8 @@ export default function ExecutorStep({
 		relationshipId: "",
 		name: "",
 		rc_number: "",
+		personId: "",
+		corporateExecutorId: "",
 		isPrimary: false,
 	});
 
@@ -147,6 +151,7 @@ export default function ExecutorStep({
 							firstName: apiExecutor.person.first_name,
 							lastName: apiExecutor.person.last_name,
 							relationshipId: apiExecutor.person.relationship_id,
+							personId: apiExecutor.person.id,
 							isPrimary: apiExecutor.is_primary,
 						};
 					} else if (apiExecutor.corporate_executor) {
@@ -156,6 +161,7 @@ export default function ExecutorStep({
 							type: "corporate" as const,
 							name: apiExecutor.corporate_executor.name,
 							rc_number: apiExecutor.corporate_executor.rc_number,
+							corporateExecutorId: apiExecutor.corporate_executor.id,
 							isPrimary: apiExecutor.is_primary,
 						};
 					}
@@ -163,6 +169,7 @@ export default function ExecutorStep({
 					return {
 						id: apiExecutor.id,
 						type: "individual" as const,
+						personId: apiExecutor.executor_id,
 						isPrimary: apiExecutor.is_primary,
 					};
 				});
@@ -208,95 +215,210 @@ export default function ExecutorStep({
 			return;
 		}
 
+		console.log("handleSaveExecutor - executorForm:", executorForm);
+		console.log("handleSaveExecutor - editingExecutor:", editingExecutor);
+
 		setIsSubmitting(true);
 		try {
 			let executorId = executorForm.id;
 
-			// For individual executors, create person first then executor
-			if (executorForm.type === "individual") {
-				// Create person via /people endpoint
-				const personPayload = {
-					will_id: activeWill.id,
-					first_name: executorForm.firstName,
-					last_name: executorForm.lastName,
-					relationship_id: executorForm.relationshipId,
-					is_minor: false,
-					is_witness: false,
-				};
+			if (editingExecutor) {
+				// EDITING EXISTING EXECUTOR
+				if (executorForm.type === "individual") {
+					console.log(
+						"Editing individual executor with personId:",
+						executorForm.personId
+					);
 
-				const { data: personData, error: personError } = await apiClient<{
-					id: string;
-				}>("/people", {
-					method: "POST",
-					body: JSON.stringify(personPayload),
-				});
+					if (!executorForm.personId) {
+						toast.error("Person ID is missing for individual executor");
+						return;
+					}
 
-				if (personError || !personData) {
-					toast.error("Failed to create person record");
-					return;
+					// Update person via PATCH /people/{person_id}
+					const personPayload = {
+						will_id: activeWill.id,
+						first_name: executorForm.firstName,
+						last_name: executorForm.lastName,
+						relationship_id: executorForm.relationshipId,
+						is_minor: false,
+						is_witness: false,
+					};
+
+					const { error: personError } = await apiClient(
+						`/people/${executorForm.personId}`,
+						{
+							method: "PATCH",
+							body: JSON.stringify(personPayload),
+						}
+					);
+
+					if (personError) {
+						toast.error("Failed to update person record");
+						return;
+					}
+
+					// Update executor via PATCH /executors/{id}
+					const executorPayload = {
+						will_id: activeWill.id,
+						executor_id: executorForm.personId,
+						is_primary: executorForm.isPrimary,
+					};
+
+					const { error: executorError } = await apiClient(
+						`/executors/${executorForm.id}`,
+						{
+							method: "PATCH",
+							body: JSON.stringify(executorPayload),
+						}
+					);
+
+					if (executorError) {
+						toast.error("Failed to update executor record");
+						return;
+					}
+
+					executorId = executorForm.id;
+				} else {
+					console.log(
+						"Editing corporate executor with corporateExecutorId:",
+						executorForm.corporateExecutorId
+					);
+
+					if (!executorForm.corporateExecutorId) {
+						toast.error("Corporate executor ID is missing");
+						return;
+					}
+
+					// Update corporate executor via PATCH /corporate_executors/{corporate_executor_id}
+					const corporateExecutorPayload = {
+						will_id: activeWill.id,
+						name: executorForm.name,
+						rc_number: executorForm.rc_number,
+					};
+
+					const { error: corporateExecutorError } = await apiClient(
+						`/corporate_executors/${executorForm.corporateExecutorId}`,
+						{
+							method: "PATCH",
+							body: JSON.stringify(corporateExecutorPayload),
+						}
+					);
+
+					if (corporateExecutorError) {
+						toast.error("Failed to update corporate executor record");
+						return;
+					}
+
+					// Update executor via PATCH /executors/{id}
+					const executorPayload = {
+						will_id: activeWill.id,
+						corporate_executor_id: executorForm.corporateExecutorId,
+						is_primary: executorForm.isPrimary,
+					};
+
+					const { error: executorError } = await apiClient(
+						`/executors/${executorForm.id}`,
+						{
+							method: "PATCH",
+							body: JSON.stringify(executorPayload),
+						}
+					);
+
+					if (executorError) {
+						toast.error("Failed to update executor record");
+						return;
+					}
+
+					executorId = executorForm.id;
 				}
-
-				// Create executor via /executors endpoint
-				const executorPayload = {
-					will_id: activeWill.id,
-					executor_id: personData.id,
-					is_primary: executorForm.isPrimary,
-				};
-
-				const { data: executorData, error: executorError } = await apiClient<{
-					id: string;
-				}>("/executors", {
-					method: "POST",
-					body: JSON.stringify(executorPayload),
-				});
-
-				if (executorError || !executorData) {
-					toast.error("Failed to create executor record");
-					return;
-				}
-
-				executorId = executorData.id;
 			} else {
-				// For corporate executors, create corporate executor first then executor
-				const corporateExecutorPayload = {
-					will_id: activeWill.id,
-					name: executorForm.name,
-					rc_number: executorForm.rc_number,
-				};
+				// CREATING NEW EXECUTOR
+				if (executorForm.type === "individual") {
+					// Create person via /people endpoint
+					const personPayload = {
+						will_id: activeWill.id,
+						first_name: executorForm.firstName,
+						last_name: executorForm.lastName,
+						relationship_id: executorForm.relationshipId,
+						is_minor: false,
+						is_witness: false,
+					};
 
-				const { data: corporateExecutorData, error: corporateExecutorError } =
-					await apiClient<{
+					const { data: personData, error: personError } = await apiClient<{
 						id: string;
-					}>("/corporate_executors", {
+					}>("/people", {
 						method: "POST",
-						body: JSON.stringify(corporateExecutorPayload),
+						body: JSON.stringify(personPayload),
 					});
 
-				if (corporateExecutorError || !corporateExecutorData) {
-					toast.error("Failed to create corporate executor record");
-					return;
+					if (personError || !personData) {
+						toast.error("Failed to create person record");
+						return;
+					}
+
+					// Create executor via /executors endpoint
+					const executorPayload = {
+						will_id: activeWill.id,
+						executor_id: personData.id,
+						is_primary: executorForm.isPrimary,
+					};
+
+					const { data: executorData, error: executorError } = await apiClient<{
+						id: string;
+					}>("/executors", {
+						method: "POST",
+						body: JSON.stringify(executorPayload),
+					});
+
+					if (executorError || !executorData) {
+						toast.error("Failed to create executor record");
+						return;
+					}
+
+					executorId = executorData.id;
+				} else {
+					// For corporate executors, create corporate executor first then executor
+					const corporateExecutorPayload = {
+						will_id: activeWill.id,
+						name: executorForm.name,
+						rc_number: executorForm.rc_number,
+					};
+
+					const { data: corporateExecutorData, error: corporateExecutorError } =
+						await apiClient<{
+							id: string;
+						}>("/corporate_executors", {
+							method: "POST",
+							body: JSON.stringify(corporateExecutorPayload),
+						});
+
+					if (corporateExecutorError || !corporateExecutorData) {
+						toast.error("Failed to create corporate executor record");
+						return;
+					}
+
+					// Create executor via /executors endpoint
+					const executorPayload = {
+						will_id: activeWill.id,
+						corporate_executor_id: corporateExecutorData.id,
+						is_primary: executorForm.isPrimary,
+					};
+
+					const { data: executorData, error: executorError } = await apiClient<{
+						id: string;
+					}>("/executors", {
+						method: "POST",
+						body: JSON.stringify(executorPayload),
+					});
+
+					if (executorError || !executorData) {
+						toast.error("Failed to create executor record");
+						return;
+					}
+
+					executorId = executorData.id;
 				}
-
-				// Create executor via /executors endpoint
-				const executorPayload = {
-					will_id: activeWill.id,
-					corporate_executor_id: corporateExecutorData.id,
-					is_primary: executorForm.isPrimary,
-				};
-
-				const { data: executorData, error: executorError } = await apiClient<{
-					id: string;
-				}>("/executors", {
-					method: "POST",
-					body: JSON.stringify(executorPayload),
-				});
-
-				if (executorError || !executorData) {
-					toast.error("Failed to create executor record");
-					return;
-				}
-
-				executorId = executorData.id;
 			}
 
 			// If this is a primary executor, ensure no other primary exists
@@ -317,8 +439,10 @@ export default function ExecutorStep({
 							: executor
 					)
 				);
+				toast.success("Executor updated successfully");
 			} else {
 				setExecutors((prev) => [...prev, { ...executorForm, id: executorId }]);
+				toast.success("Executor added successfully");
 			}
 
 			// Reset form and close dialog
@@ -330,12 +454,12 @@ export default function ExecutorStep({
 				relationshipId: "",
 				name: "",
 				rc_number: "",
+				personId: "",
+				corporateExecutorId: "",
 				isPrimary: false,
 			});
 			setEditingExecutor(null);
 			setExecutorDialogOpen(false);
-
-			toast.success("Executor added successfully");
 		} catch (error) {
 			console.error("Error saving executor:", error);
 			toast.error("Failed to save executor");
@@ -406,6 +530,8 @@ export default function ExecutorStep({
 										relationshipId: "",
 										name: "",
 										rc_number: "",
+										personId: "",
+										corporateExecutorId: "",
 										isPrimary: false,
 									});
 									setEditingExecutor(null);
