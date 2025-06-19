@@ -332,6 +332,31 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 		return data.guardians && data.guardians.length > 0;
 	};
 
+	// Helper function to calculate section numbers
+	const getSectionNumber = () => {
+		let sectionNum = 1;
+		const sections = {
+			scope: sectionNum++,
+			executors: sectionNum++,
+			guardians: shouldShowGuardiansSection() ? sectionNum++ : null,
+			distribution: sectionNum++,
+			gifts: data.gifts && data.gifts.length > 0 ? sectionNum++ : null,
+			administration: sectionNum++,
+			residuary:
+				data.residuaryBeneficiaries && data.residuaryBeneficiaries.length > 0
+					? sectionNum++
+					: null,
+			disclaimer: sectionNum++,
+			powers: sectionNum++,
+			protection: sectionNum++,
+			definitions: sectionNum++,
+			witnesses: sectionNum++,
+		};
+		return sections;
+	};
+
+	const sections = getSectionNumber();
+
 	// Helper function to get distribution text for an asset
 	const getAssetDistributionText = (_asset: {
 		type: string;
@@ -414,7 +439,9 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 
 				{/* Scope Section */}
 				<View style={styles.scopeSection}>
-					<Text style={styles.scopeTitle}>Scope of this will</Text>
+					<Text style={styles.scopeTitle}>
+						{sections.scope}. Scope of this will
+					</Text>
 					<Text style={styles.scopeText}>
 						I am {data.personal.fullName} of {data.personal.address}.
 					</Text>
@@ -434,7 +461,9 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 
 				{/* Executors Section */}
 				<View style={styles.executorSection}>
-					<Text style={styles.executorTitle}>Appointment of Executors</Text>
+					<Text style={styles.executorTitle}>
+						{sections.executors}. Appointment of Executors
+					</Text>
 
 					{primaryExecutor && (
 						<Text style={styles.executorText}>
@@ -486,7 +515,9 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 				{/* Guardians Section */}
 				{shouldShowGuardiansSection() && (
 					<View style={styles.guardianSection}>
-						<Text style={styles.guardianTitle}>Appointment of Guardians</Text>
+						<Text style={styles.guardianTitle}>
+							{sections.guardians}. Appointment of Guardians
+						</Text>
 
 						{primaryGuardian && (
 							<Text style={styles.guardianText}>
@@ -531,7 +562,9 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 
 				{/* Asset Distribution Section */}
 				<View style={styles.distributionSection}>
-					<Text style={styles.distributionTitle}>Distribution of Assets</Text>
+					<Text style={styles.distributionTitle}>
+						{sections.distribution}. Distribution of Assets
+					</Text>
 
 					<Text style={styles.distributionText}>
 						I give, devise, and bequeath my estate as follows:
@@ -552,7 +585,9 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 				{/* Specific Bequests Section */}
 				{data.gifts && data.gifts.length > 0 && (
 					<View style={styles.giftSection}>
-						<Text style={styles.giftTitle}>Specific Bequests</Text>
+						<Text style={styles.giftTitle}>
+							{sections.gifts}. Specific Bequests
+						</Text>
 						<Text style={styles.giftText}>
 							I hereby make the following specific bequests:
 						</Text>
@@ -580,7 +615,9 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 
 				{/* Estate Administration Section */}
 				<View style={styles.distributionSection}>
-					<Text style={styles.distributionTitle}>Administration of Estate</Text>
+					<Text style={styles.distributionTitle}>
+						{sections.administration}. Administration of Estate
+					</Text>
 					<Text style={styles.distributionText}>
 						All the assets that I can dispose of by will are my Estate. My
 						executors may sell all or any of the assets in my Estate as they
@@ -609,7 +646,7 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 					data.residuaryBeneficiaries.length > 0 && (
 						<View style={styles.distributionSection}>
 							<Text style={styles.distributionTitle}>
-								Gifts of my Residuary Estate
+								{sections.residuary}. Gifts of my Residuary Estate
 							</Text>
 
 							<Text style={styles.distributionText}>
@@ -644,7 +681,7 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 
 				<View style={styles.distributionSection}>
 					<Text style={styles.distributionTitle}>
-						Power for beneficiaries to disclaim gifts
+						{sections.disclaimer}. Power for beneficiaries to disclaim gifts
 					</Text>
 					<Text style={styles.distributionText}>
 						Any beneficiary of this will may disclaim any interest in my Estate
@@ -653,7 +690,9 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 				</View>
 
 				<View style={styles.distributionSection}>
-					<Text style={styles.distributionTitle}>Powers for my executors</Text>
+					<Text style={styles.distributionTitle}>
+						{sections.powers}. Powers for my executors
+					</Text>
 					<Text style={styles.distributionText}>
 						My executors may transfer assets in kind from my Estate or from my
 						Residuary Estate to any beneficiary to satisfy (wholly or partly)
@@ -667,7 +706,7 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 
 				<View style={styles.distributionSection}>
 					<Text style={styles.distributionTitle}>
-						Paying and protecting my executors
+						{sections.protection}. Paying and protecting my executors
 					</Text>
 					<Text style={styles.distributionText}>
 						Anyone who is acting as one of my executors in the course of a
@@ -693,7 +732,7 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 
 				<View style={styles.distributionSection}>
 					<Text style={styles.distributionTitle}>
-						Meaning of words used in this will
+						{sections.definitions}. Meaning of words used in this will
 					</Text>
 					<Text style={styles.distributionText}>
 						The rules of interpretation in this clause apply in this will.
@@ -732,7 +771,9 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 
 				{/* Witness Signatures Section */}
 				<View style={styles.witnessSection}>
-					<Text style={styles.witnessTitle}>Witness Signatures</Text>
+					<Text style={styles.witnessTitle}>
+						{sections.witnesses}. Witness Signatures
+					</Text>
 					<Text style={styles.witnessText}>
 						I declare that this is my last will and testament, and I sign it in
 						the presence of the following witnesses, who in my presence and in
