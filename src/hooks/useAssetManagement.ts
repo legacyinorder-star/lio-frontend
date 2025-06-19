@@ -99,7 +99,7 @@ export function useAssetManagement(initialAssets: Asset[] = []) {
 		try {
 			// Fetch assets from API
 			const { data: assetsData, error } = await apiClient<ApiAssetResponse[]>(
-				`/assets?will_id=${activeWill.id}`,
+				`/assets/get-by-will/${activeWill.id}`,
 				{
 					method: "GET",
 				}

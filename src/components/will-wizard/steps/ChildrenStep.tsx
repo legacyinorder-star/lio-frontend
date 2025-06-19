@@ -333,13 +333,19 @@ export default function ChildrenStep({
 							Yes
 						</Button>
 					</div>
-					<div className="flex justify-end mt-6">
+					<div className="flex justify-between mt-6">
 						<Button
 							variant="outline"
 							onClick={onBack}
 							className="cursor-pointer"
 						>
 							<ArrowLeft className="mr-2 h-4 w-4" /> Back
+						</Button>
+						<Button
+							onClick={handleSubmit}
+							className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
+						>
+							Next <ArrowRight className="ml-2 h-4 w-4" />
 						</Button>
 					</div>
 				</>
