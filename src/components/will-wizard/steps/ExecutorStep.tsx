@@ -643,13 +643,49 @@ export default function ExecutorStep({
 					</div>
 				)}
 
+				{/* Validation message for multiple primary executors */}
+				{executors.filter((executor) => executor.isPrimary).length > 1 && (
+					<div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-4">
+						<div className="flex items-start">
+							<div className="flex-shrink-0">
+								<svg
+									className="h-5 w-5 text-yellow-400"
+									viewBox="0 0 20 20"
+									fill="currentColor"
+								>
+									<path
+										fillRule="evenodd"
+										d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+										clipRule="evenodd"
+									/>
+								</svg>
+							</div>
+							<div className="ml-3">
+								<h3 className="text-sm font-medium text-yellow-800">
+									Multiple Primary Executors Selected
+								</h3>
+								<div className="mt-2 text-sm text-yellow-700">
+									<p>
+										You can only have one primary executor. Please uncheck the
+										"Primary Executor" option for all but one executor to
+										continue.
+									</p>
+								</div>
+							</div>
+						</div>
+					</div>
+				)}
+
 				<div className="flex justify-between pt-4">
 					<Button variant="outline" onClick={onBack} className="cursor-pointer">
 						<ArrowLeft className="mr-2 h-4 w-4" /> Back
 					</Button>
 					<Button
 						onClick={onNext}
-						disabled={executors.length === 0}
+						disabled={
+							executors.length === 0 ||
+							executors.filter((executor) => executor.isPrimary).length > 1
+						}
 						className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
 					>
 						Next <ArrowRight className="ml-2 h-4 w-4" />
