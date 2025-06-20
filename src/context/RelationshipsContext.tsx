@@ -1,5 +1,13 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, {
+	createContext,
+	useContext,
+	useState,
+	useEffect,
+	useCallback,
+	useRef,
+} from "react";
 import { apiClient } from "@/utils/apiClient";
+import { useAuth } from "@/hooks/useAuth";
 
 export interface Relationship {
 	id: string;
@@ -13,8 +21,8 @@ interface RelationshipsContextType {
 	refetch: () => Promise<void>;
 }
 
-// Cache configuration
-const CACHE_KEY = "relationships_cache";
+// Cache configuration - DISABLED
+// const CACHE_KEY = "relationships_cache";
 // const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
 // interface CachedRelationships {
@@ -82,34 +90,60 @@ export const RelationshipsProvider: React.FC<{ children: React.ReactNode }> = ({
 	const [relationships, setRelationships] = useState<Relationship[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
+	const { user, isLoading: authLoading } = useAuth();
+	const hasFetchedRef = useRef(false);
 
 	// Generate unique instance ID for debugging
 	const instanceId = Math.random().toString(36).substr(2, 9);
-	console.log(`RelationshipsProvider instance ${instanceId} created`);
+	//console.log(`RelationshipsProvider instance ${instanceId} created`);
 
-	const fetchRelationships = async (_useCache: boolean = true) => {
+	const fetchRelationships = useCallback(async (_useCache: boolean = true) => {
 		console.log(
 			`RelationshipsProvider ${instanceId} - fetchRelationships called`
 		);
+
+		// Prevent multiple fetches
+		if (hasFetchedRef.current) {
+			console.log(
+				`RelationshipsProvider ${instanceId} - Already fetched relationships, skipping`
+			);
+			return;
+		}
+
+		// Wait for authentication to be ready
+		if (authLoading) {
+			console.log(
+				`RelationshipsProvider ${instanceId} - Waiting for authentication to load`
+			);
+			return;
+		}
+
+		// Check if user is authenticated
+		if (!user) {
+			console.log(
+				`RelationshipsProvider ${instanceId} - User not authenticated, using fallback relationships`
+			);
+			const fallbackRelationships: Relationship[] = [
+				{ id: "842e72ff-7175-4461-8580-15f27777d97c", name: "Spouse" },
+				{ id: "e4625b80-7608-4ce6-b573-ca533d8a81fb", name: "Child" },
+				{ id: "34b0dd83-96e6-42c2-bbfe-55b84b05971c", name: "Parent" },
+				{ id: "faccb17f-ebed-4b80-bd4c-3c4b12df4ec9", name: "Sibling" },
+				{ id: "7c0dad85-1f75-451d-9b9c-afa073e5f503", name: "Friend" },
+				//{ id: "charity", name: "Charity" },
+			];
+			setRelationships(fallbackRelationships);
+			setIsLoading(false);
+			hasFetchedRef.current = true;
+			return;
+		}
+
 		try {
 			setIsLoading(true);
 			setError(null);
 
-			// Temporarily disable caching for testing
-			// Try to get from cache first if useCache is true
-			/*
-			if (useCache) {
-				const cachedData = getCachedRelationships();
-				if (cachedData) {
-					setRelationships(cachedData);
-					setIsLoading(false);
-					return;
-				}
-			}
-			*/
-
+			// Caching is completely disabled - always fetch from API
 			console.log(
-				`RelationshipsProvider ${instanceId} - Fetching relationships from API`
+				`RelationshipsProvider ${instanceId} - Fetching relationships from API (caching disabled)`
 			);
 
 			// Debug authentication status
@@ -129,8 +163,10 @@ export const RelationshipsProvider: React.FC<{ children: React.ReactNode }> = ({
 				);
 			}
 
+			// Always make authenticated request - no cache, no fallback
 			const { data, error: apiError } = await apiClient<Relationship[]>(
-				"/relationships"
+				"/relationships",
+				{ authenticated: true } // Explicitly ensure authentication
 			);
 
 			if (apiError) {
@@ -139,7 +175,7 @@ export const RelationshipsProvider: React.FC<{ children: React.ReactNode }> = ({
 					apiError
 				);
 
-				// Fallback to common relationship types if API fails
+				// Only use fallback for authentication issues
 				if (
 					apiError.includes("Authentication required") ||
 					apiError.includes("Unauthorized")
@@ -148,16 +184,15 @@ export const RelationshipsProvider: React.FC<{ children: React.ReactNode }> = ({
 						`RelationshipsProvider ${instanceId} - Using fallback relationships due to authentication issue`
 					);
 					const fallbackRelationships: Relationship[] = [
-						{ id: "spouse", name: "Spouse" },
-						{ id: "child", name: "Child" },
-						{ id: "parent", name: "Parent" },
-						{ id: "sibling", name: "Sibling" },
-						{ id: "friend", name: "Friend" },
-						{ id: "charity", name: "Charity" },
+						{ id: "842e72ff-7175-4461-8580-15f27777d97c", name: "Spouse" },
+						{ id: "e4625b80-7608-4ce6-b573-ca533d8a81fb", name: "Child" },
+						{ id: "34b0dd83-96e6-42c2-bbfe-55b84b05971c", name: "Parent" },
+						{ id: "faccb17f-ebed-4b80-bd4c-3c4b12df4ec9", name: "Sibling" },
+						{ id: "7c0dad85-1f75-451d-9b9c-afa073e5f503", name: "Friend" },
+						//{ id: "charity", name: "Charity" },
 					];
 					setRelationships(fallbackRelationships);
-					// Temporarily disable caching
-					// setCachedRelationships(fallbackRelationships);
+					hasFetchedRef.current = true;
 					return;
 				}
 
@@ -171,13 +206,14 @@ export const RelationshipsProvider: React.FC<{ children: React.ReactNode }> = ({
 					data
 				);
 				setRelationships(data);
-				// Temporarily disable caching
-				// setCachedRelationships(data);
+				// No caching - data is not stored
 			} else {
 				console.error(
 					`RelationshipsProvider ${instanceId} - No data received from relationships API`
 				);
 			}
+
+			hasFetchedRef.current = true;
 		} catch (err) {
 			setError(
 				err instanceof Error ? err.message : "Failed to fetch relationships"
@@ -185,20 +221,32 @@ export const RelationshipsProvider: React.FC<{ children: React.ReactNode }> = ({
 		} finally {
 			setIsLoading(false);
 		}
-	};
+	}, []); // No dependencies to prevent infinite loops
 
 	useEffect(() => {
-		// Clear any existing cache to force fresh API calls
-		localStorage.removeItem(CACHE_KEY);
+		// Caching is disabled - no need to clear cache
 		console.log(
-			`RelationshipsProvider ${instanceId} - Cleared relationships cache from localStorage`
+			`RelationshipsProvider ${instanceId} - Initializing (caching disabled)`
 		);
 
 		fetchRelationships();
-	}, []); // Empty dependency array means this runs once on mount
+	}, []); // Only run once on mount
+
+	// Separate effect for authentication changes
+	useEffect(() => {
+		if (!authLoading) {
+			// Reset the fetch flag when auth state changes
+			hasFetchedRef.current = false;
+			fetchRelationships();
+		}
+	}, [user, authLoading]); // Trigger when user or auth loading state changes
 
 	const refetch = async () => {
-		// Force refetch bypasses cache
+		// Force refetch bypasses cache and fetch prevention
+		console.log(
+			`RelationshipsProvider ${instanceId} - Force refetch requested`
+		);
+		hasFetchedRef.current = false;
 		await fetchRelationships(false);
 	};
 
