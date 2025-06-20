@@ -12,6 +12,7 @@ import { useWillOwnerData } from "@/hooks/useWillOwnerData";
 import { apiClient } from "@/utils/apiClient";
 import { useRelationships } from "@/hooks/useRelationships";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 
 // Import step components
 import NameStep from "./steps/NameStep";
@@ -42,7 +43,11 @@ export default function WillWizard() {
 	// Track the current question being shown
 	const [currentQuestion, setCurrentQuestion] = useState<QuestionType>("name");
 	const { activeWill, setActiveWill } = useWill();
-	const { relationships } = useRelationships();
+	const {
+		relationships,
+		isLoading: relationshipsLoading,
+		error: relationshipsError,
+	} = useRelationships();
 	const {
 		willOwnerData,
 		spouseData,
@@ -181,6 +186,16 @@ export default function WillWizard() {
 		formData.lastName,
 	]);
 
+	// Debug: Log relationships loading state
+	useEffect(() => {
+		console.log("WillWizard - Relationships state:", {
+			count: relationships.length,
+			loading: relationshipsLoading,
+			error: relationshipsError,
+			relationships: relationships.map((r) => ({ id: r.id, name: r.name })),
+		});
+	}, [relationships, relationshipsLoading, relationshipsError]);
+
 	// Handle spouse data saving
 	const handleSpouseDataSave = async (data: {
 		firstName: string;
@@ -193,13 +208,39 @@ export default function WillWizard() {
 			return false;
 		}
 
-		try {
-			// Find the spouse relationship ID
-			const spouseRelationship = relationships.find(
-				(rel) => rel.name.toLowerCase() === "spouse"
+		// Check if relationships are loaded
+		if (!relationships || relationships.length === 0) {
+			toast.error(
+				"Relationships are still loading. Please wait a moment and try again."
 			);
+			return false;
+		}
+
+		try {
+			// Debug: Log all available relationships
+			console.log("Available relationships:", relationships);
+			console.log("Looking for spouse relationship...");
+
+			// Find the spouse relationship ID - try multiple possible names
+			const spouseRelationship = relationships.find((rel) => {
+				const name = rel.name.toLowerCase();
+				return (
+					name === "spouse" ||
+					name === "husband" ||
+					name === "wife" ||
+					name === "partner" ||
+					name === "civil partner" ||
+					name === "spouse/partner"
+				);
+			});
+
+			console.log("Found spouse relationship:", spouseRelationship);
 
 			if (!spouseRelationship) {
+				console.error(
+					"Spouse relationship not found. Available relationships:",
+					relationships.map((r) => ({ id: r.id, name: r.name }))
+				);
 				toast.error("Spouse relationship type not found. Please try again.");
 				return false;
 			}
@@ -498,6 +539,50 @@ export default function WillWizard() {
 
 	// Render different content based on current question
 	const renderQuestion = () => {
+		// Show loading state if relationships are not loaded for spouse step
+		if (currentQuestion === "hasSpouse" && relationshipsLoading) {
+			return (
+				<div className="space-y-4">
+					<div className="text-2xl font-semibold">
+						Are you married or in a legally recognized civil relationship?
+					</div>
+					<div className="text-muted-foreground">
+						Loading relationship types...
+					</div>
+					<div className="flex justify-center py-8">
+						<div className="flex items-center gap-2">
+							<div className="h-4 w-4 animate-spin rounded-full border-t-2 border-b-2 border-black"></div>
+							<span>Loading relationships...</span>
+						</div>
+					</div>
+				</div>
+			);
+		}
+
+		// Show error state if relationships failed to load
+		if (currentQuestion === "hasSpouse" && relationshipsError) {
+			return (
+				<div className="space-y-4">
+					<div className="text-2xl font-semibold text-red-600">
+						Error Loading Relationships
+					</div>
+					<div className="text-muted-foreground">
+						Unable to load relationship types. Please refresh the page and try
+						again.
+					</div>
+					<div className="text-sm text-red-500">
+						Error: {relationshipsError}
+					</div>
+					<Button
+						onClick={() => window.location.reload()}
+						className="bg-red-600 hover:bg-red-700"
+					>
+						Refresh Page
+					</Button>
+				</div>
+			);
+		}
+
 		const commonProps = {
 			data: formData,
 			onUpdate: (data: Partial<WillFormData>) => {

@@ -15,6 +15,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import SpouseDialog, { SpouseData } from "../SpouseDialog";
 import { ArrowLeft, ArrowRight, Edit2, User } from "lucide-react";
 import { toast } from "sonner";
+import { useRelationships } from "@/hooks/useRelationships";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 const spouseSchema = z.object({
 	hasSpouse: z.boolean(),
@@ -51,6 +53,7 @@ export default function SpouseStep({
 		SpouseData | undefined
 	>(spouseData || initialData?.spouse);
 	const [isSubmitting, setIsSubmitting] = useState(false);
+	const { isLoading: relationshipsLoading } = useRelationships();
 
 	// Determine if has spouse based on marital status or existing spouse data
 	const hasSpouseFromData =
@@ -121,6 +124,23 @@ export default function SpouseStep({
 			setIsSubmitting(false);
 		}
 	};
+
+	// Show loading state if relationships are still loading
+	if (relationshipsLoading) {
+		return (
+			<div className="space-y-4">
+				<div className="text-2xl font-semibold">
+					Are you married or in a legally recognized civil relationship?
+				</div>
+				<div className="text-muted-foreground">
+					Loading relationship types...
+				</div>
+				<div className="flex justify-center py-8">
+					<LoadingSpinner message="Loading relationships..." />
+				</div>
+			</div>
+		);
+	}
 
 	return (
 		<div className="space-y-4">

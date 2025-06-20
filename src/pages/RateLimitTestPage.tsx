@@ -8,6 +8,7 @@ import { RateLimitMonitor } from "@/components/ui/rate-limit-monitor";
 import { apiClient } from "@/utils/apiClient";
 import { toast } from "sonner";
 import { Loader2, Send, TestTube } from "lucide-react";
+import { useRelationships } from "@/hooks/useRelationships";
 
 interface TestResult {
 	endpoint: string;
@@ -23,6 +24,13 @@ export default function RateLimitTestPage() {
 	const [isTestingBurst, setIsTestingBurst] = useState(false);
 	const [isTesting, setIsTesting] = useState(false);
 	const [testResults, setTestResults] = useState<TestResult[]>([]);
+	const [isLoading, setIsLoading] = useState(false);
+	const {
+		relationships,
+		isLoading: relationshipsLoading,
+		error: relationshipsError,
+		refetch,
+	} = useRelationships();
 
 	const makeTestRequest = async (endpoint: string): Promise<TestResult> => {
 		const startTime = Date.now();
@@ -121,6 +129,67 @@ export default function RateLimitTestPage() {
 		if (result.status === 429) return "Rate Limited";
 		if (result.status === 0) return "Network Error";
 		return `Error ${result.status}`;
+	};
+
+	const addResult = (message: string) => {
+		setTestResults((prev) => [
+			...prev,
+			{
+				endpoint: message,
+				status: 0,
+				success: true,
+				duration: 0,
+				timestamp: new Date(),
+			},
+		]);
+	};
+
+	const testRelationships = async () => {
+		setIsLoading(true);
+		addResult("Testing relationships API...");
+
+		try {
+			// Test authentication status first
+			const token = localStorage.getItem("authToken");
+			const userDetails = localStorage.getItem("userDetails");
+			addResult(`Auth Token exists: ${!!token}`);
+			addResult(`User Details exist: ${!!userDetails}`);
+
+			if (token) {
+				addResult(`Token length: ${token.length}`);
+				addResult(`Token starts with: ${token.substring(0, 20)}...`);
+			}
+
+			// Test direct API call
+			const { data, error } = await apiClient("/relationships");
+
+			if (error) {
+				addResult(`API Error: ${error}`);
+			} else {
+				addResult(`API Response: ${JSON.stringify(data, null, 2)}`);
+			}
+
+			// Test context data
+			addResult(`Context relationships count: ${relationships.length}`);
+			addResult(
+				`Context relationships: ${JSON.stringify(relationships, null, 2)}`
+			);
+
+			// Test spouse lookup
+			const spouseRelationship = relationships.find(
+				(rel) => rel.name.toLowerCase() === "spouse"
+			);
+			addResult(
+				`Spouse relationship found: ${spouseRelationship ? "YES" : "NO"}`
+			);
+			if (spouseRelationship) {
+				addResult(`Spouse relationship: ${JSON.stringify(spouseRelationship)}`);
+			}
+		} catch (error) {
+			addResult(`Exception: ${error}`);
+		} finally {
+			setIsLoading(false);
+		}
 	};
 
 	return (
@@ -258,6 +327,57 @@ export default function RateLimitTestPage() {
 					</Card>
 				</div>
 			</div>
+
+			<Card className="mt-6">
+				<CardHeader>
+					<CardTitle>Relationships Test</CardTitle>
+				</CardHeader>
+				<CardContent className="space-y-4">
+					<div className="flex gap-2">
+						<Button
+							onClick={testRelationships}
+							disabled={isLoading}
+							className="bg-blue-600 hover:bg-blue-700"
+						>
+							{isLoading ? "Testing..." : "Test Relationships"}
+						</Button>
+						<Button
+							onClick={refetch}
+							disabled={relationshipsLoading}
+							variant="outline"
+						>
+							{relationshipsLoading ? "Refreshing..." : "Refresh Relationships"}
+						</Button>
+						<Button onClick={clearResults} variant="outline">
+							Clear Results
+						</Button>
+					</div>
+
+					<div className="space-y-2">
+						<h3 className="font-semibold">Current Status:</h3>
+						<p>Relationships Loading: {relationshipsLoading ? "Yes" : "No"}</p>
+						<p>Relationships Error: {relationshipsError || "None"}</p>
+						<p>Relationships Count: {relationships.length}</p>
+					</div>
+
+					<div className="space-y-2">
+						<h3 className="font-semibold">Test Results:</h3>
+						<div className="bg-gray-100 p-4 rounded-md max-h-96 overflow-y-auto">
+							{testResults.length === 0 ? (
+								<p className="text-gray-500">
+									No test results yet. Click "Test Relationships" to start.
+								</p>
+							) : (
+								testResults.map((result, index) => (
+									<div key={index} className="text-sm font-mono mb-1">
+										{result.endpoint}
+									</div>
+								))
+							)}
+						</div>
+					</div>
+				</CardContent>
+			</Card>
 		</div>
 	);
 }

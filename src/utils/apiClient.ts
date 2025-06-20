@@ -235,8 +235,17 @@ class RateLimitManager {
 				}
 
 				headers.set("Authorization", `Bearer ${token}`);
+				console.log(
+					`Adding Authorization header for ${endpoint}: Bearer ${token.substring(
+						0,
+						20
+					)}...`
+				);
 			} else {
 				// If authentication is required but no token is available
+				console.error(
+					`No auth token available for authenticated request to ${endpoint}`
+				);
 				handleAuthError(AUTH_ERROR_CODES.UNAUTHORIZED);
 				return {
 					data: null,
@@ -244,6 +253,8 @@ class RateLimitManager {
 					status: 401,
 				};
 			}
+		} else {
+			console.log(`Skipping authentication for ${endpoint}`);
 		}
 
 		// Prepare the request
@@ -252,6 +263,9 @@ class RateLimitManager {
 		try {
 			// Record the request attempt
 			this.recordRequest();
+
+			console.log(`Making request to: ${url}`);
+			console.log(`Request headers:`, Object.fromEntries(headers.entries()));
 
 			const response = await fetch(url, {
 				...fetchOptions,

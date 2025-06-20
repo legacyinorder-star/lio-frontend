@@ -369,7 +369,7 @@ export default function ChildrenStep({
 										setEditingChild(null);
 									}}
 									className="cursor-pointer"
-									disabled={children.length >= 5 || isLoadingChildren}
+									disabled={isLoadingChildren}
 								>
 									<Plus className="mr-2 h-4 w-4" />
 									Add Child
