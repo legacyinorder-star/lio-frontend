@@ -268,10 +268,19 @@ export function useWillData() {
 					return null;
 				}
 
-				// Get the relationship name for display
-				const relationshipName =
-					relationshipResolver.getFormattedRelationshipName(relationshipId) ||
-					"Other";
+				// Get the relationship name for display using the fallback relationships directly
+				const relationship = relationships.find((r) => r.id === relationshipId);
+				const relationshipName = relationship ? relationship.name : "Other";
+
+				console.log("Relationship resolution:", {
+					relationshipId,
+					foundRelationship: relationship,
+					relationshipName,
+					availableRelationships: relationships.map((r) => ({
+						id: r.id,
+						name: r.name,
+					})),
+				});
 
 				// Create new beneficiary
 				const newBeneficiary: EnhancedBeneficiary = {

@@ -212,57 +212,6 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 					</div>
 				</div>
 
-				{/* Beneficiaries */}
-				{data.beneficiaries && data.beneficiaries.length > 0 && (
-					<div className="space-y-4">
-						<h3 className="text-lg font-semibold border-b pb-2">
-							Beneficiaries
-						</h3>
-						<div className="grid gap-4">
-							{data.beneficiaries.map((beneficiary, index) => (
-								<div
-									key={index}
-									className="rounded-lg border border-gray-200 p-4 bg-gray-50"
-								>
-									<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-										<div>
-											<label className="block text-sm font-medium text-gray-700">
-												Name
-											</label>
-											<p className="mt-1 text-gray-900">
-												{beneficiary.fullName}
-											</p>
-										</div>
-										<div>
-											<label className="block text-sm font-medium text-gray-700">
-												Relationship
-											</label>
-											<p className="mt-1 text-gray-900">
-												{beneficiary.relationship}
-											</p>
-										</div>
-										<div>
-											<label className="block text-sm font-medium text-gray-700">
-												Allocation
-											</label>
-											<p className="mt-1 text-gray-900">
-												{beneficiary.allocation}%
-											</p>
-										</div>
-										{beneficiary.requiresGuardian && (
-											<div className="md:col-span-3">
-												<span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-													Requires Guardian
-												</span>
-											</div>
-										)}
-									</div>
-								</div>
-							))}
-						</div>
-					</div>
-				)}
-
 				{/* Guardians */}
 				{data.guardians && data.guardians.length > 0 && (
 					<div className="space-y-4">
@@ -339,14 +288,21 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 													Beneficiaries
 												</label>
 												<div className="mt-1 space-y-1">
-													{asset.beneficiaries.map((beneficiary, idx) => (
-														<p key={idx} className="text-gray-900 text-sm">
-															Beneficiary {idx + 1}:{" "}
-															{beneficiary.percentage
-																? `${beneficiary.percentage}%`
-																: "Equal share"}
-														</p>
-													))}
+													{asset.beneficiaries.map((beneficiary, idx) => {
+														const beneficiaryInfo = data.beneficiaries.find(
+															(b) => b.id === beneficiary.id
+														);
+														return (
+															<p key={idx} className="text-gray-900 text-sm">
+																{beneficiaryInfo?.fullName ||
+																	"Unknown Beneficiary"}
+																:{" "}
+																{beneficiary.percentage
+																	? `${beneficiary.percentage}%`
+																	: "Equal share"}
+															</p>
+														);
+													})}
 												</div>
 											</div>
 										)}

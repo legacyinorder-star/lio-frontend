@@ -304,27 +304,43 @@ export function AssetDialog({
 													</div>
 												) : (
 													<div className="space-y-1">
-														{filteredBeneficiaries.map((beneficiary) => (
-															<DropdownMenuItem
-																key={beneficiary.id}
-																onSelect={() =>
-																	handleSelectBeneficiary(beneficiary.id)
-																}
-																className="cursor-pointer"
-															>
-																{beneficiary.firstName} {beneficiary.lastName} (
-																{beneficiary.relationshipId
+														{filteredBeneficiaries.map((beneficiary) => {
+															const beneficiaryDetails =
+																enhancedBeneficiaries.find(
+																	(b) => b.id === beneficiary.id
+																);
+
+															if (!beneficiaryDetails) return null;
+
+															const relationship =
+																beneficiaryDetails.relationshipId
 																	? getFormattedRelationshipNameById(
 																			relationships,
-																			beneficiary.relationshipId
-																	  ) || beneficiary.relationship
-																	: beneficiary.relationship}
-																)
-																{beneficiary.type === "charity" &&
-																	beneficiary.registrationNumber &&
-																	` - Reg: ${beneficiary.registrationNumber}`}
-															</DropdownMenuItem>
-														))}
+																			beneficiaryDetails.relationshipId
+																	  ) || beneficiaryDetails.relationship
+																	: beneficiaryDetails.relationship;
+
+															return (
+																<DropdownMenuItem
+																	key={beneficiary.id}
+																	onSelect={() =>
+																		handleSelectBeneficiary(beneficiary.id)
+																	}
+																	className="cursor-pointer"
+																>
+																	{beneficiaryDetails.type === "charity"
+																		? beneficiaryDetails.firstName
+																		: `${beneficiaryDetails.firstName} ${beneficiaryDetails.lastName}`}
+																	<span className="text-muted-foreground">
+																		{" "}
+																		({relationship})
+																		{beneficiaryDetails.type === "charity" &&
+																			beneficiaryDetails.registrationNumber &&
+																			` - Reg: ${beneficiaryDetails.registrationNumber}`}
+																	</span>
+																</DropdownMenuItem>
+															);
+														})}
 													</div>
 												)}
 											</div>

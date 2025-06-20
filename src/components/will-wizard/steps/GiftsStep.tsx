@@ -730,27 +730,33 @@ export default function GiftsStep({
 												</div>
 											) : (
 												<div className="space-y-1">
-													{filteredBeneficiaries.map((beneficiary) => (
-														<DropdownMenuItem
-															key={beneficiary.id}
-															onSelect={() =>
-																handleSelectBeneficiary(beneficiary.id)
-															}
-															className="cursor-pointer"
-														>
-															{beneficiary.firstName} {beneficiary.lastName} (
-															{beneficiary.relationshipId
-																? getFormattedRelationshipNameById(
-																		relationships,
-																		beneficiary.relationshipId
-																  ) || beneficiary.relationship
-																: beneficiary.relationship}
-															)
-															{beneficiary.type === "charity" &&
-																beneficiary.registrationNumber &&
-																` - Reg: ${beneficiary.registrationNumber}`}
-														</DropdownMenuItem>
-													))}
+													{filteredBeneficiaries.map((beneficiary) => {
+														const relationshipId = beneficiary.relationshipId;
+														const relationship = beneficiary.relationship;
+
+														const formattedName = relationshipId
+															? getFormattedRelationshipNameById(
+																	relationships,
+																	relationshipId
+															  ) || relationship
+															: relationship;
+
+														return (
+															<DropdownMenuItem
+																key={beneficiary.id}
+																onSelect={() =>
+																	handleSelectBeneficiary(beneficiary.id)
+																}
+																className="cursor-pointer"
+															>
+																{beneficiary.firstName} {beneficiary.lastName} (
+																{formattedName})
+																{beneficiary.type === "charity" &&
+																	beneficiary.registrationNumber &&
+																	` - Reg: ${beneficiary.registrationNumber}`}
+															</DropdownMenuItem>
+														);
+													})}
 												</div>
 											)}
 										</div>
