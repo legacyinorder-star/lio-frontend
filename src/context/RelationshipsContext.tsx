@@ -15,59 +15,59 @@ interface RelationshipsContextType {
 
 // Cache configuration
 const CACHE_KEY = "relationships_cache";
-const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+// const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
-interface CachedRelationships {
-	data: Relationship[];
-	timestamp: number;
-}
+// interface CachedRelationships {
+// 	data: Relationship[];
+// 	timestamp: number;
+// }
 
 // Cache utility functions
-const _getCachedRelationships = (): Relationship[] | null => {
-	console.log("_getCachedRelationships called at:", new Date().toISOString());
-	try {
-		const cached = localStorage.getItem(CACHE_KEY);
-		if (!cached) {
-			console.log("No cached relationships found");
-			return null;
-		}
+// const _getCachedRelationships = (): Relationship[] | null => {
+// 	console.log("_getCachedRelationships called at:", new Date().toISOString());
+// 	try {
+// 		const cached = localStorage.getItem(CACHE_KEY);
+// 		if (!cached) {
+// 			console.log("No cached relationships found");
+// 			return null;
+// 		}
 
-		const parsedCache: CachedRelationships = JSON.parse(cached);
-		const now = Date.now();
+// 		const parsedCache: CachedRelationships = JSON.parse(cached);
+// 		const now = Date.now();
 
-		// Check if cache is still valid
-		if (now - parsedCache.timestamp < CACHE_DURATION) {
-			console.log(
-				"Using cached relationships data at",
-				new Date().toISOString() + ":",
-				parsedCache.data
-			);
-			return parsedCache.data;
-		} else {
-			// Cache expired, remove it
-			localStorage.removeItem(CACHE_KEY);
-			console.log("Relationships cache expired, removing");
-			return null;
-		}
-	} catch (error) {
-		console.error("Error reading relationships cache:", error);
-		localStorage.removeItem(CACHE_KEY);
-		return null;
-	}
-};
+// 		// Check if cache is still valid
+// 		if (now - parsedCache.timestamp < CACHE_DURATION) {
+// 			console.log(
+// 				"Using cached relationships data at",
+// 				new Date().toISOString() + ":",
+// 				parsedCache.data
+// 			);
+// 			return parsedCache.data;
+// 		} else {
+// 			// Cache expired, remove it
+// 			localStorage.removeItem(CACHE_KEY);
+// 			console.log("Relationships cache expired, removing");
+// 			return null;
+// 		}
+// 	} catch (error) {
+// 		console.error("Error reading relationships cache:", error);
+// 		localStorage.removeItem(CACHE_KEY);
+// 		return null;
+// 	}
+// };
 
-const _setCachedRelationships = (relationships: Relationship[]): void => {
-	try {
-		const cacheData: CachedRelationships = {
-			data: relationships,
-			timestamp: Date.now(),
-		};
-		localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
-		console.log("Cached relationships data");
-	} catch (error) {
-		console.error("Error caching relationships:", error);
-	}
-};
+// const _setCachedRelationships = (relationships: Relationship[]): void => {
+// 	try {
+// 		const cacheData: CachedRelationships = {
+// 			data: relationships,
+// 			timestamp: Date.now(),
+// 		};
+// 		localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
+// 		console.log("Cached relationships data");
+// 	} catch (error) {
+// 		console.error("Error caching relationships:", error);
+// 	}
+// };
 
 const RelationshipsContext = createContext<RelationshipsContextType>({
 	relationships: [],
