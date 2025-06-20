@@ -59,7 +59,11 @@ export default function ChildrenStep({
 	initialData,
 }: ChildrenStepProps) {
 	const { activeWill, setActiveWill } = useWill();
-	const { relationships } = useRelationships();
+	const {
+		relationships,
+		isLoading: relationshipsLoading,
+		error: relationshipsError,
+	} = useRelationships();
 	const [hasChildren, setHasChildren] = useState(
 		initialData?.hasChildren ?? false
 	);
@@ -167,6 +171,14 @@ export default function ChildrenStep({
 			return;
 		}
 
+		// Check if relationships are loaded
+		if (!relationships || relationships.length === 0) {
+			toast.error(
+				"Relationships are still loading. Please wait a moment and try again."
+			);
+			return;
+		}
+
 		setIsSubmitting(true);
 
 		try {
@@ -179,11 +191,18 @@ export default function ChildrenStep({
 			}
 
 			// Find the child relationship ID
+			console.log("Available relationships for child lookup:", relationships);
 			const childRelationship = relationships.find(
 				(rel) => rel.name.toLowerCase() === "child"
 			);
 
+			console.log("Found child relationship:", childRelationship);
+
 			if (!childRelationship) {
+				console.error(
+					"Child relationship not found. Available relationships:",
+					relationships.map((r) => ({ id: r.id, name: r.name }))
+				);
 				toast.error("Child relationship type not found. Please try again.");
 				return;
 			}
@@ -369,7 +388,7 @@ export default function ChildrenStep({
 										setEditingChild(null);
 									}}
 									className="cursor-pointer"
-									disabled={isLoadingChildren}
+									disabled={isLoadingChildren || relationshipsLoading}
 								>
 									<Plus className="mr-2 h-4 w-4" />
 									Add Child
@@ -455,12 +474,25 @@ export default function ChildrenStep({
 						</Dialog>
 					</div>
 
-					{isLoadingChildren ? (
+					{isLoadingChildren || relationshipsLoading ? (
 						<div className="flex items-center justify-center py-8">
 							<div className="flex flex-col items-center gap-4">
 								<div className="h-8 w-8 animate-spin rounded-full border-t-2 border-b-2 border-primary"></div>
-								<p className="text-muted-foreground">Loading children...</p>
+								<p className="text-muted-foreground">
+									{isLoadingChildren
+										? "Loading children..."
+										: "Loading relationships..."}
+								</p>
 							</div>
+						</div>
+					) : relationshipsError ? (
+						<div className="text-center py-4">
+							<p className="text-red-500">
+								Error loading relationships: {relationshipsError}
+							</p>
+							<p className="text-sm text-muted-foreground mt-2">
+								Please refresh the page and try again.
+							</p>
 						</div>
 					) : children.length === 0 ? (
 						<p className="text-muted-foreground text-center py-4">
