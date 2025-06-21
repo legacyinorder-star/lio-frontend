@@ -99,15 +99,17 @@ export default function GuardiansStep({
 			}
 
 			if (apiData && apiData.length > 0) {
-				// Transform API response to Guardian format
-				const loadedGuardians: Guardian[] = apiData.map((guardianship) => ({
-					id: guardianship.person.id,
-					firstName: guardianship.person.first_name,
-					lastName: guardianship.person.last_name,
-					relationship: guardianship.person.relationship_id,
-					isPrimary: guardianship.is_primary,
-					guardianshipId: guardianship.id, // Store guardianship record ID
-				}));
+				// Filter out guardianships with missing person data
+				const loadedGuardians: Guardian[] = apiData
+					.filter((guardianship) => guardianship.person)
+					.map((guardianship) => ({
+						id: guardianship.person.id,
+						firstName: guardianship.person.first_name,
+						lastName: guardianship.person.last_name,
+						relationship: guardianship.person.relationship_id,
+						isPrimary: guardianship.is_primary,
+						guardianshipId: guardianship.id, // Store guardianship record ID
+					}));
 
 				onUpdate({ guardians: loadedGuardians });
 				updateActiveWillGuardians(loadedGuardians);
