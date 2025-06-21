@@ -789,17 +789,44 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 						<Text style={styles.witnessDate}>Date: _________________</Text>
 					</View>
 
-					{/* Witness Signatures */}
-					{data.witnesses.map((witness, index) => (
-						<View key={index} style={styles.witnessSignature}>
-							<View style={styles.signatureLine} />
-							<Text style={styles.witnessName}>
-								{witness.fullName} (Witness)
-							</Text>
-							<Text style={styles.witnessAddress}>{witness.address}</Text>
-							<Text style={styles.witnessDate}>Date: _________________</Text>
-						</View>
-					))}
+					{/* Witness Signatures - Always show at least 2 witness signature lines */}
+					{data.witnesses && data.witnesses.length > 0 ? (
+						// Show existing witnesses if available
+						data.witnesses.map((witness, index) => (
+							<View key={index} style={styles.witnessSignature}>
+								<View style={styles.signatureLine} />
+								<Text style={styles.witnessName}>
+									{witness.fullName} (Witness)
+								</Text>
+								<Text style={styles.witnessAddress}>{witness.address}</Text>
+								<Text style={styles.witnessDate}>Date: _________________</Text>
+							</View>
+						))
+					) : (
+						// Show empty signature lines for manual completion
+						<>
+							<View style={styles.witnessSignature}>
+								<View style={styles.signatureLine} />
+								<Text style={styles.witnessName}>
+									Witness 1 Name: _________________ (Witness)
+								</Text>
+								<Text style={styles.witnessAddress}>
+									Address: _________________________________________
+								</Text>
+								<Text style={styles.witnessDate}>Date: _________________</Text>
+							</View>
+							<View style={styles.witnessSignature}>
+								<View style={styles.signatureLine} />
+								<Text style={styles.witnessName}>
+									Witness 2 Name: _________________ (Witness)
+								</Text>
+								<Text style={styles.witnessAddress}>
+									Address: _________________________________________
+								</Text>
+								<Text style={styles.witnessDate}>Date: _________________</Text>
+							</View>
+						</>
+					)}
 
 					<Text style={styles.witnessText}>
 						Signed by the testator in our presence and then by us in the

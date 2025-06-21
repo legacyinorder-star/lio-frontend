@@ -5,11 +5,9 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, CreditCard } from "lucide-react";
 import { PaymentService } from "@/services/paymentService";
 import { downloadWillPDF } from "@/utils/willDownload";
-import { useWill } from "@/context/WillContext";
-import { useWillData } from "@/hooks/useWillData";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { apiClient } from "@/utils/apiClient";
-import { mapWillDataFromAPI } from "@/utils/dataTransform";
+import { getFormattedRelationshipNameById } from "@/utils/relationships";
 
 export interface ReviewStepProps {
 	data?: {
@@ -26,6 +24,7 @@ export interface ReviewStepProps {
 				id: string;
 				percentage?: number;
 				beneficiaryName?: string;
+				relationship?: string;
 			}>;
 		}>;
 		beneficiaries: Array<{
@@ -77,6 +76,154 @@ export interface ReviewStepHandle {
 	isSaving: boolean;
 }
 
+// API Response interfaces
+interface WillOwnerApiResponse {
+	id: string;
+	will_id: string;
+	first_name: string;
+	last_name: string;
+	marital_status: string;
+	address: string;
+	city: string;
+	state: string;
+	post_code: string;
+	country: string;
+}
+
+interface GuardianApiResponse {
+	id: string;
+	will_id: string;
+	guardian_id: string;
+	is_primary: boolean;
+	guardian: {
+		id: string;
+		first_name: string;
+		last_name: string;
+		relationship: string;
+	};
+}
+
+interface AssetApiResponse {
+	id: string;
+	will_id: string;
+	asset_type: string;
+	description: string;
+	distribution_type: "equal" | "percentage";
+	beneficiaries: Array<{
+		id: string;
+		percentage: number;
+		people_id?: string;
+		charities_id?: string;
+		person?: {
+			id: string;
+			first_name: string;
+			last_name: string;
+			relationship_id: string;
+		};
+		charity?: {
+			id: string;
+			name: string;
+			rc_number?: string;
+		};
+	}>;
+}
+
+interface GiftApiResponse {
+	id: string;
+	will_id: string;
+	type: string;
+	description: string;
+	value?: number;
+	currency?: string;
+	people_id?: string;
+	charities_id?: string;
+	person?: {
+		id: string;
+		first_name: string;
+		last_name: string;
+		relationship_id: string;
+	};
+	charity?: {
+		id: string;
+		name: string;
+		rc_number?: string;
+	};
+}
+
+interface ResiduaryApiResponse {
+	id: string;
+	will_id: string;
+	distribution_type: "equal" | "manual";
+	beneficiaries: Array<{
+		id: string;
+		percentage: number;
+		people_id?: string;
+		charities_id?: string;
+		person?: {
+			id: string;
+			first_name: string;
+			last_name: string;
+			relationship_id: string;
+		};
+		charity?: {
+			id: string;
+			name: string;
+			rc_number?: string;
+		};
+	}>;
+}
+
+interface ExecutorApiResponse {
+	id: string;
+	will_id: string;
+	type: "individual" | "corporate";
+	first_name?: string;
+	last_name?: string;
+	company_name?: string;
+	relationship?: string;
+	is_primary: boolean;
+	address: string;
+	city: string;
+	state: string;
+	post_code: string;
+	country: string;
+	email: string;
+	phone: string;
+}
+
+interface WitnessApiResponse {
+	id: string;
+	will_id: string;
+	first_name: string;
+	last_name: string;
+	address: string;
+	city: string;
+	state: string;
+	post_code: string;
+	country: string;
+}
+
+interface FuneralInstructionsApiResponse {
+	id: string;
+	will_id: string;
+	instructions: string;
+}
+
+interface BeneficiaryApiResponse {
+	charities: Array<{
+		id: string;
+		name: string;
+		rc_number?: string;
+	}>;
+	people: Array<{
+		id: string;
+		first_name: string;
+		last_name: string;
+		relationship_id: string;
+		is_minor: boolean;
+	}>;
+}
+
 const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 	({ data: propData, onBack }, ref) => {
 		const [isSaving, setIsSaving] = useState(false);
@@ -87,154 +234,301 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 		const navigate = useNavigate();
 		const [_willId, setWillId] = useState<string>("");
 
-		const { activeWill, setActiveWill } = useWill();
-		const {
-			allBeneficiaries,
-			isLoading: isLoadingBeneficiaries,
-			isReady: isBeneficiariesReady,
-		} = useWillData();
-
-		// Load active will from API on page load
-		const loadActiveWill = async () => {
+		// Load active will ID first
+		const loadActiveWillId = async () => {
 			try {
 				const { data, error } = await apiClient("/wills/get-user-active-will");
 
 				if (error) {
 					console.error("Error loading active will:", error);
 					toast.error("Failed to load will data");
-					return;
+					return null;
 				}
 
 				// Handle both array and single object responses
 				const willData = Array.isArray(data) ? data[0] : data;
-				if (willData) {
-					// Transform API data to camelCase format
-					const transformedWillData = mapWillDataFromAPI(willData);
-					setActiveWill(transformedWillData);
+				if (willData && willData.id) {
+					return willData.id;
 				}
+				return null;
 			} catch (error) {
 				console.error("Error loading active will:", error);
 				toast.error("Failed to load will data");
+				return null;
 			}
 		};
 
-		// Transform activeWill data to review format
-		const transformWillDataToReviewFormat = () => {
-			if (!activeWill) return null;
+		// Load all data from API
+		const loadAllData = async (willId: string) => {
+			try {
+				// Load all data in parallel
+				const [
+					ownerResponse,
+					guardiansResponse,
+					assetsResponse,
+					giftsResponse,
+					residuaryResponse,
+					executorsResponse,
+					witnessesResponse,
+					funeralInstructionsResponse,
+					beneficiariesResponse,
+				] = await Promise.allSettled([
+					apiClient<WillOwnerApiResponse>(`/will_owner/get-by-will/${willId}`),
+					apiClient<GuardianApiResponse[]>(
+						`/guardianship/get-by-will/${willId}`
+					),
+					apiClient<AssetApiResponse[]>(`/assets/get-by-will/${willId}`),
+					apiClient<GiftApiResponse[]>(`/gifts/get-by-will/${willId}`),
+					apiClient<ResiduaryApiResponse>(`/residuary/get-by-will/${willId}`),
+					apiClient<ExecutorApiResponse[]>(`/executors/get-by-will/${willId}`),
+					apiClient<WitnessApiResponse[]>(`/witnesses/get-by-will/${willId}`),
+					apiClient<FuneralInstructionsApiResponse>(
+						`/funeral_instructions/get-by-will/${willId}`
+					),
+					apiClient<BeneficiaryApiResponse>(`/beneficiaries/${willId}`),
+				]);
 
-			// Transform beneficiaries from allBeneficiaries
-			const beneficiaries = allBeneficiaries.map((beneficiary) => ({
-				id: beneficiary.id,
-				fullName:
-					beneficiary.type === "charity"
-						? beneficiary.firstName
-						: `${beneficiary.firstName} ${beneficiary.lastName}`,
-				relationship: beneficiary.relationship,
-				allocation: 0, // This will be calculated from assets/residuary
-				requiresGuardian: beneficiary.isMinor || false,
-			}));
-
-			// Transform assets with proper beneficiary name resolution
-			const assets = activeWill.assets.map((asset) => ({
-				type: asset.assetType,
-				description: asset.description,
-				distributionType: asset.distributionType,
-				beneficiaries: asset.beneficiaries.map((beneficiary) => {
-					// Find the beneficiary details from allBeneficiaries
-					const beneficiaryDetails = allBeneficiaries.find(
-						(b) =>
-							b.id ===
-							(beneficiary.peopleId ||
-								beneficiary.charitiesId ||
-								beneficiary.id)
-					);
-
-					return {
-						id:
-							beneficiary.peopleId || beneficiary.charitiesId || beneficiary.id,
-						percentage: beneficiary.percentage,
-						// Add beneficiary name for display
-						beneficiaryName: beneficiaryDetails
-							? beneficiaryDetails.type === "charity"
-								? beneficiaryDetails.firstName
-								: `${beneficiaryDetails.firstName} ${beneficiaryDetails.lastName}`
-							: "Unknown Beneficiary",
+				// Process owner data
+				let personal = null;
+				if (ownerResponse.status === "fulfilled" && ownerResponse.value.data) {
+					const owner = ownerResponse.value.data;
+					personal = {
+						fullName: `${owner.first_name} ${owner.last_name}`,
+						address: `${owner.address}, ${owner.city}, ${owner.state} ${owner.post_code}, ${owner.country}`,
+						maritalStatus: owner.marital_status,
 					};
-				}),
-			}));
+				}
 
-			// Transform gifts with proper beneficiary name resolution
-			const gifts = activeWill.gifts.map((gift) => {
-				const beneficiary = allBeneficiaries.find(
-					(b) => b.id === (gift.peopleId || gift.charitiesId)
-				);
-				return {
-					type: gift.type,
-					description: gift.description,
-					value: gift.value?.toString(),
-					beneficiaryId: gift.peopleId || gift.charitiesId || "",
-					beneficiaryName: beneficiary
-						? beneficiary.type === "charity"
-							? beneficiary.firstName
-							: `${beneficiary.firstName} ${beneficiary.lastName}`
-						: "Unknown Beneficiary",
-				};
-			});
+				// Process guardians
+				let guardians: Array<{
+					fullName: string;
+					relationship: string;
+					isPrimary: boolean;
+				}> = [];
+				if (
+					guardiansResponse.status === "fulfilled" &&
+					guardiansResponse.value.data
+				) {
+					guardians = guardiansResponse.value.data.map((guardian) => ({
+						fullName: `${guardian.guardian.first_name} ${guardian.guardian.last_name}`,
+						relationship: getFormattedRelationshipNameById(
+							guardian.guardian.relationship
+						),
+						isPrimary: guardian.is_primary,
+					}));
+				}
 
-			// Transform executors
-			const executors = activeWill.executors.map((executor) => ({
-				fullName:
-					executor.type === "individual"
-						? `${executor.firstName || ""} ${executor.lastName || ""}`.trim()
-						: undefined,
-				companyName:
-					executor.type === "corporate" ? executor.companyName : undefined,
-				relationship: executor.relationship,
-				isPrimary: executor.isPrimary,
-				type: executor.type,
-				registrationNumber: undefined, // Not available in WillExecutor interface
-			}));
+				// Process assets
+				let assets: Array<{
+					type: string;
+					description: string;
+					distributionType: "equal" | "percentage";
+					beneficiaries: Array<{
+						id: string;
+						percentage?: number;
+						beneficiaryName?: string;
+						relationship?: string;
+					}>;
+				}> = [];
+				if (
+					assetsResponse.status === "fulfilled" &&
+					assetsResponse.value.data
+				) {
+					assets = assetsResponse.value.data.map((asset) => ({
+						type: asset.asset_type,
+						description: asset.description,
+						distributionType: asset.distribution_type,
+						beneficiaries: asset.beneficiaries.map((beneficiary) => {
+							let beneficiaryName = "Unknown Beneficiary";
+							let relationship = "Unknown";
 
-			// Transform witnesses
-			const witnesses = activeWill.witnesses.map((witness) => ({
-				fullName: `${witness.firstName} ${witness.lastName}`,
-				address: `${witness.address.address}, ${witness.address.city}, ${witness.address.state} ${witness.address.postCode}, ${witness.address.country}`,
-			}));
+							if (beneficiary.person) {
+								beneficiaryName = `${beneficiary.person.first_name} ${beneficiary.person.last_name}`;
+								relationship = getFormattedRelationshipNameById(
+									beneficiary.person.relationship_id
+								);
+							} else if (beneficiary.charity) {
+								beneficiaryName = beneficiary.charity.name;
+								relationship = "Charity";
+							}
 
-			// Transform guardians
-			const guardians =
-				activeWill.guardians?.map((guardian) => ({
-					fullName: `${guardian.firstName} ${guardian.lastName}`,
-					relationship: guardian.relationship,
-					isPrimary: guardian.isPrimary,
-				})) || [];
+							return {
+								id: beneficiary.id,
+								percentage: beneficiary.percentage,
+								beneficiaryName,
+								relationship,
+							};
+						}),
+					}));
+				}
 
-			// Transform residuary beneficiaries
-			const residuaryBeneficiaries =
-				activeWill.residuary?.beneficiaries.map((residuary) => ({
-					id: residuary.id,
-					beneficiaryId: residuary.peopleId || residuary.charitiesId || "",
-					percentage: residuary.percentage,
-				})) || [];
+				// Process gifts
+				let gifts: Array<{
+					type: string;
+					description: string;
+					value?: string;
+					beneficiaryId: string;
+					beneficiaryName: string;
+				}> = [];
+				if (giftsResponse.status === "fulfilled" && giftsResponse.value.data) {
+					gifts = giftsResponse.value.data.map((gift) => {
+						let beneficiaryName = "Unknown Beneficiary";
+						if (gift.person) {
+							beneficiaryName = `${gift.person.first_name} ${gift.person.last_name}`;
+						} else if (gift.charity) {
+							beneficiaryName = gift.charity.name;
+						}
+						return {
+							type: gift.type,
+							description: gift.description,
+							value: gift.value?.toString(),
+							beneficiaryId: gift.people_id || gift.charities_id || "",
+							beneficiaryName,
+						};
+					});
+				}
 
-			return {
-				personal: {
-					fullName: `${activeWill.owner.firstName} ${activeWill.owner.lastName}`,
-					address: `${activeWill.owner.address}, ${activeWill.owner.city}, ${activeWill.owner.state} ${activeWill.owner.postCode}, ${activeWill.owner.country}`,
-					maritalStatus: activeWill.owner.maritalStatus,
-				},
-				assets,
-				beneficiaries,
-				executors,
-				witnesses,
-				guardians,
-				gifts,
-				residuaryBeneficiaries,
-				funeralInstructions: undefined, // Not available in WillData interface
-			};
+				// Process residuary beneficiaries
+				let residuaryBeneficiaries: Array<{
+					id: string;
+					beneficiaryId: string;
+					percentage: number;
+				}> = [];
+				if (
+					residuaryResponse.status === "fulfilled" &&
+					residuaryResponse.value.data
+				) {
+					residuaryBeneficiaries =
+						residuaryResponse.value.data.beneficiaries.map((beneficiary) => ({
+							id: beneficiary.id,
+							beneficiaryId:
+								beneficiary.people_id || beneficiary.charities_id || "",
+							percentage: beneficiary.percentage,
+						}));
+				}
+
+				// Process executors
+				let executors: Array<{
+					fullName?: string;
+					companyName?: string;
+					relationship?: string;
+					isPrimary: boolean;
+					type: "individual" | "corporate";
+					registrationNumber?: string;
+				}> = [];
+				if (
+					executorsResponse.status === "fulfilled" &&
+					executorsResponse.value.data
+				) {
+					executors = executorsResponse.value.data.map((executor) => ({
+						fullName:
+							executor.type === "individual"
+								? `${executor.first_name || ""} ${
+										executor.last_name || ""
+								  }`.trim()
+								: undefined,
+						companyName:
+							executor.type === "corporate" ? executor.company_name : undefined,
+						relationship: executor.relationship,
+						isPrimary: executor.is_primary,
+						type: executor.type,
+						registrationNumber: undefined,
+					}));
+				}
+
+				// Process witnesses
+				let witnesses: Array<{
+					fullName: string;
+					address: string;
+				}> = [];
+				if (
+					witnessesResponse.status === "fulfilled" &&
+					witnessesResponse.value.data
+				) {
+					witnesses = witnessesResponse.value.data.map((witness) => ({
+						fullName: `${witness.first_name} ${witness.last_name}`,
+						address: `${witness.address}, ${witness.city}, ${witness.state} ${witness.post_code}, ${witness.country}`,
+					}));
+				}
+
+				// Process funeral instructions
+				let funeralInstructions: { instructions: string } | undefined =
+					undefined;
+				if (
+					funeralInstructionsResponse.status === "fulfilled" &&
+					funeralInstructionsResponse.value.data
+				) {
+					funeralInstructions = {
+						instructions: funeralInstructionsResponse.value.data.instructions,
+					};
+				}
+
+				// Process beneficiaries for residuary display
+				const beneficiaries: Array<{
+					id: string;
+					fullName: string;
+					relationship: string;
+					allocation: number;
+					requiresGuardian?: boolean;
+				}> = [];
+				if (
+					beneficiariesResponse.status === "fulfilled" &&
+					beneficiariesResponse.value.data
+				) {
+					const beneficiariesData = beneficiariesResponse.value.data;
+
+					// Add charities
+					beneficiariesData.charities.forEach((charity) => {
+						beneficiaries.push({
+							id: charity.id,
+							fullName: charity.name,
+							relationship: "Charity",
+							allocation: 0,
+						});
+					});
+
+					// Add people
+					beneficiariesData.people.forEach((person) => {
+						const relationshipName =
+							getFormattedRelationshipNameById(person.relationship_id) ||
+							"Other";
+						beneficiaries.push({
+							id: person.id,
+							fullName: `${person.first_name} ${person.last_name}`,
+							relationship: relationshipName,
+							allocation: 0,
+							requiresGuardian: person.is_minor,
+						});
+					});
+				}
+
+				// Combine all data - only set if we have personal data
+				if (personal) {
+					const combinedData = {
+						personal,
+						assets,
+						beneficiaries,
+						executors,
+						witnesses,
+						guardians,
+						gifts,
+						residuaryBeneficiaries,
+						funeralInstructions,
+					};
+
+					setReviewData(combinedData);
+				} else {
+					toast.error("Failed to load personal information");
+				}
+			} catch (error) {
+				console.error("Error loading data:", error);
+				toast.error("Failed to load will data");
+			} finally {
+				setIsLoading(false);
+			}
 		};
 
-		// Load and transform data on component mount
+		// Load data on component mount
 		useEffect(() => {
 			const loadData = async () => {
 				setIsLoading(true);
@@ -246,31 +540,18 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 					return;
 				}
 
-				// Load active will from API first
-				await loadActiveWill();
-
-				// Wait for beneficiaries to be ready
-				if (!isBeneficiariesReady || isLoadingBeneficiaries) {
-					return;
+				// Load active will ID first
+				const willId = await loadActiveWillId();
+				if (willId) {
+					// Load all data using the will ID
+					await loadAllData(willId);
+				} else {
+					setIsLoading(false);
 				}
-
-				// Transform activeWill data
-				const transformedData = transformWillDataToReviewFormat();
-				if (transformedData) {
-					setReviewData(transformedData);
-				}
-
-				setIsLoading(false);
 			};
 
 			loadData();
-		}, [
-			activeWill,
-			allBeneficiaries,
-			isBeneficiariesReady,
-			isLoadingBeneficiaries,
-			propData,
-		]);
+		}, [propData]);
 
 		const saveWillToLocalStorage = () => {
 			try {
@@ -334,7 +615,7 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 		const handleProceedToPayment = async () => {
 			try {
 				// First, save the will data to ensure we have a will ID
-				if (!reviewData?.personal.fullName) {
+				if (!reviewData?.personal?.fullName) {
 					toast.error(
 						"Please complete all required information before proceeding to payment"
 					);
@@ -392,37 +673,39 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 				</div>
 
 				{/* Personal Information */}
-				<div className="space-y-4">
-					<h3 className="text-lg font-semibold border-b pb-2">
-						Personal Information
-					</h3>
-					<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-						<div>
-							<label className="block text-sm font-medium text-gray-700">
-								Full Name
-							</label>
-							<p className="mt-1 text-gray-900">
-								{reviewData.personal.fullName}
-							</p>
-						</div>
-						<div>
-							<label className="block text-sm font-medium text-gray-700">
-								Marital Status
-							</label>
-							<p className="mt-1 text-gray-900">
-								{reviewData.personal.maritalStatus}
-							</p>
-						</div>
-						<div className="md:col-span-2">
-							<label className="block text-sm font-medium text-gray-700">
-								Address
-							</label>
-							<p className="mt-1 text-gray-900">
-								{reviewData.personal.address}
-							</p>
+				{reviewData.personal && (
+					<div className="space-y-4">
+						<h3 className="text-lg font-semibold border-b pb-2">
+							Personal Information
+						</h3>
+						<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+							<div>
+								<label className="block text-sm font-medium text-gray-700">
+									Full Name
+								</label>
+								<p className="mt-1 text-gray-900">
+									{reviewData.personal.fullName}
+								</p>
+							</div>
+							<div>
+								<label className="block text-sm font-medium text-gray-700">
+									Marital Status
+								</label>
+								<p className="mt-1 text-gray-900">
+									{reviewData.personal.maritalStatus}
+								</p>
+							</div>
+							<div className="md:col-span-2">
+								<label className="block text-sm font-medium text-gray-700">
+									Address
+								</label>
+								<p className="mt-1 text-gray-900">
+									{reviewData.personal.address}
+								</p>
+							</div>
 						</div>
 					</div>
-				</div>
+				)}
 
 				{/* Guardians */}
 				{reviewData.guardians && reviewData.guardians.length > 0 && (
@@ -499,25 +782,23 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 												<label className="block text-sm font-medium text-gray-700">
 													Beneficiaries
 												</label>
-												<div className="mt-1 space-y-1">
-													{asset.beneficiaries.map((beneficiary, idx) => {
-														// Use the beneficiaryName from the transformed data
-														const beneficiaryName =
-															beneficiary.beneficiaryName ||
-															reviewData.beneficiaries.find(
-																(b) => b.id === beneficiary.id
-															)?.fullName ||
-															"Unknown Beneficiary";
-
-														return (
-															<p key={idx} className="text-gray-900 text-sm">
-																{beneficiaryName}:{" "}
+												<div className="mt-1 space-y-2">
+													{asset.beneficiaries.map((beneficiary, idx) => (
+														<div
+															key={idx}
+															className="text-gray-900 text-sm border-l-2 border-gray-200 pl-3"
+														>
+															<div className="font-medium">
+																{beneficiary.beneficiaryName}
+															</div>
+															<div className="text-gray-600 text-xs">
+																{beneficiary.relationship} •{" "}
 																{beneficiary.percentage
 																	? `${beneficiary.percentage}%`
 																	: "Equal share"}
-															</p>
-														);
-													})}
+															</div>
+														</div>
+													))}
 												</div>
 											</div>
 										)}
@@ -696,6 +977,23 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 									</div>
 								</div>
 							))}
+						</div>
+					</div>
+				)}
+
+				{/* Funeral Instructions */}
+				{reviewData.funeralInstructions && (
+					<div className="space-y-4">
+						<h3 className="text-lg font-semibold border-b pb-2">
+							Funeral Instructions
+						</h3>
+						<div className="rounded-lg border border-gray-200 p-4 bg-gray-50">
+							<label className="block text-sm font-medium text-gray-700">
+								Instructions
+							</label>
+							<p className="mt-1 text-gray-900">
+								{reviewData.funeralInstructions.instructions}
+							</p>
 						</div>
 					</div>
 				)}

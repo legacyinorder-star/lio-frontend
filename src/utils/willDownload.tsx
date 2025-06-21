@@ -2,6 +2,8 @@ import { toast } from "sonner";
 import { pdf } from "@react-pdf/renderer";
 import WillPDF from "@/components/will-wizard/WillPDF";
 import { type WillData } from "@/context/WillContext";
+import { apiClient } from "@/utils/apiClient";
+import { getFormattedRelationshipNameById } from "@/utils/relationships";
 
 interface SavedWill {
 	id: string;
@@ -77,6 +79,33 @@ interface DownloadWillOptions {
 	activeWill?: WillData | null;
 	willId?: string;
 	searchParams?: URLSearchParams;
+}
+
+// Define AssetApiResponse and BeneficiaryApiResponse types for asset fetching
+interface AssetApiBeneficiary {
+	id: string;
+	percentage: number;
+	people_id?: string;
+	charities_id?: string;
+	person?: {
+		id: string;
+		first_name: string;
+		last_name: string;
+		relationship_id: string;
+	};
+	charity?: {
+		id: string;
+		name: string;
+		rc_number?: string;
+	};
+}
+interface AssetApiResponse {
+	id: string;
+	will_id: string;
+	asset_type: string;
+	description: string;
+	distribution_type: "equal" | "percentage";
+	beneficiaries: AssetApiBeneficiary[];
 }
 
 /**
@@ -222,10 +251,59 @@ export const downloadWillPDF = async (
 			return false;
 		}
 
+		// --- NEW: Fetch assets from API ---
+		let willId = options.willId || options.searchParams?.get("willId");
+		if (!willId && options.activeWill) {
+			willId = options.activeWill.id;
+		}
+		let apiAssets = null;
+		if (willId) {
+			try {
+				const { data: assetsData, error } = await apiClient(
+					`/assets/get-by-will/${willId}`
+				);
+				if (!error && Array.isArray(assetsData)) {
+					apiAssets = (assetsData as AssetApiResponse[]).map((asset) => ({
+						type: asset.asset_type,
+						description: asset.description,
+						distributionType: asset.distribution_type,
+						beneficiaries: asset.beneficiaries.map((b: AssetApiBeneficiary) => {
+							let beneficiaryName = "Unknown Beneficiary";
+							let relationship = "Unknown";
+							if (b.person) {
+								beneficiaryName = `${b.person.first_name} ${b.person.last_name}`;
+								relationship = getFormattedRelationshipNameById(
+									b.person.relationship_id
+								);
+							} else if (b.charity) {
+								beneficiaryName = b.charity.name;
+								relationship = "Charity";
+							}
+							return {
+								id: b.id,
+								percentage: b.percentage,
+								beneficiaryName,
+								relationship,
+							};
+						}),
+					}));
+				}
+			} catch (err) {
+				console.error("Failed to fetch assets for PDF:", err);
+			}
+		}
+		// --- END NEW ---
+
+		// Merge API assets into willData for PDF
+		const pdfData = {
+			...willData,
+			assets: apiAssets || willData.assets,
+		};
+
 		// Generate PDF using JSX
 		const pdfDoc = pdf(
 			<WillPDF
-				data={willData}
+				data={pdfData}
 				// additionalText="This is a sample additional text that can be customized based on the user's input."
 			/>
 		);
@@ -243,7 +321,7 @@ export const downloadWillPDF = async (
 			const url = URL.createObjectURL(blob);
 			const link = document.createElement("a");
 			link.href = url;
-			link.download = `will-${willData.personal.fullName
+			link.download = `will-${pdfData.personal.fullName
 				.toLowerCase()
 				.replace(/\s+/g, "-")}-${new Date().toISOString().split("T")[0]}.pdf`;
 
@@ -268,7 +346,7 @@ export const downloadWillPDF = async (
 				const url = URL.createObjectURL(blob);
 				const link = document.createElement("a");
 				link.href = url;
-				link.download = `will-${willData.personal.fullName
+				link.download = `will-${pdfData.personal.fullName
 					.toLowerCase()
 					.replace(/\s+/g, "-")}-${new Date().toISOString().split("T")[0]}.pdf`;
 
