@@ -52,6 +52,19 @@ import { NewBeneficiaryDialog } from "../components/NewBeneficiaryDialog";
 import { toast } from "sonner";
 import { apiClient } from "@/utils/apiClient";
 
+// Interface for gift API response
+interface GiftApiResponse {
+	id: string;
+	type: string;
+	description: string;
+	value?: number;
+	currency?: string;
+	peopleId?: string;
+	charitiesId?: string;
+	person?: unknown;
+	charity?: unknown;
+}
+
 const giftSchema = z
 	.object({
 		type: z.enum(["Cash", "Item", "Other"]),
@@ -173,7 +186,7 @@ export default function GiftsStep({ onNext, onBack }: GiftsStepProps) {
 		isReady,
 	} = useWillData();
 	const { updateLoadingState } = useDataLoading();
-	const { activeWill } = useWill();
+	const { activeWill, setActiveWill } = useWill();
 
 	// Convert WillGift to Gift for compatibility
 	const gifts: GiftType[] = (activeWill?.gifts || []).map(
@@ -292,7 +305,7 @@ export default function GiftsStep({ onNext, onBack }: GiftsStepProps) {
 				willId: activeWill?.id,
 			};
 
-			const { error } = await apiClient(
+			const { data, error } = await apiClient(
 				editingGift ? `/gifts/${editingGift.id}` : "/gifts",
 				{
 					method: editingGift ? "PATCH" : "POST",
@@ -303,6 +316,56 @@ export default function GiftsStep({ onNext, onBack }: GiftsStepProps) {
 			if (error) {
 				toast.error("Failed to save gift");
 				return;
+			}
+
+			// Update the local gifts list with response data
+			if (data) {
+				const giftResponse = data as GiftApiResponse;
+				const newGift: GiftType = {
+					id: giftResponse.id,
+					type: giftResponse.type as GiftTypeEnum,
+					description: giftResponse.description,
+					value: giftResponse.value,
+					currency: giftResponse.currency,
+					peopleId: giftResponse.peopleId,
+					charitiesId: giftResponse.charitiesId,
+				};
+
+				// Update the gifts array in the will context
+				if (activeWill) {
+					const updatedGifts = editingGift
+						? activeWill.gifts.map((gift) =>
+								gift.id === editingGift.id
+									? {
+											...gift,
+											type: newGift.type,
+											description: newGift.description,
+											value: newGift.value,
+											currency: newGift.currency,
+											peopleId: newGift.peopleId,
+											charitiesId: newGift.charitiesId,
+									  }
+									: gift
+						  )
+						: [
+								...activeWill.gifts,
+								{
+									id: newGift.id,
+									type: newGift.type,
+									description: newGift.description,
+									value: newGift.value,
+									currency: newGift.currency,
+									peopleId: newGift.peopleId,
+									charitiesId: newGift.charitiesId,
+								},
+						  ];
+
+					// Update the will context
+					setActiveWill({
+						...activeWill,
+						gifts: updatedGifts,
+					});
+				}
 			}
 
 			toast.success(
@@ -320,9 +383,6 @@ export default function GiftsStep({ onNext, onBack }: GiftsStepProps) {
 			});
 			setEditingGift(null);
 			setGiftDialogOpen(false);
-
-			// Refresh will data to get updated gifts
-			// This will be handled by the will context automatically
 		} catch (err) {
 			toast.error("Failed to save gift");
 			console.error("Error saving gift:", err);
