@@ -106,7 +106,10 @@ export default function GuardiansStep({
 						id: guardianship.person.id,
 						firstName: guardianship.person.first_name,
 						lastName: guardianship.person.last_name,
-						relationship: guardianship.person.relationship_id,
+						relationship:
+							getFormattedRelationshipNameById(
+								guardianship.person.relationship_id
+							) || guardianship.person.relationship_id,
 						isPrimary: guardianship.is_primary,
 						guardianshipId: guardianship.id, // Store guardianship record ID
 					}));
@@ -544,9 +547,7 @@ export default function GuardiansStep({
 												)}
 											</p>
 											<p className="text-sm text-muted-foreground">
-												{getFormattedRelationshipNameById(
-													guardian.relationship
-												)}
+												{guardian.relationship}
 											</p>
 										</div>
 										<div className="flex space-x-2">

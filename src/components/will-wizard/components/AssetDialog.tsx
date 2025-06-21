@@ -390,6 +390,7 @@ export function AssetDialog({
 								{/* Beneficiary Select Box */}
 								<div className="w-full">
 									<DropdownMenu
+										open={isDropdownOpen}
 										onOpenChange={setIsDropdownOpen}
 										className="w-[600px] max-h-[300px] "
 									>

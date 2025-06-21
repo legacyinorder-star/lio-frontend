@@ -137,9 +137,14 @@ export function AssetCard({
 												className="text-muted-foreground"
 											>
 												Beneficiary ID: {beneficiary.id}
-												{asset.distributionType === "percentage" &&
-													` (${beneficiary.percentage}%)`}
-												{asset.distributionType === "equal" && " (equal share)"}
+												{asset.beneficiaries.length > 1 && (
+													<>
+														{asset.distributionType === "percentage" &&
+															` (${beneficiary.percentage}%)`}
+														{asset.distributionType === "equal" &&
+															" (equal share)"}
+													</>
+												)}
 											</li>
 										);
 									}
@@ -152,9 +157,14 @@ export function AssetCard({
 												className="text-red-600 font-medium"
 											>
 												Unknown Beneficiary (Deleted)
-												{asset.distributionType === "percentage" &&
-													` (${beneficiary.percentage}%)`}
-												{asset.distributionType === "equal" && " (equal share)"}
+												{asset.beneficiaries.length > 1 && (
+													<>
+														{asset.distributionType === "percentage" &&
+															` (${beneficiary.percentage}%)`}
+														{asset.distributionType === "equal" &&
+															" (equal share)"}
+													</>
+												)}
 											</li>
 										);
 									}
@@ -177,9 +187,14 @@ export function AssetCard({
 													: isCharity
 													? "Unknown Charity (Deleted Beneficiary)"
 													: "Unknown Beneficiary (Deleted)"}
-												{asset.distributionType === "percentage" &&
-													` (${willBeneficiary.percentage}%)`}
-												{asset.distributionType === "equal" && " (equal share)"}
+												{asset.beneficiaries.length > 1 && (
+													<>
+														{asset.distributionType === "percentage" &&
+															` (${willBeneficiary.percentage}%)`}
+														{asset.distributionType === "equal" &&
+															" (equal share)"}
+													</>
+												)}
 											</li>
 										);
 									}
@@ -220,9 +235,14 @@ export function AssetCard({
 												({relationship})
 												{registrationNumber && ` - Reg: ${registrationNumber}`}
 											</span>
-											{asset.distributionType === "percentage" &&
-												` (${willBeneficiary.percentage}%)`}
-											{asset.distributionType === "equal" && " (equal share)"}
+											{asset.beneficiaries.length > 1 && (
+												<>
+													{asset.distributionType === "percentage" &&
+														` (${willBeneficiary.percentage}%)`}
+													{asset.distributionType === "equal" &&
+														" (equal share)"}
+												</>
+											)}
 										</li>
 									);
 								})}

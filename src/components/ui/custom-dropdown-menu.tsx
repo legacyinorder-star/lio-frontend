@@ -5,6 +5,7 @@ interface DropdownMenuProps {
 	children: ReactNode;
 	align?: "start" | "end";
 	className?: string;
+	open?: boolean;
 	onOpenChange?: (open: boolean) => void;
 }
 
@@ -35,11 +36,15 @@ export function DropdownMenu({
 	children,
 	align = "start",
 	className,
+	open,
 	onOpenChange,
 }: DropdownMenuProps) {
-	const [isOpen, setIsOpen] = useState(false);
+	const [internalIsOpen, setInternalIsOpen] = useState(false);
 	const dropdownRef = useRef<HTMLDivElement>(null);
 	const triggerRef = useRef<HTMLDivElement>(null);
+
+	// Use external open prop if provided, otherwise use internal state
+	const isOpen = open !== undefined ? open : internalIsOpen;
 
 	// Find the trigger element from children
 	const childrenArray = React.Children.toArray(children);
@@ -54,15 +59,23 @@ export function DropdownMenu({
 				triggerRef.current &&
 				!triggerRef.current.contains(event.target as Node)
 			) {
-				setIsOpen(false);
-				onOpenChange?.(false);
+				if (open !== undefined) {
+					onOpenChange?.(false);
+				} else {
+					setInternalIsOpen(false);
+					onOpenChange?.(false);
+				}
 			}
 		};
 
 		const handleEscape = (event: KeyboardEvent) => {
 			if (event.key === "Escape") {
-				setIsOpen(false);
-				onOpenChange?.(false);
+				if (open !== undefined) {
+					onOpenChange?.(false);
+				} else {
+					setInternalIsOpen(false);
+					onOpenChange?.(false);
+				}
 			}
 		};
 
@@ -75,12 +88,16 @@ export function DropdownMenu({
 			document.removeEventListener("mousedown", handleClickOutside);
 			document.removeEventListener("keydown", handleEscape);
 		};
-	}, [isOpen, onOpenChange]);
+	}, [isOpen, onOpenChange, open]);
 
 	const handleTriggerClick = () => {
 		const newIsOpen = !isOpen;
-		setIsOpen(newIsOpen);
-		onOpenChange?.(newIsOpen);
+		if (open !== undefined) {
+			onOpenChange?.(newIsOpen);
+		} else {
+			setInternalIsOpen(newIsOpen);
+			onOpenChange?.(newIsOpen);
+		}
 	};
 
 	return (
