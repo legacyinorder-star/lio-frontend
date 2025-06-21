@@ -7,9 +7,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { useWillData } from "@/hooks/useWillData";
-import { useRelationships } from "@/hooks/useRelationships";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { getAllRelationships } from "@/utils/relationships";
 
 interface RelationshipSelectProps {
 	value?: string;
@@ -21,7 +19,6 @@ interface RelationshipSelectProps {
 	error?: string;
 	className?: string;
 	excludeRelationships?: string[];
-	useOnlyRelationships?: boolean;
 }
 
 const RelationshipSelect = forwardRef<
@@ -39,61 +36,16 @@ const RelationshipSelect = forwardRef<
 			error,
 			className = "",
 			excludeRelationships = [],
-			useOnlyRelationships = false,
 			...props
 		},
 		ref
 	) => {
-		const relationshipsData = useRelationships();
-		const willData = useWillData();
-
-		const {
-			relationships,
-			isLoading,
-			error: fetchError,
-		} = useOnlyRelationships ? relationshipsData : willData;
-
-		const isReady = useOnlyRelationships ? !isLoading : willData.isReady;
+		const relationships = getAllRelationships();
 
 		const filteredRelationships = relationships.filter(
 			(relationship) =>
 				!excludeRelationships.includes(relationship.name.toLowerCase())
 		);
-
-		if (isLoading || !isReady) {
-			return (
-				<div className={`space-y-2 ${className}`}>
-					{label && (
-						<Label className="flex items-center gap-2">
-							{label}
-							{required && <span className="text-destructive">*</span>}
-						</Label>
-					)}
-					<div className="flex items-center justify-center py-2">
-						<LoadingSpinner
-							message="Loading relationships..."
-							className="py-2"
-						/>
-					</div>
-				</div>
-			);
-		}
-
-		if (fetchError) {
-			return (
-				<div className={`space-y-2 ${className}`}>
-					{label && (
-						<Label className="flex items-center gap-2 text-destructive">
-							{label}
-							{required && <span className="text-destructive">*</span>}
-						</Label>
-					)}
-					<div className="text-sm text-red-500 py-2">
-						Error loading relationships: {fetchError}
-					</div>
-				</div>
-			);
-		}
 
 		return (
 			<div className={`space-y-2 ${className}`}>

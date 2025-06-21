@@ -175,7 +175,6 @@ export default function GiftsStep({
 
 	const {
 		allBeneficiaries: enhancedBeneficiaries,
-		relationships,
 		addIndividualBeneficiary,
 		addCharityBeneficiary,
 		isLoading: isDataLoading,
@@ -482,7 +481,6 @@ export default function GiftsStep({
 									const beneficiary = getBeneficiaryFromGift(gift);
 									const relationship = beneficiary?.relationshipId
 										? getFormattedRelationshipNameById(
-												relationships,
 												beneficiary.relationshipId
 										  ) || beneficiary.relationship
 										: beneficiary?.relationship || "Unknown";
@@ -700,7 +698,6 @@ export default function GiftsStep({
 												{selectedBeneficiary.lastName} (
 												{selectedBeneficiary.relationshipId
 													? getFormattedRelationshipNameById(
-															relationships,
 															selectedBeneficiary.relationshipId
 													  ) || selectedBeneficiary.relationship
 													: selectedBeneficiary.relationship}
@@ -736,7 +733,6 @@ export default function GiftsStep({
 
 														const formattedName = relationshipId
 															? getFormattedRelationshipNameById(
-																	relationships,
 																	relationshipId
 															  ) || relationship
 															: relationship;
@@ -834,7 +830,6 @@ export default function GiftsStep({
 									const beneficiary = getBeneficiaryFromGift(giftToDelete);
 									const relationship = beneficiary?.relationshipId
 										? getFormattedRelationshipNameById(
-												relationships,
 												beneficiary.relationshipId
 										  ) || beneficiary.relationship
 										: beneficiary?.relationship || "Unknown";

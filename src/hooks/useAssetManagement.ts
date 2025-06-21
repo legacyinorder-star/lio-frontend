@@ -88,7 +88,7 @@ export function useAssetManagement(initialAssets: Asset[] = []) {
 	const mapBeneficiaryDetails = (
 		assetBeneficiaries: ApiAssetResponse["beneficiaries"]
 	) => {
-		return mapAssetBeneficiariesFromAPI(assetBeneficiaries, relationships);
+		return mapAssetBeneficiariesFromAPI(assetBeneficiaries);
 	};
 
 	// Function to load assets from API and update will context

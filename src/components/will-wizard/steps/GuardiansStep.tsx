@@ -14,11 +14,10 @@ import {
 } from "@/components/ui/dialog";
 import { Plus, Edit2, Trash2, ArrowLeft, ArrowRight } from "lucide-react";
 import { StepProps } from "../types/will.types";
-import { useRelationships } from "@/hooks/useRelationships";
-import { getFormattedRelationshipNameById } from "@/utils/relationships";
 import { toast } from "sonner";
 import { apiClient } from "@/utils/apiClient";
 import { useWill } from "@/context/WillContext";
+import { getFormattedRelationshipNameById } from "@/utils/relationships";
 
 interface Guardian {
 	id: string;
@@ -62,7 +61,6 @@ export default function GuardiansStep({
 	onBack,
 }: StepProps) {
 	const { activeWill, setActiveWill } = useWill();
-	const { relationships } = useRelationships();
 	const [guardianDialogOpen, setGuardianDialogOpen] = useState(false);
 	const [editingGuardian, setEditingGuardian] = useState<Guardian | null>(null);
 	const [isSubmitting, setIsSubmitting] = useState(false);
@@ -460,17 +458,16 @@ export default function GuardiansStep({
 								<div className="space-y-2">
 									<RelationshipSelect
 										value={guardianForm.relationship}
-										onValueChange={(value) => {
-											const event = {
-												target: { value },
-											} as React.ChangeEvent<HTMLInputElement>;
-											handleGuardianFormChange("relationship")(event);
-										}}
-										label="Relationship to You"
-										required
-										excludeRelationships={["spouse", "child"]}
+										onValueChange={(value) =>
+											setGuardianForm((prev) => ({
+												...prev,
+												relationship: value,
+											}))
+										}
+										label="Relationship"
+										required={true}
+										excludeRelationships={["spouse"]}
 										disabled={isSubmitting}
-										useOnlyRelationships={true}
 									/>
 								</div>
 								<div className="flex items-center space-x-2">
@@ -546,7 +543,6 @@ export default function GuardiansStep({
 											</p>
 											<p className="text-sm text-muted-foreground">
 												{getFormattedRelationshipNameById(
-													relationships,
 													guardian.relationship
 												)}
 											</p>

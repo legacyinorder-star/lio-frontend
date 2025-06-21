@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
 	Dialog,
 	DialogContent,
@@ -14,7 +14,7 @@ import {
 	DropdownMenuContent,
 	DropdownMenuItem,
 } from "@/components/ui/custom-dropdown-menu";
-import { ChevronsUpDown, Plus, X } from "lucide-react";
+import { Plus, X, ChevronsUpDown } from "lucide-react";
 import { Asset, AssetType } from "../types/will.types";
 import { AssetTypeSelector } from "./AssetTypeSelector";
 import { EnhancedBeneficiary } from "@/hooks/useWillData";
@@ -36,7 +36,6 @@ interface AssetDialogProps {
 	onAddNewBeneficiary: () => void;
 	enhancedBeneficiaries: EnhancedBeneficiary[];
 	isLoadingBeneficiaries: boolean;
-	relationships: Array<{ id: string; name: string }>;
 }
 
 export function AssetDialog({
@@ -47,7 +46,6 @@ export function AssetDialog({
 	onAddNewBeneficiary,
 	enhancedBeneficiaries,
 	isLoadingBeneficiaries,
-	relationships,
 }: AssetDialogProps) {
 	const [assetForm, setAssetForm] = useState<Omit<Asset, "id">>({
 		assetType: "Property" as AssetType,
@@ -315,7 +313,6 @@ export function AssetDialog({
 															const relationship =
 																beneficiaryDetails.relationshipId
 																	? getFormattedRelationshipNameById(
-																			relationships,
 																			beneficiaryDetails.relationshipId
 																	  ) || beneficiaryDetails.relationship
 																	: beneficiaryDetails.relationship;
@@ -367,7 +364,6 @@ export function AssetDialog({
 
 											const relationship = beneficiaryDetails.relationshipId
 												? getFormattedRelationshipNameById(
-														relationships,
 														beneficiaryDetails.relationshipId
 												  ) || beneficiaryDetails.relationship
 												: beneficiaryDetails.relationship;

@@ -394,8 +394,7 @@ export function mapAssetBeneficiariesFromAPI(
 			user_id: string;
 			rc_number?: string;
 		};
-	}>,
-	relationships: Array<{ id: string; name: string }>
+	}>
 ): WillAssetBeneficiary[] {
 	return assetBeneficiaries.map((assetBeneficiary) => {
 		// Check if people_id is set (individual)
@@ -411,7 +410,6 @@ export function mapAssetBeneficiariesFromAPI(
 						lastName: assetBeneficiary.person.last_name,
 						relationship:
 							getFormattedRelationshipNameById(
-								relationships,
 								assetBeneficiary.person.relationship_id
 							) || "Unknown Relationship",
 						relationshipId: assetBeneficiary.person.relationship_id,

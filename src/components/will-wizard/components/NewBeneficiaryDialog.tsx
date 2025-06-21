@@ -179,8 +179,7 @@ export function NewBeneficiaryDialog({
 								}
 								label="Relationship"
 								placeholder="Select relationship"
-								excludeRelationships={["child", "spouse"]}
-								useOnlyRelationships={true}
+								excludeRelationships={["spouse", "child"]}
 							/>
 						</div>
 					)}

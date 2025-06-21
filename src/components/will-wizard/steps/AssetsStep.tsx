@@ -54,8 +54,6 @@ export default function AssetsStep({
 		allBeneficiaries: enhancedBeneficiaries,
 		isLoading: isLoadingBeneficiaries,
 		isReady: isBeneficiariesReady,
-		relationships,
-		relationshipResolver,
 		addIndividualBeneficiary,
 		addCharityBeneficiary,
 	} = useWillData();
@@ -196,7 +194,6 @@ export default function AssetsStep({
 										onEdit={handleEditAsset}
 										onRemove={handleRemoveAsset}
 										enhancedBeneficiaries={enhancedBeneficiaries}
-										relationshipResolver={relationshipResolver}
 									/>
 								))}
 							</div>
@@ -232,7 +229,6 @@ export default function AssetsStep({
 				onAddNewBeneficiary={handleAddNewBeneficiary}
 				enhancedBeneficiaries={enhancedBeneficiaries}
 				isLoadingBeneficiaries={isLoadingBeneficiaries}
-				relationships={relationships}
 			/>
 
 			{/* New Beneficiary Dialog */}

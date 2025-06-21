@@ -434,7 +434,9 @@ export default function ResiduaryStep({
 					beneficiaries.push({
 						id: guardian.id,
 						fullName: `${guardian.firstName || ""} ${guardian.lastName || ""}`,
-						relationship: guardian.relationship || "",
+						relationship: getFormattedRelationshipNameById(
+							guardian.relationship
+						),
 					});
 				}
 			});
@@ -507,7 +509,6 @@ export default function ResiduaryStep({
 						// If guardian has a relationship ID, try to format it
 						if (relationships.length > 0) {
 							const formattedName = getFormattedRelationshipNameById(
-								relationships,
 								guardian.relationship
 							);
 							if (formattedName) {
@@ -542,7 +543,6 @@ export default function ResiduaryStep({
 				if (beneficiary.relationshipId && relationships.length > 0) {
 					// Try to get formatted relationship name from ID
 					const formattedName = getFormattedRelationshipNameById(
-						relationships,
 						beneficiary.relationshipId
 					);
 					if (formattedName) {

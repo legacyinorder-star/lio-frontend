@@ -110,7 +110,7 @@ export default function ExecutorStep({
 	const [useLegacyInOrder, setUseLegacyInOrder] = useState(false);
 	const prevExecutorsRef = useRef<Executor[]>([]);
 	const { activeWill } = useWill();
-	const { relationships, isLoading: isDataLoading, isReady } = useWillData();
+	const { isLoading: isDataLoading, isReady } = useWillData();
 	const { updateLoadingState } = useDataLoading();
 
 	const [executorForm, setExecutorForm] = useState<Executor>({
@@ -869,16 +869,15 @@ export default function ExecutorStep({
 										</div>
 										<div className="space-y-2">
 											<RelationshipSelect
-												value={executorForm.relationshipId || ""}
-												label="Relationship to You"
-												onValueChange={(value) => {
-													const event = {
-														target: { value },
-													} as React.ChangeEvent<HTMLInputElement>;
-													handleExecutorFormChange("relationshipId")(event);
-												}}
-												required
-												useOnlyRelationships={true}
+												value={executorForm.relationshipId}
+												label="Relationship"
+												onValueChange={(value) =>
+													setExecutorForm((prev) => ({
+														...prev,
+														relationshipId: value,
+													}))
+												}
+												required={true}
 											/>
 										</div>
 									</>
@@ -966,7 +965,6 @@ export default function ExecutorStep({
 													<span className="text-sm text-muted-foreground ml-2">
 														(
 														{getFormattedRelationshipNameById(
-															relationships,
 															executor.relationshipId || ""
 														) || executor.relationshipId}
 														)
@@ -1125,7 +1123,6 @@ export default function ExecutorStep({
 											<span className="text-muted-foreground ml-1">
 												(
 												{getFormattedRelationshipNameById(
-													relationships,
 													executorToDelete.relationshipId
 												) || executorToDelete.relationshipId}
 												)

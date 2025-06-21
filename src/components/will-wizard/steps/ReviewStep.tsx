@@ -1,13 +1,18 @@
-import { forwardRef, useImperativeHandle, useState } from "react";
+import { forwardRef, useImperativeHandle, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, CreditCard } from "lucide-react";
 import { PaymentService } from "@/services/paymentService";
 import { downloadWillPDF } from "@/utils/willDownload";
+import { useWill } from "@/context/WillContext";
+import { useWillData } from "@/hooks/useWillData";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { apiClient } from "@/utils/apiClient";
+import { mapWillDataFromAPI } from "@/utils/dataTransform";
 
 export interface ReviewStepProps {
-	data: {
+	data?: {
 		personal: {
 			fullName: string;
 			address: string;
@@ -20,6 +25,7 @@ export interface ReviewStepProps {
 			beneficiaries: Array<{
 				id: string;
 				percentage?: number;
+				beneficiaryName?: string;
 			}>;
 		}>;
 		beneficiaries: Array<{
@@ -72,10 +78,199 @@ export interface ReviewStepHandle {
 }
 
 const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
-	({ data, onBack }, ref) => {
+	({ data: propData, onBack }, ref) => {
 		const [isSaving, setIsSaving] = useState(false);
+		const [isLoading, setIsLoading] = useState(true);
+		const [reviewData, setReviewData] = useState<
+			ReviewStepProps["data"] | null
+		>(null);
 		const navigate = useNavigate();
 		const [_willId, setWillId] = useState<string>("");
+
+		const { activeWill, setActiveWill } = useWill();
+		const {
+			allBeneficiaries,
+			isLoading: isLoadingBeneficiaries,
+			isReady: isBeneficiariesReady,
+		} = useWillData();
+
+		// Load active will from API on page load
+		const loadActiveWill = async () => {
+			try {
+				const { data, error } = await apiClient("/wills/get-user-active-will");
+
+				if (error) {
+					console.error("Error loading active will:", error);
+					toast.error("Failed to load will data");
+					return;
+				}
+
+				// Handle both array and single object responses
+				const willData = Array.isArray(data) ? data[0] : data;
+				if (willData) {
+					// Transform API data to camelCase format
+					const transformedWillData = mapWillDataFromAPI(willData);
+					setActiveWill(transformedWillData);
+				}
+			} catch (error) {
+				console.error("Error loading active will:", error);
+				toast.error("Failed to load will data");
+			}
+		};
+
+		// Transform activeWill data to review format
+		const transformWillDataToReviewFormat = () => {
+			if (!activeWill) return null;
+
+			// Transform beneficiaries from allBeneficiaries
+			const beneficiaries = allBeneficiaries.map((beneficiary) => ({
+				id: beneficiary.id,
+				fullName:
+					beneficiary.type === "charity"
+						? beneficiary.firstName
+						: `${beneficiary.firstName} ${beneficiary.lastName}`,
+				relationship: beneficiary.relationship,
+				allocation: 0, // This will be calculated from assets/residuary
+				requiresGuardian: beneficiary.isMinor || false,
+			}));
+
+			// Transform assets with proper beneficiary name resolution
+			const assets = activeWill.assets.map((asset) => ({
+				type: asset.assetType,
+				description: asset.description,
+				distributionType: asset.distributionType,
+				beneficiaries: asset.beneficiaries.map((beneficiary) => {
+					// Find the beneficiary details from allBeneficiaries
+					const beneficiaryDetails = allBeneficiaries.find(
+						(b) =>
+							b.id ===
+							(beneficiary.peopleId ||
+								beneficiary.charitiesId ||
+								beneficiary.id)
+					);
+
+					return {
+						id:
+							beneficiary.peopleId || beneficiary.charitiesId || beneficiary.id,
+						percentage: beneficiary.percentage,
+						// Add beneficiary name for display
+						beneficiaryName: beneficiaryDetails
+							? beneficiaryDetails.type === "charity"
+								? beneficiaryDetails.firstName
+								: `${beneficiaryDetails.firstName} ${beneficiaryDetails.lastName}`
+							: "Unknown Beneficiary",
+					};
+				}),
+			}));
+
+			// Transform gifts with proper beneficiary name resolution
+			const gifts = activeWill.gifts.map((gift) => {
+				const beneficiary = allBeneficiaries.find(
+					(b) => b.id === (gift.peopleId || gift.charitiesId)
+				);
+				return {
+					type: gift.type,
+					description: gift.description,
+					value: gift.value?.toString(),
+					beneficiaryId: gift.peopleId || gift.charitiesId || "",
+					beneficiaryName: beneficiary
+						? beneficiary.type === "charity"
+							? beneficiary.firstName
+							: `${beneficiary.firstName} ${beneficiary.lastName}`
+						: "Unknown Beneficiary",
+				};
+			});
+
+			// Transform executors
+			const executors = activeWill.executors.map((executor) => ({
+				fullName:
+					executor.type === "individual"
+						? `${executor.firstName || ""} ${executor.lastName || ""}`.trim()
+						: undefined,
+				companyName:
+					executor.type === "corporate" ? executor.companyName : undefined,
+				relationship: executor.relationship,
+				isPrimary: executor.isPrimary,
+				type: executor.type,
+				registrationNumber: undefined, // Not available in WillExecutor interface
+			}));
+
+			// Transform witnesses
+			const witnesses = activeWill.witnesses.map((witness) => ({
+				fullName: `${witness.firstName} ${witness.lastName}`,
+				address: `${witness.address.address}, ${witness.address.city}, ${witness.address.state} ${witness.address.postCode}, ${witness.address.country}`,
+			}));
+
+			// Transform guardians
+			const guardians =
+				activeWill.guardians?.map((guardian) => ({
+					fullName: `${guardian.firstName} ${guardian.lastName}`,
+					relationship: guardian.relationship,
+					isPrimary: guardian.isPrimary,
+				})) || [];
+
+			// Transform residuary beneficiaries
+			const residuaryBeneficiaries =
+				activeWill.residuary?.beneficiaries.map((residuary) => ({
+					id: residuary.id,
+					beneficiaryId: residuary.peopleId || residuary.charitiesId || "",
+					percentage: residuary.percentage,
+				})) || [];
+
+			return {
+				personal: {
+					fullName: `${activeWill.owner.firstName} ${activeWill.owner.lastName}`,
+					address: `${activeWill.owner.address}, ${activeWill.owner.city}, ${activeWill.owner.state} ${activeWill.owner.postCode}, ${activeWill.owner.country}`,
+					maritalStatus: activeWill.owner.maritalStatus,
+				},
+				assets,
+				beneficiaries,
+				executors,
+				witnesses,
+				guardians,
+				gifts,
+				residuaryBeneficiaries,
+				funeralInstructions: undefined, // Not available in WillData interface
+			};
+		};
+
+		// Load and transform data on component mount
+		useEffect(() => {
+			const loadData = async () => {
+				setIsLoading(true);
+
+				// If prop data is provided, use it
+				if (propData) {
+					setReviewData(propData);
+					setIsLoading(false);
+					return;
+				}
+
+				// Load active will from API first
+				await loadActiveWill();
+
+				// Wait for beneficiaries to be ready
+				if (!isBeneficiariesReady || isLoadingBeneficiaries) {
+					return;
+				}
+
+				// Transform activeWill data
+				const transformedData = transformWillDataToReviewFormat();
+				if (transformedData) {
+					setReviewData(transformedData);
+				}
+
+				setIsLoading(false);
+			};
+
+			loadData();
+		}, [
+			activeWill,
+			allBeneficiaries,
+			isBeneficiariesReady,
+			isLoadingBeneficiaries,
+			propData,
+		]);
 
 		const saveWillToLocalStorage = () => {
 			try {
@@ -87,7 +282,7 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 					id: _willId,
 					createdAt: new Date().toISOString(),
 					updatedAt: new Date().toISOString(),
-					data: data,
+					data: reviewData,
 					status: "draft",
 				};
 
@@ -139,7 +334,7 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 		const handleProceedToPayment = async () => {
 			try {
 				// First, save the will data to ensure we have a will ID
-				if (!data.personal.fullName) {
+				if (!reviewData?.personal.fullName) {
 					toast.error(
 						"Please complete all required information before proceeding to payment"
 					);
@@ -176,6 +371,19 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 			isSaving,
 		}));
 
+		// Show loading state
+		if (isLoading || !reviewData) {
+			return (
+				<div className="space-y-6">
+					<div className="text-2xl font-semibold">Review Your Will</div>
+					<LoadingSpinner
+						message="Loading will data..."
+						className="min-h-[400px]"
+					/>
+				</div>
+			);
+		}
+
 		return (
 			<div data-review-step className="space-y-6">
 				<div className="text-2xl font-semibold">Review Your Will</div>
@@ -193,31 +401,35 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 							<label className="block text-sm font-medium text-gray-700">
 								Full Name
 							</label>
-							<p className="mt-1 text-gray-900">{data.personal.fullName}</p>
+							<p className="mt-1 text-gray-900">
+								{reviewData.personal.fullName}
+							</p>
 						</div>
 						<div>
 							<label className="block text-sm font-medium text-gray-700">
 								Marital Status
 							</label>
 							<p className="mt-1 text-gray-900">
-								{data.personal.maritalStatus}
+								{reviewData.personal.maritalStatus}
 							</p>
 						</div>
 						<div className="md:col-span-2">
 							<label className="block text-sm font-medium text-gray-700">
 								Address
 							</label>
-							<p className="mt-1 text-gray-900">{data.personal.address}</p>
+							<p className="mt-1 text-gray-900">
+								{reviewData.personal.address}
+							</p>
 						</div>
 					</div>
 				</div>
 
 				{/* Guardians */}
-				{data.guardians && data.guardians.length > 0 && (
+				{reviewData.guardians && reviewData.guardians.length > 0 && (
 					<div className="space-y-4">
 						<h3 className="text-lg font-semibold border-b pb-2">Guardians</h3>
 						<div className="grid gap-4">
-							{data.guardians.map((guardian, index) => (
+							{reviewData.guardians.map((guardian, index) => (
 								<div
 									key={index}
 									className="rounded-lg border border-gray-200 p-4 bg-gray-50"
@@ -252,11 +464,11 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 				)}
 
 				{/* Assets */}
-				{data.assets && data.assets.length > 0 && (
+				{reviewData.assets && reviewData.assets.length > 0 && (
 					<div className="space-y-4">
 						<h3 className="text-lg font-semibold border-b pb-2">Assets</h3>
 						<div className="grid gap-4">
-							{data.assets.map((asset, index) => (
+							{reviewData.assets.map((asset, index) => (
 								<div
 									key={index}
 									className="rounded-lg border border-gray-200 p-4 bg-gray-50"
@@ -289,14 +501,17 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 												</label>
 												<div className="mt-1 space-y-1">
 													{asset.beneficiaries.map((beneficiary, idx) => {
-														const beneficiaryInfo = data.beneficiaries.find(
-															(b) => b.id === beneficiary.id
-														);
+														// Use the beneficiaryName from the transformed data
+														const beneficiaryName =
+															beneficiary.beneficiaryName ||
+															reviewData.beneficiaries.find(
+																(b) => b.id === beneficiary.id
+															)?.fullName ||
+															"Unknown Beneficiary";
+
 														return (
 															<p key={idx} className="text-gray-900 text-sm">
-																{beneficiaryInfo?.fullName ||
-																	"Unknown Beneficiary"}
-																:{" "}
+																{beneficiaryName}:{" "}
 																{beneficiary.percentage
 																	? `${beneficiary.percentage}%`
 																	: "Equal share"}
@@ -314,13 +529,13 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 				)}
 
 				{/* Gifts */}
-				{data.gifts && data.gifts.length > 0 && (
+				{reviewData.gifts && reviewData.gifts.length > 0 && (
 					<div className="space-y-4">
 						<h3 className="text-lg font-semibold border-b pb-2">
 							Specific Gifts
 						</h3>
 						<div className="grid gap-4">
-							{data.gifts.map((gift, index) => (
+							{reviewData.gifts.map((gift, index) => (
 								<div
 									key={index}
 									className="rounded-lg border border-gray-200 p-4 bg-gray-50"
@@ -362,15 +577,15 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 				)}
 
 				{/* Residuary Estate */}
-				{data.residuaryBeneficiaries &&
-					data.residuaryBeneficiaries.length > 0 && (
+				{reviewData.residuaryBeneficiaries &&
+					reviewData.residuaryBeneficiaries.length > 0 && (
 						<div className="space-y-4">
 							<h3 className="text-lg font-semibold border-b pb-2">
 								Residuary Estate Distribution
 							</h3>
 							<div className="grid gap-4">
-								{data.residuaryBeneficiaries.map((residuary, index) => {
-									const beneficiary = data.beneficiaries.find(
+								{reviewData.residuaryBeneficiaries.map((residuary, index) => {
+									const beneficiary = reviewData.beneficiaries.find(
 										(b) => b.id === residuary.beneficiaryId
 									);
 									return (
@@ -404,11 +619,11 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 					)}
 
 				{/* Executors */}
-				{data.executors && data.executors.length > 0 && (
+				{reviewData.executors && reviewData.executors.length > 0 && (
 					<div className="space-y-4">
 						<h3 className="text-lg font-semibold border-b pb-2">Executors</h3>
 						<div className="grid gap-4">
-							{data.executors.map((executor, index) => (
+							{reviewData.executors.map((executor, index) => (
 								<div
 									key={index}
 									className="rounded-lg border border-gray-200 p-4 bg-gray-50"
@@ -448,17 +663,6 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 													</p>
 												</div>
 											)}
-										{executor.type === "corporate" &&
-											executor.registrationNumber && (
-												<div>
-													<label className="block text-sm font-medium text-gray-700">
-														Registration Number
-													</label>
-													<p className="mt-1 text-gray-900">
-														{executor.registrationNumber}
-													</p>
-												</div>
-											)}
 									</div>
 								</div>
 							))}
@@ -467,11 +671,11 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 				)}
 
 				{/* Witnesses */}
-				{data.witnesses && data.witnesses.length > 0 && (
+				{reviewData.witnesses && reviewData.witnesses.length > 0 && (
 					<div className="space-y-4">
 						<h3 className="text-lg font-semibold border-b pb-2">Witnesses</h3>
 						<div className="grid gap-4">
-							{data.witnesses.map((witness, index) => (
+							{reviewData.witnesses.map((witness, index) => (
 								<div
 									key={index}
 									className="rounded-lg border border-gray-200 p-4 bg-gray-50"
@@ -492,20 +696,6 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 									</div>
 								</div>
 							))}
-						</div>
-					</div>
-				)}
-
-				{/* Funeral Instructions */}
-				{data.funeralInstructions?.instructions && (
-					<div className="space-y-4">
-						<h3 className="text-lg font-semibold border-b pb-2">
-							Funeral Instructions
-						</h3>
-						<div className="rounded-lg border border-gray-200 p-4 bg-gray-50">
-							<div className="whitespace-pre-wrap text-gray-900">
-								{data.funeralInstructions.instructions}
-							</div>
 						</div>
 					</div>
 				)}

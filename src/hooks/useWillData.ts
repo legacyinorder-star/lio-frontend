@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useWill } from "@/context/WillContext";
 import { useRelationships } from "@/hooks/useRelationships";
 import { apiClient } from "@/utils/apiClient";
-import { createRelationshipResolver } from "@/utils/relationshipResolver";
+import { getFormattedRelationshipNameById } from "@/utils/relationships";
 import { toast } from "sonner";
 
 // Types for API responses
@@ -58,19 +58,12 @@ export function useWillData() {
 	const { relationships, isLoading: isLoadingRelationships } =
 		useRelationships();
 
-	// Create relationship resolver for optimized lookups
-	const relationshipResolver = useMemo(() => {
-		return createRelationshipResolver(relationships);
-	}, [relationships]);
-
 	// Check if all dependencies are ready
 	const dependenciesReady = useMemo(() => {
 		return (
-			!isLoadingRelationships &&
-			relationshipResolver.isReady() &&
-			activeWill?.id
+			!isLoadingRelationships && relationships.length > 0 && activeWill?.id
 		);
-	}, [isLoadingRelationships, relationshipResolver, activeWill?.id]);
+	}, [isLoadingRelationships, relationships.length, activeWill?.id]);
 
 	// Combine all beneficiary sources into a single array
 	const combineAllBeneficiaries = useCallback(
@@ -146,17 +139,15 @@ export function useWillData() {
 				if (!usedIds.has(person.id)) {
 					usedIds.add(person.id);
 
-					// Resolve relationship name using the optimized resolver
+					// Use simple relationship lookup
 					const relationshipName =
-						relationshipResolver.getFormattedRelationshipName(
-							person.relationship_id
-						);
+						getFormattedRelationshipNameById(person.relationship_id) || "Other";
 
 					combined.push({
 						id: person.id,
 						firstName: person.first_name,
 						lastName: person.last_name,
-						relationship: relationshipName || "Other",
+						relationship: relationshipName,
 						relationshipId: person.relationship_id,
 						isMinor: person.is_minor,
 						type: "person",
@@ -166,7 +157,7 @@ export function useWillData() {
 
 			return combined;
 		},
-		[relationships]
+		[]
 	);
 
 	// Load all beneficiary data
@@ -268,13 +259,12 @@ export function useWillData() {
 					return null;
 				}
 
-				// Get the relationship name for display using the fallback relationships directly
-				const relationship = relationships.find((r) => r.id === relationshipId);
-				const relationshipName = relationship ? relationship.name : "Other";
+				// Use simple relationship lookup
+				const relationshipName =
+					getFormattedRelationshipNameById(relationshipId) || "Other";
 
 				console.log("Relationship resolution:", {
 					relationshipId,
-					foundRelationship: relationship,
 					relationshipName,
 					availableRelationships: relationships.map((r) => ({
 						id: r.id,
@@ -364,7 +354,6 @@ export function useWillData() {
 		// Data
 		allBeneficiaries: state.allBeneficiaries,
 		relationships,
-		relationshipResolver,
 
 		// Loading states
 		isLoading: state.isLoading,
