@@ -295,14 +295,22 @@ export default function GiftsStep({ onNext, onBack }: GiftsStepProps) {
 		}
 
 		try {
+			// Check if the selected beneficiary is a guardian
+			const selectedBeneficiaryId = giftForm.peopleId || giftForm.charitiesId;
+			const isGuardian = activeWill?.guardians?.some(
+				(guardian) => guardian.id === selectedBeneficiaryId
+			);
+
 			const payload = {
+				will_id: activeWill?.id,
 				type: giftForm.type,
 				description: giftForm.description,
 				value: giftForm.value,
 				currency: giftForm.currency,
-				peopleId: giftForm.peopleId || null,
-				charitiesId: giftForm.charitiesId || null,
-				willId: activeWill?.id,
+				people_id: giftForm.peopleId || null,
+				charities_id: giftForm.charitiesId || null,
+				// Add guardian flag if it's a guardian
+				...(isGuardian && { guardian_id: selectedBeneficiaryId }),
 			};
 
 			const { data, error } = await apiClient(
