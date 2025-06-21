@@ -61,8 +61,25 @@ interface GiftApiResponse {
 	currency?: string;
 	peopleId?: string;
 	charitiesId?: string;
-	person?: unknown;
-	charity?: unknown;
+	person?: {
+		id: string;
+		user_id: string;
+		will_id: string;
+		relationship_id: string;
+		first_name: string;
+		last_name: string;
+		is_minor: boolean;
+		created_at: string;
+		is_witness: boolean;
+	};
+	charity?: {
+		id: string;
+		created_at: string;
+		will_id: string;
+		name: string;
+		rc_number?: string;
+		user_id: string;
+	};
 }
 
 const giftSchema = z
@@ -501,26 +518,115 @@ export default function GiftsStep({ onNext, onBack }: GiftsStepProps) {
 
 		// Return person data if available
 		if (willGift.person) {
-			return {
-				id: willGift.person.id,
-				firstName: willGift.person.firstName,
-				lastName: willGift.person.lastName,
-				relationship: willGift.person.relationship,
-				relationshipId: willGift.person.relationshipId,
-				type: "person" as const,
-			};
+			// Check if it's API response format (has first_name, last_name, relationship_id)
+			if ("first_name" in willGift.person && "last_name" in willGift.person) {
+				// API response format
+				const personData =
+					willGift.person as unknown as GiftApiResponse["person"];
+				if (personData) {
+					return {
+						id: personData.id,
+						firstName: personData.first_name,
+						lastName: personData.last_name,
+						relationship: "Unknown", // Will be resolved by relationship_id
+						relationshipId: personData.relationship_id,
+						type: "person" as const,
+					};
+				}
+			} else {
+				// Context format (WillPerson) - has firstName, lastName, relationship
+				const personData = willGift.person;
+				return {
+					id: personData.id,
+					firstName: personData.firstName,
+					lastName: personData.lastName,
+					relationship: personData.relationship,
+					relationshipId: personData.relationshipId,
+					type: "person" as const,
+				};
+			}
 		}
 
 		// Return charity data if available
 		if (willGift.charity) {
-			return {
-				id: willGift.charity.id,
-				firstName: willGift.charity.name,
-				lastName: "",
-				relationship: "Charity",
-				registrationNumber: willGift.charity.registrationNumber,
-				type: "charity" as const,
-			};
+			// Check if it's API response format (has rc_number)
+			if ("rc_number" in willGift.charity) {
+				// API response format
+				const charityData =
+					willGift.charity as unknown as GiftApiResponse["charity"];
+				if (charityData) {
+					return {
+						id: charityData.id,
+						firstName: charityData.name,
+						lastName: "",
+						relationship: "Charity",
+						registrationNumber: charityData.rc_number,
+						type: "charity" as const,
+					};
+				}
+			} else {
+				// Context format
+				const charityData = willGift.charity;
+				return {
+					id: charityData.id,
+					firstName: charityData.name,
+					lastName: "",
+					relationship: "Charity",
+					registrationNumber: charityData.registrationNumber,
+					type: "charity" as const,
+				};
+			}
+		}
+
+		// Check if it's a guardian from activeWill context
+		if (willGift.peopleId) {
+			const guardian = activeWill?.guardians?.find(
+				(g) => g.id === willGift.peopleId
+			);
+			if (guardian) {
+				return {
+					id: guardian.id,
+					firstName: guardian.firstName,
+					lastName: guardian.lastName,
+					relationship: guardian.relationship,
+					type: "person" as const,
+				};
+			}
+		}
+
+		// Fallback: Check enhancedBeneficiaries if person/charity/guardian data is not available
+		if (willGift.peopleId) {
+			const enhancedBeneficiary = enhancedBeneficiaries.find(
+				(b) => b.id === willGift.peopleId
+			);
+			if (enhancedBeneficiary) {
+				return {
+					id: enhancedBeneficiary.id,
+					firstName: enhancedBeneficiary.firstName,
+					lastName: enhancedBeneficiary.lastName,
+					relationship: enhancedBeneficiary.relationship,
+					relationshipId: enhancedBeneficiary.relationshipId,
+					type: enhancedBeneficiary.type,
+					registrationNumber: enhancedBeneficiary.registrationNumber,
+				};
+			}
+		}
+
+		if (willGift.charitiesId) {
+			const enhancedBeneficiary = enhancedBeneficiaries.find(
+				(b) => b.id === willGift.charitiesId
+			);
+			if (enhancedBeneficiary) {
+				return {
+					id: enhancedBeneficiary.id,
+					firstName: enhancedBeneficiary.firstName,
+					lastName: enhancedBeneficiary.lastName,
+					relationship: enhancedBeneficiary.relationship,
+					relationshipId: enhancedBeneficiary.relationshipId,
+					type: enhancedBeneficiary.type,
+					registrationNumber: enhancedBeneficiary.registrationNumber,
+				};
+			}
 		}
 
 		return null;
