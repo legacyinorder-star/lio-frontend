@@ -72,7 +72,7 @@ export function AssetDialog({
 	const [searchQuery, setSearchQuery] = useState("");
 	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-	// Initialize form when editing
+	// Initialize form when editing or when modal opens
 	useEffect(() => {
 		if (editingAsset) {
 			setAssetForm({
@@ -81,15 +81,18 @@ export function AssetDialog({
 				distributionType: editingAsset.distributionType,
 				beneficiaries: editingAsset.beneficiaries,
 			});
-		} else {
+		} else if (open) {
+			// Reset form to default values when adding new asset and modal is open
 			setAssetForm({
 				assetType: "Property" as AssetType,
 				description: "",
 				distributionType: "equal",
 				beneficiaries: [],
 			});
+			setSearchQuery("");
+			setIsDropdownOpen(false);
 		}
-	}, [editingAsset]);
+	}, [editingAsset, open]);
 
 	const handleAssetFormChange =
 		(field: keyof Omit<Asset, "id">) =>
@@ -193,6 +196,7 @@ export function AssetDialog({
 			}
 		);
 
+		// Call onSave with the form data
 		onSave(assetForm, beneficiariesWithPercentages);
 	};
 
@@ -438,8 +442,7 @@ export function AssetDialog({
 																	{beneficiaryDetails.type === "charity"
 																		? beneficiaryDetails.firstName
 																		: `${beneficiaryDetails.firstName} ${beneficiaryDetails.lastName}`}
-																	<span className="text-muted-foreground">
-																		{" "}
+																	<span className="text-muted-foreground ps-[0.25rem]">
 																		({relationship})
 																		{beneficiaryDetails.type === "charity" &&
 																			beneficiaryDetails.registrationNumber &&
