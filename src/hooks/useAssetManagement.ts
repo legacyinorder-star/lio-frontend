@@ -43,46 +43,29 @@ interface ApiAssetResponse {
 	}>;
 }
 
-export function useAssetManagement(initialAssets: Asset[] = []) {
-	const [assets, setAssets] = useState<Asset[]>(initialAssets);
+export function useAssetManagement() {
+	const [assets, setAssets] = useState<Asset[]>([]);
 	const [isLoadingAssets, setIsLoadingAssets] = useState(false);
 	const { activeWill, setActiveWill } = useWill();
 	const { relationships } = useRelationships();
 	const hasLoadedInitialAssets = useRef(false);
 
-	// Load assets from activeWill context or API
+	// Load assets from API only
 	useEffect(() => {
-		const loadAssetsFromContext = async () => {
-			if (activeWill?.assets && activeWill.assets.length > 0) {
-				// Convert WillAsset format to Asset format
-				const convertedAssets: Asset[] = activeWill.assets.map((willAsset) => ({
-					id: willAsset.id,
-					assetType: willAsset.assetType as AssetType,
-					description: willAsset.description,
-					distributionType: willAsset.distributionType,
-					beneficiaries: willAsset.beneficiaries.map((beneficiary) => ({
-						id: beneficiary.id,
-						percentage: beneficiary.percentage,
-					})),
-				}));
-				setAssets(convertedAssets);
-			} else if (initialAssets.length > 0 && !hasLoadedInitialAssets.current) {
-				setAssets(initialAssets);
-				hasLoadedInitialAssets.current = true;
-			} else if (
+		const loadAssetsFromAPIEffect = async () => {
+			if (
 				activeWill?.id &&
 				relationships.length > 0 &&
 				!hasLoadedInitialAssets.current
 			) {
-				// If no assets in context but we have an active will and relationships are loaded,
-				// try to load from API
-				loadAssetsFromAPI();
+				// Load assets from API
+				await loadAssetsFromAPI();
 				hasLoadedInitialAssets.current = true;
 			}
 		};
 
-		loadAssetsFromContext();
-	}, [activeWill, relationships.length]);
+		loadAssetsFromAPIEffect();
+	}, [activeWill?.id, relationships.length]);
 
 	// Function to map beneficiary details from API response to WillContext structure
 	const mapBeneficiaryDetails = (
@@ -99,7 +82,7 @@ export function useAssetManagement(initialAssets: Asset[] = []) {
 		try {
 			// Fetch assets from API
 			const { data: assetsData, error } = await apiClient<ApiAssetResponse[]>(
-				`/assets?will_id=${activeWill.id}`,
+				`/assets/get-by-will/${activeWill.id}`,
 				{
 					method: "GET",
 				}
@@ -176,18 +159,23 @@ export function useAssetManagement(initialAssets: Asset[] = []) {
 		}
 
 		try {
-			// Send POST request to /assets
+			const payload = {
+				will_id: activeWill.id,
+				name: assetForm.assetType,
+				asset_type: assetForm.assetType,
+				description: assetForm.description,
+				distribution_type: assetForm.distributionType,
+				beneficiaries: beneficiariesWithPercentages,
+			};
+
+			// Use PATCH for updates, POST for new assets
+			const endpoint = editingAssetId ? `/assets/${editingAssetId}` : "/assets";
+			const method = editingAssetId ? "PATCH" : "POST";
+
 			const { data: assetData, error: assetError } =
-				await apiClient<ApiAssetResponse>("/assets", {
-					method: "POST",
-					body: JSON.stringify({
-						will_id: activeWill.id,
-						name: assetForm.assetType,
-						asset_type: assetForm.assetType,
-						description: assetForm.description,
-						distribution_type: assetForm.distributionType,
-						beneficiaries: beneficiariesWithPercentages,
-					}),
+				await apiClient<ApiAssetResponse>(endpoint, {
+					method,
+					body: JSON.stringify(payload),
 				});
 
 			if (assetError || !assetData) {
@@ -218,11 +206,16 @@ export function useAssetManagement(initialAssets: Asset[] = []) {
 				);
 				setAssets(updatedAssets);
 
-				// Update will context with mapped beneficiaries
+				// Update will context with all asset properties, not just beneficiaries
 				const updatedWillAssets = activeWill.assets.map((willAsset) =>
 					willAsset.id === editingAssetId
 						? {
-								...willAsset,
+								id: assetData.id,
+								assetType: assetData.asset_type,
+								description: assetData.description,
+								distributionType: assetData.distribution_type as
+									| "equal"
+									| "percentage",
 								beneficiaries: mappedBeneficiaries,
 						  }
 						: willAsset
@@ -267,19 +260,41 @@ export function useAssetManagement(initialAssets: Asset[] = []) {
 	};
 
 	// Remove asset
-	const removeAsset = (assetId: string) => {
-		const updatedAssets = assets.filter((asset) => asset.id !== assetId);
-		setAssets(updatedAssets);
+	const removeAsset = async (assetId: string) => {
+		if (!activeWill?.id) {
+			toast.error("No active will found");
+			return;
+		}
 
-		// Update will context by removing the asset
-		if (activeWill) {
-			const updatedWillAssets = activeWill.assets.filter(
-				(willAsset) => willAsset.id !== assetId
-			);
-			setActiveWill({
-				...activeWill,
-				assets: updatedWillAssets,
+		try {
+			// Make DELETE API call
+			const { error } = await apiClient(`/assets/${assetId}`, {
+				method: "DELETE",
 			});
+
+			if (error) {
+				toast.error("Failed to delete asset");
+				return;
+			}
+
+			// Only update local state on successful API call
+			const updatedAssets = assets.filter((asset) => asset.id !== assetId);
+			setAssets(updatedAssets);
+
+			// Update will context by removing the asset
+			if (activeWill) {
+				const updatedWillAssets = activeWill.assets.filter(
+					(willAsset) => willAsset.id !== assetId
+				);
+				setActiveWill({
+					...activeWill,
+					assets: updatedWillAssets,
+				});
+			}
+
+			toast.success("Asset deleted successfully");
+		} catch (err) {
+			toast.error("Failed to delete asset");
 		}
 	};
 

@@ -8,6 +8,7 @@ import { ArrowLeft, ArrowRight, Plus } from "lucide-react";
 import { Asset, WillFormData } from "../types/will.types";
 import { useAssetManagement } from "@/hooks/useAssetManagement";
 import { useWillData } from "@/hooks/useWillData";
+import { useWill } from "@/context/WillContext";
 import { AssetDialog } from "../components/AssetDialog";
 import { NewBeneficiaryDialog } from "../components/NewBeneficiaryDialog";
 import { AssetCard } from "../components/AssetCard";
@@ -29,16 +30,12 @@ interface AssetsStepProps {
 	onUpdate: (data: Partial<WillFormData>) => void;
 	onNext: () => void;
 	onBack: () => void;
-	initialData?: {
-		assets: Asset[];
-	};
 }
 
 export default function AssetsStep({
 	onUpdate,
 	onNext,
 	onBack,
-	initialData,
 }: AssetsStepProps) {
 	const [assetDialogOpen, setAssetDialogOpen] = useState(false);
 	const [editingAsset, setEditingAsset] = useState<Asset | null>(null);
@@ -46,9 +43,7 @@ export default function AssetsStep({
 		useState(false);
 
 	// Use custom hooks
-	const { assets, saveAsset, removeAsset } = useAssetManagement(
-		initialData?.assets || []
-	);
+	const { assets, saveAsset, removeAsset } = useAssetManagement();
 
 	const {
 		allBeneficiaries: enhancedBeneficiaries,
@@ -57,6 +52,8 @@ export default function AssetsStep({
 		addIndividualBeneficiary,
 		addCharityBeneficiary,
 	} = useWillData();
+
+	const { activeWill } = useWill();
 
 	const form = useForm<z.infer<typeof assetSchema>>({
 		resolver: zodResolver(assetSchema),
@@ -67,6 +64,47 @@ export default function AssetsStep({
 			beneficiaries: [],
 		},
 	});
+
+	// Function to check if a beneficiary is deleted
+	const isBeneficiaryDeleted = (
+		beneficiaryId: string,
+		assetId: string
+	): boolean => {
+		// Get the will asset from activeWill context
+		const willAsset = activeWill?.assets.find(
+			(willAsset) => willAsset.id === assetId
+		);
+
+		if (!willAsset) return false;
+
+		// Find the beneficiary in the will asset
+		const willBeneficiary = willAsset.beneficiaries.find(
+			(wb) => wb.id === beneficiaryId
+		);
+
+		if (!willBeneficiary) return true;
+
+		// Check if it's an individual and the person data is missing
+		const isIndividual = willBeneficiary.peopleId !== undefined;
+		const isCharity = willBeneficiary.charitiesId !== undefined;
+
+		if (isIndividual && !willBeneficiary.person) {
+			return true;
+		}
+
+		if (isCharity && !willBeneficiary.charity) {
+			return true;
+		}
+
+		return false;
+	};
+
+	// Check if any asset has deleted beneficiaries
+	const hasAnyDeletedBeneficiaries = assets.some((asset) =>
+		asset.beneficiaries.some((beneficiary) =>
+			isBeneficiaryDeleted(beneficiary.id, asset.id)
+		)
+	);
 
 	// Show loading state if data is not ready
 	if (!isBeneficiariesReady || isLoadingBeneficiaries) {
@@ -109,8 +147,8 @@ export default function AssetsStep({
 		setAssetDialogOpen(true);
 	};
 
-	const handleRemoveAsset = (assetId: string) => {
-		removeAsset(assetId);
+	const handleRemoveAsset = async (assetId: string) => {
+		await removeAsset(assetId);
 	};
 
 	const handleAddNewBeneficiary = () => {
@@ -187,18 +225,59 @@ export default function AssetsStep({
 							</p>
 						) : (
 							<div className="space-y-4">
-								{assets.map((asset) => (
-									<AssetCard
-										key={asset.id}
-										asset={asset}
-										onEdit={handleEditAsset}
-										onRemove={handleRemoveAsset}
-										enhancedBeneficiaries={enhancedBeneficiaries}
-									/>
-								))}
+								{assets.map((asset) => {
+									// Check if this specific asset has deleted beneficiaries
+									const hasDeletedBeneficiaries = asset.beneficiaries.some(
+										(beneficiary) =>
+											isBeneficiaryDeleted(beneficiary.id, asset.id)
+									);
+
+									return (
+										<AssetCard
+											key={asset.id}
+											asset={asset}
+											onEdit={handleEditAsset}
+											onRemove={handleRemoveAsset}
+											hasDeletedBeneficiaries={hasDeletedBeneficiaries}
+										/>
+									);
+								})}
 							</div>
 						)}
 					</div>
+
+					{/* Validation message for deleted beneficiaries */}
+					{hasAnyDeletedBeneficiaries && (
+						<div className="bg-red-50 border border-red-200 rounded-lg p-4">
+							<div className="flex items-start">
+								<div className="flex-shrink-0">
+									<svg
+										className="h-5 w-5 text-red-400"
+										viewBox="0 0 20 20"
+										fill="currentColor"
+									>
+										<path
+											fillRule="evenodd"
+											d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+											clipRule="evenodd"
+										/>
+									</svg>
+								</div>
+								<div className="ml-3">
+									<h3 className="text-sm font-medium text-red-800">
+										Deleted Beneficiaries Detected
+									</h3>
+									<div className="mt-2 text-sm text-red-700">
+										<p>
+											Some assets have beneficiaries that have been deleted.
+											Please edit those assets to fix this issue before
+											proceeding.
+										</p>
+									</div>
+								</div>
+							</div>
+						</div>
+					)}
 
 					<div className="flex justify-between pt-4">
 						<Button
@@ -212,7 +291,8 @@ export default function AssetsStep({
 						<Button
 							type="button"
 							onClick={handleSubmit}
-							className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
+							disabled={hasAnyDeletedBeneficiaries}
+							className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black disabled:bg-gray-300 disabled:cursor-not-allowed"
 						>
 							Next <ArrowRight className="ml-2 h-4 w-4" />
 						</Button>

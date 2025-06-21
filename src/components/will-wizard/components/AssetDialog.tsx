@@ -20,6 +20,7 @@ import { AssetTypeSelector } from "./AssetTypeSelector";
 import { EnhancedBeneficiary } from "@/hooks/useWillData";
 import { getFormattedRelationshipNameById } from "@/utils/relationships";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { useWill } from "@/context/WillContext";
 
 interface AssetDialogProps {
 	open: boolean;
@@ -38,6 +39,20 @@ interface AssetDialogProps {
 	isLoadingBeneficiaries: boolean;
 }
 
+// Type for beneficiary details with fallback support
+type BeneficiaryDetails =
+	| EnhancedBeneficiary
+	| {
+			id: string;
+			firstName: string;
+			lastName: string;
+			relationship: string;
+			relationshipId?: string;
+			type: "person" | "charity";
+			registrationNumber?: string;
+			isDeleted?: boolean;
+	  };
+
 export function AssetDialog({
 	open,
 	onOpenChange,
@@ -47,6 +62,7 @@ export function AssetDialog({
 	enhancedBeneficiaries,
 	isLoadingBeneficiaries,
 }: AssetDialogProps) {
+	const { activeWill } = useWill();
 	const [assetForm, setAssetForm] = useState<Omit<Asset, "id">>({
 		assetType: "Property" as AssetType,
 		description: "",
@@ -195,6 +211,100 @@ export function AssetDialog({
 						.toLowerCase()
 						.includes(searchQuery.toLowerCase())))
 	);
+
+	// Helper function to get beneficiary details with fallback to will context
+	const getBeneficiaryDetails = (beneficiaryId: string): BeneficiaryDetails => {
+		// First try to find in enhancedBeneficiaries
+		const enhancedBeneficiary = enhancedBeneficiaries.find(
+			(b) => b.id === beneficiaryId
+		);
+		if (enhancedBeneficiary) {
+			return enhancedBeneficiary;
+		}
+
+		// Fallback to will context for deleted beneficiaries
+		if (editingAsset && activeWill?.assets) {
+			const willAsset = activeWill.assets.find(
+				(willAsset) => willAsset.id === editingAsset.id
+			);
+			if (willAsset) {
+				const willBeneficiary = willAsset.beneficiaries.find(
+					(wb) => wb.id === beneficiaryId
+				);
+				if (willBeneficiary) {
+					// Check if it's a deleted beneficiary
+					const isIndividual = willBeneficiary.peopleId !== undefined;
+					const isCharity = willBeneficiary.charitiesId !== undefined;
+
+					if (isIndividual && !willBeneficiary.person) {
+						// Deleted person
+						return {
+							id: beneficiaryId,
+							firstName: "Unknown Person",
+							lastName: "(Deleted)",
+							relationship: "Deleted Beneficiary",
+							type: "person",
+							isDeleted: true,
+						};
+					}
+
+					if (isCharity && !willBeneficiary.charity) {
+						// Deleted charity
+						return {
+							id: beneficiaryId,
+							firstName: "Unknown Charity",
+							lastName: "(Deleted)",
+							relationship: "Deleted Beneficiary",
+							type: "charity",
+							isDeleted: true,
+						};
+					}
+
+					// Valid beneficiary from will context
+					if (willBeneficiary.person) {
+						return {
+							id: beneficiaryId,
+							firstName: willBeneficiary.person.firstName,
+							lastName: willBeneficiary.person.lastName,
+							relationship: willBeneficiary.person.relationship,
+							relationshipId: willBeneficiary.person.relationshipId,
+							type: "person",
+						};
+					}
+
+					if (willBeneficiary.charity) {
+						return {
+							id: beneficiaryId,
+							firstName: willBeneficiary.charity.name,
+							lastName: "",
+							relationship: "Charity",
+							registrationNumber: willBeneficiary.charity.registrationNumber,
+							type: "charity",
+						};
+					}
+				}
+			}
+		}
+
+		// Ultimate fallback
+		return {
+			id: beneficiaryId,
+			firstName: "Unknown",
+			lastName: "Beneficiary",
+			relationship: "Unknown",
+			type: "person",
+			isDeleted: true,
+		};
+	};
+
+	// Helper function to check if beneficiary is deleted
+	const isBeneficiaryDeleted = (
+		beneficiaryDetails: BeneficiaryDetails
+	): boolean => {
+		return (
+			"isDeleted" in beneficiaryDetails && beneficiaryDetails.isDeleted === true
+		);
+	};
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
@@ -357,8 +467,8 @@ export function AssetDialog({
 											Selected beneficiaries:
 										</p>
 										{assetForm.beneficiaries.map((beneficiary) => {
-											const beneficiaryDetails = enhancedBeneficiaries.find(
-												(b) => b.id === beneficiary.id
+											const beneficiaryDetails = getBeneficiaryDetails(
+												beneficiary.id
 											);
 											if (!beneficiaryDetails) return null;
 
@@ -368,13 +478,24 @@ export function AssetDialog({
 												  ) || beneficiaryDetails.relationship
 												: beneficiaryDetails.relationship;
 
+											const isDeleted =
+												isBeneficiaryDeleted(beneficiaryDetails);
+
 											return (
 												<div
 													key={beneficiary.id}
-													className="flex items-center justify-between p-2 border rounded-md hover:bg-gray-50 transition-colors"
+													className={`flex items-center justify-between p-2 border rounded-md transition-colors ${
+														isDeleted
+															? "bg-red-50 border-red-200 hover:bg-red-100"
+															: "hover:bg-gray-50"
+													}`}
 												>
 													<div>
-														<span className="font-medium">
+														<span
+															className={`font-medium ${
+																isDeleted ? "text-red-600" : ""
+															}`}
+														>
 															{beneficiaryDetails.type === "charity"
 																? beneficiaryDetails.firstName
 																: `${beneficiaryDetails.firstName} ${beneficiaryDetails.lastName}`}
@@ -388,6 +509,11 @@ export function AssetDialog({
 														{assetForm.distributionType === "percentage" && (
 															<span className="text-sm text-muted-foreground ml-2">
 																({beneficiary.percentage}%)
+															</span>
+														)}
+														{isDeleted && (
+															<span className="text-sm text-red-600 ml-2">
+																(Deleted - Please remove)
 															</span>
 														)}
 													</div>

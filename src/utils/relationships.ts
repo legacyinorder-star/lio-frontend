@@ -22,11 +22,9 @@ export function getRelationshipNameById(id: string): string | undefined {
 	return getRelationshipById(id)?.name;
 }
 
-export function getFormattedRelationshipNameById(
-	id: string
-): string | undefined {
+export function getFormattedRelationshipNameById(id: string): string {
 	const name = getRelationshipNameById(id);
-	if (!name) return undefined;
+	if (!name) return "Unknown Relationship";
 
 	return name
 		.split(" ")

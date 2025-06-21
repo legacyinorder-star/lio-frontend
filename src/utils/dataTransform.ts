@@ -417,18 +417,12 @@ export function mapAssetBeneficiariesFromAPI(
 					},
 				};
 			} else {
+				// Deleted person - don't create fake person object
 				return {
 					id: assetBeneficiary.id,
 					percentage: assetBeneficiary.percentage,
 					peopleId: assetBeneficiary.people_id,
-					person: {
-						id: assetBeneficiary.people_id,
-						firstName: "Unknown",
-						lastName: "Person",
-						relationship: "Unknown Relationship",
-						relationshipId: "",
-						isMinor: false,
-					},
+					// person is undefined, indicating deleted beneficiary
 				};
 			}
 		}
@@ -450,20 +444,17 @@ export function mapAssetBeneficiariesFromAPI(
 					},
 				};
 			} else {
+				// Deleted charity - don't create fake charity object
 				return {
 					id: assetBeneficiary.id,
 					percentage: assetBeneficiary.percentage,
 					charitiesId: assetBeneficiary.charities_id,
-					charity: {
-						id: assetBeneficiary.charities_id,
-						name: "Unknown Charity",
-						registrationNumber: undefined,
-					},
+					// charity is undefined, indicating deleted beneficiary
 				};
 			}
 		}
 
-		// Ultimate fallback
+		// Ultimate fallback - this shouldn't happen with proper data
 		return {
 			id: assetBeneficiary.id,
 			percentage: assetBeneficiary.percentage,
