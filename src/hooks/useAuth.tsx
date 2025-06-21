@@ -5,7 +5,6 @@ import {
 	useEffect,
 	ReactNode,
 	useCallback,
-	useRef,
 } from "react";
 import {
 	getUserDetails,
@@ -45,44 +44,44 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 // Session management constants
-const SESSION_CHECK_INTERVAL = 15 * 60 * 1000; // 15 minutes
-const ACTIVITY_EVENTS = [
-	"mousedown",
-	"mousemove",
-	"keypress",
-	"scroll",
-	"touchstart",
-];
-const INACTIVITY_WARNING_TIME = 25 * 60 * 1000; // 25 minutes
-const SESSION_TIMEOUT_TIME = 30 * 60 * 1000; // 30 minutes
+// const SESSION_CHECK_INTERVAL = 15 * 60 * 1000; // 15 minutes
+// const ACTIVITY_EVENTS = [
+// 	"mousedown",
+// 	"mousemove",
+// 	"keypress",
+// 	"scroll",
+// 	"touchstart",
+// ];
+// const INACTIVITY_WARNING_TIME = 25 * 60 * 1000; // 25 minutes
+// const SESSION_TIMEOUT_TIME = 30 * 60 * 1000; // 30 minutes
 
 export function AuthProvider({ children }: { children: ReactNode }) {
 	const [user, setUser] = useState<User | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
-	const [lastActivity, setLastActivity] = useState<Date | null>(null);
-	const sessionCheckIntervalRef = useRef<number | null>(null);
-	const inactivityWarningRef = useRef<number | null>(null);
-	const inactivityTimeoutRef = useRef<number | null>(null);
+	// const [lastActivity, setLastActivity] = useState<Date | null>(null);
+	// const sessionCheckIntervalRef = useRef<number | null>(null);
+	// const inactivityWarningRef = useRef<number | null>(null);
+	// const inactivityTimeoutRef = useRef<number | null>(null);
 
 	// Centralized logout function
 	const logout = useCallback(() => {
 		setUser(null);
-		setLastActivity(null);
+		// setLastActivity(null);
 		removeAuthData();
 
 		// Clear all timers
-		if (sessionCheckIntervalRef.current) {
-			clearInterval(sessionCheckIntervalRef.current);
-			sessionCheckIntervalRef.current = null;
-		}
-		if (inactivityWarningRef.current) {
-			clearTimeout(inactivityWarningRef.current);
-			inactivityWarningRef.current = null;
-		}
-		if (inactivityTimeoutRef.current) {
-			clearTimeout(inactivityTimeoutRef.current);
-			inactivityTimeoutRef.current = null;
-		}
+		// if (sessionCheckIntervalRef.current) {
+		// 	clearInterval(sessionCheckIntervalRef.current);
+		// 	sessionCheckIntervalRef.current = null;
+		// }
+		// if (inactivityWarningRef.current) {
+		// 	clearTimeout(inactivityWarningRef.current);
+		// 	inactivityWarningRef.current = null;
+		// }
+		// if (inactivityTimeoutRef.current) {
+		// 	clearTimeout(inactivityTimeoutRef.current);
+		// 	inactivityTimeoutRef.current = null;
+		// }
 	}, []);
 
 	// Function to check token expiration
@@ -182,39 +181,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		return false;
 	}, [user, logout]);
 
-	// Track user activity
-	const updateActivity = useCallback(() => {
-		// Only track activity if user is authenticated
-		if (!user) return;
+	// Track user activity - COMMENTED OUT
+	// const updateActivity = useCallback(() => {
+	// 	// Only track activity if user is authenticated
+	// 	if (!user) return;
 
-		const now = new Date();
-		setLastActivity(now);
+	// 	// const now = new Date();
+	// 	// setLastActivity(now);
 
-		// Clear existing timers
-		if (inactivityWarningRef.current) {
-			clearTimeout(inactivityWarningRef.current);
-		}
-		if (inactivityTimeoutRef.current) {
-			clearTimeout(inactivityTimeoutRef.current);
-		}
+	// 	// Clear existing timers
+	// 	// if (inactivityWarningRef.current) {
+	// 	// 	clearTimeout(inactivityWarningRef.current);
+	// 	// }
+	// 	// if (inactivityTimeoutRef.current) {
+	// 	// 	clearTimeout(inactivityTimeoutRef.current);
+	// 	// }
 
-		// Set warning timer
-		inactivityWarningRef.current = setTimeout(() => {
-			toast.warning(
-				"You've been inactive for a while. Your session will expire soon unless you interact with the page.",
-				{
-					duration: 10000,
-				}
-			);
-		}, INACTIVITY_WARNING_TIME);
+	// 	// Set warning timer
+	// 	// inactivityWarningRef.current = setTimeout(() => {
+	// 	// 	toast.warning(
+	// 	// 		"You've been inactive for a while. Your session will expire soon unless you interact with the page.",
+	// 	// 		{
+	// 	// 			duration: 10000,
+	// 	// 		}
+	// 	// 	);
+	// 	// }, INACTIVITY_WARNING_TIME);
 
-		// Set timeout timer
-		inactivityTimeoutRef.current = setTimeout(() => {
-			toast.error("Session expired due to inactivity.");
-			logout();
-			window.location.href = "/login";
-		}, SESSION_TIMEOUT_TIME);
-	}, [user, logout]);
+	// 	// Set timeout timer
+	// 	// inactivityTimeoutRef.current = setTimeout(() => {
+	// 	// 	toast.error("Session expired due to inactivity.");
+	// 	// 	logout();
+	// 	// 	window.location.href = "/login";
+	// 	// }, SESSION_TIMEOUT_TIME);
+	// }, [user, logout]);
 
 	// Initialize auth state on mount
 	useEffect(() => {
@@ -262,38 +261,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 	useEffect(() => {
 		if (user) {
 			// Initialize activity tracking for authenticated users
-			updateActivity();
+			// updateActivity();
 
 			// Set up token expiration checking interval (every 3 minutes)
 			const tokenCheckInterval = setInterval(checkTokenExpiration, 180000);
 
 			// Set up session validation interval
-			sessionCheckIntervalRef.current = setInterval(async () => {
-				const isValid = await refreshSession();
-				if (!isValid) {
-					console.warn("Session validation failed");
-				}
-			}, SESSION_CHECK_INTERVAL);
+			// sessionCheckIntervalRef.current = setInterval(async () => {
+			// 	const isValid = await refreshSession();
+			// 	if (!isValid) {
+			// 		console.warn("Session validation failed");
+			// 	}
+			// }, SESSION_CHECK_INTERVAL);
 
 			// Set up activity listeners
-			const handleActivity = () => updateActivity();
-			ACTIVITY_EVENTS.forEach((event) => {
-				document.addEventListener(event, handleActivity, { passive: true });
-			});
+			// const handleActivity = () => updateActivity();
+			// ACTIVITY_EVENTS.forEach((event) => {
+			// 	document.addEventListener(event, handleActivity, { passive: true });
+			// });
 
 			// Cleanup function
 			return () => {
 				clearInterval(tokenCheckInterval);
-				if (sessionCheckIntervalRef.current) {
-					clearInterval(sessionCheckIntervalRef.current);
-					sessionCheckIntervalRef.current = null;
-				}
-				ACTIVITY_EVENTS.forEach((event) => {
-					document.removeEventListener(event, handleActivity);
-				});
+				// if (sessionCheckIntervalRef.current) {
+				// 	clearInterval(sessionCheckIntervalRef.current);
+				// 	sessionCheckIntervalRef.current = null;
+				// }
+				// ACTIVITY_EVENTS.forEach((event) => {
+				// 	document.removeEventListener(event, handleActivity);
+				// });
 			};
 		}
-	}, [user, checkTokenExpiration, refreshSession, updateActivity]);
+	}, [user, checkTokenExpiration, refreshSession]);
 
 	// Save user to localStorage whenever it changes (but only if user exists)
 	useEffect(() => {
@@ -311,7 +310,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 	return (
 		<AuthContext.Provider
-			value={{ user, setUser, logout, isLoading, refreshSession, lastActivity }}
+			value={{
+				user,
+				setUser,
+				logout,
+				isLoading,
+				refreshSession,
+				lastActivity: null,
+			}}
 		>
 			{children}
 		</AuthContext.Provider>

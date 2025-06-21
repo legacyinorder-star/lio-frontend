@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { getAuthToken, getUserDetails, isTokenExpired } from "@/utils/auth";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
-import { Shield, Clock } from "lucide-react";
+import { Shield } from "lucide-react";
 
 interface ProtectedRouteProps {
 	children: ReactNode;
@@ -19,7 +19,7 @@ export default function ProtectedRoute({
 	fallbackPath = "/app/dashboard",
 	showLoadingCard = true,
 }: ProtectedRouteProps) {
-	const { user, isLoading, refreshSession, lastActivity } = useAuth();
+	const { user, isLoading, refreshSession } = useAuth();
 	const location = useLocation();
 	const [isValidatingSession, setIsValidatingSession] = useState(false);
 	const [validationAttempted, setValidationAttempted] = useState(false);
@@ -31,28 +31,28 @@ export default function ProtectedRoute({
 				setValidationAttempted(true);
 
 				// Check if we need to validate the session
-				const shouldValidate =
-					!lastActivity || Date.now() - lastActivity.getTime() > 5 * 60 * 1000; // 5 minutes
+				// const shouldValidate =
+				// 	!lastActivity || Date.now() - lastActivity.getTime() > 5 * 60 * 1000; // 5 minutes
 
-				if (shouldValidate) {
-					setIsValidatingSession(true);
-					try {
-						const isValid = await refreshSession();
-						if (!isValid) {
-							toast.error("Session validation failed. Please log in again.");
-							return;
-						}
-					} catch (error) {
-						console.error("Session validation error:", error);
-					} finally {
-						setIsValidatingSession(false);
+				// if (shouldValidate) {
+				setIsValidatingSession(true);
+				try {
+					const isValid = await refreshSession();
+					if (!isValid) {
+						toast.error("Session validation failed. Please log in again.");
+						return;
 					}
+				} catch (error) {
+					console.error("Session validation error:", error);
+				} finally {
+					setIsValidatingSession(false);
 				}
+				// }
 			}
 		};
 
 		validateSession();
-	}, [user, refreshSession, lastActivity, validationAttempted]);
+	}, [user, refreshSession, validationAttempted]);
 
 	// Show loading state while auth is initializing or validating
 	if (isLoading || isValidatingSession) {
@@ -147,20 +147,20 @@ export default function ProtectedRoute({
 	}
 
 	// Show session warning if user has been inactive for a while
-	if (lastActivity && Date.now() - lastActivity.getTime() > 20 * 60 * 1000) {
-		// Show a subtle warning for long inactivity (only once per session)
-		const hasShownWarning = sessionStorage.getItem("inactivity-warning");
-		if (!hasShownWarning) {
-			sessionStorage.setItem("inactivity-warning", "true");
-			toast.warning(
-				"You've been inactive for a while. Please interact with the page to keep your session active.",
-				{
-					duration: 8000,
-					icon: <Clock className="h-4 w-4" />,
-				}
-			);
-		}
-	}
+	// if (lastActivity && Date.now() - lastActivity.getTime() > 20 * 60 * 1000) {
+	// 	// Show a subtle warning for long inactivity (only once per session)
+	// 	const hasShownWarning = sessionStorage.getItem("inactivity-warning");
+	// 	if (!hasShownWarning) {
+	// 		sessionStorage.setItem("inactivity-warning", "true");
+	// 		toast.warning(
+	// 			"You've been inactive for a while. Please interact with the page to keep your session active.",
+	// 			{
+	// 				duration: 8000,
+	// 				icon: <Clock className="h-4 w-4" />,
+	// 			}
+	// 		);
+	// 	}
+	// }
 
 	return <>{children}</>;
 }

@@ -1,3 +1,7 @@
+// SESSION TIMEOUT FUNCTIONALITY DISABLED
+// This component is no longer used as we only rely on API-based session validation
+
+/*
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "./button";
 import { Card, CardContent, CardHeader, CardTitle } from "./card";
@@ -237,3 +241,4 @@ export function useSessionTimeoutWarning(
 		updateActivity,
 	};
 }
+*/

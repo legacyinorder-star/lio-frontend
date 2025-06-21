@@ -1,16 +1,20 @@
-import { useState } from "react";
+// SESSION TIMEOUT FUNCTIONALITY DISABLED
+// This component is no longer used as we only rely on API-based session validation
+
+/*
 import { useSessionActivity } from "@/hooks/useSessionActivity";
 import { Button } from "./button";
 import { Badge } from "./badge";
-import { Card, CardContent } from "./card";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
+	DropdownMenuItem,
 	DropdownMenuLabel,
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "./dropdown-menu";
-import { Clock, Shield, Activity, RefreshCw } from "lucide-react";
+import { Activity, Clock, RefreshCw, Shield } from "lucide-react";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 interface SessionStatusProps {
@@ -132,22 +136,12 @@ export function SessionStatus({
 		);
 	}
 
-	if (compact) {
-		return (
-			<div className={cn("flex items-center gap-2", className)}>
-				<Shield className="h-4 w-4 text-muted-foreground" />
-				<Badge variant={getStatusColor()}>{getStatusText()}</Badge>
-			</div>
-		);
-	}
-
 	return (
-		<Card className={cn("w-full max-w-sm", className)}>
-			<CardContent className="p-4">
-				<StatusContent />
-			</CardContent>
-		</Card>
+		<div className={cn("p-4 border rounded-lg bg-card", className)}>
+			<StatusContent />
+		</div>
 	);
 }
 
 export default SessionStatus;
+*/

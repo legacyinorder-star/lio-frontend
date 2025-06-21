@@ -1,3 +1,7 @@
+// SESSION TIMEOUT FUNCTIONALITY DISABLED
+// This hook is no longer used as we only rely on API-based session validation
+
+/*
 import { useEffect, useCallback, useState, useRef } from "react";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
@@ -220,3 +224,4 @@ export function useSessionActivity(options: SessionActivityOptions = {}) {
 		sessionDurationFormatted: formatDuration(sessionStatus.sessionDuration),
 	};
 }
+*/
