@@ -46,8 +46,7 @@ import {
 import { useWillData } from "@/hooks/useWillData";
 import { useDataLoading } from "@/context/DataLoadingContext";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { useWill } from "@/context/WillContext";
-import { useGiftManagement } from "@/hooks/useGiftManagement";
+import { useWill, WillGift } from "@/context/WillContext";
 import { getFormattedRelationshipNameById } from "@/utils/relationships";
 import { NewBeneficiaryDialog } from "../components/NewBeneficiaryDialog";
 import { toast } from "sonner";
@@ -145,16 +144,9 @@ const GiftTypePill = ({
 interface GiftsStepProps {
 	onNext: (data: { gifts: GiftType[] }) => void;
 	onBack: () => void;
-	initialData?: {
-		gifts: GiftType[];
-	};
 }
 
-export default function GiftsStep({
-	onNext,
-	onBack,
-	initialData,
-}: GiftsStepProps) {
+export default function GiftsStep({ onNext, onBack }: GiftsStepProps) {
 	const [giftForm, setGiftForm] = useState<Omit<GiftType, "id">>({
 		type: "Cash",
 		description: "",
@@ -182,9 +174,18 @@ export default function GiftsStep({
 	} = useWillData();
 	const { updateLoadingState } = useDataLoading();
 	const { activeWill } = useWill();
-	const { gifts, saveGift, removeGift } = useGiftManagement(
-		initialData?.gifts || [],
-		enhancedBeneficiaries
+
+	// Convert WillGift to Gift for compatibility
+	const gifts: GiftType[] = (activeWill?.gifts || []).map(
+		(willGift: WillGift) => ({
+			id: willGift.id,
+			type: willGift.type as GiftTypeEnum,
+			description: willGift.description,
+			value: willGift.value,
+			currency: willGift.currency,
+			peopleId: willGift.peopleId,
+			charitiesId: willGift.charitiesId,
+		})
 	);
 
 	const form = useForm<z.infer<typeof giftSchema>>({
@@ -280,9 +281,35 @@ export default function GiftsStep({
 			return;
 		}
 
-		const savedGift = await saveGift(giftForm, editingGift?.id);
+		try {
+			const payload = {
+				type: giftForm.type,
+				description: giftForm.description,
+				value: giftForm.value,
+				currency: giftForm.currency,
+				peopleId: giftForm.peopleId || null,
+				charitiesId: giftForm.charitiesId || null,
+				willId: activeWill?.id,
+			};
 
-		if (savedGift) {
+			const { error } = await apiClient(
+				editingGift ? `/gifts/${editingGift.id}` : "/gifts",
+				{
+					method: editingGift ? "PATCH" : "POST",
+					body: JSON.stringify(payload),
+				}
+			);
+
+			if (error) {
+				toast.error("Failed to save gift");
+				return;
+			}
+
+			toast.success(
+				editingGift ? "Gift updated successfully" : "Gift added successfully"
+			);
+
+			// Reset form and close dialog
 			setGiftForm({
 				type: "Cash",
 				description: "",
@@ -293,6 +320,12 @@ export default function GiftsStep({
 			});
 			setEditingGift(null);
 			setGiftDialogOpen(false);
+
+			// Refresh will data to get updated gifts
+			// This will be handled by the will context automatically
+		} catch (err) {
+			toast.error("Failed to save gift");
+			console.error("Error saving gift:", err);
 		}
 	};
 
@@ -327,11 +360,12 @@ export default function GiftsStep({
 					return;
 				}
 
-				// Remove from local state after successful API call
-				await removeGift(giftToDelete.id);
 				toast.success("Gift removed successfully");
 				setGiftToDelete(null);
 				setConfirmDeleteOpen(false);
+
+				// Refresh will data to get updated gifts
+				// This will be handled by the will context automatically
 			} catch (err) {
 				toast.error("Failed to remove gift");
 				console.error("Error removing gift:", err);
@@ -388,51 +422,65 @@ export default function GiftsStep({
 	// Get selected beneficiary details
 	const selectedBeneficiary = getSelectedBeneficiaryFromForm();
 
-	// Helper function to get beneficiary ID from Gift
-	const getBeneficiaryIdFromGift = (gift: GiftType) => {
-		return gift.peopleId || gift.charitiesId || "";
-	};
-
-	// Helper function to get beneficiary from gift
+	// Helper function to get beneficiary from gift using will context data
 	const getBeneficiaryFromGift = (gift: GiftType) => {
-		const beneficiaryId = getBeneficiaryIdFromGift(gift);
-
-		// First try to find in enhancedBeneficiaries
-		const enhancedBeneficiary = enhancedBeneficiaries.find(
-			(b) => b.id === beneficiaryId
+		// Find the gift in will context
+		const willGift = activeWill?.gifts.find(
+			(wg: WillGift) => wg.id === gift.id
 		);
-		if (enhancedBeneficiary) {
-			return enhancedBeneficiary;
+
+		if (!willGift) return null;
+
+		// Return person data if available
+		if (willGift.person) {
+			return {
+				id: willGift.person.id,
+				firstName: willGift.person.firstName,
+				lastName: willGift.person.lastName,
+				relationship: willGift.person.relationship,
+				relationshipId: willGift.person.relationshipId,
+				type: "person" as const,
+			};
 		}
 
-		// Fallback to will context if enhancedBeneficiaries is empty
-		if (activeWill?.gifts) {
-			const willGift = activeWill.gifts.find((wg) => wg.id === gift.id);
-			if (willGift) {
-				if (willGift.person) {
-					return {
-						id: willGift.person.id,
-						firstName: willGift.person.firstName,
-						lastName: willGift.person.lastName,
-						relationship: willGift.person.relationship,
-						relationshipId: willGift.person.relationshipId,
-						type: "person" as const,
-					};
-				} else if (willGift.charity) {
-					return {
-						id: willGift.charity.id,
-						firstName: willGift.charity.name,
-						lastName: "",
-						relationship: "Charity",
-						registrationNumber: willGift.charity.registrationNumber,
-						type: "charity" as const,
-					};
-				}
-			}
+		// Return charity data if available
+		if (willGift.charity) {
+			return {
+				id: willGift.charity.id,
+				firstName: willGift.charity.name,
+				lastName: "",
+				relationship: "Charity",
+				registrationNumber: willGift.charity.registrationNumber,
+				type: "charity" as const,
+			};
 		}
 
 		return null;
 	};
+
+	// Function to check if a beneficiary is deleted (rewritten from scratch)
+	const isBeneficiaryDeleted = (gift: GiftType): boolean => {
+		const willGiftForCheck = activeWill?.gifts.find(
+			(wg: WillGift) => wg.id === gift.id
+		);
+		if (!willGiftForCheck) return false; // Defensive: if not found, don't block
+
+		// If peopleId is set, person must be present
+		if (willGiftForCheck.peopleId && !willGiftForCheck.charitiesId) {
+			return !willGiftForCheck.person;
+		}
+		// If charitiesId is set, charity must be present
+		if (willGiftForCheck.charitiesId && !willGiftForCheck.peopleId) {
+			return !willGiftForCheck.charity;
+		}
+		// If neither or both are set, treat as not deleted (shouldn't happen)
+		return false;
+	};
+
+	// Check if any gift has deleted beneficiaries
+	const hasAnyDeletedBeneficiaries = gifts.some((gift) =>
+		isBeneficiaryDeleted(gift)
+	);
 
 	return (
 		<div className="space-y-4">
@@ -485,6 +533,9 @@ export default function GiftsStep({
 										  ) || beneficiary.relationship
 										: beneficiary?.relationship || "Unknown";
 
+									// Check if this specific gift has deleted beneficiaries
+									const hasDeletedBeneficiaries = isBeneficiaryDeleted(gift);
+
 									// Get currency symbol for display
 									const currencyInfo = gift.currency
 										? CURRENCIES.find((c) => c.code === gift.currency)
@@ -493,7 +544,11 @@ export default function GiftsStep({
 									return (
 										<div
 											key={gift.id}
-											className="flex justify-between items-start p-4 border rounded-lg"
+											className={`flex justify-between items-start p-4 border rounded-lg ${
+												hasDeletedBeneficiaries
+													? "border-red-300 bg-red-50"
+													: ""
+											}`}
 										>
 											<div className="space-y-1">
 												<div className="flex items-center space-x-2">
@@ -539,6 +594,39 @@ export default function GiftsStep({
 								})}
 							</div>
 						)}
+
+						{/* Validation message for deleted beneficiaries */}
+						{hasAnyDeletedBeneficiaries && (
+							<div className="bg-red-50 border border-red-200 rounded-lg p-4">
+								<div className="flex items-start">
+									<div className="flex-shrink-0">
+										<svg
+											className="h-5 w-5 text-red-400"
+											viewBox="0 0 20 20"
+											fill="currentColor"
+										>
+											<path
+												fillRule="evenodd"
+												d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+												clipRule="evenodd"
+											/>
+										</svg>
+									</div>
+									<div className="ml-3">
+										<h3 className="text-sm font-medium text-red-800">
+											Deleted Beneficiaries Detected
+										</h3>
+										<div className="mt-2 text-sm text-red-700">
+											<p>
+												Some gifts have beneficiaries that have been deleted.
+												Please edit those gifts to fix this issue before
+												proceeding.
+											</p>
+										</div>
+									</div>
+								</div>
+							</div>
+						)}
 					</div>
 
 					<div className="flex justify-between pt-4">
@@ -552,7 +640,8 @@ export default function GiftsStep({
 						</Button>
 						<Button
 							type="submit"
-							className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
+							disabled={hasAnyDeletedBeneficiaries}
+							className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black disabled:bg-gray-300 disabled:cursor-not-allowed"
 						>
 							Next <ArrowRight className="ml-2 h-4 w-4" />
 						</Button>

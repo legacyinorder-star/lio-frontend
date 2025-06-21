@@ -51,31 +51,22 @@ export function useGiftManagement(
 	// Use provided beneficiaries parameter
 	const availableBeneficiaries = beneficiaries;
 
-	// Load gifts from activeWill context
+	// Load gifts from API only
 	useEffect(() => {
-		const loadGiftsFromContext = async () => {
-			if (activeWill?.gifts && activeWill.gifts.length > 0) {
-				// Convert WillGift format to Gift format
-				const convertedGifts: Gift[] = activeWill.gifts.map(
-					(willGift: WillGift) => ({
-						id: willGift.id,
-						type: willGift.type as GiftType,
-						description: willGift.description,
-						value: willGift.value,
-						currency: willGift.currency,
-						peopleId: willGift.peopleId,
-						charitiesId: willGift.charitiesId,
-					})
-				);
-				setGifts(convertedGifts);
-			} else if (initialGifts.length > 0 && !hasLoadedInitialGifts.current) {
-				setGifts(initialGifts);
+		const loadGiftsFromAPIEffect = async () => {
+			if (
+				activeWill?.id &&
+				relationships.length > 0 &&
+				!hasLoadedInitialGifts.current
+			) {
+				// Load gifts from API
+				await loadGiftsFromAPI();
 				hasLoadedInitialGifts.current = true;
 			}
 		};
 
-		loadGiftsFromContext();
-	}, [activeWill]);
+		loadGiftsFromAPIEffect();
+	}, [activeWill?.id, relationships.length]);
 
 	// Function to update gift relationships using relationships context
 	const updateGiftRelationships = (willGifts: WillGift[]) => {
@@ -99,9 +90,9 @@ export function useGiftManagement(
 
 		setIsLoadingGifts(true);
 		try {
-			// Fetch gifts from API
+			// Fetch gifts from API using the new endpoint
 			const { data: giftsData, error } = await apiClient<ApiGiftResponse[]>(
-				`/gifts?will_id=${activeWill.id}`,
+				`/gifts/get-by-will/${activeWill.id}`,
 				{
 					method: "GET",
 				}
