@@ -1,25 +1,18 @@
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, Download, ArrowRight } from "lucide-react";
 import { useState } from "react";
-import { useWill } from "@/context/WillContext";
 import { downloadWillPDF } from "@/utils/willDownload";
 
 export default function WillSuccessPage() {
 	const navigate = useNavigate();
-	const [searchParams] = useSearchParams();
-	const { activeWill } = useWill();
 	const [isDownloading, setIsDownloading] = useState(false);
 
 	const handleDownloadWill = async () => {
 		setIsDownloading(true);
-
 		try {
-			await downloadWillPDF({
-				activeWill,
-				searchParams,
-			});
+			await downloadWillPDF();
 		} finally {
 			setIsDownloading(false);
 		}

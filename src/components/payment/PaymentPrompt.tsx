@@ -54,11 +54,6 @@ export default function PaymentPrompt({
 	];
 
 	const handleStartPayment = async () => {
-		if (!willId) {
-			toast.error("Will ID is required for payment");
-			return;
-		}
-
 		setIsProcessing(true);
 		try {
 			// Create or get will ID if not provided
@@ -83,8 +78,8 @@ export default function PaymentPrompt({
 				finalWillId = data.id;
 			}
 
-			// Navigate to payment page with price ID
-			const paymentUrl = `/app/payment?willId=${finalWillId}&amount=${PaymentService.getWillPrice()}&description=Will Creation Service`;
+			// Navigate to Stripe Checkout page
+			const paymentUrl = `/app/payment/checkout?willId=${finalWillId}&description=Will Creation Service`;
 			navigate(paymentUrl);
 		} catch (error) {
 			console.error("Error starting payment:", error);

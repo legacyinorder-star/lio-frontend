@@ -27,6 +27,7 @@ import { DataLoadingProvider } from "@/context/DataLoadingContext";
 import PaymentPage from "@/pages/PaymentPage";
 import PaymentSuccessPage from "@/pages/PaymentSuccessPage";
 import PaymentCancelPage from "@/pages/PaymentCancelPage";
+import StripeCheckoutPage from "@/pages/StripeCheckoutPage";
 import WillSuccessPage from "@/pages/WillSuccessPage";
 import RateLimitTestPage from "@/pages/RateLimitTestPage";
 
@@ -119,6 +120,14 @@ function App() {
 									element={
 										<ProtectedRoute>
 											<PaymentPage />
+										</ProtectedRoute>
+									}
+								/>
+								<Route
+									path="/app/payment/checkout"
+									element={
+										<ProtectedRoute>
+											<StripeCheckoutPage />
 										</ProtectedRoute>
 									}
 								/>

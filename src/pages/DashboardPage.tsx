@@ -1,6 +1,14 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
-import { Scroll, FileText, Shield, Download, Trash2, Edit } from "lucide-react";
+import {
+	Scroll,
+	FileText,
+	Shield,
+	Download,
+	Trash2,
+	Edit,
+	CreditCard,
+} from "lucide-react";
 import { getUserDetails } from "@/utils/auth";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -15,6 +23,7 @@ export default function DashboardPage() {
 	const [userName, setUserName] = useState<string>("");
 	const [wills, setWills] = useState<WillData[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
+	const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
 	useEffect(() => {
 		const userDetails = getUserDetails();
@@ -78,16 +87,22 @@ export default function DashboardPage() {
 		navigate(`/app/create-will?edit=${willId}`);
 	};
 
-	const handleDownloadPDF = async (will: WillData) => {
-		if (!will.owner) {
-			toast.error("Cannot generate PDF: Will data is incomplete");
-			return;
-		}
+	const handleDownloadPDF = async () => {
+		await downloadWillPDF();
+	};
 
-		// Use the utility function with the will as activeWill
-		await downloadWillPDF({
-			activeWill: will,
-		});
+	const handlePaymentForWill = async (willId: string) => {
+		setIsProcessingPayment(true);
+		try {
+			// Navigate directly to Stripe Checkout with the existing will ID
+			const paymentUrl = `/app/payment/checkout?willId=${willId}&description=Will Creation Service`;
+			navigate(paymentUrl);
+		} catch (error) {
+			console.error("Error starting payment for will:", error);
+			toast.error("Failed to start payment process. Please try again.");
+		} finally {
+			setIsProcessingPayment(false);
+		}
 	};
 
 	const actions = [
@@ -135,7 +150,7 @@ export default function DashboardPage() {
 					{actions.map((action) => (
 						<Link
 							key={action.title}
-							to={action.href}
+							to={action.href || "#"}
 							className="block transition-transform hover:scale-105"
 						>
 							<Card className="p-4 h-full">
@@ -232,7 +247,17 @@ export default function DashboardPage() {
 										<Button
 											variant="outline"
 											size="sm"
-											onClick={() => handleDownloadPDF(will)}
+											onClick={() => handlePaymentForWill(will.id)}
+											className="hover:bg-green-100 text-green-600 cursor-pointer"
+											disabled={isProcessingPayment}
+										>
+											<CreditCard className="h-4 w-4 mr-2" />
+											Pay
+										</Button>
+										<Button
+											variant="outline"
+											size="sm"
+											onClick={handleDownloadPDF}
 											className="hover:bg-light-green/10 cursor-pointer"
 											disabled={!will.owner}
 										>
