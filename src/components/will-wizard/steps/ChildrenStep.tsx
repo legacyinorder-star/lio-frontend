@@ -12,6 +12,16 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { ArrowLeft, ArrowRight, Edit2, Plus, Trash2 } from "lucide-react";
 import { useWill } from "@/context/WillContext";
 import { apiClient } from "@/utils/apiClient";
@@ -75,6 +85,8 @@ export default function ChildrenStep({
 		isMinor: false,
 	});
 	const [isLoadingChildren, setIsLoadingChildren] = useState(false);
+	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+	const [childToDelete, setChildToDelete] = useState<Child | null>(null);
 
 	// Load children from API when component mounts
 	const loadChildren = async (willId: string) => {
@@ -300,6 +312,24 @@ export default function ChildrenStep({
 		}
 	};
 
+	const openDeleteDialog = (child: Child) => {
+		setChildToDelete(child);
+		setDeleteDialogOpen(true);
+	};
+
+	const confirmDelete = async () => {
+		if (childToDelete) {
+			await handleRemoveChild(childToDelete.id);
+			setDeleteDialogOpen(false);
+			setChildToDelete(null);
+		}
+	};
+
+	const cancelDelete = () => {
+		setDeleteDialogOpen(false);
+		setChildToDelete(null);
+	};
+
 	return (
 		<div className="space-y-4">
 			<div className="text-2xl font-semibold">Do you have children?</div>
@@ -489,7 +519,7 @@ export default function ChildrenStep({
 												<Button
 													variant="ghost"
 													size="icon"
-													onClick={() => handleRemoveChild(child.id)}
+													onClick={() => openDeleteDialog(child)}
 													className="cursor-pointer"
 													disabled={isLoadingChildren}
 												>
@@ -531,6 +561,31 @@ export default function ChildrenStep({
 					</div>
 				</div>
 			)}
+
+			{/* Delete Confirmation Dialog */}
+			<AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>Remove Child</AlertDialogTitle>
+						<AlertDialogDescription>
+							Are you sure you want to remove{" "}
+							<strong>
+								{childToDelete?.firstName} {childToDelete?.lastName}
+							</strong>{" "}
+							from your will? This action cannot be undone.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel onClick={cancelDelete}>Cancel</AlertDialogCancel>
+						<AlertDialogAction
+							onClick={confirmDelete}
+							className="bg-red-600 hover:bg-red-700"
+						>
+							Remove Child
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 		</div>
 	);
 }
