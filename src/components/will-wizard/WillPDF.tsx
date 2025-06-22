@@ -363,8 +363,8 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 
 	const sections = getSectionNumber();
 
-	// Helper function to get distribution text for an asset
-	const getAssetDistributionText = (_asset: {
+	// Helper function to render asset distribution text with bold formatting
+	const renderAssetDistributionText = (_asset: {
 		type: string;
 		description: string;
 		distributionType?: "equal" | "percentage";
@@ -374,11 +374,10 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 			beneficiaryName?: string;
 		}[];
 	}) => {
-		// Get beneficiaries with non-zero allocation for this asset
 		const relevantBeneficiaries = _asset.beneficiaries || [];
 
 		if (relevantBeneficiaries.length === 0) {
-			return "No beneficiaries specified";
+			return <Text>No beneficiaries specified</Text>;
 		}
 
 		// Handle single beneficiary case
@@ -388,42 +387,57 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 				beneficiary.beneficiaryName || "Unknown Beneficiary";
 
 			if (_asset.distributionType === "equal") {
-				return `${beneficiaryName}`;
+				return <Text>{beneficiaryName}</Text>;
 			} else if (_asset.distributionType === "percentage") {
-				return `${beneficiaryName} (${beneficiary.percentage}%)`;
+				return (
+					<>
+						<Text>{beneficiaryName}</Text> ({beneficiary.percentage}%)
+					</>
+				);
 			} else {
-				return `${beneficiaryName}`;
+				return <Text>{beneficiaryName}</Text>;
 			}
 		}
 
 		// Handle multiple beneficiaries
-		const distributionText = relevantBeneficiaries
-			.map((b, idx) => {
-				const isLast = idx === relevantBeneficiaries.length - 1;
-				const prefix = idx === 0 ? "" : isLast ? " and " : ", ";
-				const beneficiaryName = b.beneficiaryName || "Unknown Beneficiary";
+		const elements = relevantBeneficiaries.map((b, idx) => {
+			const isLast = idx === relevantBeneficiaries.length - 1;
+			const prefix = idx === 0 ? "" : isLast ? " and " : ", ";
+			const beneficiaryName = b.beneficiaryName || "Unknown Beneficiary";
 
-				if (_asset.distributionType === "equal") {
-					// For equal distribution, just show the name
-					return `${prefix}${beneficiaryName}`;
-				} else if (_asset.distributionType === "percentage") {
-					// For percentage distribution, show the percentage
-					return `${prefix}${beneficiaryName} (${b.percentage}%)`;
-				} else {
-					return `${prefix}${beneficiaryName}`;
-				}
-			})
-			.join("");
+			if (_asset.distributionType === "equal") {
+				return (
+					<>
+						{prefix}
+						<Text>{beneficiaryName}</Text>
+					</>
+				);
+			} else if (_asset.distributionType === "percentage") {
+				return (
+					<>
+						{prefix}
+						<Text>{beneficiaryName}</Text> ({b.percentage}%)
+					</>
+				);
+			} else {
+				return (
+					<>
+						{prefix}
+						<Text>{beneficiaryName}</Text>
+					</>
+				);
+			}
+		});
 
 		// Add distribution type suffix for equal distribution
 		if (
 			_asset.distributionType === "equal" &&
 			relevantBeneficiaries.length > 0
 		) {
-			return `${distributionText} (equally)`;
+			return <>{elements} (equally)</>;
 		}
 
-		return distributionText;
+		return elements;
 	};
 
 	return (
@@ -489,13 +503,20 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 					{primaryExecutor && (
 						<Text style={styles.executorText}>
 							I appoint{" "}
-							{primaryExecutor.type === "individual"
-								? `${primaryExecutor.fullName}${
-										primaryExecutor.relationship
-											? ` (my ${primaryExecutor.relationship.toLowerCase()})`
-											: ""
-								  }`
-								: `${primaryExecutor.companyName}`}{" "}
+							{primaryExecutor.type === "individual" ? (
+								<>
+									<Text style={{ fontWeight: "bold" }}>
+										{primaryExecutor.fullName}
+									</Text>
+									{primaryExecutor.relationship && (
+										<> (my {primaryExecutor.relationship.toLowerCase()})</>
+									)}
+								</>
+							) : (
+								<Text style={{ fontWeight: "bold" }}>
+									{primaryExecutor.companyName}
+								</Text>
+							)}{" "}
 							as my primary executor
 							{primaryExecutor.type === "corporate"
 								? " (a corporate executor)"
@@ -551,12 +572,14 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 
 						{primaryGuardian && (
 							<Text style={styles.guardianText}>
-								I appoint {primaryGuardian.fullName}
-								{primaryGuardian.relationship
-									? ` (my ${primaryGuardian.relationship.toLowerCase()})`
-									: ""}{" "}
-								{primaryGuardian.address} as the primary guardian of my minor
-								children.
+								I appoint{" "}
+								<Text style={{ fontWeight: "bold" }}>
+									{primaryGuardian.fullName}
+									{primaryGuardian.relationship
+										? ` (my ${primaryGuardian.relationship.toLowerCase()})`
+										: ""}{" "}
+								</Text>
+								as the primary guardian of my minor children.
 							</Text>
 						)}
 
@@ -603,8 +626,9 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 					{data.assets.map((asset, index) => (
 						<View key={index} style={styles.assetItem}>
 							<Text style={styles.assetDescription}>
-								{index + 1}. {asset.description} ({asset.type}) to{" "}
-								{getAssetDistributionText(asset)}.
+								{index + 1}. <Text>{asset.description}</Text> (
+								<Text>{asset.type}</Text>) to{" "}
+								{renderAssetDistributionText(asset)}.
 							</Text>
 						</View>
 					))}
@@ -629,7 +653,11 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 												gift.description
 										  })${" "}`
 										: `my ${gift.description}${" "}`}
-									to {gift.beneficiaryName}.
+									to{" "}
+									<Text style={{ fontWeight: "bold" }}>
+										{gift.beneficiaryName}
+									</Text>
+									.
 								</Text>
 							</View>
 						))}
@@ -707,10 +735,15 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 									return (
 										<Text key={index} style={styles.distributionText}>
 											{prefix}
-											{beneficiaryDetails.fullName}
-											{beneficiaryDetails.relationship
-												? ` (my ${beneficiaryDetails.relationship.toLowerCase()})`
-												: ""}
+											<Text style={{ fontWeight: "bold" }}>
+												{beneficiaryDetails.fullName}
+											</Text>
+											{beneficiaryDetails.relationship && (
+												<>
+													{" "}
+													(my {beneficiaryDetails.relationship.toLowerCase()})
+												</>
+											)}
 										</Text>
 									);
 								})}
@@ -752,7 +785,9 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 														>
 															{prefix}
 															{beneficiary.percentage}% to{" "}
-															{beneficiaryDetails.fullName}
+															<Text style={{ fontWeight: "bold" }}>
+																{beneficiaryDetails.fullName}
+															</Text>
 															{isLast ? "." : ""}
 														</Text>
 													);
@@ -879,7 +914,11 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 					<View style={styles.witnessSignature}>
 						<View style={styles.signatureLine} />
 						<Text style={styles.witnessName}>
-							Signed by {data.personal.fullName} (Testator)
+							Signed by{" "}
+							<Text style={{ fontWeight: "bold" }}>
+								{data.personal.fullName}
+							</Text>{" "}
+							(Testator)
 						</Text>
 						<Text style={styles.witnessDate}>Date: _________________</Text>
 					</View>
@@ -891,7 +930,8 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 							<View key={index} style={styles.witnessSignature}>
 								<View style={styles.signatureLine} />
 								<Text style={styles.witnessName}>
-									{witness.fullName} (Witness)
+									<Text style={{ fontWeight: "bold" }}>{witness.fullName}</Text>{" "}
+									(Witness)
 								</Text>
 								<Text style={styles.witnessAddress}>{witness.address}</Text>
 								<Text style={styles.witnessDate}>Date: _________________</Text>
