@@ -23,7 +23,15 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, ArrowRight, Plus, Trash2, Edit2 } from "lucide-react";
+import {
+	ArrowLeft,
+	ArrowRight,
+	Plus,
+	Trash2,
+	Edit2,
+	ChevronsUpDown,
+	X,
+} from "lucide-react";
 import { apiClient } from "@/utils/apiClient";
 import { useWill } from "@/context/WillContext";
 import { toast } from "sonner";
@@ -32,6 +40,11 @@ import { getFormattedRelationshipNameById } from "@/utils/relationships";
 import { useWillData } from "@/hooks/useWillData";
 import { useDataLoading } from "@/context/DataLoadingContext";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+} from "@/components/ui/custom-dropdown-menu";
 
 // API response interface
 interface ExecutorApiResponse {
@@ -70,6 +83,7 @@ interface Executor {
 	firstName?: string;
 	lastName?: string;
 	relationshipId?: string;
+	relationshipName?: string;
 	personId?: string; // Store the person ID for editing
 	// Corporate executor fields
 	name?: string;
@@ -110,7 +124,11 @@ export default function ExecutorStep({
 	const [useLegacyInOrder, setUseLegacyInOrder] = useState(false);
 	const prevExecutorsRef = useRef<Executor[]>([]);
 	const { activeWill } = useWill();
-	const { isLoading: isDataLoading, isReady } = useWillData();
+	const {
+		allBeneficiaries: enhancedBeneficiaries,
+		isLoading: isDataLoading,
+		isReady,
+	} = useWillData();
 	const { updateLoadingState } = useDataLoading();
 
 	const [executorForm, setExecutorForm] = useState<Executor>({
@@ -125,6 +143,15 @@ export default function ExecutorStep({
 		corporateExecutorId: "",
 		isPrimary: false,
 	});
+
+	const [selectedPersonInfo, setSelectedPersonInfo] = useState<{
+		id: string;
+		firstName: string;
+		lastName: string;
+		relationship: string;
+	} | null>(null);
+	const [isPersonDropdownOpen, setIsPersonDropdownOpen] = useState(false);
+	const [searchQuery, setSearchQuery] = useState("");
 
 	// Update loading state for executors
 	useEffect(() => {
@@ -166,6 +193,7 @@ export default function ExecutorStep({
 							firstName: apiExecutor.person.first_name,
 							lastName: apiExecutor.person.last_name,
 							relationshipId: apiExecutor.person.relationship_id,
+							relationshipName: apiExecutor.person.relationship_id,
 							personId: apiExecutor.person.id,
 							isPrimary: apiExecutor.is_primary,
 						};
@@ -691,6 +719,100 @@ export default function ExecutorStep({
 		}
 	}, [executors, onUpdate]);
 
+	// Filtering logic for page-level dropdown
+	const filteredPeople = enhancedBeneficiaries.filter(
+		(beneficiary) =>
+			beneficiary.type === "person" &&
+			!beneficiary.isMinor && // Exclude minors
+			!executors.some((executor) => executor.personId === beneficiary.id) && // Exclude existing executors
+			((beneficiary.firstName || "")
+				.toLowerCase()
+				.includes(searchQuery.toLowerCase()) ||
+				(beneficiary.lastName || "")
+					.toLowerCase()
+					.includes(searchQuery.toLowerCase()) ||
+				(beneficiary.relationship || "")
+					.toLowerCase()
+					.includes(searchQuery.toLowerCase()))
+	);
+
+	// Handler for selecting a person from the page-level dropdown
+	const handleSelectPerson = async (personId: string) => {
+		const selected = enhancedBeneficiaries.find(
+			(b) => b.id === personId && b.type === "person"
+		);
+
+		if (!selected || !activeWill?.id) {
+			toast.error("Failed to add executor");
+			return;
+		}
+
+		setIsSubmitting(true);
+		try {
+			// Check if person already exists as an executor
+			const existingExecutor = executors.find(
+				(executor) => executor.personId === selected.id
+			);
+
+			if (existingExecutor) {
+				toast.error("This person is already an executor");
+				return;
+			}
+
+			// Create executor record via /executors endpoint
+			const executorPayload = {
+				will_id: activeWill.id,
+				executor_id: selected.id, // Use the existing person ID
+				is_primary: executors.length === 0, // Make primary if no other executors
+			};
+
+			const { data: executorData, error: executorError } = await apiClient<{
+				id: string;
+			}>("/executors", {
+				method: "POST",
+				body: JSON.stringify(executorPayload),
+			});
+
+			if (executorError || !executorData) {
+				toast.error("Failed to create executor record");
+				return;
+			}
+
+			// Add to local state
+			const newExecutor: Executor = {
+				id: executorData.id,
+				type: "individual",
+				firstName: selected.firstName,
+				lastName: selected.lastName,
+				relationshipId: selected.relationshipId || "",
+				relationshipName: selected.relationship || "",
+				personId: selected.id, // Use the existing person ID
+				isPrimary: executors.length === 0,
+			};
+
+			setExecutors((prev) => [...prev, newExecutor]);
+
+			// Clear the selected person info and search
+			setSelectedPersonInfo(null);
+			setSearchQuery("");
+
+			toast.success(
+				`${selected.firstName} ${selected.lastName} added as executor`
+			);
+		} catch (error) {
+			console.error("Error adding executor:", error);
+			toast.error("Failed to add executor");
+		} finally {
+			setIsSubmitting(false);
+		}
+	};
+
+	// Handler for clearing the selected person
+	const handleClearSelectedPerson = () => {
+		setSelectedPersonInfo(null);
+		setSearchQuery("");
+	};
+
 	// Show loading spinner if data is not ready
 	if (isDataLoading || !isReady) {
 		return <LoadingSpinner message="Loading executor data..." />;
@@ -763,6 +885,82 @@ export default function ExecutorStep({
 				</div>
 			</div>
 
+			{/* Executor Selection Dropdown - Full Width */}
+			<div className="space-y-4 mt-6">
+				<div className="flex justify-between items-center">
+					<h3 className="text-lg font-medium">Select Executor</h3>
+				</div>
+
+				<div className="w-full">
+					{selectedPersonInfo ? (
+						<div className="flex items-center space-x-2 p-3 border rounded-md bg-muted/50">
+							<div className="flex-1">
+								<div className="font-medium">
+									{selectedPersonInfo.firstName} {selectedPersonInfo.lastName}
+								</div>
+								<div className="text-sm text-muted-foreground">
+									{selectedPersonInfo.relationship}
+								</div>
+							</div>
+							<Button
+								variant="ghost"
+								size="sm"
+								onClick={handleClearSelectedPerson}
+								className="h-8 w-8 p-0"
+							>
+								<X className="h-4 w-4" />
+							</Button>
+						</div>
+					) : (
+						<DropdownMenu
+							onOpenChange={setIsPersonDropdownOpen}
+							className="w-full"
+						>
+							<Button
+								variant="outline"
+								role="combobox"
+								aria-expanded={isPersonDropdownOpen}
+								className="w-full justify-between"
+								disabled={isSubmitting}
+							>
+								{isSubmitting
+									? "Adding executor..."
+									: searchQuery || "Search and select from existing people..."}
+								<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+							</Button>
+							<DropdownMenuContent className="w-full min-w-full max-h-[300px] overflow-y-auto">
+								<div className="p-2">
+									<Input
+										placeholder="Search people..."
+										value={searchQuery}
+										onChange={(e) => setSearchQuery(e.target.value)}
+										className="mb-2"
+									/>
+									{filteredPeople.length === 0 ? (
+										<div className="text-sm text-muted-foreground p-2">
+											No people found.
+										</div>
+									) : (
+										<div className="space-y-1">
+											{filteredPeople.map((person) => (
+												<DropdownMenuItem
+													key={person.id}
+													onSelect={() => handleSelectPerson(person.id)}
+													className="cursor-pointer"
+												>
+													{person.firstName} {person.lastName} (
+													{person.relationship})
+												</DropdownMenuItem>
+											))}
+										</div>
+									)}
+								</div>
+							</DropdownMenuContent>
+						</DropdownMenu>
+					)}
+				</div>
+			</div>
+
 			<div className="space-y-6 mt-6">
 				<div className="flex justify-between items-center">
 					<h3 className="text-lg font-medium">Appointed Executors</h3>
@@ -791,7 +989,7 @@ export default function ExecutorStep({
 								className="cursor-pointer"
 							>
 								<Plus className="mr-2 h-4 w-4" />
-								Add Executor
+								Add New Executor
 							</Button>
 						</DialogTrigger>
 						<DialogContent className="bg-white max-w-2xl">
@@ -966,7 +1164,12 @@ export default function ExecutorStep({
 														(
 														{getFormattedRelationshipNameById(
 															executor.relationshipId || ""
-														) || executor.relationshipId}
+														) !== "Unknown Relationship"
+															? getFormattedRelationshipNameById(
+																	executor.relationshipId || ""
+															  )
+															: executor.relationshipName ||
+															  "Unknown Relationship"}
 														)
 													</span>
 													{executor.isPrimary && (
@@ -1124,7 +1327,12 @@ export default function ExecutorStep({
 												(
 												{getFormattedRelationshipNameById(
 													executorToDelete.relationshipId
-												) || executorToDelete.relationshipId}
+												) !== "Unknown Relationship"
+													? getFormattedRelationshipNameById(
+															executorToDelete.relationshipId
+													  )
+													: executorToDelete.relationshipName ||
+													  "Unknown Relationship"}
 												)
 											</span>
 										)}

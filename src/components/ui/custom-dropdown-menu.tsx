@@ -141,9 +141,9 @@ export function DropdownMenu({
 				<div
 					ref={dropdownRef}
 					className={cn(
-						"absolute z-50 min-w-[8rem] rounded-md border bg-white p-1 shadow-md",
+						"absolute z-50 rounded-md border bg-white p-1 shadow-md",
 						align === "end" ? "right-0" : "left-0",
-						"mt-1"
+						"mt-1 w-full"
 					)}
 					role="menu"
 					aria-orientation="vertical"
@@ -164,7 +164,7 @@ export function DropdownMenuContent({
 		<div
 			id={id}
 			className={cn(
-				"w-56 bg-white border border-[#ECECEC] shadow-md rounded-md",
+				"bg-white border border-[#ECECEC] shadow-md rounded-md",
 				className
 			)}
 		>
