@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { WillFormData, QuestionType, NewBeneficiary } from "./types/will.types";
+import { WillFormData, QuestionType } from "./types/will.types";
 import type { ExecutorData } from "./steps/ExecutorStep";
 import WillGuard from "./WillGuard";
 import {
@@ -438,107 +438,6 @@ export default function WillWizard() {
 	const progress = questionOrder.indexOf(currentQuestion) + 1;
 	const progressPercent = (progress / totalQuestions) * 100;
 
-	// Transform form data for step components
-	const getBeneficiaries = (): NewBeneficiary[] => {
-		const beneficiaries: NewBeneficiary[] = [];
-
-		// Add spouse if exists
-		if (formData.hasSpouse && formData.spouse) {
-			beneficiaries.push({
-				id: "spouse",
-				firstName: formData.spouse.firstName,
-				lastName: formData.spouse.lastName,
-				relationship: "Spouse",
-				type: "spouse",
-				allocation: "100",
-			});
-		}
-
-		// Add children
-		formData.children.forEach((child) => {
-			beneficiaries.push({
-				id: child.id,
-				firstName: child.firstName,
-				lastName: child.lastName,
-				relationship: "Child",
-				type: "child",
-				allocation: "100",
-			});
-		});
-
-		// Add other beneficiaries
-		beneficiaries.push(...formData.otherBeneficiaries);
-
-		return beneficiaries;
-	};
-
-	// Transform form data for review step
-	const getReviewData = () => {
-		return {
-			personal: {
-				fullName: `${formData.firstName} ${formData.lastName}`,
-				dateOfBirth: "", // Add empty dateOfBirth for now
-				address: `${formData.address.address}, ${formData.address.city}, ${formData.address.state} ${formData.address.postCode}, ${formData.address.country}`,
-				phone: formData.phone,
-				maritalStatus: formData.hasSpouse ? "Married" : "Single",
-			},
-			assets: formData.assets.map((asset) => ({
-				type: asset.assetType,
-				description: asset.description,
-				distributionType: asset.distributionType,
-				beneficiaries: asset.beneficiaries,
-			})),
-			beneficiaries: getBeneficiaries().map((ben) => ({
-				id: ben.id,
-				fullName: `${ben.firstName} ${ben.lastName}`,
-				relationship: ben.relationship,
-				allocation: parseInt(ben.allocation),
-				requiresGuardian:
-					ben.type === "child" &&
-					formData.children.find((c) => c.id === ben.id)?.isMinor,
-			})),
-			executors: formData.executors.map((exec) => ({
-				fullName:
-					exec.type === "individual"
-						? `${exec.firstName} ${exec.lastName}`
-						: undefined,
-				companyName: exec.type === "corporate" ? exec.companyName : undefined,
-				relationship: exec.relationship,
-				address: `${exec.address.address}, ${exec.address.city}, ${exec.address.state} ${exec.address.postCode}, ${exec.address.country}`,
-				isPrimary: exec.isPrimary,
-				type: exec.type,
-				registrationNumber: exec.registrationNumber,
-			})),
-			witnesses: formData.witnesses.map((wit) => ({
-				fullName: `${wit.firstName} ${wit.lastName}`,
-				address: `${wit.address.address}, ${wit.address.city}, ${wit.address.state} ${wit.address.postCode}, ${wit.address.country}`,
-			})),
-			guardians: formData.guardians.map((guard) => ({
-				fullName: `${guard.firstName} ${guard.lastName}`,
-				relationship: guard.relationship,
-				isPrimary: guard.isPrimary,
-			})),
-			gifts: formData.gifts.map((gift) => ({
-				type: gift.type as string,
-				description: gift.description,
-				value: gift.value?.toString(),
-				beneficiaryId: gift.peopleId || gift.charitiesId || "",
-				beneficiaryName:
-					getBeneficiaries().find(
-						(b) => b.id === (gift.peopleId || gift.charitiesId)
-					)?.firstName +
-					" " +
-					getBeneficiaries().find(
-						(b) => b.id === (gift.peopleId || gift.charitiesId)
-					)?.lastName,
-			})),
-			residuaryBeneficiaries: formData.residuaryBeneficiaries,
-			funeralInstructions: {
-				instructions: formData.funeralInstructions.wishes,
-			},
-		};
-	};
-
 	// Render different content based on current question
 	const renderQuestion = () => {
 		// Show loading state if relationships are not loaded for spouse step
@@ -696,7 +595,7 @@ export default function WillWizard() {
 				return <FuneralInstructionsStep {...commonProps} />;
 
 			case "review":
-				return <ReviewStep data={getReviewData()} onBack={handleBack} />;
+				return <ReviewStep onBack={handleBack} />;
 
 			default:
 				return null;

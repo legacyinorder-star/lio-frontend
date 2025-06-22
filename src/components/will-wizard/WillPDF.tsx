@@ -267,6 +267,7 @@ interface WillPDFProps {
 			beneficiaries?: Array<{
 				id?: string;
 				percentage?: number;
+				beneficiaryName?: string;
 			}>;
 		}>;
 		beneficiaries: Array<{
@@ -313,6 +314,10 @@ interface WillPDFProps {
 			beneficiaryId: string;
 			percentage: number;
 		}>;
+		residuaryDistributionType?: "equal" | "manual";
+		funeralInstructions?: {
+			wishes: string;
+		};
 	};
 }
 
@@ -337,6 +342,7 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 		let sectionNum = 1;
 		const sections = {
 			scope: sectionNum++,
+			funeral: data.funeralInstructions ? sectionNum++ : null,
 			executors: sectionNum++,
 			guardians: shouldShowGuardiansSection() ? sectionNum++ : null,
 			distribution: sectionNum++,
@@ -362,7 +368,11 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 		type: string;
 		description: string;
 		distributionType?: "equal" | "percentage";
-		beneficiaries?: { id?: string; percentage?: number }[];
+		beneficiaries?: {
+			id?: string;
+			percentage?: number;
+			beneficiaryName?: string;
+		}[];
 	}) => {
 		// Get beneficiaries with non-zero allocation for this asset
 		const relevantBeneficiaries = _asset.beneficiaries || [];
@@ -373,39 +383,34 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 
 		// Handle single beneficiary case
 		if (relevantBeneficiaries.length === 1) {
-			const beneficiary = data.beneficiaries.find(
-				(ben) =>
-					ben.id === relevantBeneficiaries[0].id ||
-					ben.fullName === relevantBeneficiaries[0].id
-			) || { fullName: "Unknown Beneficiary" };
+			const beneficiary = relevantBeneficiaries[0];
+			const beneficiaryName =
+				beneficiary.beneficiaryName || "Unknown Beneficiary";
 
 			if (_asset.distributionType === "equal") {
-				return `to ${beneficiary.fullName}`;
+				return `to ${beneficiaryName}`;
 			} else if (_asset.distributionType === "percentage") {
-				return `to ${beneficiary.fullName} (${relevantBeneficiaries[0].percentage}%)`;
+				return `to ${beneficiaryName} (${beneficiary.percentage}%)`;
 			} else {
-				return `to ${beneficiary.fullName}`;
+				return `to ${beneficiaryName}`;
 			}
 		}
 
 		// Handle multiple beneficiaries
 		const distributionText = relevantBeneficiaries
 			.map((b, idx) => {
-				const isSecondLast = idx === relevantBeneficiaries.length - 2;
-				const prefix = idx === 0 ? "" : isSecondLast ? " and " : ", ";
-				// Find the beneficiary in the data to get their name
-				const beneficiary = data.beneficiaries.find(
-					(ben) => ben.id === b.id || ben.fullName === b.id
-				) || { fullName: "Unknown Beneficiary" }; // Fallback if not found
+				const isLast = idx === relevantBeneficiaries.length - 1;
+				const prefix = idx === 0 ? "" : isLast ? " and " : ", ";
+				const beneficiaryName = b.beneficiaryName || "Unknown Beneficiary";
 
 				if (_asset.distributionType === "equal") {
 					// For equal distribution, just show the name
-					return `${prefix}${beneficiary.fullName}`;
+					return `${prefix}${beneficiaryName}`;
 				} else if (_asset.distributionType === "percentage") {
 					// For percentage distribution, show the percentage
-					return `${prefix}${beneficiary.fullName} (${b.percentage}%)`;
+					return `${prefix}${beneficiaryName} (${b.percentage}%)`;
 				} else {
-					return `${prefix}${beneficiary.fullName}`;
+					return `${prefix}${beneficiaryName}`;
 				}
 			})
 			.join("");
@@ -446,10 +451,14 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 						I am {data.personal.fullName} of {data.personal.address}.
 					</Text>
 					<Text style={styles.scopeText}>
+						This is my last will, disposing of all my worldwide assets.
+					</Text>
+					<Text style={styles.scopeText}>
 						I declare, being of sound mind, that this will is made in accordance
 						with my wishes and is intended to be my last will and testament,
 						revoking all previous wills and testamentary dispositions made by
 						me.
+						{/* I revoke any previous wills and codicils. */}
 					</Text>
 					<Text style={styles.scopeText}>
 						This will sets out my wishes regarding the distribution of my estate
@@ -458,6 +467,18 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 						which I have a power of appointment or disposition.
 					</Text>
 				</View>
+
+				{/* Funeral Instructions Section */}
+				{data.funeralInstructions && (
+					<View style={styles.scopeSection}>
+						<Text style={styles.scopeTitle}>
+							{sections.funeral}. Funeral wishes
+						</Text>
+						<Text style={styles.scopeText}>
+							I want my body to be {data.funeralInstructions.wishes}.
+						</Text>
+					</View>
+				)}
 
 				{/* Executors Section */}
 				<View style={styles.executorSection}>
@@ -469,9 +490,13 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 						<Text style={styles.executorText}>
 							I appoint{" "}
 							{primaryExecutor.type === "individual"
-								? primaryExecutor.fullName
-								: `${primaryExecutor.companyName} (${primaryExecutor.contactPerson})`}{" "}
-							of {primaryExecutor.address} as my primary executor
+								? `${primaryExecutor.fullName}${
+										primaryExecutor.relationship
+											? ` (my ${primaryExecutor.relationship.toLowerCase()})`
+											: ""
+								  }`
+								: `${primaryExecutor.companyName}`}{" "}
+							as my primary executor
 							{primaryExecutor.type === "corporate"
 								? " (a corporate executor)"
 								: ""}
@@ -482,8 +507,10 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 					{additionalExecutors.length > 0 && (
 						<>
 							<Text style={styles.executorText}>
-								If my primary executor is unable to perform their duties, I also
-								appoint the following as my alternative executors:
+								If my primary executor dies before me, refuses to act or is
+								unable to act, or their appointment does not take effect for any
+								other reason, I also appoint the following as my alternative
+								executors to fill the resulting vacancy:
 							</Text>
 							<View style={styles.executorList}>
 								{additionalExecutors.map((executor, index) => (
@@ -491,9 +518,12 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 										<Text style={styles.executorText}>
 											{index + 1}.{" "}
 											{executor.type === "individual"
-												? executor.fullName
-												: `${executor.companyName} (${executor.contactPerson})`}{" "}
-											of {executor.address}
+												? `${executor.fullName}${
+														executor.relationship
+															? ` (my ${executor.relationship.toLowerCase()})`
+															: ""
+												  }`
+												: `${executor.companyName}`}
 											{executor.type === "corporate"
 												? " (a corporate executor)"
 												: ""}
@@ -523,7 +553,7 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 							<Text style={styles.guardianText}>
 								I appoint {primaryGuardian.fullName}
 								{primaryGuardian.relationship
-									? ` (my ${primaryGuardian.relationship})`
+									? ` (my ${primaryGuardian.relationship.toLowerCase()})`
 									: ""}{" "}
 								{primaryGuardian.address} as the primary guardian of my minor
 								children.
@@ -542,7 +572,7 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 											<Text style={styles.guardianText}>
 												{index + 1}. {guardian.fullName}
 												{guardian.relationship
-													? ` (my ${guardian.relationship})`
+													? ` (my ${guardian.relationship.toLowerCase()})`
 													: ""}{" "}
 											</Text>
 										</View>
@@ -573,10 +603,8 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 					{data.assets.map((asset, index) => (
 						<View key={index} style={styles.assetItem}>
 							<Text style={styles.assetDescription}>
-								{index + 1}. {asset.description} ({asset.type})
-							</Text>
-							<Text style={[styles.assetDescription, { paddingLeft: 40 }]}>
-								{getAssetDistributionText(asset)}
+								{index + 1}. my {asset.description} ({asset.type}){" "}
+								{getAssetDistributionText(asset)}.
 							</Text>
 						</View>
 					))}
@@ -597,8 +625,10 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 								<Text style={styles.giftDescription}>
 									{index + 1}. I give and bequeath{" "}
 									{gift.type === "Cash" && gift.value
-										? `the sum of $${Number(gift.value).toLocaleString()}`
-										: gift.description}{" "}
+										? `the sum of $${Number(gift.value).toLocaleString()} (${
+												gift.description
+										  })${" "}`
+										: `my ${gift.description}${" "}`}
 									to {gift.beneficiaryName}.
 								</Text>
 							</View>
@@ -653,23 +683,88 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 								I direct that my executors shall distribute my residuary estate
 								in accordance with the following provisions:
 							</Text>
-							{data.residuaryBeneficiaries.map((beneficiary, index) => {
-								const beneficiaryDetails = data.beneficiaries.find(
-									(b) => b.id === beneficiary.beneficiaryId
-								);
-								if (!beneficiaryDetails) return null;
 
-								return (
-									<View key={index} style={styles.assetItem}>
-										<Text style={styles.assetDescription}>
-											{beneficiaryDetails.fullName} - {beneficiary.percentage}%
+							<Text style={styles.distributionText}>
+								I give my residuary estate to{" "}
+								{data.residuaryBeneficiaries?.map((beneficiary, index) => {
+									const beneficiaryDetails = data.beneficiaries.find(
+										(b) => b.id === beneficiary.beneficiaryId
+									);
+									if (!beneficiaryDetails) return null;
+
+									const isLast =
+										index === (data.residuaryBeneficiaries?.length || 0) - 1;
+
+									let prefix = "";
+									if (index === 0) {
+										prefix = "";
+									} else if (isLast) {
+										prefix = " and ";
+									} else {
+										prefix = ", ";
+									}
+
+									return (
+										<Text key={index} style={styles.distributionText}>
+											{prefix}
+											{beneficiaryDetails.fullName}
 											{beneficiaryDetails.relationship
-												? ` (${beneficiaryDetails.relationship})`
+												? ` (my ${beneficiaryDetails.relationship.toLowerCase()})`
 												: ""}
 										</Text>
-									</View>
-								);
-							})}
+									);
+								})}
+								{data.residuaryBeneficiaries &&
+									data.residuaryBeneficiaries.length > 1 &&
+									(data.residuaryDistributionType === "equal" ? (
+										<Text style={styles.distributionText}>
+											{" "}
+											to be shared equally between them.
+										</Text>
+									) : (
+										<Text style={styles.distributionText}>
+											{" "}
+											in the following proportions:{" "}
+											{data.residuaryBeneficiaries?.map(
+												(beneficiary, index) => {
+													const beneficiaryDetails = data.beneficiaries.find(
+														(b) => b.id === beneficiary.beneficiaryId
+													);
+													if (!beneficiaryDetails) return null;
+
+													const isLast =
+														index ===
+														(data.residuaryBeneficiaries?.length || 0) - 1;
+
+													let prefix = "";
+													if (index === 0) {
+														prefix = "";
+													} else if (isLast) {
+														prefix = " and ";
+													} else {
+														prefix = ", ";
+													}
+
+													return (
+														<Text
+															key={`percentage-${index}`}
+															style={styles.distributionText}
+														>
+															{prefix}
+															{beneficiary.percentage}% to{" "}
+															{beneficiaryDetails.fullName}
+															{isLast ? "." : ""}
+														</Text>
+													);
+												}
+											)}
+										</Text>
+									))}
+								{data.residuaryBeneficiaries &&
+									data.residuaryBeneficiaries.length === 1 && (
+										<Text style={styles.distributionText}>.</Text>
+									)}
+							</Text>
 
 							<Text style={styles.distributionText}>
 								I declare that if any of my residuary beneficiaries predecease

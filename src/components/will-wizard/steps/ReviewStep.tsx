@@ -1,72 +1,81 @@
 import { forwardRef, useImperativeHandle, useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, CreditCard } from "lucide-react";
-import { PaymentService } from "@/services/paymentService";
-import { downloadWillPDF } from "@/utils/willDownload";
+import { ArrowLeft } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { apiClient } from "@/utils/apiClient";
 import { getFormattedRelationshipNameById } from "@/utils/relationships";
+import { useNavigate } from "react-router-dom";
 
-export interface ReviewStepProps {
-	data?: {
-		personal: {
-			fullName: string;
-			address: string;
-			maritalStatus: string;
-		};
-		assets: Array<{
-			type: string;
-			description: string;
-			distributionType: "equal" | "percentage";
-			beneficiaries: Array<{
-				id: string;
-				percentage?: number;
-				beneficiaryName?: string;
-				relationship?: string;
-			}>;
-		}>;
+// Create a type for the review data
+type ReviewData = {
+	personal: {
+		fullName: string;
+		address: string;
+		maritalStatus: string;
+	};
+	spouse?: {
+		fullName: string;
+	};
+	children?: Array<{
+		fullName: string;
+		relationship: string;
+		requiresGuardian: boolean;
+	}>;
+	assets: Array<{
+		type: string;
+		description: string;
+		distributionType: "equal" | "percentage";
 		beneficiaries: Array<{
 			id: string;
-			fullName: string;
-			relationship: string;
-			allocation: number;
-			requiresGuardian?: boolean;
-		}>;
-		executors: Array<{
-			fullName?: string;
-			companyName?: string;
+			percentage?: number;
+			beneficiaryName?: string;
 			relationship?: string;
-			isPrimary: boolean;
-			type: "individual" | "corporate";
-			registrationNumber?: string;
 		}>;
-		witnesses: Array<{
-			fullName: string;
-			address: string;
-		}>;
-		guardians: Array<{
-			fullName: string;
-			relationship: string;
-			isPrimary: boolean;
-		}>;
-		gifts: Array<{
-			type: string;
-			description: string;
-			value?: string;
-			beneficiaryId: string;
-			beneficiaryName: string;
-		}>;
-		residuaryBeneficiaries: Array<{
-			id: string;
-			beneficiaryId: string;
-			percentage: number;
-		}>;
-		funeralInstructions?: {
-			instructions: string;
-		};
+	}>;
+	beneficiaries: Array<{
+		id: string;
+		fullName: string;
+		relationship: string;
+		allocation: number;
+		requiresGuardian?: boolean;
+	}>;
+	executors: Array<{
+		fullName?: string;
+		companyName?: string;
+		relationship?: string;
+		isPrimary: boolean;
+		type: "individual" | "corporate";
+		registrationNumber?: string;
+	}>;
+	witnesses: Array<{
+		fullName: string;
+		address: string;
+	}>;
+	guardians: Array<{
+		fullName: string;
+		relationship: string;
+		isPrimary: boolean;
+	}>;
+	gifts: Array<{
+		type: string;
+		description: string;
+		value?: string;
+		beneficiaryId: string;
+		beneficiaryName: string;
+	}>;
+	residuaryBeneficiaries: Array<{
+		id: string;
+		beneficiaryId: string;
+		beneficiaryName: string;
+		percentage: number;
+	}>;
+	funeralInstructions?: {
+		wishes: string;
 	};
+};
+
+export interface ReviewStepProps {
 	onSave?: () => void;
 	onBack?: () => void;
 }
@@ -76,583 +85,668 @@ export interface ReviewStepHandle {
 	isSaving: boolean;
 }
 
-// API Response interfaces
-interface WillOwnerApiResponse {
+// Complete Will Data Structure
+interface CompleteWillData {
 	id: string;
-	will_id: string;
-	first_name: string;
-	last_name: string;
-	marital_status: string;
-	address: string;
-	city: string;
-	state: string;
-	post_code: string;
-	country: string;
-}
-
-interface GuardianApiResponse {
-	id: string;
-	will_id: string;
-	guardian_id: string;
-	is_primary: boolean;
-	guardian: {
+	created_at: string;
+	user_id: string;
+	status: string;
+	last_updated_at: string;
+	payment_status: string;
+	owner: {
 		id: string;
+		will_id: string;
+		created_at: string;
 		first_name: string;
 		last_name: string;
-		relationship: string;
+		marital_status: string;
+		address: string;
+		city: string;
+		state: string;
+		post_code: string;
+		country: string;
 	};
-}
-
-interface AssetApiResponse {
-	id: string;
-	will_id: string;
-	asset_type: string;
-	description: string;
-	distribution_type: "equal" | "percentage";
-	beneficiaries: Array<{
+	spouse?: {
 		id: string;
-		percentage: number;
-		people_id?: string;
-		charities_id?: string;
-		person?: {
-			id: string;
-			first_name: string;
-			last_name: string;
-			relationship_id: string;
-		};
-		charity?: {
-			id: string;
-			name: string;
-			rc_number?: string;
-		};
-	}>;
-}
-
-interface GiftApiResponse {
-	id: string;
-	will_id: string;
-	type: string;
-	description: string;
-	value?: number;
-	currency?: string;
-	people_id?: string;
-	charities_id?: string;
-	person?: {
-		id: string;
-		first_name: string;
-		last_name: string;
+		user_id: string;
+		will_id: string;
 		relationship_id: string;
-	};
-	charity?: {
-		id: string;
-		name: string;
-		rc_number?: string;
-	};
-}
-
-interface ResiduaryApiResponse {
-	id: string;
-	will_id: string;
-	distribution_type: "equal" | "manual";
-	beneficiaries: Array<{
-		id: string;
-		percentage: number;
-		people_id?: string;
-		charities_id?: string;
-		person?: {
-			id: string;
-			first_name: string;
-			last_name: string;
-			relationship_id: string;
-		};
-		charity?: {
-			id: string;
-			name: string;
-			rc_number?: string;
-		};
-	}>;
-}
-
-interface ExecutorApiResponse {
-	id: string;
-	will_id: string;
-	type: "individual" | "corporate";
-	first_name?: string;
-	last_name?: string;
-	company_name?: string;
-	relationship?: string;
-	is_primary: boolean;
-	address: string;
-	city: string;
-	state: string;
-	post_code: string;
-	country: string;
-	email: string;
-	phone: string;
-}
-
-interface WitnessApiResponse {
-	id: string;
-	will_id: string;
-	first_name: string;
-	last_name: string;
-	address: string;
-	city: string;
-	state: string;
-	post_code: string;
-	country: string;
-}
-
-interface FuneralInstructionsApiResponse {
-	id: string;
-	will_id: string;
-	instructions: string;
-}
-
-interface BeneficiaryApiResponse {
-	charities: Array<{
-		id: string;
-		name: string;
-		rc_number?: string;
-	}>;
-	people: Array<{
-		id: string;
 		first_name: string;
 		last_name: string;
-		relationship_id: string;
 		is_minor: boolean;
+		created_at: string;
+		is_witness: boolean;
+	};
+	children: Array<{
+		id: string;
+		user_id: string;
+		will_id: string;
+		relationship_id: string;
+		first_name: string;
+		last_name: string;
+		is_minor: boolean;
+		created_at: string;
+		is_witness: boolean;
 	}>;
+	guardians: Array<{
+		will_id: string;
+		created_at: string;
+		is_primary: boolean;
+		guardian_id: string;
+		person: {
+			id: string;
+			user_id: string;
+			will_id: string;
+			relationship_id: string;
+			first_name: string;
+			last_name: string;
+			is_minor: boolean;
+			created_at: string;
+			is_witness: boolean;
+		};
+	}>;
+	assets: Array<{
+		id: string;
+		will_id: string;
+		user_id: string;
+		name: string;
+		asset_type: string;
+		description: string;
+		created_at: string;
+		distribution_type: string;
+		beneficiaries: Array<{
+			id: string;
+			created_at: string;
+			will_id: string;
+			people_id: string;
+			charities_id: string;
+			asset_id: string;
+			percentage: number;
+			person?: {
+				id: string;
+				user_id: string;
+				will_id: string;
+				relationship_id: string;
+				first_name: string;
+				last_name: string;
+				is_minor: boolean;
+				created_at: string;
+				is_witness: boolean;
+			};
+			charity?: {
+				id: string;
+				created_at: string;
+				will_id: string;
+				name: string;
+				rc_number: string;
+				user_id: string;
+			};
+		}>;
+	}>;
+	gifts: Array<{
+		id: string;
+		will_id: string;
+		type: string;
+		created_at: string;
+		description: string;
+		currency: string;
+		value: string;
+		people_id: string;
+		charities_id: string;
+		person?: {
+			id: string;
+			user_id: string;
+			will_id: string;
+			relationship_id: string;
+			first_name: string;
+			last_name: string;
+			is_minor: boolean;
+			created_at: string;
+			is_witness: boolean;
+		};
+		charity?: {
+			id: string;
+			created_at: string;
+			will_id: string;
+			name: string;
+			rc_number: string;
+			user_id: string;
+		};
+	}>;
+	residuary: {
+		id: string;
+		created_at: string;
+		will_id: string;
+		distribution_type: string;
+		beneficiaries: Array<{
+			id: string;
+			created_at: string;
+			residuary_id: string;
+			will_id: string;
+			people_id: string;
+			charities_id: string;
+			percentage: string;
+			person?: {
+				id: string;
+				user_id: string;
+				will_id: string;
+				relationship_id: string;
+				first_name: string;
+				last_name: string;
+				is_minor: boolean;
+				created_at: string;
+				is_witness: boolean;
+			};
+			charity?: {
+				id: string;
+				created_at: string;
+				will_id: string;
+				name: string;
+				rc_number: string;
+				user_id: string;
+			};
+		}>;
+	};
+	executors: Array<{
+		id: string;
+		created_at: string;
+		will_id: string;
+		corporate_executor_id: string;
+		executor_id: string;
+		is_primary: boolean;
+		corporate_executor?: {
+			id: string;
+			created_at: string;
+			user_id: string;
+			name: string;
+			will_id: string;
+			rc_number: string;
+		};
+		person?: {
+			id: string;
+			user_id: string;
+			will_id: string;
+			relationship_id: string;
+			first_name: string;
+			last_name: string;
+			is_minor: boolean;
+			created_at: string;
+			is_witness: boolean;
+		};
+	}>;
+	witnesses: Array<{
+		id: string;
+		created_at: string;
+		will_id: string;
+		user_id: string;
+		first_name: string;
+		last_name: string;
+		address: string;
+		city: string;
+		state: string;
+		post_code: string;
+		country: string;
+	}>;
+	funeral_instructions?: {
+		id: string;
+		created_at: string;
+		wishes: string;
+		will_id: string;
+		user_id: string;
+	};
 }
 
-const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
-	({ data: propData, onBack }, ref) => {
-		const [isSaving, setIsSaving] = useState(false);
-		const [isLoading, setIsLoading] = useState(true);
-		const [reviewData, setReviewData] = useState<
-			ReviewStepProps["data"] | null
-		>(null);
-		const navigate = useNavigate();
-		const [_willId, setWillId] = useState<string>("");
+// Data transformation function
+const transformWillDataToReviewFormat = (
+	willData: CompleteWillData
+): ReviewData => {
+	// Get all unique people for beneficiary resolution
+	const allPeople = new Map<
+		string,
+		{
+			firstName: string;
+			lastName: string;
+			relationshipId: string;
+			isMinor: boolean;
+		}
+	>();
 
-		// Load active will ID first
-		const loadActiveWillId = async () => {
-			try {
-				const { data, error } = await apiClient("/wills/get-user-active-will");
+	// Add spouse
+	if (willData.spouse) {
+		allPeople.set(willData.spouse.id, {
+			firstName: willData.spouse.first_name,
+			lastName: willData.spouse.last_name,
+			relationshipId: willData.spouse.relationship_id,
+			isMinor: willData.spouse.is_minor,
+		});
+	}
 
-				if (error) {
-					console.error("Error loading active will:", error);
-					toast.error("Failed to load will data");
-					return null;
-				}
+	// Add children
+	if (willData.children && Array.isArray(willData.children)) {
+		willData.children.forEach((child) => {
+			allPeople.set(child.id, {
+				firstName: child.first_name,
+				lastName: child.last_name,
+				relationshipId: child.relationship_id,
+				isMinor: child.is_minor,
+			});
+		});
+	}
 
-				// Handle both array and single object responses
-				const willData = Array.isArray(data) ? data[0] : data;
-				if (willData && willData.id) {
-					return willData.id;
-				}
-				return null;
-			} catch (error) {
-				console.error("Error loading active will:", error);
-				toast.error("Failed to load will data");
-				return null;
+	// Add guardians
+	if (willData.guardians && Array.isArray(willData.guardians)) {
+		willData.guardians.forEach((guardian) => {
+			if (guardian.person) {
+				allPeople.set(guardian.person.id, {
+					firstName: guardian.person.first_name,
+					lastName: guardian.person.last_name,
+					relationshipId: guardian.person.relationship_id,
+					isMinor: guardian.person.is_minor,
+				});
 			}
-		};
+		});
+	}
 
-		// Load all data from API
-		const loadAllData = async (willId: string) => {
-			try {
-				// Load all data in parallel
-				const [
-					ownerResponse,
-					guardiansResponse,
-					assetsResponse,
-					giftsResponse,
-					residuaryResponse,
-					executorsResponse,
-					witnessesResponse,
-					funeralInstructionsResponse,
-					beneficiariesResponse,
-				] = await Promise.allSettled([
-					apiClient<WillOwnerApiResponse>(`/will_owner/get-by-will/${willId}`),
-					apiClient<GuardianApiResponse[]>(
-						`/guardianship/get-by-will/${willId}`
+	// Add people from assets
+	if (willData.assets && Array.isArray(willData.assets)) {
+		willData.assets.forEach((asset) => {
+			if (asset.beneficiaries && Array.isArray(asset.beneficiaries)) {
+				asset.beneficiaries.forEach((beneficiary) => {
+					if (beneficiary.person) {
+						allPeople.set(beneficiary.person.id, {
+							firstName: beneficiary.person.first_name,
+							lastName: beneficiary.person.last_name,
+							relationshipId: beneficiary.person.relationship_id,
+							isMinor: beneficiary.person.is_minor,
+						});
+					}
+				});
+			}
+		});
+	}
+
+	// Add people from gifts
+	if (willData.gifts && Array.isArray(willData.gifts)) {
+		willData.gifts.forEach((gift) => {
+			if (gift.person) {
+				allPeople.set(gift.person.id, {
+					firstName: gift.person.first_name,
+					lastName: gift.person.last_name,
+					relationshipId: gift.person.relationship_id,
+					isMinor: gift.person.is_minor,
+				});
+			}
+		});
+	}
+
+	// Add people from residuary
+	if (
+		willData.residuary &&
+		willData.residuary.beneficiaries &&
+		Array.isArray(willData.residuary.beneficiaries)
+	) {
+		willData.residuary.beneficiaries.forEach((beneficiary) => {
+			if (beneficiary.person) {
+				allPeople.set(beneficiary.person.id, {
+					firstName: beneficiary.person.first_name,
+					lastName: beneficiary.person.last_name,
+					relationshipId: beneficiary.person.relationship_id,
+					isMinor: beneficiary.person.is_minor,
+				});
+			}
+		});
+	}
+
+	// Add executors
+	if (willData.executors && Array.isArray(willData.executors)) {
+		willData.executors.forEach((executor) => {
+			console.log("Processing executor:", executor);
+
+			// Handle nested person/corporate_executor structure (expected)
+			if (executor.person) {
+				console.log("Found person executor:", executor.person);
+				return {
+					fullName: `${executor.person.first_name} ${executor.person.last_name}`,
+					companyName: undefined,
+					relationship: getFormattedRelationshipNameById(
+						executor.person.relationship_id
 					),
-					apiClient<AssetApiResponse[]>(`/assets/get-by-will/${willId}`),
-					apiClient<GiftApiResponse[]>(`/gifts/get-by-will/${willId}`),
-					apiClient<ResiduaryApiResponse>(`/residuary/get-by-will/${willId}`),
-					apiClient<ExecutorApiResponse[]>(`/executors/get-by-will/${willId}`),
-					apiClient<WitnessApiResponse[]>(`/witnesses/get-by-will/${willId}`),
-					apiClient<FuneralInstructionsApiResponse>(
-						`/funeral_instructions/get-by-will/${willId}`
-					),
-					apiClient<BeneficiaryApiResponse>(`/beneficiaries/${willId}`),
-				]);
+					isPrimary: executor.is_primary,
+					type: "individual" as const,
+					registrationNumber: undefined,
+				};
+			} else if (executor.corporate_executor) {
+				console.log("Found corporate executor:", executor.corporate_executor);
+				return {
+					fullName: undefined,
+					companyName: executor.corporate_executor.name,
+					relationship: undefined,
+					isPrimary: executor.is_primary,
+					type: "corporate" as const,
+					registrationNumber: executor.corporate_executor.rc_number,
+				};
+			}
 
-				// Process owner data
-				let personal = null;
-				if (ownerResponse.status === "fulfilled" && ownerResponse.value.data) {
-					const owner = ownerResponse.value.data;
-					personal = {
-						fullName: `${owner.first_name} ${owner.last_name}`,
-						address: `${owner.address}, ${owner.city}, ${owner.state} ${owner.post_code}, ${owner.country}`,
-						maritalStatus: owner.marital_status,
-					};
-				}
+			// Handle flat structure (fallback)
+			console.log("No nested structure found, trying flat structure");
+			const flatExecutor = executor as Record<string, unknown>; // Type assertion for fallback
+			if (flatExecutor.first_name || flatExecutor.last_name) {
+				return {
+					fullName: `${flatExecutor.first_name || ""} ${
+						flatExecutor.last_name || ""
+					}`.trim(),
+					companyName:
+						(flatExecutor.name as string) ||
+						(flatExecutor.company_name as string),
+					relationship: flatExecutor.relationship as string,
+					isPrimary: executor.is_primary,
+					type:
+						(flatExecutor.name as string) ||
+						(flatExecutor.company_name as string)
+							? "corporate"
+							: "individual",
+					registrationNumber:
+						(flatExecutor.rc_number as string) ||
+						(flatExecutor.registration_number as string),
+				};
+			}
 
-				// Process guardians
-				let guardians: Array<{
-					fullName: string;
-					relationship: string;
-					isPrimary: boolean;
-				}> = [];
-				if (
-					guardiansResponse.status === "fulfilled" &&
-					guardiansResponse.value.data
-				) {
-					guardians = guardiansResponse.value.data.map((guardian) => ({
-						fullName: `${guardian.guardian.first_name} ${guardian.guardian.last_name}`,
+			// If we can't determine the type, return a fallback
+			console.log("Could not determine executor type, returning fallback");
+			return {
+				fullName: "Unknown Executor",
+				companyName: undefined,
+				relationship: undefined,
+				isPrimary: executor.is_primary,
+				type: "individual" as const,
+				registrationNumber: undefined,
+			};
+		});
+	}
+
+	return {
+		personal: {
+			fullName: `${willData.owner.first_name} ${willData.owner.last_name}`,
+			address: `${willData.owner.address}, ${willData.owner.city}, ${willData.owner.state} ${willData.owner.post_code}, ${willData.owner.country}`,
+			maritalStatus: willData.owner.marital_status,
+		},
+		spouse: willData.spouse
+			? {
+					fullName: `${willData.spouse.first_name} ${willData.spouse.last_name}`,
+			  }
+			: undefined,
+		children:
+			willData.children && Array.isArray(willData.children)
+				? willData.children.map((child) => ({
+						fullName: `${child.first_name} ${child.last_name}`,
 						relationship: getFormattedRelationshipNameById(
-							guardian.guardian.relationship
+							child.relationship_id
 						),
-						isPrimary: guardian.is_primary,
-					}));
-				}
-
-				// Process assets
-				let assets: Array<{
-					type: string;
-					description: string;
-					distributionType: "equal" | "percentage";
-					beneficiaries: Array<{
-						id: string;
-						percentage?: number;
-						beneficiaryName?: string;
-						relationship?: string;
-					}>;
-				}> = [];
-				if (
-					assetsResponse.status === "fulfilled" &&
-					assetsResponse.value.data
-				) {
-					assets = assetsResponse.value.data.map((asset) => ({
+						requiresGuardian: child.is_minor,
+				  }))
+				: [],
+		assets:
+			willData.assets && Array.isArray(willData.assets)
+				? willData.assets.map((asset) => ({
 						type: asset.asset_type,
 						description: asset.description,
-						distributionType: asset.distribution_type,
-						beneficiaries: asset.beneficiaries.map((beneficiary) => {
-							let beneficiaryName = "Unknown Beneficiary";
-							let relationship = "Unknown";
+						distributionType: asset.distribution_type as "equal" | "percentage",
+						beneficiaries:
+							asset.beneficiaries && Array.isArray(asset.beneficiaries)
+								? asset.beneficiaries.map((beneficiary) => {
+										let beneficiaryName = "Unknown Beneficiary";
+										let relationship = "Unknown";
 
-							if (beneficiary.person) {
-								beneficiaryName = `${beneficiary.person.first_name} ${beneficiary.person.last_name}`;
-								relationship = getFormattedRelationshipNameById(
-									beneficiary.person.relationship_id
-								);
-							} else if (beneficiary.charity) {
-								beneficiaryName = beneficiary.charity.name;
-								relationship = "Charity";
-							}
+										if (beneficiary.person) {
+											beneficiaryName = `${beneficiary.person.first_name} ${beneficiary.person.last_name}`;
+											relationship = getFormattedRelationshipNameById(
+												beneficiary.person.relationship_id
+											);
+										} else if (beneficiary.charity) {
+											beneficiaryName = beneficiary.charity.name;
+											relationship = "Charity";
+										}
 
+										return {
+											id: beneficiary.id,
+											percentage: beneficiary.percentage,
+											beneficiaryName,
+											relationship,
+										};
+								  })
+								: [],
+				  }))
+				: [],
+		beneficiaries: Array.from(allPeople.entries()).map(([id, person]) => ({
+			id,
+			fullName: `${person.firstName} ${person.lastName}`,
+			relationship: getFormattedRelationshipNameById(person.relationshipId),
+			allocation: 0, // This will be calculated from residuary
+			requiresGuardian: person.isMinor,
+		})),
+		executors:
+			willData.executors && Array.isArray(willData.executors)
+				? willData.executors.map((executor) => {
+						console.log("Processing executor:", executor);
+
+						// Handle nested person/corporate_executor structure (expected)
+						if (executor.person) {
+							console.log("Found person executor:", executor.person);
 							return {
-								id: beneficiary.id,
-								percentage: beneficiary.percentage,
-								beneficiaryName,
-								relationship,
+								fullName: `${executor.person.first_name} ${executor.person.last_name}`,
+								companyName: undefined,
+								relationship: getFormattedRelationshipNameById(
+									executor.person.relationship_id
+								),
+								isPrimary: executor.is_primary,
+								type: "individual" as const,
+								registrationNumber: undefined,
 							};
-						}),
-					}));
-				}
+						} else if (executor.corporate_executor) {
+							console.log(
+								"Found corporate executor:",
+								executor.corporate_executor
+							);
+							return {
+								fullName: undefined,
+								companyName: executor.corporate_executor.name,
+								relationship: undefined,
+								isPrimary: executor.is_primary,
+								type: "corporate" as const,
+								registrationNumber: executor.corporate_executor.rc_number,
+							};
+						}
 
-				// Process gifts
-				let gifts: Array<{
-					type: string;
-					description: string;
-					value?: string;
-					beneficiaryId: string;
-					beneficiaryName: string;
-				}> = [];
-				if (giftsResponse.status === "fulfilled" && giftsResponse.value.data) {
-					gifts = giftsResponse.value.data.map((gift) => {
+						// Handle flat structure (fallback)
+						console.log("No nested structure found, trying flat structure");
+						const flatExecutor = executor as Record<string, unknown>; // Type assertion for fallback
+						if (flatExecutor.first_name || flatExecutor.last_name) {
+							return {
+								fullName: `${flatExecutor.first_name || ""} ${
+									flatExecutor.last_name || ""
+								}`.trim(),
+								companyName:
+									(flatExecutor.name as string) ||
+									(flatExecutor.company_name as string),
+								relationship: flatExecutor.relationship as string,
+								isPrimary: executor.is_primary,
+								type:
+									(flatExecutor.name as string) ||
+									(flatExecutor.company_name as string)
+										? "corporate"
+										: "individual",
+								registrationNumber:
+									(flatExecutor.rc_number as string) ||
+									(flatExecutor.registration_number as string),
+							};
+						}
+
+						// If we can't determine the type, return a fallback
+						console.log(
+							"Could not determine executor type, returning fallback"
+						);
+						return {
+							fullName: "Unknown Executor",
+							companyName: undefined,
+							relationship: undefined,
+							isPrimary: executor.is_primary,
+							type: "individual" as const,
+							registrationNumber: undefined,
+						};
+				  })
+				: [],
+		witnesses:
+			willData.witnesses && Array.isArray(willData.witnesses)
+				? willData.witnesses.map((witness) => ({
+						fullName: `${witness.first_name} ${witness.last_name}`,
+						address: `${witness.address}, ${witness.city}, ${witness.state} ${witness.post_code}, ${witness.country}`,
+				  }))
+				: [],
+		guardians:
+			willData.guardians && Array.isArray(willData.guardians)
+				? willData.guardians
+						.filter((guardian) => guardian.person) // Filter out guardians without person data
+						.map((guardian) => ({
+							fullName: `${guardian.person!.first_name} ${
+								guardian.person!.last_name
+							}`,
+							relationship: getFormattedRelationshipNameById(
+								guardian.person!.relationship_id
+							),
+							isPrimary: guardian.is_primary,
+						}))
+				: [],
+		gifts:
+			willData.gifts && Array.isArray(willData.gifts)
+				? willData.gifts.map((gift) => {
 						let beneficiaryName = "Unknown Beneficiary";
 						if (gift.person) {
 							beneficiaryName = `${gift.person.first_name} ${gift.person.last_name}`;
 						} else if (gift.charity) {
 							beneficiaryName = gift.charity.name;
 						}
+
 						return {
 							type: gift.type,
 							description: gift.description,
-							value: gift.value?.toString(),
+							value: gift.value,
 							beneficiaryId: gift.people_id || gift.charities_id || "",
 							beneficiaryName,
 						};
-					});
-				}
+				  })
+				: [],
+		residuaryBeneficiaries:
+			willData.residuary &&
+			willData.residuary.beneficiaries &&
+			Array.isArray(willData.residuary.beneficiaries)
+				? willData.residuary.beneficiaries.map((beneficiary) => {
+						let beneficiaryName = "Unknown Beneficiary";
+						if (beneficiary.person) {
+							beneficiaryName = `${beneficiary.person.first_name} ${beneficiary.person.last_name}`;
+						} else if (beneficiary.charity) {
+							beneficiaryName = beneficiary.charity.name;
+						}
 
-				// Process residuary beneficiaries
-				let residuaryBeneficiaries: Array<{
-					id: string;
-					beneficiaryId: string;
-					percentage: number;
-				}> = [];
-				if (
-					residuaryResponse.status === "fulfilled" &&
-					residuaryResponse.value.data
-				) {
-					residuaryBeneficiaries =
-						residuaryResponse.value.data.beneficiaries.map((beneficiary) => ({
+						return {
 							id: beneficiary.id,
 							beneficiaryId:
 								beneficiary.people_id || beneficiary.charities_id || "",
-							percentage: beneficiary.percentage,
-						}));
+							beneficiaryName,
+							percentage: parseInt(beneficiary.percentage) || 0,
+						};
+				  })
+				: [],
+		funeralInstructions: willData.funeral_instructions
+			? {
+					wishes: willData.funeral_instructions.wishes,
+			  }
+			: undefined,
+	};
+};
+
+const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
+	({ onBack }, ref) => {
+		const [isLoading, setIsLoading] = useState(true);
+		const [reviewData, setReviewData] = useState<ReviewData | null>(null);
+		const navigate = useNavigate();
+
+		// Load complete will data from single endpoint
+		const loadCompleteWillData = async () => {
+			try {
+				const { data, error } = await apiClient<CompleteWillData>(
+					"/wills/get-user-active-will"
+				);
+
+				if (error) {
+					console.error("Error loading complete will data:", error);
+					toast.error("Failed to load will data");
+					return;
 				}
 
-				// Process executors
-				let executors: Array<{
-					fullName?: string;
-					companyName?: string;
-					relationship?: string;
-					isPrimary: boolean;
-					type: "individual" | "corporate";
-					registrationNumber?: string;
-				}> = [];
-				if (
-					executorsResponse.status === "fulfilled" &&
-					executorsResponse.value.data
-				) {
-					executors = executorsResponse.value.data.map((executor) => ({
-						fullName:
-							executor.type === "individual"
-								? `${executor.first_name || ""} ${
-										executor.last_name || ""
-								  }`.trim()
-								: undefined,
-						companyName:
-							executor.type === "corporate" ? executor.company_name : undefined,
-						relationship: executor.relationship,
-						isPrimary: executor.is_primary,
-						type: executor.type,
-						registrationNumber: undefined,
-					}));
-				}
+				const willData = Array.isArray(data) ? data[0] : data;
+				console.log("Raw will data:", willData);
+				if (willData) {
+					console.log("Will data structure check:");
+					console.log("- owner:", willData.owner);
+					console.log("- spouse:", willData.spouse);
+					console.log("- children:", willData.children);
+					console.log("- guardians:", willData.guardians);
+					console.log("- assets:", willData.assets);
+					console.log("- gifts:", willData.gifts);
+					console.log("- executors:", willData.executors);
+					console.log("- witnesses:", willData.witnesses);
+					console.log("- residuary:", willData.residuary);
+					console.log("- funeral_instructions:", willData.funeral_instructions);
 
-				// Process witnesses
-				let witnesses: Array<{
-					fullName: string;
-					address: string;
-				}> = [];
-				if (
-					witnessesResponse.status === "fulfilled" &&
-					witnessesResponse.value.data
-				) {
-					witnesses = witnessesResponse.value.data.map((witness) => ({
-						fullName: `${witness.first_name} ${witness.last_name}`,
-						address: `${witness.address}, ${witness.city}, ${witness.state} ${witness.post_code}, ${witness.country}`,
-					}));
-				}
+					// Debug executors specifically
+					console.log("=== EXECUTORS DEBUG ===");
+					if (willData.executors && Array.isArray(willData.executors)) {
+						console.log("Executors array length:", willData.executors.length);
+						willData.executors.forEach(
+							(executor: CompleteWillData["executors"][0], index: number) => {
+								console.log(`Executor ${index}:`, {
+									id: executor.id,
+									is_primary: executor.is_primary,
+									corporate_executor: executor.corporate_executor,
+									person: executor.person,
+									executor_id: executor.executor_id,
+									corporate_executor_id: executor.corporate_executor_id,
+								});
+							}
+						);
+					} else {
+						console.log("No executors array or not an array");
+					}
+					console.log("=== END EXECUTORS DEBUG ===");
 
-				// Process funeral instructions
-				let funeralInstructions: { instructions: string } | undefined =
-					undefined;
-				if (
-					funeralInstructionsResponse.status === "fulfilled" &&
-					funeralInstructionsResponse.value.data
-				) {
-					funeralInstructions = {
-						instructions: funeralInstructionsResponse.value.data.instructions,
-					};
-				}
-
-				// Process beneficiaries for residuary display
-				const beneficiaries: Array<{
-					id: string;
-					fullName: string;
-					relationship: string;
-					allocation: number;
-					requiresGuardian?: boolean;
-				}> = [];
-				if (
-					beneficiariesResponse.status === "fulfilled" &&
-					beneficiariesResponse.value.data
-				) {
-					const beneficiariesData = beneficiariesResponse.value.data;
-
-					// Add charities
-					beneficiariesData.charities.forEach((charity) => {
-						beneficiaries.push({
-							id: charity.id,
-							fullName: charity.name,
-							relationship: "Charity",
-							allocation: 0,
-						});
-					});
-
-					// Add people
-					beneficiariesData.people.forEach((person) => {
-						const relationshipName =
-							getFormattedRelationshipNameById(person.relationship_id) ||
-							"Other";
-						beneficiaries.push({
-							id: person.id,
-							fullName: `${person.first_name} ${person.last_name}`,
-							relationship: relationshipName,
-							allocation: 0,
-							requiresGuardian: person.is_minor,
-						});
-					});
-				}
-
-				// Combine all data - only set if we have personal data
-				if (personal) {
-					const combinedData = {
-						personal,
-						assets,
-						beneficiaries,
-						executors,
-						witnesses,
-						guardians,
-						gifts,
-						residuaryBeneficiaries,
-						funeralInstructions,
-					};
-
-					setReviewData(combinedData);
+					const transformedData = transformWillDataToReviewFormat(willData);
+					console.log("Transformed data:", transformedData);
+					console.log("Transformed executors:", transformedData.executors);
+					setReviewData(transformedData);
 				} else {
-					toast.error("Failed to load personal information");
+					toast.error("No active will found");
 				}
 			} catch (error) {
-				console.error("Error loading data:", error);
+				console.error("Error loading complete will data:", error);
 				toast.error("Failed to load will data");
 			} finally {
 				setIsLoading(false);
 			}
 		};
 
-		// Load data on component mount
 		useEffect(() => {
 			const loadData = async () => {
 				setIsLoading(true);
-
-				// If prop data is provided, use it
-				if (propData) {
-					setReviewData(propData);
-					setIsLoading(false);
-					return;
-				}
-
-				// Load active will ID first
-				const willId = await loadActiveWillId();
-				if (willId) {
-					// Load all data using the will ID
-					await loadAllData(willId);
-				} else {
-					setIsLoading(false);
-				}
+				await loadCompleteWillData();
 			};
-
 			loadData();
-		}, [propData]);
-
-		const saveWillToLocalStorage = () => {
-			try {
-				// Get existing wills or initialize empty array
-				const existingWills = JSON.parse(localStorage.getItem("wills") || "[]");
-
-				// Create will object with metadata
-				const will = {
-					id: _willId,
-					createdAt: new Date().toISOString(),
-					updatedAt: new Date().toISOString(),
-					data: reviewData,
-					status: "draft",
-				};
-
-				// Add new will to array
-				existingWills.push(will);
-
-				// Save back to localStorage
-				localStorage.setItem("wills", JSON.stringify(existingWills));
-
-				return _willId;
-			} catch (error) {
-				console.error("Error saving will to localStorage:", error);
-				throw new Error("Failed to save will data");
-			}
-		};
-
-		const handleSaveAndDownload = async () => {
-			if (isSaving) return;
-
-			try {
-				setIsSaving(true);
-
-				// Generate a unique ID for the will
-				const willId = crypto.randomUUID();
-				setWillId(willId);
-
-				// Save will data to localStorage first
-				saveWillToLocalStorage();
-
-				// Use the utility function to download the PDF
-				const success = await downloadWillPDF({
-					// Create a mock saved will structure for the utility
-					willId: willId,
-					searchParams: new URLSearchParams(`willId=${willId}`),
-				});
-
-				if (success) {
-					toast.success("Will saved and downloaded successfully");
-					navigate("/app/dashboard");
-				}
-			} catch (error) {
-				console.error("Error saving will:", error);
-				toast.error("Failed to save and download will. Please try again.");
-			} finally {
-				setIsSaving(false);
-			}
-		};
-
-		const handleProceedToPayment = async () => {
-			try {
-				// First, save the will data to ensure we have a will ID
-				if (!reviewData?.personal?.fullName) {
-					toast.error(
-						"Please complete all required information before proceeding to payment"
-					);
-					return;
-				}
-
-				// Get will ID from context or generate one
-				let willId = _willId;
-				if (!willId) {
-					willId = crypto.randomUUID();
-					setWillId(willId);
-				}
-
-				// Save will data to localStorage as backup
-				saveWillToLocalStorage();
-
-				// Navigate to payment with will data using price ID
-				const searchParams = new URLSearchParams({
-					willId: willId,
-					amount: PaymentService.getWillPrice().toString(),
-					description: "Will Creation Service",
-					source: "will-wizard",
-				});
-
-				navigate(`/app/payment?${searchParams.toString()}`);
-			} catch (error) {
-				console.error("Error proceeding to payment:", error);
-				toast.error("Failed to proceed to payment. Please try again.");
-			}
-		};
+		}, []);
 
 		useImperativeHandle(ref, () => ({
-			handleSaveAndDownload,
-			isSaving,
+			handleSaveAndDownload: async () => {},
+			isSaving: false,
 		}));
 
-		// Show loading state
 		if (isLoading || !reviewData) {
 			return (
 				<div className="space-y-6">
@@ -665,281 +759,430 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 			);
 		}
 
-		return (
-			<div data-review-step className="space-y-6">
-				<div className="text-2xl font-semibold">Review Your Will</div>
-				<div className="text-muted-foreground">
-					Please review all the information below before proceeding to payment.
-				</div>
-
-				{/* Personal Information */}
-				{reviewData.personal && (
-					<div className="space-y-4">
-						<h3 className="text-lg font-semibold border-b pb-2">
-							Personal Information
-						</h3>
-						<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-							<div>
+		// --- REDESIGNED REVIEW PAGE ---
+		// Prepare sections dynamically
+		const sections = [
+			{
+				shouldShow: true,
+				render: (num: number) => (
+					<section
+						className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm"
+						key="personal"
+					>
+						<div className="flex items-center space-x-3 mb-6">
+							<div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+								<span className="text-blue-600 font-semibold text-sm">
+									{num}
+								</span>
+							</div>
+							<h3 className="text-xl font-semibold text-gray-900">
+								Personal Information
+							</h3>
+						</div>
+						<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+							<div className="space-y-2">
 								<label className="block text-sm font-medium text-gray-700">
 									Full Name
 								</label>
-								<p className="mt-1 text-gray-900">
+								<p className="text-gray-900 font-medium">
 									{reviewData.personal.fullName}
 								</p>
 							</div>
-							<div>
+							<div className="space-y-2">
 								<label className="block text-sm font-medium text-gray-700">
 									Marital Status
 								</label>
-								<p className="mt-1 text-gray-900">
+								<p className="text-gray-900 font-medium capitalize">
 									{reviewData.personal.maritalStatus}
 								</p>
 							</div>
-							<div className="md:col-span-2">
+							<div className="md:col-span-2 space-y-2">
 								<label className="block text-sm font-medium text-gray-700">
 									Address
 								</label>
-								<p className="mt-1 text-gray-900">
-									{reviewData.personal.address}
-								</p>
+								<p className="text-gray-900">{reviewData.personal.address}</p>
 							</div>
 						</div>
-					</div>
-				)}
-
-				{/* Guardians */}
-				{reviewData.guardians && reviewData.guardians.length > 0 && (
-					<div className="space-y-4">
-						<h3 className="text-lg font-semibold border-b pb-2">Guardians</h3>
+					</section>
+				),
+			},
+			{
+				shouldShow: !!reviewData.spouse,
+				render: (num: number) => (
+					<section
+						className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm"
+						key="spouse"
+					>
+						<div className="flex items-center space-x-3 mb-6">
+							<div className="w-8 h-8 bg-pink-100 rounded-full flex items-center justify-center">
+								<span className="text-pink-600 font-semibold text-sm">
+									{num}
+								</span>
+							</div>
+							<h3 className="text-xl font-semibold text-gray-900">Spouse</h3>
+						</div>
+						<div className="space-y-2">
+							<label className="block text-sm font-medium text-gray-700">
+								Full Name
+							</label>
+							<p className="text-gray-900 font-medium">
+								{reviewData.spouse?.fullName}
+							</p>
+						</div>
+					</section>
+				),
+			},
+			{
+				shouldShow: reviewData.children && reviewData.children.length > 0,
+				render: (num: number) => (
+					<section
+						className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm"
+						key="children"
+					>
+						<div className="flex items-center space-x-3 mb-6">
+							<div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+								<span className="text-green-600 font-semibold text-sm">
+									{num}
+								</span>
+							</div>
+							<h3 className="text-xl font-semibold text-gray-900">Children</h3>
+						</div>
 						<div className="grid gap-4">
-							{reviewData.guardians.map((guardian, index) => (
+							{reviewData.children?.map((child, idx) => (
 								<div
-									key={index}
-									className="rounded-lg border border-gray-200 p-4 bg-gray-50"
+									key={idx}
+									className="bg-gray-50 rounded-lg p-4 border border-gray-100"
 								>
-									<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-										<div>
+									<div className="flex flex-col md:flex-row md:items-center md:justify-between">
+										<div className="space-y-1">
 											<label className="block text-sm font-medium text-gray-700">
-												Name
+												Full Name
 											</label>
-											<p className="mt-1 text-gray-900">
-												{guardian.fullName}
-												{guardian.isPrimary && (
-													<span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-														Primary
+											<div className="flex items-center gap-2">
+												<p className="text-gray-900 font-medium">
+													{child.fullName}
+												</p>
+												{child.requiresGuardian && (
+													<span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+														Minor
 													</span>
 												)}
-											</p>
+											</div>
 										</div>
-										<div>
+										<div className="space-y-1 mt-2 md:mt-0">
 											<label className="block text-sm font-medium text-gray-700">
 												Relationship
 											</label>
-											<p className="mt-1 text-gray-900">
-												{guardian.relationship}
-											</p>
+											<p className="text-gray-900">{child.relationship}</p>
 										</div>
 									</div>
 								</div>
 							))}
 						</div>
-					</div>
-				)}
-
-				{/* Assets */}
-				{reviewData.assets && reviewData.assets.length > 0 && (
-					<div className="space-y-4">
-						<h3 className="text-lg font-semibold border-b pb-2">Assets</h3>
+					</section>
+				),
+			},
+			{
+				shouldShow: reviewData.guardians && reviewData.guardians.length > 0,
+				render: (num: number) => (
+					<section
+						className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm"
+						key="guardians"
+					>
+						<div className="flex items-center space-x-3 mb-6">
+							<div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+								<span className="text-purple-600 font-semibold text-sm">
+									{num}
+								</span>
+							</div>
+							<h3 className="text-xl font-semibold text-gray-900">Guardians</h3>
+						</div>
 						<div className="grid gap-4">
-							{reviewData.assets.map((asset, index) => (
+							{reviewData.guardians?.map((guardian, idx) => (
 								<div
-									key={index}
-									className="rounded-lg border border-gray-200 p-4 bg-gray-50"
+									key={idx}
+									className="bg-gray-50 rounded-lg p-4 border border-gray-100"
 								>
-									<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-										<div>
+									<div className="flex flex-col md:flex-row md:items-center md:justify-between">
+										<div className="space-y-1">
 											<label className="block text-sm font-medium text-gray-700">
-												Type
+												Full Name
 											</label>
-											<p className="mt-1 text-gray-900">{asset.type}</p>
+											<div className="flex items-center gap-2">
+												<p className="text-gray-900 font-medium">
+													{guardian.fullName}
+												</p>
+												{guardian.isPrimary && (
+													<span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+														Primary Guardian
+													</span>
+												)}
+											</div>
 										</div>
-										<div>
+										<div className="space-y-1 mt-2 md:mt-0">
+											<label className="block text-sm font-medium text-gray-700">
+												Relationship
+											</label>
+											<p className="text-gray-900">{guardian.relationship}</p>
+										</div>
+									</div>
+								</div>
+							))}
+						</div>
+					</section>
+				),
+			},
+			{
+				shouldShow: reviewData.assets && reviewData.assets.length > 0,
+				render: (num: number) => (
+					<section
+						className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm"
+						key="assets"
+					>
+						<div className="flex items-center space-x-3 mb-6">
+							<div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+								<span className="text-yellow-600 font-semibold text-sm">
+									{num}
+								</span>
+							</div>
+							<h3 className="text-xl font-semibold text-gray-900">Assets</h3>
+						</div>
+						<div className="grid gap-6">
+							{reviewData.assets?.map((asset, idx) => (
+								<div
+									key={idx}
+									className="bg-gray-50 rounded-lg p-6 border border-gray-100"
+								>
+									<div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+										<div className="space-y-2">
+											<label className="block text-sm font-medium text-gray-700">
+												Asset Type
+											</label>
+											<p className="text-gray-900 font-medium">{asset.type}</p>
+										</div>
+										<div className="space-y-2">
 											<label className="block text-sm font-medium text-gray-700">
 												Distribution Type
 											</label>
-											<p className="mt-1 text-gray-900 capitalize">
+											<p className="text-gray-900 font-medium capitalize">
 												{asset.distributionType}
 											</p>
 										</div>
-										<div className="md:col-span-2">
+										<div className="md:col-span-2 space-y-2">
 											<label className="block text-sm font-medium text-gray-700">
 												Description
 											</label>
-											<p className="mt-1 text-gray-900">{asset.description}</p>
+											<p className="text-gray-900">{asset.description}</p>
 										</div>
-										{asset.beneficiaries && asset.beneficiaries.length > 0 && (
-											<div className="md:col-span-2">
-												<label className="block text-sm font-medium text-gray-700">
-													Beneficiaries
-												</label>
-												<div className="mt-1 space-y-2">
-													{asset.beneficiaries.map((beneficiary, idx) => (
-														<div
-															key={idx}
-															className="text-gray-900 text-sm border-l-2 border-gray-200 pl-3"
-														>
-															<div className="font-medium">
-																{beneficiary.beneficiaryName}
-															</div>
-															<div className="text-gray-600 text-xs">
-																{beneficiary.relationship} •{" "}
-																{beneficiary.percentage
-																	? `${beneficiary.percentage}%`
-																	: "Equal share"}
-															</div>
-														</div>
-													))}
-												</div>
-											</div>
-										)}
 									</div>
+									{asset.beneficiaries && asset.beneficiaries.length > 0 && (
+										<div className="border-t border-gray-200 pt-4">
+											<label className="block text-sm font-medium text-gray-700 mb-3">
+												Beneficiaries
+											</label>
+											<div className="space-y-3">
+												{asset.beneficiaries.map((beneficiary, bidx) => (
+													<div
+														key={bidx}
+														className="bg-white rounded-lg p-3 border border-gray-200"
+													>
+														<div className="flex flex-col md:flex-row md:items-center md:justify-between">
+															<div className="space-y-1">
+																<p className="text-gray-900 font-medium">
+																	{beneficiary.beneficiaryName}
+																</p>
+																<p className="text-sm text-gray-600">
+																	{beneficiary.relationship}
+																</p>
+															</div>
+															{asset.beneficiaries.length > 1 &&
+																asset.distributionType === "percentage" && (
+																	<div className="mt-2 md:mt-0">
+																		<span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+																			{beneficiary.percentage
+																				? `${beneficiary.percentage}%`
+																				: "Equal share"}
+																		</span>
+																	</div>
+																)}
+														</div>
+													</div>
+												))}
+											</div>
+										</div>
+									)}
 								</div>
 							))}
 						</div>
-					</div>
-				)}
-
-				{/* Gifts */}
-				{reviewData.gifts && reviewData.gifts.length > 0 && (
-					<div className="space-y-4">
-						<h3 className="text-lg font-semibold border-b pb-2">
-							Specific Gifts
-						</h3>
-						<div className="grid gap-4">
-							{reviewData.gifts.map((gift, index) => (
+					</section>
+				),
+			},
+			{
+				shouldShow: reviewData.gifts && reviewData.gifts.length > 0,
+				render: (num: number) => (
+					<section
+						className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm"
+						key="gifts"
+					>
+						<div className="flex items-center space-x-3 mb-6">
+							<div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center">
+								<span className="text-indigo-600 font-semibold text-sm">
+									{num}
+								</span>
+							</div>
+							<h3 className="text-xl font-semibold text-gray-900">
+								Specific Bequests
+							</h3>
+						</div>
+						<div className="grid gap-6">
+							{reviewData.gifts?.map((gift, idx) => (
 								<div
-									key={index}
-									className="rounded-lg border border-gray-200 p-4 bg-gray-50"
+									key={idx}
+									className="bg-gray-50 rounded-lg p-6 border border-gray-100"
 								>
-									<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-										<div>
+									<div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+										<div className="space-y-2">
 											<label className="block text-sm font-medium text-gray-700">
-												Type
+												Gift Type
 											</label>
-											<p className="mt-1 text-gray-900">{gift.type}</p>
+											<p className="text-gray-900 font-medium">{gift.type}</p>
 										</div>
 										{gift.value && (
-											<div>
+											<div className="space-y-2">
 												<label className="block text-sm font-medium text-gray-700">
 													Value
 												</label>
-												<p className="mt-1 text-gray-900">{gift.value}</p>
+												<p className="text-gray-900 font-medium">
+													{gift.value}
+												</p>
 											</div>
 										)}
-										<div>
+										<div className="space-y-2">
 											<label className="block text-sm font-medium text-gray-700">
 												Beneficiary
 											</label>
-											<p className="mt-1 text-gray-900">
+											<p className="text-gray-900 font-medium">
 												{gift.beneficiaryName}
 											</p>
 										</div>
-										<div className="md:col-span-3">
+										<div className="md:col-span-3 space-y-2">
 											<label className="block text-sm font-medium text-gray-700">
 												Description
 											</label>
-											<p className="mt-1 text-gray-900">{gift.description}</p>
+											<p className="text-gray-900">{gift.description}</p>
 										</div>
 									</div>
 								</div>
 							))}
 						</div>
-					</div>
-				)}
-
-				{/* Residuary Estate */}
-				{reviewData.residuaryBeneficiaries &&
-					reviewData.residuaryBeneficiaries.length > 0 && (
-						<div className="space-y-4">
-							<h3 className="text-lg font-semibold border-b pb-2">
+					</section>
+				),
+			},
+			{
+				shouldShow:
+					reviewData.residuaryBeneficiaries &&
+					reviewData.residuaryBeneficiaries.length > 0,
+				render: (num: number) => (
+					<section
+						className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm"
+						key="residuary"
+					>
+						<div className="flex items-center space-x-3 mb-6">
+							<div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+								<span className="text-orange-600 font-semibold text-sm">
+									{num}
+								</span>
+							</div>
+							<h3 className="text-xl font-semibold text-gray-900">
 								Residuary Estate Distribution
 							</h3>
-							<div className="grid gap-4">
-								{reviewData.residuaryBeneficiaries.map((residuary, index) => {
-									const beneficiary = reviewData.beneficiaries.find(
-										(b) => b.id === residuary.beneficiaryId
-									);
-									return (
-										<div
-											key={index}
-											className="rounded-lg border border-gray-200 p-4 bg-gray-50"
-										>
-											<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-												<div>
-													<label className="block text-sm font-medium text-gray-700">
-														Beneficiary
-													</label>
-													<p className="mt-1 text-gray-900">
-														{beneficiary?.fullName || "Unknown"}
-													</p>
-												</div>
-												<div>
-													<label className="block text-sm font-medium text-gray-700">
-														Percentage
-													</label>
-													<p className="mt-1 text-gray-900">
-														{residuary.percentage}%
-													</p>
-												</div>
-											</div>
-										</div>
-									);
-								})}
-							</div>
 						</div>
-					)}
-
-				{/* Executors */}
-				{reviewData.executors && reviewData.executors.length > 0 && (
-					<div className="space-y-4">
-						<h3 className="text-lg font-semibold border-b pb-2">Executors</h3>
 						<div className="grid gap-4">
-							{reviewData.executors.map((executor, index) => (
+							{reviewData.residuaryBeneficiaries.map((residuary, idx) => (
 								<div
-									key={index}
-									className="rounded-lg border border-gray-200 p-4 bg-gray-50"
+									key={idx}
+									className="bg-gray-50 rounded-lg p-4 border border-gray-100"
 								>
-									<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-										<div>
+									<div className="flex flex-col md:flex-row md:items-center md:justify-between">
+										<div className="space-y-1">
 											<label className="block text-sm font-medium text-gray-700">
-												Name
+												Beneficiary
 											</label>
-											<p className="mt-1 text-gray-900">
-												{executor.type === "individual"
-													? executor.fullName
-													: executor.companyName}
-												{executor.isPrimary && (
-													<span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-														Primary
-													</span>
-												)}
+											<p className="text-gray-900 font-medium">
+												{residuary.beneficiaryName}
 											</p>
 										</div>
-										<div>
+										<div className="space-y-1 mt-2 md:mt-0">
+											<label className="block text-sm font-medium text-gray-700">
+												Percentage
+											</label>
+											<span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800">
+												{residuary.percentage}%
+											</span>
+										</div>
+									</div>
+								</div>
+							))}
+						</div>
+					</section>
+				),
+			},
+			{
+				shouldShow: reviewData.executors && reviewData.executors.length > 0,
+				render: (num: number) => (
+					<section
+						className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm"
+						key="executors"
+					>
+						<div className="flex items-center space-x-3 mb-6">
+							<div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+								<span className="text-red-600 font-semibold text-sm">
+									{num}
+								</span>
+							</div>
+							<h3 className="text-xl font-semibold text-gray-900">Executors</h3>
+						</div>
+						<div className="grid gap-4">
+							{reviewData.executors.map((executor, idx) => (
+								<div
+									key={idx}
+									className="bg-gray-50 rounded-lg p-4 border border-gray-100"
+								>
+									<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+										<div className="space-y-2">
+											<label className="block text-sm font-medium text-gray-700">
+												{executor.type === "individual"
+													? "Name"
+													: "Company Name"}
+											</label>
+											<div className="flex items-center gap-2">
+												<p className="text-gray-900 font-medium">
+													{executor.type === "individual"
+														? executor.fullName
+														: executor.companyName}
+												</p>
+												{executor.isPrimary && (
+													<span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+														Primary Executor
+													</span>
+												)}
+											</div>
+										</div>
+										<div className="space-y-2">
 											<label className="block text-sm font-medium text-gray-700">
 												Type
 											</label>
-											<p className="mt-1 text-gray-900 capitalize">
+											<p className="text-gray-900 font-medium capitalize">
 												{executor.type}
 											</p>
 										</div>
 										{executor.type === "individual" &&
 											executor.relationship && (
-												<div>
+												<div className="space-y-2">
 													<label className="block text-sm font-medium text-gray-700">
 														Relationship
 													</label>
-													<p className="mt-1 text-gray-900">
+													<p className="text-gray-900">
 														{executor.relationship}
 													</p>
 												</div>
@@ -948,73 +1191,120 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 								</div>
 							))}
 						</div>
-					</div>
-				)}
-
-				{/* Witnesses */}
-				{reviewData.witnesses && reviewData.witnesses.length > 0 && (
-					<div className="space-y-4">
-						<h3 className="text-lg font-semibold border-b pb-2">Witnesses</h3>
+					</section>
+				),
+			},
+			{
+				shouldShow: reviewData.witnesses && reviewData.witnesses.length > 0,
+				render: (num: number) => (
+					<section
+						className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm"
+						key="witnesses"
+					>
+						<div className="flex items-center space-x-3 mb-6">
+							<div className="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center">
+								<span className="text-teal-600 font-semibold text-sm">
+									{num}
+								</span>
+							</div>
+							<h3 className="text-xl font-semibold text-gray-900">Witnesses</h3>
+						</div>
 						<div className="grid gap-4">
-							{reviewData.witnesses.map((witness, index) => (
+							{reviewData.witnesses.map((witness, idx) => (
 								<div
-									key={index}
-									className="rounded-lg border border-gray-200 p-4 bg-gray-50"
+									key={idx}
+									className="bg-gray-50 rounded-lg p-4 border border-gray-100"
 								>
 									<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-										<div>
+										<div className="space-y-2">
 											<label className="block text-sm font-medium text-gray-700">
-												Name
+												Full Name
 											</label>
-											<p className="mt-1 text-gray-900">{witness.fullName}</p>
+											<p className="text-gray-900 font-medium">
+												{witness.fullName}
+											</p>
 										</div>
-										<div>
+										<div className="space-y-2">
 											<label className="block text-sm font-medium text-gray-700">
 												Address
 											</label>
-											<p className="mt-1 text-gray-900">{witness.address}</p>
+											<p className="text-gray-900">{witness.address}</p>
 										</div>
 									</div>
 								</div>
 							))}
 						</div>
-					</div>
-				)}
-
-				{/* Funeral Instructions */}
-				{reviewData.funeralInstructions && (
-					<div className="space-y-4">
-						<h3 className="text-lg font-semibold border-b pb-2">
-							Funeral Instructions
-						</h3>
-						<div className="rounded-lg border border-gray-200 p-4 bg-gray-50">
-							<label className="block text-sm font-medium text-gray-700">
+					</section>
+				),
+			},
+			{
+				shouldShow: !!reviewData.funeralInstructions,
+				render: (num: number) => (
+					<section
+						className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm"
+						key="funeral"
+					>
+						<div className="flex items-center space-x-3 mb-6">
+							<div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+								<span className="text-gray-600 font-semibold text-sm">
+									{num}
+								</span>
+							</div>
+							<h3 className="text-xl font-semibold text-gray-900">
+								Funeral Instructions
+							</h3>
+						</div>
+						<div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
+							<label className="block text-sm font-medium text-gray-700 mb-2">
 								Instructions
 							</label>
-							<p className="mt-1 text-gray-900">
-								{reviewData.funeralInstructions.instructions}
+							<p className="text-gray-900">
+								I want to be {reviewData.funeralInstructions?.wishes}
 							</p>
 						</div>
+					</section>
+				),
+			},
+		];
+
+		return (
+			<div data-review-step className="space-y-8">
+				{/* Header Section */}
+				<div className="text-center space-y-4">
+					<div className="text-3xl font-bold text-gray-900">
+						Review Your Will
 					</div>
-				)}
+					<div className="text-lg text-gray-600 max-w-2xl mx-auto">
+						Please carefully review all the information below before proceeding
+						to payment. This document will be legally binding once completed.
+					</div>
+				</div>
+
+				{/* Dynamically Rendered Sections */}
+				{sections
+					.filter((s) => s.shouldShow)
+					.map((section, idx) => section.render(idx + 1))}
 
 				{/* Navigation Buttons */}
-				<div className="flex justify-between pt-6 border-t">
+				<div className="flex justify-between pt-8 border-t border-gray-200">
 					<Button
 						type="button"
 						variant="outline"
 						onClick={onBack}
-						className="cursor-pointer"
+						className="cursor-pointer px-8 py-3"
 					>
 						<ArrowLeft className="mr-2 h-4 w-4" /> Back
 					</Button>
-
 					<Button
 						type="button"
-						onClick={handleProceedToPayment}
-						className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
+						className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black px-8 py-3 font-medium"
+						onClick={() => {
+							// For now, navigate to checkout without willId
+							navigate(
+								`/app/payment/checkout?description=Will Creation Service`
+							);
+						}}
 					>
-						<CreditCard className="mr-2 h-4 w-4" />
 						Proceed to Payment
 					</Button>
 				</div>

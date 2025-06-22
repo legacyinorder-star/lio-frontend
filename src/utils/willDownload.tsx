@@ -1,312 +1,570 @@
 import { toast } from "sonner";
 import { pdf } from "@react-pdf/renderer";
 import WillPDF from "@/components/will-wizard/WillPDF";
-import { type WillData } from "@/context/WillContext";
 import { apiClient } from "@/utils/apiClient";
 import { getFormattedRelationshipNameById } from "@/utils/relationships";
 
-interface SavedWill {
+// Import the same types and transformation function from ReviewStep
+interface CompleteWillData {
 	id: string;
-	createdAt: string;
-	updatedAt: string;
-	data: {
-		personal: {
-			fullName: string;
-			dateOfBirth: string;
-			address: string;
-			phone: string;
-			maritalStatus: string;
-		};
-		assets: Array<{
-			type: string;
-			description: string;
-			distributionType?: "equal" | "percentage";
-			beneficiaries?: Array<{
-				id?: string;
-				percentage?: number;
-			}>;
-		}>;
-		beneficiaries: Array<{
-			id?: string;
-			fullName: string;
-			relationship: string;
-			email?: string;
-			phone?: string;
-			allocation: number;
-			dateOfBirth?: string;
-			requiresGuardian?: boolean;
-		}>;
-		executors: Array<{
-			fullName?: string;
-			companyName?: string;
-			relationship?: string;
-			email?: string;
-			phone?: string;
-			address: string;
-			isPrimary: boolean;
-			type: "individual" | "corporate";
-			contactPerson?: string;
-			registrationNumber?: string;
-		}>;
-		witnesses: Array<{
-			fullName: string;
-			address: string;
-		}>;
-		guardians?: Array<{
-			fullName: string;
-			relationship: string;
-			isPrimary: boolean;
-			address?: string;
-		}>;
-		gifts?: Array<{
-			type: string;
-			description: string;
-			value?: string;
-			beneficiaryId: string;
-			beneficiaryName: string;
-		}>;
-		residuaryBeneficiaries?: Array<{
-			id: string;
-			beneficiaryId: string;
-			percentage: number;
-		}>;
-		// additionalInstructions?: string;
-	};
+	created_at: string;
+	user_id: string;
 	status: string;
-}
-
-interface DownloadWillOptions {
-	activeWill?: WillData | null;
-	willId?: string;
-	searchParams?: URLSearchParams;
-}
-
-// Define AssetApiResponse and BeneficiaryApiResponse types for asset fetching
-interface AssetApiBeneficiary {
-	id: string;
-	percentage: number;
-	people_id?: string;
-	charities_id?: string;
-	person?: {
+	last_updated_at: string;
+	payment_status: string;
+	owner: {
 		id: string;
+		will_id: string;
+		created_at: string;
 		first_name: string;
 		last_name: string;
-		relationship_id: string;
+		marital_status: string;
+		address: string;
+		city: string;
+		state: string;
+		post_code: string;
+		country: string;
 	};
-	charity?: {
+	spouse?: {
 		id: string;
+		user_id: string;
+		will_id: string;
+		relationship_id: string;
+		first_name: string;
+		last_name: string;
+		is_minor: boolean;
+		created_at: string;
+		is_witness: boolean;
+	};
+	children: Array<{
+		id: string;
+		user_id: string;
+		will_id: string;
+		relationship_id: string;
+		first_name: string;
+		last_name: string;
+		is_minor: boolean;
+		created_at: string;
+		is_witness: boolean;
+	}>;
+	guardians: Array<{
+		will_id: string;
+		created_at: string;
+		is_primary: boolean;
+		guardian_id: string;
+		person: {
+			id: string;
+			user_id: string;
+			will_id: string;
+			relationship_id: string;
+			first_name: string;
+			last_name: string;
+			is_minor: boolean;
+			created_at: string;
+			is_witness: boolean;
+		};
+	}>;
+	assets: Array<{
+		id: string;
+		will_id: string;
+		user_id: string;
 		name: string;
-		rc_number?: string;
+		asset_type: string;
+		description: string;
+		created_at: string;
+		distribution_type: string;
+		beneficiaries: Array<{
+			id: string;
+			created_at: string;
+			will_id: string;
+			people_id: string;
+			charities_id: string;
+			asset_id: string;
+			percentage: number;
+			person?: {
+				id: string;
+				user_id: string;
+				will_id: string;
+				relationship_id: string;
+				first_name: string;
+				last_name: string;
+				is_minor: boolean;
+				created_at: string;
+				is_witness: boolean;
+			};
+			charity?: {
+				id: string;
+				created_at: string;
+				will_id: string;
+				name: string;
+				rc_number: string;
+				user_id: string;
+			};
+		}>;
+	}>;
+	gifts: Array<{
+		id: string;
+		will_id: string;
+		type: string;
+		created_at: string;
+		description: string;
+		currency: string;
+		value: string;
+		people_id: string;
+		charities_id: string;
+		person?: {
+			id: string;
+			user_id: string;
+			will_id: string;
+			relationship_id: string;
+			first_name: string;
+			last_name: string;
+			is_minor: boolean;
+			created_at: string;
+			is_witness: boolean;
+		};
+		charity?: {
+			id: string;
+			created_at: string;
+			will_id: string;
+			name: string;
+			rc_number: string;
+			user_id: string;
+		};
+	}>;
+	residuary: {
+		id: string;
+		created_at: string;
+		will_id: string;
+		distribution_type: string;
+		beneficiaries: Array<{
+			id: string;
+			created_at: string;
+			residuary_id: string;
+			will_id: string;
+			people_id: string;
+			charities_id: string;
+			percentage: string;
+			person?: {
+				id: string;
+				user_id: string;
+				will_id: string;
+				relationship_id: string;
+				first_name: string;
+				last_name: string;
+				is_minor: boolean;
+				created_at: string;
+				is_witness: boolean;
+			};
+			charity?: {
+				id: string;
+				created_at: string;
+				will_id: string;
+				name: string;
+				rc_number: string;
+				user_id: string;
+			};
+		}>;
+	};
+	executors: Array<{
+		id: string;
+		created_at: string;
+		will_id: string;
+		corporate_executor_id: string;
+		executor_id: string;
+		is_primary: boolean;
+		corporate_executor?: {
+			id: string;
+			created_at: string;
+			user_id: string;
+			name: string;
+			will_id: string;
+			rc_number: string;
+		};
+		person?: {
+			id: string;
+			user_id: string;
+			will_id: string;
+			relationship_id: string;
+			first_name: string;
+			last_name: string;
+			is_minor: boolean;
+			created_at: string;
+			is_witness: boolean;
+		};
+	}>;
+	witnesses: Array<{
+		id: string;
+		created_at: string;
+		will_id: string;
+		user_id: string;
+		first_name: string;
+		last_name: string;
+		address: string;
+		city: string;
+		state: string;
+		post_code: string;
+		country: string;
+	}>;
+	funeral_instructions?: {
+		id: string;
+		created_at: string;
+		wishes: string;
+		will_id: string;
+		user_id: string;
 	};
 }
-interface AssetApiResponse {
-	id: string;
-	will_id: string;
-	asset_type: string;
-	description: string;
-	distribution_type: "equal" | "percentage";
-	beneficiaries: AssetApiBeneficiary[];
+
+// PDF data structure that matches WillPDF component expectations
+interface PDFData {
+	personal: {
+		fullName: string;
+		dateOfBirth: string;
+		address: string;
+		phone: string;
+		maritalStatus: string;
+	};
+	assets: Array<{
+		type: string;
+		description: string;
+		distributionType?: "equal" | "percentage";
+		beneficiaries?: Array<{
+			id?: string;
+			percentage?: number;
+			beneficiaryName?: string;
+		}>;
+	}>;
+	beneficiaries: Array<{
+		id?: string;
+		fullName: string;
+		relationship: string;
+		email?: string;
+		phone?: string;
+		allocation: number;
+		dateOfBirth?: string;
+		requiresGuardian?: boolean;
+	}>;
+	executors: Array<{
+		fullName?: string;
+		companyName?: string;
+		relationship?: string;
+		email?: string;
+		phone?: string;
+		address: string;
+		isPrimary: boolean;
+		type: "individual" | "corporate";
+		contactPerson?: string;
+		registrationNumber?: string;
+	}>;
+	witnesses: Array<{
+		fullName: string;
+		address: string;
+	}>;
+	guardians?: Array<{
+		fullName: string;
+		relationship: string;
+		isPrimary: boolean;
+		address?: string;
+	}>;
+	gifts?: Array<{
+		type: string;
+		description: string;
+		value?: string;
+		beneficiaryId: string;
+		beneficiaryName: string;
+	}>;
+	residuaryBeneficiaries?: Array<{
+		id: string;
+		beneficiaryId: string;
+		percentage: number;
+	}>;
+	residuaryDistributionType?: "equal" | "manual" | undefined;
+	funeralInstructions?: {
+		wishes: string;
+	};
 }
 
 /**
- * Transform activeWill data to the format expected by WillPDF component
+ * Transform CompleteWillData to PDF format using the same logic as ReviewStep
  */
-export const transformActiveWillToPDFData = (will: WillData) => {
+const transformWillDataToPDFFormat = (willData: CompleteWillData): PDFData => {
+	// Get all unique people for beneficiary resolution
+	const allPeople = new Map<
+		string,
+		{
+			firstName: string;
+			lastName: string;
+			relationshipId: string;
+			isMinor: boolean;
+		}
+	>();
+
+	// Add spouse
+	if (willData.spouse) {
+		allPeople.set(willData.spouse.id, {
+			firstName: willData.spouse.first_name,
+			lastName: willData.spouse.last_name,
+			relationshipId: willData.spouse.relationship_id,
+			isMinor: willData.spouse.is_minor,
+		});
+	}
+
+	// Add children
+	if (willData.children && Array.isArray(willData.children)) {
+		willData.children.forEach((child) => {
+			allPeople.set(child.id, {
+				firstName: child.first_name,
+				lastName: child.last_name,
+				relationshipId: child.relationship_id,
+				isMinor: child.is_minor,
+			});
+		});
+	}
+
+	// Add guardians
+	if (willData.guardians && Array.isArray(willData.guardians)) {
+		willData.guardians.forEach((guardian) => {
+			if (guardian.person) {
+				allPeople.set(guardian.person.id, {
+					firstName: guardian.person.first_name,
+					lastName: guardian.person.last_name,
+					relationshipId: guardian.person.relationship_id,
+					isMinor: guardian.person.is_minor,
+				});
+			}
+		});
+	}
+
+	// Add people from assets
+	if (willData.assets && Array.isArray(willData.assets)) {
+		willData.assets.forEach((asset) => {
+			if (asset.beneficiaries && Array.isArray(asset.beneficiaries)) {
+				asset.beneficiaries.forEach((beneficiary) => {
+					if (beneficiary.person) {
+						allPeople.set(beneficiary.person.id, {
+							firstName: beneficiary.person.first_name,
+							lastName: beneficiary.person.last_name,
+							relationshipId: beneficiary.person.relationship_id,
+							isMinor: beneficiary.person.is_minor,
+						});
+					}
+				});
+			}
+		});
+	}
+
+	// Add people from gifts
+	if (willData.gifts && Array.isArray(willData.gifts)) {
+		willData.gifts.forEach((gift) => {
+			if (gift.person) {
+				allPeople.set(gift.person.id, {
+					firstName: gift.person.first_name,
+					lastName: gift.person.last_name,
+					relationshipId: gift.person.relationship_id,
+					isMinor: gift.person.is_minor,
+				});
+			}
+		});
+	}
+
+	// Add people from residuary
+	if (
+		willData.residuary &&
+		willData.residuary.beneficiaries &&
+		Array.isArray(willData.residuary.beneficiaries)
+	) {
+		willData.residuary.beneficiaries.forEach((beneficiary) => {
+			if (beneficiary.person) {
+				allPeople.set(beneficiary.person.id, {
+					firstName: beneficiary.person.first_name,
+					lastName: beneficiary.person.last_name,
+					relationshipId: beneficiary.person.relationship_id,
+					isMinor: beneficiary.person.is_minor,
+				});
+			}
+		});
+	}
+
 	return {
 		personal: {
-			fullName: `${will.owner.firstName} ${will.owner.lastName}`,
-			dateOfBirth: "", // Not available in WillPersonalData
-			address: `${will.owner.address}, ${will.owner.city}, ${
-				will.owner.state
-			} ${will.owner.postCode || ""}, ${will.owner.country}`,
-			phone: "", // Not available in WillPersonalData
-			maritalStatus: will.owner.maritalStatus || "",
+			fullName: `${willData.owner.first_name} ${willData.owner.last_name}`,
+			dateOfBirth: "", // Not available in API
+			address: `${willData.owner.address}, ${willData.owner.city}, ${willData.owner.state} ${willData.owner.post_code}, ${willData.owner.country}`,
+			phone: "", // Not available in API
+			maritalStatus: willData.owner.marital_status,
 		},
-		assets: (will.assets || []).map((asset) => ({
-			type: asset.assetType,
-			description: asset.description,
-			distributionType: asset.distributionType,
-			beneficiaries: asset.beneficiaries.map((b) => ({
-				id: b.id,
-				percentage: b.percentage,
-			})),
+		assets:
+			willData.assets && Array.isArray(willData.assets)
+				? willData.assets.map((asset) => ({
+						type: asset.asset_type,
+						description: asset.description,
+						distributionType: asset.distribution_type as "equal" | "percentage",
+						beneficiaries:
+							asset.beneficiaries && Array.isArray(asset.beneficiaries)
+								? asset.beneficiaries.map((beneficiary) => {
+										let beneficiaryName = "Unknown Beneficiary";
+										if (beneficiary.person) {
+											beneficiaryName = `${beneficiary.person.first_name} ${beneficiary.person.last_name}`;
+										} else if (beneficiary.charity) {
+											beneficiaryName = beneficiary.charity.name;
+										}
+
+										return {
+											id: beneficiary.id,
+											percentage: beneficiary.percentage,
+											beneficiaryName,
+										};
+								  })
+								: [],
+				  }))
+				: [],
+		beneficiaries: Array.from(allPeople.entries()).map(([id, person]) => ({
+			id,
+			fullName: `${person.firstName} ${person.lastName}`,
+			relationship: getFormattedRelationshipNameById(person.relationshipId),
+			allocation: 0, // This will be calculated from residuary
+			requiresGuardian: person.isMinor,
 		})),
-		beneficiaries: (will.beneficiaries || []).map((beneficiary) => ({
-			id: "", // Not available in WillBeneficiary
-			fullName: `${beneficiary.firstName} ${beneficiary.lastName}`,
-			relationship: beneficiary.relationship,
-			email: "", // Not available in WillBeneficiary
-			phone: "", // Not available in WillBeneficiary
-			allocation: beneficiary.allocation || 0,
-			dateOfBirth: "", // Not available in WillBeneficiary
-			requiresGuardian: false, // Not available in WillBeneficiary
-		})),
-		executors: (will.executors || []).map((executor) => ({
-			fullName:
-				executor.type === "individual"
-					? `${executor.firstName || ""} ${executor.lastName || ""}`
-					: undefined,
-			companyName:
-				executor.type === "corporate" ? executor.companyName : undefined,
-			relationship: executor.relationship || "",
-			email: "", // Not available in WillExecutor
-			phone: "", // Not available in WillExecutor
-			address: `${executor.address?.address || ""}, ${
-				executor.address?.city || ""
-			}, ${executor.address?.state || ""} ${
-				executor.address?.postCode || ""
-			}, ${executor.address?.country || ""}`,
-			isPrimary: executor.isPrimary || false,
-			type: executor.type,
-			contactPerson:
-				executor.type === "corporate" ? executor.contactPerson : undefined,
-			registrationNumber: "", // Not available in WillExecutor
-		})),
-		witnesses: (will.witnesses || []).map((witness) => ({
-			fullName: `${witness.firstName} ${witness.lastName}`,
-			address: `${witness.address?.address || ""}, ${
-				witness.address?.city || ""
-			}, ${witness.address?.state || ""} ${witness.address?.postCode || ""}, ${
-				witness.address?.country || ""
-			}`,
-		})),
-		guardians: (will.guardians || []).map((guardian) => ({
-			fullName: `${guardian.firstName} ${guardian.lastName}`,
-			relationship: guardian.relationship,
-			isPrimary: guardian.isPrimary || false,
-			address: "", // Not available in WillData guardians
-		})),
-		gifts: (will.gifts || []).map((gift) => ({
-			type: gift.type,
-			description: gift.description,
-			value: gift.value?.toString() || "",
-			beneficiaryId: gift.person?.id || gift.charity?.id || "",
-			beneficiaryName: gift.person
-				? `${gift.person.firstName} ${gift.person.lastName}`
-				: gift.charity?.name || "",
-		})),
+		executors:
+			willData.executors && Array.isArray(willData.executors)
+				? willData.executors.map((executor) => {
+						// Handle nested person/corporate_executor structure
+						if (executor.person) {
+							return {
+								fullName: `${executor.person.first_name} ${executor.person.last_name}`,
+								companyName: undefined,
+								relationship: getFormattedRelationshipNameById(
+									executor.person.relationship_id
+								),
+								email: "",
+								phone: "",
+								address: "", // Not available in API
+								isPrimary: executor.is_primary,
+								type: "individual" as const,
+								contactPerson: undefined,
+								registrationNumber: undefined,
+							};
+						} else if (executor.corporate_executor) {
+							return {
+								fullName: undefined,
+								companyName: executor.corporate_executor.name,
+								relationship: undefined,
+								email: "",
+								phone: "",
+								address: "", // Not available in API
+								isPrimary: executor.is_primary,
+								type: "corporate" as const,
+								contactPerson: undefined,
+								registrationNumber: executor.corporate_executor.rc_number,
+							};
+						}
+
+						// Fallback
+						return {
+							fullName: "Unknown Executor",
+							companyName: undefined,
+							relationship: undefined,
+							email: "",
+							phone: "",
+							address: "",
+							isPrimary: executor.is_primary,
+							type: "individual" as const,
+							contactPerson: undefined,
+							registrationNumber: undefined,
+						};
+				  })
+				: [],
+		witnesses:
+			willData.witnesses && Array.isArray(willData.witnesses)
+				? willData.witnesses.map((witness) => ({
+						fullName: `${witness.first_name} ${witness.last_name}`,
+						address: `${witness.address}, ${witness.city}, ${witness.state} ${witness.post_code}, ${witness.country}`,
+				  }))
+				: [],
+		guardians:
+			willData.guardians && Array.isArray(willData.guardians)
+				? willData.guardians
+						.filter((guardian) => guardian.person)
+						.map((guardian) => ({
+							fullName: `${guardian.person!.first_name} ${
+								guardian.person!.last_name
+							}`,
+							relationship: getFormattedRelationshipNameById(
+								guardian.person!.relationship_id
+							),
+							isPrimary: guardian.is_primary,
+							address: "", // Not available in API
+						}))
+				: [],
+		gifts:
+			willData.gifts && Array.isArray(willData.gifts)
+				? willData.gifts.map((gift) => {
+						let beneficiaryName = "Unknown Beneficiary";
+						if (gift.person) {
+							beneficiaryName = `${gift.person.first_name} ${gift.person.last_name}`;
+						} else if (gift.charity) {
+							beneficiaryName = gift.charity.name;
+						}
+
+						return {
+							type: gift.type,
+							description: gift.description,
+							value: gift.value,
+							beneficiaryId: gift.people_id || gift.charities_id || "",
+							beneficiaryName,
+						};
+				  })
+				: [],
 		residuaryBeneficiaries:
-			will.residuary?.beneficiaries?.map((beneficiary) => ({
-				id: beneficiary.id,
-				beneficiaryId: beneficiary.person?.id || beneficiary.charity?.id || "",
-				percentage: beneficiary.percentage,
-			})) || [],
-		// additionalInstructions: "", // Not available in WillData
+			willData.residuary &&
+			willData.residuary.beneficiaries &&
+			Array.isArray(willData.residuary.beneficiaries)
+				? willData.residuary.beneficiaries.map((beneficiary) => ({
+						id: beneficiary.id,
+						beneficiaryId:
+							beneficiary.people_id || beneficiary.charities_id || "",
+						percentage: parseInt(beneficiary.percentage) || 0,
+				  }))
+				: [],
+		residuaryDistributionType: willData.residuary?.distribution_type as
+			| "equal"
+			| "manual"
+			| undefined,
+		funeralInstructions: willData.funeral_instructions
+			? {
+					wishes: willData.funeral_instructions.wishes,
+			  }
+			: undefined,
 	};
 };
 
 /**
- * Get will data from multiple sources (activeWill context, localStorage, etc.)
+ * Generate and download a will PDF using the new endpoint and data structure
  */
-export const getWillDataForDownload = (options: DownloadWillOptions) => {
-	const { activeWill, willId, searchParams } = options;
-
-	// 1. First try to get from activeWill context
-	if (activeWill && activeWill.owner) {
-		return transformActiveWillToPDFData(activeWill);
-	}
-
-	// 2. Try to get from localStorage using willId from URL or direct willId
-	const targetWillId = willId || searchParams?.get("willId");
-	if (targetWillId) {
-		const savedWills: SavedWill[] = JSON.parse(
-			localStorage.getItem("wills") || "[]"
-		);
-		const savedWill = savedWills.find((w: SavedWill) => w.id === targetWillId);
-		if (savedWill && savedWill.data) {
-			return savedWill.data;
-		}
-	}
-
-	// 3. If still no data, try to get the most recent will from localStorage
-	const savedWills: SavedWill[] = JSON.parse(
-		localStorage.getItem("wills") || "[]"
-	);
-	if (savedWills.length > 0) {
-		// Get the most recent will
-		const mostRecentWill = savedWills.sort(
-			(a: SavedWill, b: SavedWill) =>
-				new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-		)[0];
-		if (mostRecentWill && mostRecentWill.data) {
-			return mostRecentWill.data;
-		}
-	}
-
-	return null;
-};
-
-/**
- * Generate and download a will PDF
- */
-export const downloadWillPDF = async (
-	options: DownloadWillOptions
-): Promise<boolean> => {
+export const downloadWillPDF = async (): Promise<boolean> => {
 	try {
-		// Get will data from multiple sources
-		const willData = getWillDataForDownload(options);
+		// Load complete will data from the same endpoint as ReviewStep
+		const { data, error } = await apiClient<CompleteWillData>(
+			"/wills/get-user-active-will"
+		);
 
-		if (!willData) {
-			toast.error("No will data found. Please create a will first.");
+		if (error) {
+			console.error("Error loading complete will data:", error);
+			toast.error("Failed to load will data");
 			return false;
 		}
 
-		// --- NEW: Fetch assets from API ---
-		let willId = options.willId || options.searchParams?.get("willId");
-		if (!willId && options.activeWill) {
-			willId = options.activeWill.id;
+		const willData = Array.isArray(data) ? data[0] : data;
+		if (!willData) {
+			toast.error("No active will found");
+			return false;
 		}
-		let apiAssets = null;
-		if (willId) {
-			try {
-				const { data: assetsData, error } = await apiClient(
-					`/assets/get-by-will/${willId}`
-				);
-				if (!error && Array.isArray(assetsData)) {
-					apiAssets = (assetsData as AssetApiResponse[]).map((asset) => ({
-						type: asset.asset_type,
-						description: asset.description,
-						distributionType: asset.distribution_type,
-						beneficiaries: asset.beneficiaries.map((b: AssetApiBeneficiary) => {
-							let beneficiaryName = "Unknown Beneficiary";
-							let relationship = "Unknown";
-							if (b.person) {
-								beneficiaryName = `${b.person.first_name} ${b.person.last_name}`;
-								relationship = getFormattedRelationshipNameById(
-									b.person.relationship_id
-								);
-							} else if (b.charity) {
-								beneficiaryName = b.charity.name;
-								relationship = "Charity";
-							}
-							return {
-								id: b.id,
-								percentage: b.percentage,
-								beneficiaryName,
-								relationship,
-							};
-						}),
-					}));
-				}
-			} catch (err) {
-				console.error("Failed to fetch assets for PDF:", err);
-			}
-		}
-		// --- END NEW ---
 
-		// Merge API assets into willData for PDF
-		const pdfData = {
-			...willData,
-			assets: apiAssets || willData.assets,
-		};
+		// Transform the data using the same logic as ReviewStep
+		const pdfData = transformWillDataToPDFFormat(willData);
 
 		// Generate PDF using JSX
-		const pdfDoc = pdf(
-			<WillPDF
-				data={pdfData}
-				// additionalText="This is a sample additional text that can be customized based on the user's input."
-			/>
-		);
+		const pdfDoc = pdf(<WillPDF data={pdfData} />);
 
 		try {
 			// First try to get the blob directly
@@ -380,8 +638,8 @@ export const downloadWillPDF = async (
  * Hook-like function for will download with loading state management
  */
 export const useWillDownload = () => {
-	const downloadWill = async (options: DownloadWillOptions) => {
-		return await downloadWillPDF(options);
+	const downloadWill = async () => {
+		return await downloadWillPDF();
 	};
 
 	return { downloadWill };
