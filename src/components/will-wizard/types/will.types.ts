@@ -123,7 +123,7 @@ export interface Executor {
 
 // Funeral Instructions Types
 export interface FuneralInstructions {
-	instructions: string;
+	wishes: string;
 }
 
 // Main Form Data Type

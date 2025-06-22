@@ -81,7 +81,7 @@ export default function WillWizard() {
 		executors: [],
 		witnesses: [],
 		funeralInstructions: {
-			instructions: "",
+			wishes: "",
 		},
 	});
 
@@ -533,7 +533,9 @@ export default function WillWizard() {
 					)?.lastName,
 			})),
 			residuaryBeneficiaries: formData.residuaryBeneficiaries,
-			funeralInstructions: formData.funeralInstructions,
+			funeralInstructions: {
+				instructions: formData.funeralInstructions.wishes,
+			},
 		};
 	};
 
