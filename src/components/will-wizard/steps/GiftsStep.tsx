@@ -298,9 +298,8 @@ export default function GiftsStep({ onNext, onBack }: GiftsStepProps) {
 			}));
 		}
 
-		// Close dropdown and clear search
+		// Clear search query
 		setSearchQuery("");
-		setIsBeneficiaryDropdownOpen(false);
 	};
 
 	const handleSaveGift = async () => {

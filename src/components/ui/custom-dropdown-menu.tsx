@@ -79,14 +79,33 @@ export function DropdownMenu({
 			}
 		};
 
+		const handleDropdownItemSelected = () => {
+			// Automatically close the dropdown when an item is selected
+			if (open !== undefined) {
+				onOpenChange?.(false);
+			} else {
+				setInternalIsOpen(false);
+				onOpenChange?.(false);
+			}
+		};
+
 		if (isOpen) {
 			document.addEventListener("mousedown", handleClickOutside);
 			document.addEventListener("keydown", handleEscape);
+			// Listen for the custom event to close dropdown when item is selected
+			document.addEventListener(
+				"dropdownItemSelected",
+				handleDropdownItemSelected
+			);
 		}
 
 		return () => {
 			document.removeEventListener("mousedown", handleClickOutside);
 			document.removeEventListener("keydown", handleEscape);
+			document.removeEventListener(
+				"dropdownItemSelected",
+				handleDropdownItemSelected
+			);
 		};
 	}, [isOpen, onOpenChange, open]);
 
@@ -163,6 +182,17 @@ export function DropdownMenuItem({
 	const handleClick = (e: React.MouseEvent) => {
 		e.preventDefault();
 		onSelect?.(e);
+
+		// Automatically close the dropdown after selection
+		// Find the parent DropdownMenu and close it
+		const dropdownMenu = (e.target as Element).closest(
+			'[role="menu"]'
+		)?.parentElement;
+		if (dropdownMenu) {
+			// Trigger the onOpenChange callback to close the dropdown
+			const event = new CustomEvent("dropdownItemSelected", { bubbles: true });
+			dropdownMenu.dispatchEvent(event);
+		}
 	};
 
 	if (asChild) {

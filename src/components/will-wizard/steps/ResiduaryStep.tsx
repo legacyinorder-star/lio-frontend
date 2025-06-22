@@ -324,8 +324,7 @@ export default function ResiduaryStep({
 			return newSet;
 		});
 
-		// Close dropdown and clear search
-		setIsDropdownOpen(false);
+		// Clear search
 		setSearchQuery("");
 	};
 

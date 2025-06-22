@@ -145,8 +145,7 @@ export function AssetDialog({
 			],
 		}));
 
-		// Close dropdown and clear search
-		setIsDropdownOpen(false);
+		// Clear search
 		setSearchQuery("");
 	};
 
