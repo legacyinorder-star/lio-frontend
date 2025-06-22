@@ -647,7 +647,11 @@ export default function GiftsStep({ onNext, onBack }: GiftsStepProps) {
 		if (willGiftForCheck.charitiesId && !willGiftForCheck.peopleId) {
 			return !willGiftForCheck.charity;
 		}
-		// If neither or both are set, treat as not deleted (shouldn't happen)
+		// If both peopleId and charitiesId are set, at least one must have data
+		if (willGiftForCheck.peopleId && willGiftForCheck.charitiesId) {
+			return !willGiftForCheck.person && !willGiftForCheck.charity;
+		}
+		// If neither is set, it's a new gift without a beneficiary assigned yet
 		return false;
 	};
 

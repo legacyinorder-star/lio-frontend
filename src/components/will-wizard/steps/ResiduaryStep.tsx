@@ -422,7 +422,7 @@ export default function ResiduaryStep({
 			});
 		}
 
-		// Add guardians if selected
+		// Add guardians if selected - use relationship name directly like in AssetsCard
 		if (activeWill?.guardians) {
 			activeWill.guardians.forEach((guardian) => {
 				if (
@@ -434,9 +434,7 @@ export default function ResiduaryStep({
 					beneficiaries.push({
 						id: guardian.id,
 						fullName: `${guardian.firstName || ""} ${guardian.lastName || ""}`,
-						relationship: getFormattedRelationshipNameById(
-							guardian.relationship
-						),
+						relationship: guardian.relationship || "Guardian",
 					});
 				}
 			});
@@ -498,35 +496,15 @@ export default function ResiduaryStep({
 			});
 		}
 
-		// Add guardians
+		// Add guardians - use relationship name directly like in AssetsCard
 		if (activeWill?.guardians) {
 			activeWill.guardians.forEach((guardian) => {
 				if (guardian.id && !usedIds.has(guardian.id)) {
 					usedIds.add(guardian.id);
-					// Try to get formatted relationship name, fallback to stored relationship, then to "Guardian"
-					let relationshipName = "Guardian";
-					if (guardian.relationship) {
-						// If guardian has a relationship ID, try to format it
-						if (relationships.length > 0) {
-							const formattedName = getFormattedRelationshipNameById(
-								guardian.relationship
-							);
-							if (formattedName) {
-								relationshipName = formattedName;
-							} else {
-								// If formatting fails, use the stored relationship name
-								relationshipName = guardian.relationship;
-							}
-						} else {
-							// If no relationships loaded, use the stored relationship name
-							relationshipName = guardian.relationship;
-						}
-					}
-
 					beneficiaries.push({
 						id: guardian.id,
 						fullName: `${guardian.firstName || ""} ${guardian.lastName || ""}`,
-						relationship: relationshipName,
+						relationship: guardian.relationship || "Guardian",
 					});
 				}
 			});
