@@ -388,11 +388,11 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 				beneficiary.beneficiaryName || "Unknown Beneficiary";
 
 			if (_asset.distributionType === "equal") {
-				return `to ${beneficiaryName}`;
+				return `${beneficiaryName}`;
 			} else if (_asset.distributionType === "percentage") {
-				return `to ${beneficiaryName} (${beneficiary.percentage}%)`;
+				return `${beneficiaryName} (${beneficiary.percentage}%)`;
 			} else {
-				return `to ${beneficiaryName}`;
+				return `${beneficiaryName}`;
 			}
 		}
 
@@ -603,7 +603,7 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 					{data.assets.map((asset, index) => (
 						<View key={index} style={styles.assetItem}>
 							<Text style={styles.assetDescription}>
-								{index + 1}. my {asset.description} ({asset.type}){" "}
+								{index + 1}. {asset.description} ({asset.type}) to{" "}
 								{getAssetDistributionText(asset)}.
 							</Text>
 						</View>
