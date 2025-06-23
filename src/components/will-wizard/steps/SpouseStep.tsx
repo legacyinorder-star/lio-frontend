@@ -10,6 +10,13 @@ import { ArrowLeft, ArrowRight, Edit2, User } from "lucide-react";
 import { toast } from "sonner";
 import { useRelationships } from "@/hooks/useRelationships";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import {
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
+} from "@/components/ui/dialog";
+import { apiClient } from "@/utils/apiClient";
 
 const spouseSchema = z.object({
 	hasSpouse: z.boolean(),
@@ -49,6 +56,8 @@ export default function SpouseStep({
 	>(spouseData || initialData?.spouse);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const { isLoading: relationshipsLoading } = useRelationships();
+	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+	const [deleteLoading, setDeleteLoading] = useState(false);
 
 	// Determine if has spouse based on marital status or existing spouse data
 	const hasSpouseFromData =
@@ -120,6 +129,22 @@ export default function SpouseStep({
 		}
 	};
 
+	const handleDeleteSpouse = async () => {
+		if (!spouseData?.id) return;
+		setDeleteLoading(true);
+		try {
+			await apiClient(`/people/${spouseData.id}`, { method: "DELETE" });
+			setLocalSpouseData(undefined);
+			setShowDeleteConfirm(false);
+			toast.success("Spousal details deleted successfully.");
+		} catch (error) {
+			console.error("Error deleting spouse:", error);
+			toast.error("Failed to delete spousal details. Please try again.");
+		} finally {
+			setDeleteLoading(false);
+		}
+	};
+
 	// Show loading state if relationships or owner data are still loading
 	if (relationshipsLoading || isLoadingOwnerData) {
 		return (
@@ -170,8 +195,12 @@ export default function SpouseStep({
 								!form.watch("hasSpouse") ? "bg-light-green text-black" : ""
 							}
 							onClick={() => {
-								form.setValue("hasSpouse", false);
-								setLocalSpouseData(undefined);
+								if (spouseData) {
+									setShowDeleteConfirm(true);
+								} else {
+									form.setValue("hasSpouse", false);
+									setLocalSpouseData(undefined);
+								}
 							}}
 							disabled={isSubmitting}
 						>
@@ -250,6 +279,42 @@ export default function SpouseStep({
 				initialData={localSpouseData}
 				isSubmitting={isSubmitting}
 			/>
+
+			{/* Confirmation Dialog for Deleting Spouse */}
+			<Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+				<DialogContent>
+					<DialogHeader>
+						<DialogTitle>Remove Spousal Details?</DialogTitle>
+					</DialogHeader>
+					<p>
+						If you continue, your spousal details will be deleted and cannot be
+						undone. Are you sure you want to proceed?
+					</p>
+					<div className="flex justify-end gap-2 mt-4">
+						<Button
+							variant="outline"
+							onClick={() => setShowDeleteConfirm(false)}
+							disabled={deleteLoading}
+						>
+							Cancel
+						</Button>
+						<Button
+							variant="destructive"
+							onClick={handleDeleteSpouse}
+							disabled={deleteLoading}
+						>
+							{deleteLoading ? (
+								<>
+									<div className="h-4 w-4 animate-spin rounded-full border-t-2 border-b-2 border-black mr-2" />
+									Deleting...
+								</>
+							) : (
+								<>Delete</>
+							)}
+						</Button>
+					</div>
+				</DialogContent>
+			</Dialog>
 		</div>
 	);
 }
