@@ -2,15 +2,8 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import {
-	Form,
-	FormControl,
-	FormField,
-	FormItem,
-	FormLabel,
-} from "@/components/ui/form";
+import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import SpouseDialog, { SpouseData } from "../SpouseDialog";
 import { ArrowLeft, ArrowRight, Edit2, User } from "lucide-react";
@@ -38,6 +31,7 @@ interface SpouseStepProps {
 		lastName: string;
 	} | null;
 	onSpouseDataSave?: (data: SpouseData) => Promise<boolean>;
+	isLoadingOwnerData?: boolean;
 }
 
 export default function SpouseStep({
@@ -47,6 +41,7 @@ export default function SpouseStep({
 	willOwnerData,
 	spouseData,
 	onSpouseDataSave,
+	isLoadingOwnerData,
 }: SpouseStepProps) {
 	const [spouseDialogOpen, setSpouseDialogOpen] = useState(false);
 	const [localSpouseData, setLocalSpouseData] = useState<
@@ -125,18 +120,18 @@ export default function SpouseStep({
 		}
 	};
 
-	// Show loading state if relationships are still loading
-	if (relationshipsLoading) {
+	// Show loading state if relationships or owner data are still loading
+	if (relationshipsLoading || isLoadingOwnerData) {
 		return (
 			<div className="space-y-4">
 				<div className="text-2xl font-semibold">
 					Are you married or in a legally recognized civil relationship?
 				</div>
 				<div className="text-muted-foreground">
-					Loading relationship types...
+					Loading relationship types or spouse information...
 				</div>
 				<div className="flex justify-center py-8">
-					<LoadingSpinner message="Loading relationships..." />
+					<LoadingSpinner message="Loading..." />
 				</div>
 			</div>
 		);
@@ -153,28 +148,36 @@ export default function SpouseStep({
 
 			<Form {...form}>
 				<form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-					<FormField
-						control={form.control}
-						name="hasSpouse"
-						render={({ field }) => (
-							<FormItem className="flex flex-row items-start space-x-3 space-y-0">
-								<FormControl>
-									<Checkbox
-										checked={field.value}
-										onCheckedChange={(checked) => {
-											field.onChange(checked);
-											if (!checked) {
-												setLocalSpouseData(undefined);
-											} else if (!localSpouseData) {
-												setSpouseDialogOpen(true);
-											}
-										}}
-									/>
-								</FormControl>
-								<FormLabel>Yes, I have a spouse or civil partner</FormLabel>
-							</FormItem>
-						)}
-					/>
+					<div className="flex gap-4">
+						<Button
+							type="button"
+							variant={form.watch("hasSpouse") ? "default" : "outline"}
+							className={
+								form.watch("hasSpouse") ? "bg-light-green text-black" : ""
+							}
+							onClick={() => {
+								form.setValue("hasSpouse", true);
+								if (!localSpouseData) setSpouseDialogOpen(true);
+							}}
+							disabled={isSubmitting}
+						>
+							Yes, I have a spouse or civil partner
+						</Button>
+						<Button
+							type="button"
+							variant={!form.watch("hasSpouse") ? "default" : "outline"}
+							className={
+								!form.watch("hasSpouse") ? "bg-light-green text-black" : ""
+							}
+							onClick={() => {
+								form.setValue("hasSpouse", false);
+								setLocalSpouseData(undefined);
+							}}
+							disabled={isSubmitting}
+						>
+							No
+						</Button>
+					</div>
 
 					{form.watch("hasSpouse") && localSpouseData && (
 						<Card className="border-2 border-green-100 bg-green-50/50">

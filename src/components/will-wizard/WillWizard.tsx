@@ -197,6 +197,8 @@ export default function WillWizard() {
 	}, [relationships, relationshipsLoading, relationshipsError]);
 
 	// Handle spouse data saving
+	// This function ensures that after saving spouse data, the latest willOwnerData and spouseData
+	// are re-fetched and passed down to SpouseStep, keeping the UI in sync with the backend.
 	const handleSpouseDataSave = async (data: {
 		firstName: string;
 		lastName: string;
@@ -267,6 +269,18 @@ export default function WillWizard() {
 					console.error("Error updating spouse record:", updateError);
 					return false;
 				}
+
+				// Update activeWill context with updated spouse information
+				if (activeWill) {
+					setActiveWill({
+						...activeWill,
+						spouse: {
+							id: spouseData.id,
+							firstName: data.firstName,
+							lastName: data.lastName,
+						},
+					});
+				}
 			} else {
 				// Step 1: Update marital status to "married" (only for new spouses)
 				const success = await saveWillOwnerData({ maritalStatus: "married" });
@@ -306,8 +320,8 @@ export default function WillWizard() {
 				}
 			}
 
-			// Reload will owner data to get updated spouse information
-			await loadWillOwnerData(activeWill.id);
+			// After saving, always reload the latest will owner data (which includes spouse)
+			await loadWillOwnerData(activeWill.id); // This will update willOwnerData and spouseData in the parent
 			return true;
 		} catch (error) {
 			console.error("Error in handleSpouseDataSave:", error);
@@ -519,6 +533,7 @@ export default function WillWizard() {
 						willOwnerData={willOwnerData}
 						spouseData={spouseData}
 						onSpouseDataSave={handleSpouseDataSave}
+						isLoadingOwnerData={_isLoadingOwnerData}
 					/>
 				);
 
