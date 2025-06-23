@@ -215,6 +215,9 @@ export default function GuardiansStep({
 								...g,
 								firstName: guardianForm.firstName,
 								lastName: guardianForm.lastName,
+								relationship:
+									getFormattedRelationshipNameById(guardianForm.relationship) ||
+									guardianForm.relationship,
 								isPrimary: guardianForm.isPrimary,
 						  }
 						: g
@@ -273,7 +276,9 @@ export default function GuardiansStep({
 					id: personData.id,
 					firstName: personData.first_name,
 					lastName: personData.last_name,
-					relationship: guardianForm.relationship,
+					relationship:
+						getFormattedRelationshipNameById(guardianForm.relationship) ||
+						guardianForm.relationship,
 					isPrimary: guardianForm.isPrimary,
 				};
 
