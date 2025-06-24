@@ -2,6 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Menu, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const NAV_LINKS = [
 	{ label: "About Us", to: "/about" },
@@ -12,20 +13,19 @@ const NAV_LINKS = [
 ];
 
 export default function Navbar() {
-	const { isAuthenticated } = useAuth();
+	const { user } = useAuth();
 	const [mobileOpen, setMobileOpen] = useState(false);
 	const location = useLocation();
 
 	return (
 		<nav className="w-full bg-white border-b border-gray-light sticky top-0 z-30 font-sans">
-			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
+			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-20">
 				{/* Logo */}
 				<Link to="/" className="flex items-center gap-2 min-w-[160px]">
 					<img
-						src="/logos/LIO_Logo_Color.svg"
+						src="/logos/Original.svg"
 						alt="Legacy In Order Logo"
-						className="h-10 w-auto"
-						style={{ fontFamily: "TMT Limkin" }}
+						className="h-12 w-auto"
 					/>
 				</Link>
 
@@ -35,7 +35,7 @@ export default function Navbar() {
 						<Link
 							key={link.to}
 							to={link.to}
-							className={`text-secondary hover:text-primary transition-colors font-medium px-2 py-1 rounded ${
+							className={`text-[#173C37] hover:text-[#173C37] transition-colors font-semibold px-2 py-1 ${
 								location.pathname === link.to
 									? "underline underline-offset-4"
 									: ""
@@ -53,26 +53,31 @@ export default function Navbar() {
 						href="https://calendly.com/" // TODO: Replace with actual scheduling link
 						target="_blank"
 						rel="noopener noreferrer"
-						className="bg-primary text-white px-4 py-2 rounded font-semibold shadow hover:bg-primary/90 transition-colors"
-						style={{ fontFamily: "TMT Limkin" }}
 					>
-						Schedule a Call
-					</a>
-					{isAuthenticated ? (
-						<Link
-							to="/dashboard"
-							className="bg-secondary text-white px-4 py-2 rounded font-semibold hover:bg-secondary/90 transition-colors"
-							style={{ fontFamily: "TMT Limkin" }}
+						<Button
+							variant="outline"
+							className="mr-1 text-[#173C37] border border-[#173C37] font-semibold rounded hover:bg-[#173C37] hover:text-white"
 						>
-							Dashboard
+							Schedule a Call
+						</Button>
+					</a>
+					{user ? (
+						<Link to="/dashboard">
+							<Button
+								variant="default"
+								className="text-[#173C37] bg-[#173C37] rounded border border-[#173C37] hover:bg-[#173C37]/90 font-semibold"
+							>
+								Dashboard
+							</Button>
 						</Link>
 					) : (
-						<Link
-							to="/login"
-							className="bg-white border border-primary text-primary px-4 py-2 rounded font-semibold hover:bg-primary hover:text-white transition-colors"
-							style={{ fontFamily: "TMT Limkin" }}
-						>
-							Sign In
+						<Link to="/login">
+							<Button
+								variant="default"
+								className="text-white bg-[#173C37] rounded border border-[#173C37] font-semibold"
+							>
+								Sign In
+							</Button>
 						</Link>
 					)}
 				</div>
@@ -93,12 +98,12 @@ export default function Navbar() {
 
 			{/* Mobile Menu */}
 			{mobileOpen && (
-				<div className="md:hidden bg-white border-t border-gray-light px-4 pb-4 pt-2 space-y-2 shadow-lg">
+				<div className="md:hidden bg-white border-t border-gray-light px-4 pb-6 pt-4 space-y-3 shadow-lg">
 					{NAV_LINKS.map((link) => (
 						<Link
 							key={link.to}
 							to={link.to}
-							className={`block text-secondary hover:text-primary font-medium py-2 ${
+							className={`block text-primary hover:text-primary font-medium py-2 ${
 								location.pathname === link.to
 									? "underline underline-offset-4"
 									: ""
@@ -113,28 +118,28 @@ export default function Navbar() {
 						href="https://calendly.com/" // TODO: Replace with actual scheduling link
 						target="_blank"
 						rel="noopener noreferrer"
-						className="block bg-primary text-white px-4 py-2 rounded font-semibold mt-2 text-center"
-						style={{ fontFamily: "TMT Limkin" }}
 					>
-						Schedule a Call
+						<Button variant="outline" className="w-full mt-2">
+							Schedule a Call
+						</Button>
 					</a>
-					{isAuthenticated ? (
-						<Link
-							to="/dashboard"
-							className="block bg-secondary text-white px-4 py-2 rounded font-semibold mt-2 text-center"
-							onClick={() => setMobileOpen(false)}
-							style={{ fontFamily: "TMT Limkin" }}
-						>
-							Dashboard
+					{user ? (
+						<Link to="/dashboard" onClick={() => setMobileOpen(false)}>
+							<Button
+								variant="default"
+								className="w-full mt-2 text-white bg-[#173C37] rounded border border-[#173C37] font-semibold hover:bg-[#173C37] hover:text-white"
+							>
+								Dashboard
+							</Button>
 						</Link>
 					) : (
-						<Link
-							to="/login"
-							className="block bg-white border border-primary text-primary px-4 py-2 rounded font-semibold mt-2 text-center"
-							onClick={() => setMobileOpen(false)}
-							style={{ fontFamily: "TMT Limkin" }}
-						>
-							Sign In
+						<Link to="/login" onClick={() => setMobileOpen(false)}>
+							<Button
+								variant="default"
+								className="w-full mt-2 text-white bg-[#173C37] rounded border border-[#173C37] font-semibold hover:bg-[#173C37] hover:text-[#173C37]"
+							>
+								Sign In
+							</Button>
 						</Link>
 					)}
 				</div>
