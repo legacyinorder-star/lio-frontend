@@ -12,9 +12,9 @@ module.exports = {
 		},
 		extend: {
 			fontFamily: {
-				sans: ["Hedvig Letters Serif", "serif"],
-				serif: ["Hedvig Letters Serif", "serif"],
-				dmsans: ["DM Sans", "sans-serif"],
+				sans: ["TMT Limkin", "sans-serif"],
+				serif: ["TMT Limkin", "serif"],
+				mono: ["TMT Limkin", "monospace"],
 			},
 			colors: {
 				border: "hsl(var(--border))",
