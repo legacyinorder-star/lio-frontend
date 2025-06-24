@@ -9,6 +9,7 @@ import {
 	type WillPersonalData,
 } from "@/context/WillContext";
 import { useWillOwnerData } from "@/hooks/useWillOwnerData";
+import { useWillData } from "@/hooks/useWillData";
 import { apiClient } from "@/utils/apiClient";
 import { useRelationships } from "@/hooks/useRelationships";
 import { toast } from "sonner";
@@ -55,6 +56,7 @@ export default function WillWizard() {
 		loadWillOwnerData,
 		saveWillOwnerData,
 	} = useWillOwnerData();
+	const { refetch } = useWillData();
 
 	// Data collection
 	const [formData, setFormData] = useState<WillFormData>({
@@ -322,6 +324,7 @@ export default function WillWizard() {
 
 			// After saving, always reload the latest will owner data (which includes spouse)
 			await loadWillOwnerData(activeWill.id); // This will update willOwnerData and spouseData in the parent
+			await refetch();
 			return true;
 		} catch (error) {
 			console.error("Error in handleSpouseDataSave:", error);

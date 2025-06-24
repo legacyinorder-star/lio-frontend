@@ -9,6 +9,7 @@ import SpouseDialog, { SpouseData } from "../SpouseDialog";
 import { ArrowLeft, ArrowRight, Edit2, User } from "lucide-react";
 import { toast } from "sonner";
 import { useRelationships } from "@/hooks/useRelationships";
+import { useWillData } from "@/hooks/useWillData";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import {
 	Dialog,
@@ -58,6 +59,7 @@ export default function SpouseStep({
 	const { isLoading: relationshipsLoading } = useRelationships();
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 	const [deleteLoading, setDeleteLoading] = useState(false);
+	const { refetch } = useWillData();
 
 	// Determine if has spouse based on marital status or existing spouse data
 	const hasSpouseFromData =
@@ -119,6 +121,9 @@ export default function SpouseStep({
 
 			// Show success message
 			toast.success("Spouse information saved successfully");
+
+			// Refresh beneficiary lists
+			refetch();
 		} catch (error) {
 			console.error("Error in spouse data submission:", error);
 			toast.error(
@@ -137,6 +142,9 @@ export default function SpouseStep({
 			setLocalSpouseData(undefined);
 			setShowDeleteConfirm(false);
 			toast.success("Spousal details deleted successfully.");
+
+			// Refresh beneficiary lists
+			refetch();
 		} catch (error) {
 			console.error("Error deleting spouse:", error);
 			toast.error("Failed to delete spousal details. Please try again.");

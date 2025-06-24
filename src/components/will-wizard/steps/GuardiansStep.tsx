@@ -17,6 +17,7 @@ import { StepProps } from "../types/will.types";
 import { toast } from "sonner";
 import { apiClient } from "@/utils/apiClient";
 import { useWill } from "@/context/WillContext";
+import { useWillData } from "@/hooks/useWillData";
 import { getFormattedRelationshipNameById } from "@/utils/relationships";
 
 interface Guardian {
@@ -61,6 +62,7 @@ export default function GuardiansStep({
 	onBack,
 }: StepProps) {
 	const { activeWill, setActiveWill } = useWill();
+	const { refetch } = useWillData();
 	const [guardianDialogOpen, setGuardianDialogOpen] = useState(false);
 	const [editingGuardian, setEditingGuardian] = useState<Guardian | null>(null);
 	const [isSubmitting, setIsSubmitting] = useState(false);
@@ -235,6 +237,9 @@ export default function GuardiansStep({
 				onUpdate({ guardians: updatedGuardians });
 				updateActiveWillGuardians(updatedGuardians);
 				toast.success("Guardian updated successfully");
+
+				// Refresh beneficiary lists
+				await refetch();
 			} else {
 				// Creating new guardian - send POST requests
 
@@ -297,6 +302,9 @@ export default function GuardiansStep({
 				onUpdate({ guardians: updatedGuardians });
 				updateActiveWillGuardians(updatedGuardians);
 				toast.success("Guardian saved successfully");
+
+				// Refresh beneficiary lists
+				await refetch();
 			}
 
 			// Reset form and close dialog
@@ -366,6 +374,9 @@ export default function GuardiansStep({
 			updateActiveWillGuardians(updatedGuardians);
 
 			toast.success("Guardian removed successfully");
+
+			// Refresh beneficiary lists
+			await refetch();
 		} catch (error) {
 			console.error("Error removing guardian:", error);
 			toast.error("An error occurred while removing the guardian");

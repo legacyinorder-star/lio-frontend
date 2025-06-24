@@ -46,7 +46,7 @@ import {
 import { useWillData } from "@/hooks/useWillData";
 import { useDataLoading } from "@/context/DataLoadingContext";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { useWill, WillGift } from "@/context/WillContext";
+import { useWill } from "@/context/WillContext";
 import { getFormattedRelationshipNameById } from "@/utils/relationships";
 import { NewBeneficiaryDialog } from "../components/NewBeneficiaryDialog";
 import { toast } from "sonner";
@@ -61,6 +61,29 @@ interface GiftApiResponse {
 	currency?: string;
 	peopleId?: string;
 	charitiesId?: string;
+	person?: {
+		id: string;
+		user_id: string;
+		will_id: string;
+		relationship_id: string;
+		first_name: string;
+		last_name: string;
+		is_minor: boolean;
+		created_at: string;
+		is_witness: boolean;
+	};
+	charity?: {
+		id: string;
+		created_at: string;
+		will_id: string;
+		name: string;
+		rc_number?: string;
+		user_id: string;
+	};
+}
+
+// Extended Gift interface to include person/charity objects
+interface ExtendedGift extends GiftType {
 	person?: {
 		id: string;
 		user_id: string;
@@ -172,11 +195,13 @@ const GiftTypePill = ({
 };
 
 interface GiftsStepProps {
-	onNext: (data: { gifts: GiftType[] }) => void;
+	onNext: (data: { gifts: ExtendedGift[] }) => void;
 	onBack: () => void;
 }
 
 export default function GiftsStep({ onNext, onBack }: GiftsStepProps) {
+	const [gifts, setGifts] = useState<ExtendedGift[]>([]);
+	const [isLoadingGifts, setIsLoadingGifts] = useState(false);
 	const [giftForm, setGiftForm] = useState<Omit<GiftType, "id">>({
 		type: "Cash",
 		description: "",
@@ -185,7 +210,7 @@ export default function GiftsStep({ onNext, onBack }: GiftsStepProps) {
 		peopleId: "",
 		charitiesId: "",
 	});
-	const [editingGift, setEditingGift] = useState<GiftType | null>(null);
+	const [editingGift, setEditingGift] = useState<ExtendedGift | null>(null);
 	const [giftDialogOpen, setGiftDialogOpen] = useState(false);
 	const [newBeneficiaryDialogOpen, setNewBeneficiaryDialogOpen] =
 		useState(false);
@@ -193,7 +218,7 @@ export default function GiftsStep({ onNext, onBack }: GiftsStepProps) {
 	const [isBeneficiaryDropdownOpen, setIsBeneficiaryDropdownOpen] =
 		useState(false);
 	const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
-	const [giftToDelete, setGiftToDelete] = useState<GiftType | null>(null);
+	const [giftToDelete, setGiftToDelete] = useState<ExtendedGift | null>(null);
 
 	const {
 		allBeneficiaries: enhancedBeneficiaries,
@@ -203,20 +228,7 @@ export default function GiftsStep({ onNext, onBack }: GiftsStepProps) {
 		isReady,
 	} = useWillData();
 	const { updateLoadingState } = useDataLoading();
-	const { activeWill, setActiveWill } = useWill();
-
-	// Convert WillGift to Gift for compatibility
-	const gifts: GiftType[] = (activeWill?.gifts || []).map(
-		(willGift: WillGift) => ({
-			id: willGift.id,
-			type: willGift.type as GiftTypeEnum,
-			description: willGift.description,
-			value: willGift.value,
-			currency: willGift.currency,
-			peopleId: willGift.peopleId,
-			charitiesId: willGift.charitiesId,
-		})
-	);
+	const { activeWill } = useWill();
 
 	const form = useForm<z.infer<typeof giftSchema>>({
 		resolver: zodResolver(giftSchema),
@@ -230,10 +242,61 @@ export default function GiftsStep({ onNext, onBack }: GiftsStepProps) {
 		},
 	});
 
+	// Load gifts from API
+	const loadGifts = async () => {
+		if (!activeWill?.id) return;
+
+		setIsLoadingGifts(true);
+		try {
+			const { data: apiData, error } = await apiClient<GiftApiResponse[]>(
+				`/gifts/get-by-will/${activeWill.id}`,
+				{ method: "GET" }
+			);
+
+			if (error) {
+				// If 404, no gifts exist - this is normal
+				if (error.includes("404")) {
+					console.log("No existing gifts found");
+					setGifts([]);
+					return;
+				}
+				toast.error("Failed to load gifts");
+				return;
+			}
+
+			if (apiData) {
+				const loadedGifts: ExtendedGift[] = apiData.map((giftResponse) => ({
+					id: giftResponse.id,
+					type: giftResponse.type as GiftTypeEnum,
+					description: giftResponse.description,
+					value: giftResponse.value,
+					currency: giftResponse.currency,
+					peopleId: giftResponse.peopleId,
+					charitiesId: giftResponse.charitiesId,
+					person: giftResponse.person,
+					charity: giftResponse.charity,
+				}));
+
+				setGifts(loadedGifts);
+				console.log("Loaded gifts:", loadedGifts);
+			}
+		} catch (err) {
+			console.error("Error loading gifts:", err);
+			toast.error("Failed to load gifts");
+		} finally {
+			setIsLoadingGifts(false);
+		}
+	};
+
+	// Load gifts when component mounts or activeWill changes
+	useEffect(() => {
+		loadGifts();
+	}, [activeWill?.id]);
+
 	// Update loading state for gifts
 	useEffect(() => {
-		updateLoadingState("gifts", isDataLoading);
-	}, [isDataLoading, updateLoadingState]);
+		updateLoadingState("gifts", isDataLoading || isLoadingGifts);
+	}, [isDataLoading, isLoadingGifts, updateLoadingState]);
 
 	// Initialize form when editing
 	useEffect(() => {
@@ -259,7 +322,7 @@ export default function GiftsStep({ onNext, onBack }: GiftsStepProps) {
 	}, [editingGift]);
 
 	// Show loading spinner if data is not ready
-	if (isDataLoading || !isReady) {
+	if (isDataLoading || !isReady || isLoadingGifts) {
 		return <LoadingSpinner message="Loading gifts data..." />;
 	}
 
@@ -345,7 +408,7 @@ export default function GiftsStep({ onNext, onBack }: GiftsStepProps) {
 			// Update the local gifts list with response data
 			if (data) {
 				const giftResponse = data as GiftApiResponse;
-				const newGift: GiftType = {
+				const newGift: ExtendedGift = {
 					id: giftResponse.id,
 					type: giftResponse.type as GiftTypeEnum,
 					description: giftResponse.description,
@@ -353,42 +416,19 @@ export default function GiftsStep({ onNext, onBack }: GiftsStepProps) {
 					currency: giftResponse.currency,
 					peopleId: giftResponse.peopleId,
 					charitiesId: giftResponse.charitiesId,
+					person: giftResponse.person,
+					charity: giftResponse.charity,
 				};
 
-				// Update the gifts array in the will context
-				if (activeWill) {
-					const updatedGifts = editingGift
-						? activeWill.gifts.map((gift) =>
-								gift.id === editingGift.id
-									? {
-											...gift,
-											type: newGift.type,
-											description: newGift.description,
-											value: newGift.value,
-											currency: newGift.currency,
-											peopleId: newGift.peopleId,
-											charitiesId: newGift.charitiesId,
-									  }
-									: gift
-						  )
-						: [
-								...activeWill.gifts,
-								{
-									id: newGift.id,
-									type: newGift.type,
-									description: newGift.description,
-									value: newGift.value,
-									currency: newGift.currency,
-									peopleId: newGift.peopleId,
-									charitiesId: newGift.charitiesId,
-								},
-						  ];
-
-					// Update the will context
-					setActiveWill({
-						...activeWill,
-						gifts: updatedGifts,
-					});
+				// Update the gifts array in local state
+				if (editingGift) {
+					setGifts((prevGifts) =>
+						prevGifts.map((gift) =>
+							gift.id === editingGift.id ? newGift : gift
+						)
+					);
+				} else {
+					setGifts((prevGifts) => [...prevGifts, newGift]);
 				}
 			}
 
@@ -413,7 +453,7 @@ export default function GiftsStep({ onNext, onBack }: GiftsStepProps) {
 		}
 	};
 
-	const handleEditGift = (gift: GiftType) => {
+	const handleEditGift = (gift: ExtendedGift) => {
 		setEditingGift(gift);
 		setGiftForm({
 			type: gift.type,
@@ -426,7 +466,7 @@ export default function GiftsStep({ onNext, onBack }: GiftsStepProps) {
 		setGiftDialogOpen(true);
 	};
 
-	const handleRemoveGift = (gift: GiftType) => {
+	const handleRemoveGift = (gift: ExtendedGift) => {
 		setGiftToDelete(gift);
 		setConfirmDeleteOpen(true);
 	};
@@ -444,12 +484,14 @@ export default function GiftsStep({ onNext, onBack }: GiftsStepProps) {
 					return;
 				}
 
+				// Update local state
+				setGifts((prevGifts) =>
+					prevGifts.filter((gift) => gift.id !== giftToDelete.id)
+				);
+
 				toast.success("Gift removed successfully");
 				setGiftToDelete(null);
 				setConfirmDeleteOpen(false);
-
-				// Refresh will data to get updated gifts
-				// This will be handled by the will context automatically
 			} catch (err) {
 				toast.error("Failed to remove gift");
 				console.error("Error removing gift:", err);
@@ -506,97 +548,42 @@ export default function GiftsStep({ onNext, onBack }: GiftsStepProps) {
 	// Get selected beneficiary details
 	const selectedBeneficiary = getSelectedBeneficiaryFromForm();
 
-	// Helper function to get beneficiary from gift using will context data
-	const getBeneficiaryFromGift = (gift: GiftType) => {
-		// Find the gift in will context
-		const willGift = activeWill?.gifts.find(
-			(wg: WillGift) => wg.id === gift.id
-		);
+	// Helper function to get beneficiary from gift using gifts state
+	const getBeneficiaryFromGift = (gift: ExtendedGift) => {
+		// Find the gift in our local gifts state
+		const foundGift = gifts.find((g) => g.id === gift.id);
 
-		if (!willGift) return null;
+		if (!foundGift) return null;
 
-		// Return person data if available
-		if (willGift.person) {
-			// Check if it's API response format (has first_name, last_name, relationship_id)
-			if ("first_name" in willGift.person && "last_name" in willGift.person) {
-				// API response format
-				const personData =
-					willGift.person as unknown as GiftApiResponse["person"];
-				if (personData) {
-					return {
-						id: personData.id,
-						firstName: personData.first_name,
-						lastName: personData.last_name,
-						relationship: "Unknown", // Will be resolved by relationship_id
-						relationshipId: personData.relationship_id,
-						type: "person" as const,
-					};
-				}
-			} else {
-				// Context format (WillPerson) - has firstName, lastName, relationship
-				const personData = willGift.person;
-				return {
-					id: personData.id,
-					firstName: personData.firstName,
-					lastName: personData.lastName,
-					relationship: personData.relationship,
-					relationshipId: personData.relationshipId,
-					type: "person" as const,
-				};
-			}
+		// First, try to use the embedded person/charity data from API response
+		if (foundGift.person) {
+			return {
+				id: foundGift.person.id,
+				firstName: foundGift.person.first_name,
+				lastName: foundGift.person.last_name,
+				relationship: "Unknown", // We'll get this from relationship_id
+				relationshipId: foundGift.person.relationship_id,
+				type: "person" as const,
+				registrationNumber: undefined,
+			};
 		}
 
-		// Return charity data if available
-		if (willGift.charity) {
-			// Check if it's API response format (has rc_number)
-			if ("rc_number" in willGift.charity) {
-				// API response format
-				const charityData =
-					willGift.charity as unknown as GiftApiResponse["charity"];
-				if (charityData) {
-					return {
-						id: charityData.id,
-						firstName: charityData.name,
-						lastName: "",
-						relationship: "Charity",
-						registrationNumber: charityData.rc_number,
-						type: "charity" as const,
-					};
-				}
-			} else {
-				// Context format
-				const charityData = willGift.charity;
-				return {
-					id: charityData.id,
-					firstName: charityData.name,
-					lastName: "",
-					relationship: "Charity",
-					registrationNumber: charityData.registrationNumber,
-					type: "charity" as const,
-				};
-			}
+		if (foundGift.charity) {
+			return {
+				id: foundGift.charity.id,
+				firstName: foundGift.charity.name,
+				lastName: "",
+				relationship: "Charity",
+				relationshipId: "",
+				type: "charity" as const,
+				registrationNumber: foundGift.charity.rc_number,
+			};
 		}
 
-		// Check if it's a guardian from activeWill context
-		if (willGift.peopleId) {
-			const guardian = activeWill?.guardians?.find(
-				(g) => g.id === willGift.peopleId
-			);
-			if (guardian) {
-				return {
-					id: guardian.id,
-					firstName: guardian.firstName,
-					lastName: guardian.lastName,
-					relationship: guardian.relationship,
-					type: "person" as const,
-				};
-			}
-		}
-
-		// Fallback: Check enhancedBeneficiaries if person/charity/guardian data is not available
-		if (willGift.peopleId) {
+		// Fallback to enhancedBeneficiaries if embedded data is not available
+		if (foundGift.peopleId) {
 			const enhancedBeneficiary = enhancedBeneficiaries.find(
-				(b) => b.id === willGift.peopleId
+				(b) => b.id === foundGift.peopleId
 			);
 			if (enhancedBeneficiary) {
 				return {
@@ -611,9 +598,9 @@ export default function GiftsStep({ onNext, onBack }: GiftsStepProps) {
 			}
 		}
 
-		if (willGift.charitiesId) {
+		if (foundGift.charitiesId) {
 			const enhancedBeneficiary = enhancedBeneficiaries.find(
-				(b) => b.id === willGift.charitiesId
+				(b) => b.id === foundGift.charitiesId
 			);
 			if (enhancedBeneficiary) {
 				return {
@@ -632,24 +619,25 @@ export default function GiftsStep({ onNext, onBack }: GiftsStepProps) {
 	};
 
 	// Function to check if a beneficiary is deleted (rewritten from scratch)
-	const isBeneficiaryDeleted = (gift: GiftType): boolean => {
-		const willGiftForCheck = activeWill?.gifts.find(
-			(wg: WillGift) => wg.id === gift.id
-		);
-		if (!willGiftForCheck) return false; // Defensive: if not found, don't block
+	const isBeneficiaryDeleted = (gift: ExtendedGift): boolean => {
+		const foundGift = gifts.find((g) => g.id === gift.id);
+		if (!foundGift) return false; // Defensive: if not found, don't block
 
-		// If peopleId is set, person must be present
-		if (willGiftForCheck.peopleId && !willGiftForCheck.charitiesId) {
-			return !willGiftForCheck.person;
+		// Check if the beneficiary exists in enhancedBeneficiaries
+		if (foundGift.peopleId) {
+			const beneficiaryExists = enhancedBeneficiaries.some(
+				(b) => b.id === foundGift.peopleId
+			);
+			return !beneficiaryExists;
 		}
-		// If charitiesId is set, charity must be present
-		if (willGiftForCheck.charitiesId && !willGiftForCheck.peopleId) {
-			return !willGiftForCheck.charity;
+
+		if (foundGift.charitiesId) {
+			const beneficiaryExists = enhancedBeneficiaries.some(
+				(b) => b.id === foundGift.charitiesId
+			);
+			return !beneficiaryExists;
 		}
-		// If both peopleId and charitiesId are set, at least one must have data
-		if (willGiftForCheck.peopleId && willGiftForCheck.charitiesId) {
-			return !willGiftForCheck.person && !willGiftForCheck.charity;
-		}
+
 		// If neither is set, it's a new gift without a beneficiary assigned yet
 		return false;
 	};

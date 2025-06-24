@@ -1,3 +1,13 @@
+@font-face {
+  font-family: 'TMT Limkin';
+  src: url('/fonts/TMT Limkin.woff2') format('woff2'),
+       url('/fonts/TMT Limkin.woff') format('woff'),
+       url('/fonts/TMT Limkin.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 @import "tailwindcss";
 
 @plugin "tailwindcss-animate";
@@ -112,15 +122,12 @@
   }
   body {
     @apply bg-white text-black;
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'TMT Limkin', sans-serif;
   }
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'TMT Limkin', sans-serif;
     font-size: 2rem;
     color: #333333;
-  }
-  .font-dmsans {
-    font-family: 'DM Sans', sans-serif;
   }
   /* Global placeholder color */
   ::placeholder {
