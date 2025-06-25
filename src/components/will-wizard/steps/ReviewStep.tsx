@@ -668,6 +668,7 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 	({ onBack }, ref) => {
 		const [isLoading, setIsLoading] = useState(true);
 		const [reviewData, setReviewData] = useState<ReviewData | null>(null);
+		const [willId, setWillId] = useState<string | null>(null);
 		const navigate = useNavigate();
 
 		// Load complete will data from single endpoint
@@ -686,6 +687,9 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 				const willData = Array.isArray(data) ? data[0] : data;
 				console.log("Raw will data:", willData);
 				if (willData) {
+					// Store the will ID for payment flow
+					setWillId(willData.id);
+
 					console.log("Will data structure check:");
 					console.log("- owner:", willData.owner);
 					console.log("- spouse:", willData.spouse);
@@ -723,6 +727,9 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 					console.log("Transformed data:", transformedData);
 					console.log("Transformed executors:", transformedData.executors);
 					setReviewData(transformedData);
+
+					// Update will status to draft
+					await updateWillStatusToDraft(willData.id);
 				} else {
 					toast.error("No active will found");
 				}
@@ -732,6 +739,41 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 			} finally {
 				setIsLoading(false);
 			}
+		};
+
+		// Update will status to draft
+		const updateWillStatusToDraft = async (willId: string) => {
+			try {
+				const { error } = await apiClient(`/wills/${willId}`, {
+					method: "PATCH",
+					body: JSON.stringify({
+						status: "draft",
+					}),
+				});
+
+				if (error) {
+					console.error("Error updating will status to draft:", error);
+					// Don't show error toast as this is not critical for the review step
+					return;
+				}
+
+				console.log("Will status updated to draft successfully");
+			} catch (error) {
+				console.error("Error updating will status to draft:", error);
+				// Don't show error toast as this is not critical for the review step
+			}
+		};
+
+		// Handle payment flow (same as Dashboard)
+		const handleProceedToPayment = () => {
+			if (!willId) {
+				toast.error("No will ID found. Please try again.");
+				return;
+			}
+
+			// Navigate directly to Stripe Checkout with the will ID (same as Dashboard)
+			const paymentUrl = `/app/payment/checkout?willId=${willId}&description=Will Creation Service`;
+			navigate(paymentUrl);
 		};
 
 		useEffect(() => {
@@ -1298,12 +1340,7 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 					<Button
 						type="button"
 						className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black px-8 py-3 font-medium"
-						onClick={() => {
-							// For now, navigate to checkout without willId
-							navigate(
-								`/app/payment/checkout?description=Will Creation Service`
-							);
-						}}
+						onClick={handleProceedToPayment}
 					>
 						Proceed to Payment
 					</Button>

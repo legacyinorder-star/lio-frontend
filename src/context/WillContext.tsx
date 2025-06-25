@@ -108,6 +108,9 @@ export interface WillData {
 	createdAt: string;
 	status: string;
 	userId: string;
+	// Payment data
+	paymentStatus?: string;
+	paymentDate?: string;
 	// Owner data
 	owner: WillPersonalData;
 	// Spouse data

@@ -133,8 +133,8 @@ export default function DashboardPage() {
 		<div className="space-y-8">
 			<div
 				id="dashboard-header"
-				className="flex flex-col items-start justify-between p-8 rounded-lg bg-cover bg-center bg-no-repeat"
-				style={{ backgroundImage: "url('/images/bg_grass.png')" }}
+				className="flex flex-col items-start justify-between p-8 rounded-lg"
+				style={{ backgroundColor: "#173C37" }}
 			>
 				<h1 className="text-3xl font-bold text-white">
 					Welcome back, {userName}!
@@ -210,60 +210,77 @@ export default function DashboardPage() {
 													className={`capitalize ${
 														will.status === "draft"
 															? "text-yellow-600"
-															: "text-green-600"
+															: will.status === "completed"
+															? "text-green-600"
+															: "text-gray-600"
 													}`}
 												>
 													{will.status}
 												</span>
 											</p>
-											<p>
-												<span className="font-medium">Assets:</span>{" "}
-												{will.assets?.length || 0}
-											</p>
-											<p>
-												<span className="font-medium">Beneficiaries:</span>{" "}
-												{will.beneficiaries?.length || 0}
-											</p>
-											<p>
-												<span className="font-medium">Executors:</span>{" "}
-												{will.executors?.length || 0}
-											</p>
-											<p>
-												<span className="font-medium">Witnesses:</span>{" "}
-												{will.witnesses?.length || 0}
-											</p>
+											{(will.status === "draft" ||
+												will.status === "completed") && (
+												<>
+													<p>
+														<span className="font-medium">Payment Status:</span>{" "}
+														<span
+															className={`capitalize ${
+																will.paymentStatus === "succeeded"
+																	? "text-green-600"
+																	: will.paymentStatus === "pending"
+																	? "text-yellow-600"
+																	: "text-red-600"
+															}`}
+														>
+															{will.paymentStatus || "unpaid"}
+														</span>
+													</p>
+													{will.paymentDate && (
+														<p>
+															<span className="font-medium">Payment Date:</span>{" "}
+															{new Date(will.paymentDate).toLocaleDateString()}
+														</p>
+													)}
+												</>
+											)}
 										</div>
 									</div>
 									<div className="flex space-x-2">
-										<Button
-											variant="outline"
-											size="sm"
-											onClick={() => handleEditWill(will.id)}
-											className="hover:bg-blue-100 text-blue-600 cursor-pointer"
-										>
-											<Edit className="h-4 w-4 mr-2" />
-											Continue
-										</Button>
-										<Button
-											variant="outline"
-											size="sm"
-											onClick={() => handlePaymentForWill(will.id)}
-											className="hover:bg-green-100 text-green-600 cursor-pointer"
-											disabled={isProcessingPayment}
-										>
-											<CreditCard className="h-4 w-4 mr-2" />
-											Pay
-										</Button>
-										<Button
-											variant="outline"
-											size="sm"
-											onClick={handleDownloadPDF}
-											className="hover:bg-light-green/10 cursor-pointer"
-											disabled={!will.owner}
-										>
-											<Download className="h-4 w-4 mr-2" />
-											Download
-										</Button>
+										{will.status !== "completed" && (
+											<Button
+												variant="outline"
+												size="sm"
+												onClick={() => handleEditWill(will.id)}
+												className="hover:bg-blue-100 text-blue-600 cursor-pointer"
+											>
+												<Edit className="h-4 w-4 mr-2" />
+												Continue
+											</Button>
+										)}
+										{will.status === "draft" && (
+											<Button
+												variant="outline"
+												size="sm"
+												onClick={() => handlePaymentForWill(will.id)}
+												className="hover:bg-green-100 text-green-600 cursor-pointer"
+												disabled={isProcessingPayment}
+											>
+												<CreditCard className="h-4 w-4 mr-2" />
+												Pay
+											</Button>
+										)}
+										{will.status === "completed" && (
+											<Button
+												variant="outline"
+												size="sm"
+												onClick={handleDownloadPDF}
+												className="hover:bg-light-green/10 cursor-pointer"
+												disabled={!will.owner}
+											>
+												<Download className="h-4 w-4 mr-2" />
+												Download
+											</Button>
+										)}
 										<Button
 											variant="outline"
 											size="sm"

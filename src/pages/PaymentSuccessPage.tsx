@@ -1,29 +1,80 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, ArrowRight } from "lucide-react";
+import { CheckCircle, ArrowRight, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { apiClient } from "@/utils/apiClient";
 
 export default function PaymentSuccessPage() {
 	const navigate = useNavigate();
 	const [searchParams] = useSearchParams();
+	const [isLoading, setIsLoading] = useState(true);
+	const [isValid, setIsValid] = useState(false);
 
-	const paymentIntentId = searchParams.get("payment_intent");
+	const willId = searchParams.get("willId");
 
 	useEffect(() => {
-		if (paymentIntentId) {
-			toast.success("Payment completed successfully!");
+		if (!willId) {
+			toast.error("Invalid payment success page. Missing will ID.");
+			navigate("/app/dashboard");
+			return;
 		}
-	}, [paymentIntentId]);
 
-	const handleContinueToWill = () => {
-		navigate("/app/create-will");
+		validatePaymentSuccess();
+	}, [willId, navigate]);
+
+	const validatePaymentSuccess = async () => {
+		try {
+			setIsLoading(true);
+
+			const { error } = await apiClient(`/wills/${willId}/payment-successful`, {
+				method: "POST",
+			});
+
+			if (error) {
+				// Handle 400 or other error responses
+				toast.error(error || "Payment validation failed");
+				navigate("/app/dashboard");
+				return;
+			}
+
+			// Success - 200 response
+			setIsValid(true);
+			toast.success("Payment completed successfully!");
+		} catch (error) {
+			console.error("Error validating payment success:", error);
+			toast.error("Failed to validate payment. Please contact support.");
+			navigate("/app/dashboard");
+		} finally {
+			setIsLoading(false);
+		}
 	};
 
 	const handleGoToDashboard = () => {
 		navigate("/app/dashboard");
 	};
+
+	// Show loading state while validating
+	if (isLoading) {
+		return (
+			<div className="min-h-screen flex items-center justify-center p-4">
+				<Card className="max-w-md mx-auto">
+					<CardContent className="p-8">
+						<div className="flex flex-col items-center gap-4">
+							<Loader2 className="h-8 w-8 animate-spin text-primary" />
+							<p className="text-muted-foreground">Validating payment...</p>
+						</div>
+					</CardContent>
+				</Card>
+			</div>
+		);
+	}
+
+	// Don't render success content if validation failed
+	if (!isValid) {
+		return null;
+	}
 
 	return (
 		<div className="min-h-screen flex items-center justify-center p-4">
@@ -45,37 +96,29 @@ export default function PaymentSuccessPage() {
 						</p>
 					</div>
 
-					{paymentIntentId && (
+					{/* {paymentIntentId && (
 						<div className="bg-gray-50 p-4 rounded-lg">
 							<p className="text-sm text-gray-600">
 								<span className="font-medium">Payment ID:</span>{" "}
 								{paymentIntentId}
 							</p>
 						</div>
-					)}
+					)} */}
 
 					<div className="space-y-3">
 						<Button
-							onClick={handleContinueToWill}
+							variant="default"
+							onClick={handleGoToDashboard}
 							className="w-full bg-light-green hover:bg-light-green/90 text-black"
 						>
 							<ArrowRight className="mr-2 h-4 w-4" />
-							Continue Creating Your Will
-						</Button>
-
-						<Button
-							variant="outline"
-							onClick={handleGoToDashboard}
-							className="w-full"
-						>
-							Back to Dashboard
+							Continue to Dashboard
 						</Button>
 					</div>
 
 					<div className="text-center">
 						<p className="text-xs text-muted-foreground">
-							You will receive a confirmation email shortly with your payment
-							details.
+							You will receive a confirmation email shortly.
 						</p>
 					</div>
 				</CardContent>

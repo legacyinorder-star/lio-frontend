@@ -54,6 +54,12 @@ export function mapWillDataFromAPI(apiData: unknown): WillData {
 		createdAt: (converted.createdAt as string) || new Date().toISOString(),
 		status: (converted.status as string) || "draft",
 		userId: (converted.userId as string) || (converted.user_id as string) || "",
+		// Payment data
+		paymentStatus:
+			(converted.paymentStatus as string) ||
+			(converted.payment_status as string),
+		paymentDate:
+			(converted.paymentDate as string) || (converted.payment_date as string),
 
 		// Owner data
 		owner: {
