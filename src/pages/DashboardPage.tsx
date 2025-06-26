@@ -87,8 +87,8 @@ export default function DashboardPage() {
 		navigate(`/app/create-will?edit=${willId}`);
 	};
 
-	const handleDownloadPDF = async () => {
-		await downloadWillPDF();
+	const handleDownloadPDF = async (willId: string) => {
+		await downloadWillPDF(willId);
 	};
 
 	const handlePaymentForWill = async (willId: string) => {
@@ -273,7 +273,7 @@ export default function DashboardPage() {
 											<Button
 												variant="outline"
 												size="sm"
-												onClick={handleDownloadPDF}
+												onClick={() => handleDownloadPDF(will.id)}
 												className="hover:bg-light-green/10 cursor-pointer"
 												disabled={!will.owner}
 											>

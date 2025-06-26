@@ -4,15 +4,26 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle, Download, ArrowRight } from "lucide-react";
 import { useState } from "react";
 import { downloadWillPDF } from "@/utils/willDownload";
+import { useWill } from "@/context/WillContext";
+import { toast } from "sonner";
 
 export default function WillSuccessPage() {
 	const navigate = useNavigate();
 	const [isDownloading, setIsDownloading] = useState(false);
+	const { activeWill } = useWill();
 
 	const handleDownloadWill = async () => {
+		if (!activeWill?.id) {
+			toast.error("No will found to download");
+			return;
+		}
+
 		setIsDownloading(true);
 		try {
-			await downloadWillPDF();
+			await downloadWillPDF(activeWill.id);
+		} catch (error) {
+			console.error("Error downloading will:", error);
+			toast.error("Failed to download will. Please try again.");
 		} finally {
 			setIsDownloading(false);
 		}

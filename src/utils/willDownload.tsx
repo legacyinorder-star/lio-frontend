@@ -539,13 +539,13 @@ const transformWillDataToPDFFormat = (willData: CompleteWillData): PDFData => {
 };
 
 /**
- * Generate and download a will PDF using the new endpoint and data structure
+ * Generate and download a will PDF using the specific will endpoint
  */
-export const downloadWillPDF = async (): Promise<boolean> => {
+export const downloadWillPDF = async (willId: string): Promise<boolean> => {
 	try {
-		// Load complete will data from the same endpoint as ReviewStep
+		// Load complete will data from the specific will endpoint
 		const { data, error } = await apiClient<CompleteWillData>(
-			"/wills/get-user-active-will"
+			`/wills/${willId}/get-full-will`
 		);
 
 		if (error) {
@@ -556,7 +556,7 @@ export const downloadWillPDF = async (): Promise<boolean> => {
 
 		const willData = Array.isArray(data) ? data[0] : data;
 		if (!willData) {
-			toast.error("No active will found");
+			toast.error("Will not found");
 			return false;
 		}
 
@@ -638,8 +638,8 @@ export const downloadWillPDF = async (): Promise<boolean> => {
  * Hook-like function for will download with loading state management
  */
 export const useWillDownload = () => {
-	const downloadWill = async () => {
-		return await downloadWillPDF();
+	const downloadWill = async (willId: string) => {
+		return await downloadWillPDF(willId);
 	};
 
 	return { downloadWill };

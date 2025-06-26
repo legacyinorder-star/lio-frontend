@@ -42,18 +42,6 @@ export default function HomePage() {
 									>
 										<Link to="/#">Lasting Power of Attorney</Link>
 									</Button>
-									<Button
-										variant="default"
-										className="bg-[#173C37] text-white hover:bg-[#173C37]/90 font-semibold rounded px-[1.625rem] py-[2.4375rem] text-lg"
-									>
-										<a
-											href="https://calendly.com/"
-											target="_blank"
-											rel="noopener noreferrer"
-										>
-											Write a Letter of Wishes
-										</a>
-									</Button>
 								</div>
 							</div>
 
