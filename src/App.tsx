@@ -21,6 +21,7 @@ import ManageDocumentsPage from "@/pages/admin/ManageDocumentsPage";
 import LogoutPage from "@/pages/LogoutPage";
 import HomePage from "@/pages/HomePage";
 import NotFoundPage from "@/pages/NotFoundPage";
+import PricingPage from "@/pages/PricingPage";
 import { WillProvider } from "@/context/WillContext";
 import { RelationshipsProvider } from "@/context/RelationshipsContext";
 import { DataLoadingProvider } from "@/context/DataLoadingContext";
@@ -44,6 +45,14 @@ function App() {
 									element={
 										<PublicRoute>
 											<HomePage />
+										</PublicRoute>
+									}
+								/>
+								<Route
+									path="/pricing"
+									element={
+										<PublicRoute>
+											<PricingPage />
 										</PublicRoute>
 									}
 								/>
