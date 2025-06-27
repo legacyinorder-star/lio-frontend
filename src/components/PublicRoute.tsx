@@ -49,23 +49,42 @@ export default function PublicRoute({
 		);
 	}
 
-	// If user is authenticated, redirect them away from public pages
+	// If user is authenticated, handle redirects based on the page
 	if (user) {
-		// Determine redirect destination
-		let destination = redirectTo;
+		// Pages that authenticated users should be redirected away from
+		const authPages = [
+			"/login",
+			"/signup",
+			"/verify-otp",
+			"/request-password-reset",
+			"/reset-password",
+		];
 
-		if (!destination) {
-			// Default redirect based on user role
-			destination =
-				user.role === "admin" ? "/admin/dashboard" : "/app/dashboard";
+		// Check if current page is an auth page
+		const isAuthPage = authPages.some((page) =>
+			location.pathname.startsWith(page)
+		);
+
+		if (isAuthPage) {
+			// Determine redirect destination
+			let destination = redirectTo;
+
+			if (!destination) {
+				// Default redirect based on user role
+				destination =
+					user.role === "admin" ? "/admin/dashboard" : "/app/dashboard";
+			}
+
+			// Don't redirect if they're already at the destination
+			if (location.pathname === destination) {
+				return <>{children}</>;
+			}
+
+			return <Navigate to={destination} replace />;
 		}
 
-		// Don't redirect if they're already at the destination
-		if (location.pathname === destination) {
-			return <>{children}</>;
-		}
-
-		return <Navigate to={destination} replace />;
+		// For non-auth pages (like homepage, pricing), allow authenticated users to access them
+		return <>{children}</>;
 	}
 
 	// User is not authenticated, show the public page
