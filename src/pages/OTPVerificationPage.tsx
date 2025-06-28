@@ -213,10 +213,10 @@ export default function OTPVerificationPage() {
 				id="otp-card-container"
 				className="flex flex-col justify-center items-center pt-12"
 			>
+				<div className="flex flex-col items-center mb-2">
+					<h2 className="text-[2rem] font-medium">Verify OTP</h2>
+				</div>
 				<Card className="w-full max-w-md border-none rounded-none shadow-none">
-					<div className="flex flex-col items-center mb-6">
-						<h2 className="text-2xl font-bold">Verify OTP</h2>
-					</div>
 					<CardContent>
 						<div className="space-y-4">
 							<div className="relative">
@@ -234,7 +234,7 @@ export default function OTPVerificationPage() {
 										name="otp"
 										render={({ field }) => (
 											<FormItem>
-												<FormLabel>
+												<FormLabel className="text-[#000000] text-sm font-normal">
 													Enter the 6-digit code sent to your email
 												</FormLabel>
 												<FormControl>
@@ -250,7 +250,7 @@ export default function OTPVerificationPage() {
 									/>
 									<Button
 										type="submit"
-										className="w-full py-[12px] px-[12px] rounded-lg bg-light-green font-[1rem] font-[600] cursor-pointer"
+										className="w-full py-[0.75rem] mt-3 rounded-[0.25rem] bg-primary text-white font-[1rem] font-[600] cursor-pointer hover:bg-primary/90"
 										disabled={isLoading}
 									>
 										{isLoading ? "Verifying..." : "Verify OTP"}
@@ -262,7 +262,7 @@ export default function OTPVerificationPage() {
 							<p className="text-sm text-[#000000]">
 								Didn't receive the code?{" "}
 								<button
-									className="text-black font-bold cursor-pointer hover:underline"
+									className="text-black font-semibold cursor-pointer hover:underline"
 									onClick={handleResendOTP}
 									disabled={isResending}
 								>

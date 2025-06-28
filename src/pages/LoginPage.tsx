@@ -212,8 +212,8 @@ export default function LoginPage() {
 				id="login-card-container"
 				className="flex flex-col justify-center items-center pt-12"
 			>
-				<div className="flex flex-col items-center mb-6">
-					<h2 className="text-2xl font-bold">Log into your account</h2>
+				<div className="flex flex-col items-center mb-2">
+					<h2 className="text-[2rem] font-medium">Log into your account</h2>
 				</div>
 				<Card className="w-full max-w-md border-none rounded-none shadow-none">
 					<CardContent>
@@ -233,7 +233,7 @@ export default function LoginPage() {
 										name="email"
 										render={({ field }) => (
 											<FormItem>
-												<FormLabel className="text-[#000000] font-[14px]">
+												<FormLabel className="text-[#000000] text-sm font-normal">
 													Email
 												</FormLabel>
 												<FormControl>
@@ -253,7 +253,7 @@ export default function LoginPage() {
 										name="password"
 										render={({ field }) => (
 											<FormItem>
-												<FormLabel className="text-[#000000] font-[14px]">
+												<FormLabel className="text-[#000000] text-sm font-normal">
 													Password
 												</FormLabel>
 												<FormControl>
@@ -287,7 +287,7 @@ export default function LoginPage() {
 									/>
 									<Button
 										type="submit"
-										className="w-full py-[12px] px-[12px] rounded-lg bg-light-green font-[1rem] font-[600] cursor-pointer"
+										className="w-full py-[0.75rem] mt-3 rounded-[0.25rem] bg-primary text-white font-[1rem] font-[600] cursor-pointer hover:bg-primary/90"
 										disabled={isLoading || !isOnline || apiAvailable === false}
 									>
 										{isLoading ? "Signing in..." : "Continue"}
@@ -300,7 +300,7 @@ export default function LoginPage() {
 								Don't have an account?{" "}
 								<Link
 									to="/signup"
-									className="text-black font-bold cursor-pointer hover:underline"
+									className="text-black font-semibold cursor-pointer hover:underline"
 								>
 									Create an account
 								</Link>
@@ -309,7 +309,7 @@ export default function LoginPage() {
 								Forgot your password?{" "}
 								<Link
 									to="/request-password-reset"
-									className="text-black font-bold cursor-pointer hover:underline"
+									className="text-black font-semibold cursor-pointer hover:underline"
 								>
 									Reset password
 								</Link>
@@ -317,11 +317,11 @@ export default function LoginPage() {
 							<div className="mt-12 flex flex-col justify-left items-left">
 								<div className="flex items-center gap-2">
 									<img src="svgs/green_shield.svg" alt="green shield" />
-									<h2 className="text-[#000000] text-bold font-[0.875rem]">
+									<h2 className="text-[#000000] font-semibold text-[0.875rem]">
 										Privacy guaranteed
 									</h2>
 								</div>
-								<p className="text-[#5E5D5D] font-[14px]">
+								<p className="text-[#5E5D5D] text-sm">
 									We take your privacy seriously. We will never sell your data,
 									and our world-class security ensures your will is completely
 									confidential.

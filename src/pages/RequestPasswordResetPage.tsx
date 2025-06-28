@@ -13,17 +13,11 @@ import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardFooter,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { API_CONFIG, getApiUrl } from "@/config/api";
 import { useAuth } from "@/hooks/useAuth";
+import { AuthPageHeader } from "@/components/auth/auth-page-header";
 
 const formSchema = z.object({
 	email: z.string().email("Invalid email address"),
@@ -91,64 +85,72 @@ export default function RequestPasswordResetPage() {
 	}
 
 	return (
-		<div className="min-h-screen flex flex-col items-center justify-center p-4">
-			<div className="mb-8 flex items-center justify-center">
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					strokeWidth="2"
-					strokeLinecap="round"
-					strokeLinejoin="round"
-					className="mr-2 h-6 w-6"
-				>
-					<path d="M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3" />
-				</svg>
-				<span className="text-lg font-medium">Legacy In Order</span>
+		<div className="min-h-screen flex flex-col">
+			<AuthPageHeader />
+			<div
+				id="password-reset-card-container"
+				className="flex flex-col justify-center items-center pt-12"
+			>
+				<div className="flex flex-col items-center mb-2">
+					<h2 className="text-[2rem] font-medium">Reset Password</h2>
+				</div>
+				<Card className="w-full max-w-md border-none rounded-none shadow-none">
+					<CardContent>
+						<div className="space-y-4">
+							<div className="relative">
+								<div className="absolute inset-0 flex items-center">
+									<span className="w-full border-t" />
+								</div>
+							</div>
+							<Form {...form}>
+								<form
+									onSubmit={form.handleSubmit(onSubmit)}
+									className="space-y-4"
+								>
+									<FormField
+										control={form.control}
+										name="email"
+										render={({ field }) => (
+											<FormItem>
+												<FormLabel className="text-[#000000] text-sm font-normal">
+													Email
+												</FormLabel>
+												<FormControl>
+													<Input
+														type="email"
+														placeholder="john.doe@example.com"
+														className="border-[#CCCCCC] py-[10px] px-[16px] rounded-lg mt-2"
+														{...field}
+													/>
+												</FormControl>
+												<FormMessage />
+											</FormItem>
+										)}
+									/>
+									<Button
+										type="submit"
+										className="w-full py-[0.75rem] mt-3 rounded-[0.25rem] bg-primary text-white font-[1rem] font-[600] cursor-pointer hover:bg-primary/90"
+										disabled={isLoading}
+									>
+										{isLoading ? "Sending..." : "Send Reset Link"}
+									</Button>
+								</form>
+							</Form>
+						</div>
+						<div className="mt-2">
+							<p className="text-sm text-[#000000]">
+								Remember your password?{" "}
+								<Link
+									to="/login"
+									className="text-black font-semibold cursor-pointer hover:underline"
+								>
+									Sign in
+								</Link>
+							</p>
+						</div>
+					</CardContent>
+				</Card>
 			</div>
-			<Card className="w-full max-w-md">
-				<CardHeader className="space-y-1">
-					<CardTitle className="text-2xl font-bold">Reset Password</CardTitle>
-					<CardDescription>
-						Enter your email to receive a password reset link
-					</CardDescription>
-				</CardHeader>
-				<CardContent>
-					<Form {...form}>
-						<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-							<FormField
-								control={form.control}
-								name="email"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Email</FormLabel>
-										<FormControl>
-											<Input
-												type="email"
-												placeholder="john.doe@example.com"
-												{...field}
-											/>
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-							<Button type="submit" className="w-full" disabled={isLoading}>
-								{isLoading ? "Sending..." : "Send Reset Link"}
-							</Button>
-						</form>
-					</Form>
-				</CardContent>
-				<CardFooter className="flex flex-col space-y-4">
-					<div className="text-sm text-center text-muted-foreground">
-						Remember your password?{" "}
-						<Link to="/login" className="text-primary hover:underline">
-							Sign in
-						</Link>
-					</div>
-				</CardFooter>
-			</Card>
 		</div>
 	);
 }

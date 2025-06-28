@@ -113,10 +113,10 @@ export default function SignupPage() {
 				id="signup-card-container"
 				className="flex flex-col justify-center items-center pt-12"
 			>
+				<div className="flex flex-col items-center mb-2">
+					<h2 className="text-[2rem] font-medium">Create an account</h2>
+				</div>
 				<Card className="w-full max-w-md border-none rounded-none shadow-none">
-					<div className="flex flex-col items-center mb-6">
-						<h2 className="text-2xl font-bold">Create an account</h2>
-					</div>
 					<CardContent>
 						<div className="space-y-4">
 							<div className="relative">
@@ -135,7 +135,9 @@ export default function SignupPage() {
 											name="firstName"
 											render={({ field }) => (
 												<FormItem>
-													<FormLabel>First name</FormLabel>
+													<FormLabel className="text-[#000000] text-sm font-normal">
+														First name
+													</FormLabel>
 													<FormControl>
 														<Input
 															placeholder="John"
@@ -152,7 +154,9 @@ export default function SignupPage() {
 											name="lastName"
 											render={({ field }) => (
 												<FormItem>
-													<FormLabel>Last name</FormLabel>
+													<FormLabel className="text-[#000000] text-sm font-normal">
+														Last name
+													</FormLabel>
 													<FormControl>
 														<Input
 															placeholder="Doe"
@@ -170,7 +174,9 @@ export default function SignupPage() {
 										name="email"
 										render={({ field }) => (
 											<FormItem>
-												<FormLabel>Email</FormLabel>
+												<FormLabel className="text-[#000000] text-sm font-normal">
+													Email
+												</FormLabel>
 												<FormControl>
 													<Input
 														type="email"
@@ -188,7 +194,9 @@ export default function SignupPage() {
 										name="password"
 										render={({ field }) => (
 											<FormItem>
-												<FormLabel>Password</FormLabel>
+												<FormLabel className="text-[#000000] text-sm font-normal">
+													Password
+												</FormLabel>
 												<FormControl>
 													<div className="relative">
 														<Input
@@ -200,7 +208,7 @@ export default function SignupPage() {
 														<button
 															type="button"
 															onClick={() => setShowPassword(!showPassword)}
-															className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+															className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 cursor-pointer"
 														>
 															{showPassword ? (
 																<div className="text-[#818181] flex items-center gap-2">
@@ -223,7 +231,9 @@ export default function SignupPage() {
 										name="confirmPassword"
 										render={({ field }) => (
 											<FormItem>
-												<FormLabel>Confirm password</FormLabel>
+												<FormLabel className="text-[#000000] text-sm font-normal">
+													Confirm password
+												</FormLabel>
 												<FormControl>
 													<div className="relative">
 														<Input
@@ -237,7 +247,7 @@ export default function SignupPage() {
 															onClick={() =>
 																setShowConfirmPassword(!showConfirmPassword)
 															}
-															className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+															className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 cursor-pointer"
 														>
 															{showConfirmPassword ? (
 																<div className="text-[#818181] flex items-center gap-2">
@@ -259,14 +269,14 @@ export default function SignupPage() {
 										By clicking "Create account", you agree to our{" "}
 										<Link
 											to="/terms-conditions"
-											className="text-black font-bold cursor-pointer hover:underline"
+											className="text-black font-semibold cursor-pointer hover:underline"
 										>
 											terms of service
 										</Link>{" "}
 										and acknowledge you have read our{" "}
 										<Link
 											to="/privacy-policy"
-											className="text-black font-bold cursor-pointer hover:underline"
+											className="text-black font-semibold cursor-pointer hover:underline"
 										>
 											privacy policy
 										</Link>
@@ -274,7 +284,7 @@ export default function SignupPage() {
 									</p>
 									<Button
 										type="submit"
-										className="w-full py-[12px] px-[12px] rounded-lg bg-light-green font-[1rem] font-[600]"
+										className="w-full py-[0.75rem] mt-3 rounded-[0.25rem] bg-primary text-white font-[1rem] font-[600] cursor-pointer hover:bg-primary/90"
 										disabled={isLoading}
 									>
 										{isLoading ? "Creating account..." : "Create account"}
@@ -287,7 +297,7 @@ export default function SignupPage() {
 								Already have an account?{" "}
 								<Link
 									to="/login"
-									className="text-black font-bold cursor-pointer hover:underline"
+									className="text-black font-semibold cursor-pointer hover:underline"
 								>
 									Sign in
 								</Link>
