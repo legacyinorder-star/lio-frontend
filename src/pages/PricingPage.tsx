@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/ui/navbar";
 import Footer from "@/components/ui/footer";
@@ -17,30 +16,6 @@ export default function PricingPage() {
 		"Downloadable PDF format",
 	];
 
-	const testimonials = [
-		{
-			name: "Sarah Johnson",
-			role: "Business Owner",
-			content:
-				"Creating my will was so much easier than I expected. The process was clear and professional.",
-			rating: 5,
-		},
-		{
-			name: "Michael Chen",
-			role: "Family Man",
-			content:
-				"Peace of mind knowing my family is protected. The service was excellent from start to finish.",
-			rating: 5,
-		},
-		{
-			name: "Emily Rodriguez",
-			role: "Retiree",
-			content:
-				"Simple, secure, and affordable. I recommend this to everyone who needs a will.",
-			rating: 5,
-		},
-	];
-
 	return (
 		<div className="flex min-h-screen w-full flex-col">
 			<Navbar />
@@ -53,7 +28,7 @@ export default function PricingPage() {
 							<div className="space-y-8 flex flex-col justify-center py-12 px-8 md:px-10 lg:px-12">
 								<div className="space-y-4 pt-12">
 									<h1 className="text-[4rem] font-semibold leading-tight text-[#173C37]">
-										Write a will that’s tailored to you.
+										Write a will that's tailored to you.
 									</h1>
 									<p className="text-[1rem] font-normal leading-relaxed text-[#173C37]">
 										LegacyInOrder simplifies and secures your most important
@@ -86,104 +61,328 @@ export default function PricingPage() {
 					</div>
 				</section>
 
+				{/* No Will Section */}
+				<section className="w-full bg-white py-12">
+					<div className="w-full max-w-[2000px] mx-auto px-4 md:px-6 lg:px-8">
+						<h2 className="text-[3rem] md:text-4xl font-semibold text-center text-[#173C37] pt-4 mb-18">
+							Why you need a Will
+						</h2>
+						<div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+							{/* Card 1 */}
+							<div className="flex items-center bg-white rounded-[0.5rem] border border-mint-light p-6 max-w-md">
+								<img
+									src="/svgs/wills_page/need_1.svg"
+									alt="State Decides Icon"
+									className="w-16 h-16 mr-4 flex-shrink-0"
+								/>
+								<div>
+									<p className="text-primary text-base font-medium">
+										Decide who inherits your property, money, and possessions.
+									</p>
+								</div>
+							</div>
+							{/* Card 2 */}
+							<div className="flex items-center bg-white rounded-[0.5rem] border border-mint-light p-6 max-w-md">
+								<img
+									src="/svgs/wills_page/need_2.svg"
+									alt="No Guardianship Choice Icon"
+									className="w-16 h-16 mr-4 flex-shrink-0"
+								/>
+								<div>
+									<p className="text-primary text-base font-medium">
+										Appoint guardians for your children.
+									</p>
+								</div>
+							</div>
+							{/* Card 3 */}
+							<div className="flex items-center bg-white rounded-[0.5rem] border border-mint-light p-6 max-w-md">
+								<img
+									src="/svgs/wills_page/need_3.svg"
+									alt="Delays & Costs Icon"
+									className="w-16 h-16 mr-4 flex-shrink-0"
+								/>
+								<div>
+									<p className="text-primary text-base font-medium">
+										Leave specific gifts or instructions.
+									</p>
+								</div>
+							</div>
+						</div>
+						<div className="flex justify-center gap-4">
+							{/* Card 4 */}
+							<div className="flex items-center bg-white rounded-[0.5rem] border border-mint-light p-6 max-w-md">
+								<img
+									src="/svgs/wills_page/need_4.svg"
+									alt="No Executor Control Icon"
+									className="w-16 h-16 mr-4 flex-shrink-0"
+								/>
+								<div>
+									<p className="text-primary text-base font-medium">
+										Reduce stress, delays, and costs for your loved ones.
+									</p>
+								</div>
+							</div>
+							{/* Card 5 */}
+							<div className="flex items-center bg-white rounded-[0.5rem] border border-mint-light p-6 max-w-md">
+								<img
+									src="/svgs/wills_page/need_5.svg"
+									alt="Family Disputes Icon"
+									className="w-16 h-16 mr-4 flex-shrink-0"
+								/>
+								<div>
+									<p className="text-primary text-base font-medium">
+										Prevent family disputes and legal complications.
+									</p>
+								</div>
+							</div>
+						</div>
+						<p className="text-center text-primary text-[1rem] font-semibold mt-16 mb-6 max-w-xl mx-auto">
+							Without a will, the law decides who receives your estate — and it
+							may not be who you would have chosen.
+						</p>
+					</div>
+				</section>
+
+				{/* How it works Section */}
+				<section
+					className="w-full bg-mint-alt py-6 md:py-12 lg:py-24"
+					id="features"
+				>
+					<div className="w-full max-w-[2000px] mx-auto px-4 md:px-6 lg:px-8">
+						<div className="mx-auto flex max-w-full flex-col items-center space-y-4 text-center">
+							<h1 className="text-3xl font-semibold tracking-tight sm:text-4xl md:text-5xl mb-2">
+								How it works
+							</h1>
+							<p className="text-lg text-muted-foreground mb-6">
+								Create your legal document in as little as 15 minutes
+							</p>
+						</div>
+
+						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mt-4">
+							{/* Card 1 */}
+							<div className="flex flex-col items-center text-center bg-white p-8 rounded-xl shadow-sm">
+								<div className="w-12 h-12 flex items-center justify-center mb-6">
+									<img
+										src="/svgs/answer_1.svg"
+										alt="Answer Questions Icon"
+										className="w-12 h-12"
+									/>
+								</div>
+								<p className="text-sm text-gray-500 mb-2">Step 1</p>
+								<h3 className="text-xl font-semibold mb-4 text-[#173C37]">
+									Answer a few questions
+								</h3>
+								<p className="text-gray-600">
+									No legal jargon, no stress. Just clear prompts tailored to
+									your life and wishes.
+								</p>
+							</div>
+
+							{/* Card 2 */}
+							<div className="flex flex-col items-center text-center bg-white p-8 rounded-xl shadow-sm">
+								<div className="w-12 h-12 flex items-center justify-center mb-6">
+									<img
+										src="/svgs/answer_2.svg"
+										alt="Generate Document Icon"
+										className="w-12 h-12"
+									/>
+								</div>
+								<p className="text-sm text-gray-500 mb-2">Step 2</p>
+								<h3 className="text-xl font-semibold mb-4 text-[#173C37]">
+									Generate your document
+								</h3>
+								<p className="text-gray-600">
+									Based on your answers, we create secure, legally valid
+									documents like Wills or Power of Attorney.
+								</p>
+							</div>
+
+							{/* Card 3 */}
+							<div className="flex flex-col items-center text-center bg-white p-8 rounded-xl shadow-sm">
+								<div className="w-12 h-12 flex items-center justify-center mb-6">
+									<img
+										src="/svgs/answer_3.svg"
+										alt="Review & Verify Icon"
+										className="w-12 h-12"
+									/>
+								</div>
+								<p className="text-sm text-gray-500 mb-2">Step 3</p>
+								<h3 className="text-xl font-semibold mb-4 text-[#173C37]">
+									Sign & Register
+								</h3>
+								<p className="text-gray-600">
+									Store your documents in your private vault . Revisit, edit, or
+									share with loved ones anytime.
+								</p>
+							</div>
+
+							{/* Card 4 */}
+							<div className="flex flex-col items-center text-center bg-white p-8 rounded-xl shadow-sm">
+								<div className="w-12 h-12 flex items-center justify-center mb-6">
+									<img
+										src="/svgs/answer_4.svg"
+										alt="Secure Storage Icon"
+										className="w-12 h-12"
+									/>
+								</div>
+								<p className="text-sm text-gray-500 mb-2">Step 4</p>
+								<h3 className="text-xl font-semibold mb-4 text-[#173C37]">
+									Store Securely
+								</h3>
+								<p className="text-gray-600">
+									Make changes on your schedule, from any device, whether you're
+									at your desk or on the move.
+								</p>
+							</div>
+						</div>
+						<div className="flex flex-col sm:flex-row justify-center gap-4 mt-12">
+							<Button
+								variant="default"
+								className="text-white bg-[#173C37] rounded border border-[#173C37] font-semibold px-8 py-6 hover:bg-[#173C37]/90"
+							>
+								Write my Will
+							</Button>
+							<Button
+								variant="outline"
+								className="text-[#173C37] border border-[#173C37] font-semibold rounded hover:bg-[#173C37] hover:text-white px-8 py-6"
+							>
+								Explore the Vault
+							</Button>
+						</div>
+					</div>
+				</section>
+
 				{/* Pricing Section */}
 				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+					<div className="text-center mb-12">
+						<h2 className="text-3xl font-bold text-gray-900">
+							Our different types of wills
+						</h2>
+					</div>
 					<div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-						{/* Basic Plan */}
-						<Card className="relative border-2 border-gray-200">
-							<CardHeader className="text-center pb-8">
-								<CardTitle className="text-2xl font-bold text-gray-900">
-									Basic Will
+						{/* Single Will */}
+						<Card className="relative bg-gray-50 flex flex-col">
+							<CardHeader className="text-left pb-8">
+								<CardTitle className="text-[1.65rem] font-medium text-black">
+									Single Will
 								</CardTitle>
 								<div className="mt-4">
-									<span className="text-4xl font-bold text-gray-900">$99</span>
-									<span className="text-gray-600 ml-2">one-time</span>
+									<span className="text-[3.375rem] font-medium text-black">
+										£150
+									</span>
 								</div>
-								<p className="text-gray-600 mt-2">
-									Perfect for simple estate planning
+								<p className="text-base font-normal text-black mt-2">
+									Perfect for individual estate planning
 								</p>
 							</CardHeader>
-							<CardContent className="space-y-4">
-								<ul className="space-y-3">
+							<CardContent className="space-y-4 flex-1 flex flex-col">
+								<ul className="space-y-3 flex-1">
 									{features.slice(0, 4).map((feature, index) => (
 										<li key={index} className="flex items-start">
-											<Check className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
-											<span className="text-gray-700">{feature}</span>
+											<img
+												src="/svgs/wills_page/dot.svg"
+												alt="Feature marker"
+												className="h-5 w-5 mt-0.5 mr-3 flex-shrink-0"
+											/>
+											<span className="text-[0.8rem] font-normal text-black">
+												{feature}
+											</span>
 										</li>
 									))}
 								</ul>
-								<Button className="w-full bg-gray-600 hover:bg-gray-700 text-white mt-8">
+								<Button className="w-full bg-white border border-primary text-primary hover:bg-gray-50 mt-8">
 									Get Started
 								</Button>
 							</CardContent>
 						</Card>
 
-						{/* Premium Plan - Featured */}
-						<Card className="relative border-2 border-light-green transform scale-105 shadow-xl">
-							<div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-								<span className="bg-light-green text-black px-4 py-2 rounded-full text-sm font-semibold">
-									Most Popular
-								</span>
-							</div>
-							<CardHeader className="text-center pb-8">
-								<CardTitle className="text-2xl font-bold text-gray-900">
-									Complete Will Package
+						{/* Mirror Will */}
+						<Card className="relative bg-gray-50 flex flex-col">
+							<CardHeader className="text-left pb-8">
+								<CardTitle className="text-[1.65rem] font-medium text-black">
+									Mirror Will
 								</CardTitle>
 								<div className="mt-4">
-									<span className="text-4xl font-bold text-gray-900">$99</span>
-									<span className="text-gray-600 ml-2">one-time</span>
+									<span className="text-[3.375rem] font-medium text-black">
+										£200
+									</span>
 								</div>
-								<p className="text-gray-600 mt-2">
-									Everything you need for comprehensive estate planning
+								<p className="text-base font-normal text-black mt-2">
+									Ideal for couples with similar wishes
 								</p>
 							</CardHeader>
-							<CardContent className="space-y-4">
-								<ul className="space-y-3">
+							<CardContent className="space-y-4 flex-1 flex flex-col">
+								<ul className="space-y-3 flex-1">
 									{features.map((feature, index) => (
 										<li key={index} className="flex items-start">
-											<Check className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
-											<span className="text-gray-700">{feature}</span>
+											<img
+												src="/svgs/wills_page/dot.svg"
+												alt="Feature marker"
+												className="h-5 w-5 mt-0.5 mr-3 flex-shrink-0"
+											/>
+											<span className="text-[0.8rem] font-normal text-black">
+												{feature}
+											</span>
 										</li>
 									))}
 								</ul>
-								<Link to="/app/payment/checkout?description=Will Creation Service">
-									<Button className="w-full bg-light-green hover:bg-light-green/90 text-black mt-8">
-										Get Started Now
+								<Link to="/login">
+									<Button className="w-full bg-white border border-primary text-primary hover:bg-gray-50 mt-8">
+										Get Started
 									</Button>
 								</Link>
 							</CardContent>
 						</Card>
 
-						{/* Premium Plus Plan */}
-						<Card className="relative border-2 border-gray-200">
-							<CardHeader className="text-center pb-8">
-								<CardTitle className="text-2xl font-bold text-gray-900">
-									Premium Plus
+						{/* Will with Trust */}
+						<Card className="relative bg-gray-50 border-2 border-teal flex flex-col">
+							<CardHeader className="text-left pb-8">
+								<CardTitle className="text-[1.65rem] font-medium text-black">
+									Will with Trust
 								</CardTitle>
 								<div className="mt-4">
-									<span className="text-4xl font-bold text-gray-900">$149</span>
-									<span className="text-gray-600 ml-2">one-time</span>
+									<span className="text-[3.375rem] font-medium text-black">
+										£400
+									</span>
 								</div>
-								<p className="text-gray-600 mt-2">
-									Advanced features for complex estates
+								<p className="text-base font-normal text-black mt-2">
+									Advanced planning with trust protection
 								</p>
 							</CardHeader>
-							<CardContent className="space-y-4">
-								<ul className="space-y-3">
+							<CardContent className="space-y-4 flex-1 flex flex-col">
+								<ul className="space-y-3 flex-1">
 									{features.map((feature, index) => (
 										<li key={index} className="flex items-start">
-											<Check className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
-											<span className="text-gray-700">{feature}</span>
+											<img
+												src="/svgs/wills_page/dot.svg"
+												alt="Feature marker"
+												className="h-5 w-5 mt-0.5 mr-3 flex-shrink-0"
+											/>
+											<span className="text-[0.8rem] font-normal text-black">
+												{feature}
+											</span>
 										</li>
 									))}
 								</ul>
 								<li className="flex items-start">
-									<Check className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
-									<span className="text-gray-700">Priority legal review</span>
+									<img
+										src="/svgs/wills_page/dot.svg"
+										alt="Feature marker"
+										className="h-5 w-5 mt-0.5 mr-3 flex-shrink-0"
+									/>
+									<span className="text-[0.8rem] font-normal text-black">
+										Trust creation and management
+									</span>
 								</li>
 								<li className="flex items-start">
-									<Check className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
-									<span className="text-gray-700">Phone consultation</span>
+									<img
+										src="/svgs/wills_page/dot.svg"
+										alt="Feature marker"
+										className="h-5 w-5 mt-0.5 mr-3 flex-shrink-0"
+									/>
+									<span className="text-[0.8rem] font-normal text-black">
+										Advanced tax planning
+									</span>
 								</li>
 								<Button className="w-full bg-gray-600 hover:bg-gray-700 text-white mt-8">
 									Get Started
@@ -197,117 +396,68 @@ export default function PricingPage() {
 				<div className="bg-white py-16">
 					<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 						<div className="text-center mb-12">
-							<h2 className="text-3xl font-bold text-gray-900">
-								Why Choose Legacy In Order?
-							</h2>
-							<p className="mt-4 text-lg text-gray-600">
-								We make estate planning simple, secure, and accessible
-							</p>
-						</div>
-						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-							<div className="text-center">
-								<div className="w-16 h-16 bg-light-green/10 rounded-full flex items-center justify-center mx-auto mb-4">
-									<Check className="h-8 w-8 text-light-green" />
-								</div>
-								<h3 className="text-lg font-semibold text-gray-900 mb-2">
-									Legally Valid
-								</h3>
-								<p className="text-gray-600">
-									All documents meet your state's legal requirements
-								</p>
-							</div>
-							<div className="text-center">
-								<div className="w-16 h-16 bg-light-green/10 rounded-full flex items-center justify-center mx-auto mb-4">
-									<Star className="h-8 w-8 text-light-green" />
-								</div>
-								<h3 className="text-lg font-semibold text-gray-900 mb-2">
-									Secure & Private
-								</h3>
-								<p className="text-gray-600">
-									Bank-level encryption protects your sensitive information
-								</p>
-							</div>
-							<div className="text-center">
-								<div className="w-16 h-16 bg-light-green/10 rounded-full flex items-center justify-center mx-auto mb-4">
-									<Check className="h-8 w-8 text-light-green" />
-								</div>
-								<h3 className="text-lg font-semibold text-gray-900 mb-2">
-									Easy to Use
-								</h3>
-								<p className="text-gray-600">
-									Simple step-by-step process, no legal jargon
-								</p>
-							</div>
-							<div className="text-center">
-								<div className="w-16 h-16 bg-light-green/10 rounded-full flex items-center justify-center mx-auto mb-4">
-									<Star className="h-8 w-8 text-light-green" />
-								</div>
-								<h3 className="text-lg font-semibold text-gray-900 mb-2">
-									Lifetime Access
-								</h3>
-								<p className="text-gray-600">
-									Update your will anytime, anywhere
-								</p>
-							</div>
-						</div>
-					</div>
-				</div>
-
-				{/* Testimonials Section */}
-				<div className="bg-gray-50 py-16">
-					<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-						<div className="text-center mb-12">
-							<h2 className="text-3xl font-bold text-gray-900">
-								What Our Customers Say
+							<h2 className="text-[3rem] font-semibold text-primary">
+								Secure Vault Storage
 							</h2>
 						</div>
-						<div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-							{testimonials.map((testimonial, index) => (
-								<Card key={index} className="bg-white">
-									<CardContent className="p-6">
-										<div className="flex items-center mb-4">
-											{Array.from({ length: testimonial.rating }).map(
-												(_, i) => (
-													<Star
-														key={i}
-														className="h-5 w-5 text-yellow-400 fill-current"
-													/>
-												)
-											)}
-										</div>
-										<p className="text-gray-700 mb-4">
-											"{testimonial.content}"
-										</p>
-										<div>
-											<p className="font-semibold text-gray-900">
-												{testimonial.name}
-											</p>
-											<p className="text-sm text-gray-600">
-												{testimonial.role}
-											</p>
-										</div>
-									</CardContent>
-								</Card>
-							))}
-						</div>
-					</div>
-				</div>
+						<div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+							{/* Card 1 */}
+							<div
+								className="p-8 flex flex-col items-center justify-center"
+								style={{
+									borderRadius: "0.5rem",
+									border: "1px solid #F5F5F5",
+									background: "#FFF",
+									boxShadow: "0px 2px 12px 0px rgba(0, 0, 0, 0.10)",
+								}}
+							>
+								<img
+									src="/images/box_vault.png"
+									alt="Secure Vault"
+									className="w-48 h-48 object-contain mb-6"
+								/>
+								<h3 className="text-xl font-semibold text-black mb-3 text-center">
+									Home Vault Box
+								</h3>
+								<p className="text-gray-600 text-center max-w-sm">
+									A waterproof and fire-resistant physical storage box for your
+									essential documents.
+								</p>
+								<Button
+									disabled
+									className="w-[300px] bg-white border border-primary text-primary hover:bg-gray-50 mt-6 cursor-not-allowed"
+								>
+									Coming soon
+								</Button>
+							</div>
 
-				{/* CTA Section */}
-				<div className="bg-light-green py-16">
-					<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-						<h2 className="text-3xl font-bold text-black mb-4">
-							Ready to Protect Your Legacy?
-						</h2>
-						<p className="text-lg text-black/80 mb-8 max-w-2xl mx-auto">
-							Join thousands of families who have already secured their future
-							with Legacy In Order.
-						</p>
-						<Link to="/app/payment/checkout?description=Will Creation Service">
-							<Button className="bg-black hover:bg-black/90 text-white px-8 py-3 text-lg">
-								Get Started Today
-							</Button>
-						</Link>
+							{/* Card 2 */}
+							<div
+								className="p-8 flex flex-col items-center justify-center"
+								style={{
+									borderRadius: "0.5rem",
+									border: "1px solid #F5F5F5",
+									background: "#FFF",
+									boxShadow: "0px 2px 12px 0px rgba(0, 0, 0, 0.10)",
+								}}
+							>
+								<img
+									src="/images/weather-cloud.png"
+									alt="Weather Cloud"
+									className="w-48 h-48 object-contain mb-6"
+								/>
+								<h3 className="text-xl font-semibold text-black mb-3 text-center">
+									Digital Vault
+								</h3>
+								<p className="text-gray-600 text-center max-w-sm">
+									Upload and store your will and other legacy documents securely
+									online.
+								</p>
+								<Button className="w-[300px] bg-gray-600 hover:bg-gray-700 text-white mt-6">
+									Get Started
+								</Button>
+							</div>
+						</div>
 					</div>
 				</div>
 			</main>
