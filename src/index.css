@@ -21,6 +21,18 @@
   --legacy-light-gray: #F2F2EF;
   --legacy-light-green: #C6F91F;
   --legacy-dark-green: #083203;
+  --primary: #173C37;
+  --secondary: #545454;
+  --mint: #DFF2EB;
+  --mint-alt: #E2F3ED;
+  --teal: #239485;
+  --mint-light: #E4F4ED;
+  --mint-lighter: #EFF8F5;
+  --star: #8E8E56;
+  --white: #FAFAFA;
+  --barely-gray: #F8F8F8;
+  --gray-light: #E9E9E9;
+  --offwhite: #FAFAF5;
   --btn-border: var(--legacy-white);
   --muted: 210 40% 96.1%;
   --muted-foreground: 215.4 16.3% 46.9%;
@@ -112,6 +124,15 @@
   --color-dark-gray: var(--legacy-dark-gray);
   --color-light-green: var(--legacy-light-green);
   --color-dark-green: var(--legacy-dark-green);
+  --color-primary: var(--primary);
+  --color-secondary: var(--secondary);
+  --color-mint: var(--mint);
+  --color-mint-alt: var(--mint-alt);
+  --color-teal: var(--teal);
+  --color-mint-light: var(--mint-light);
+  --color-mint-lighter: var(--mint-lighter);
+  --color-star: var(--star);
+  --color-barely-gray: var(--barely-gray);
   --color-black: var(--legacy-black);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
@@ -161,6 +182,8 @@
     @apply bg-white text-black;
     font-family: 'TMT Limkin', sans-serif;
     color: #173C37;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: 'TMT Limkin', sans-serif;
