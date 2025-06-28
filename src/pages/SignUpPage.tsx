@@ -258,14 +258,14 @@ export default function SignupPage() {
 									<p className="text-sm text-[#000000]">
 										By clicking "Create account", you agree to our{" "}
 										<Link
-											to="/terms"
+											to="/terms-conditions"
 											className="text-black font-bold cursor-pointer hover:underline"
 										>
 											terms of service
 										</Link>{" "}
 										and acknowledge you have read our{" "}
 										<Link
-											to="/privacy"
+											to="/privacy-policy"
 											className="text-black font-bold cursor-pointer hover:underline"
 										>
 											privacy policy

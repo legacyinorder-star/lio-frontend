@@ -22,6 +22,8 @@ import LogoutPage from "@/pages/LogoutPage";
 import HomePage from "@/pages/HomePage";
 import NotFoundPage from "@/pages/NotFoundPage";
 import PricingPage from "@/pages/PricingPage";
+import PrivacyPolicyPage from "@/pages/PrivacyPolicyPage";
+import TermsConditionsPage from "@/pages/TermsConditionsPage";
 import { WillProvider } from "@/context/WillContext";
 import { RelationshipsProvider } from "@/context/RelationshipsContext";
 import { DataLoadingProvider } from "@/context/DataLoadingContext";
@@ -53,6 +55,22 @@ function App() {
 									element={
 										<PublicRoute>
 											<PricingPage />
+										</PublicRoute>
+									}
+								/>
+								<Route
+									path="/privacy-policy"
+									element={
+										<PublicRoute>
+											<PrivacyPolicyPage />
+										</PublicRoute>
+									}
+								/>
+								<Route
+									path="/terms-conditions"
+									element={
+										<PublicRoute>
+											<TermsConditionsPage />
 										</PublicRoute>
 									}
 								/>
