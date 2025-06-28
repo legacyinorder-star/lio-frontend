@@ -35,7 +35,7 @@ export default function Navbar() {
 						<Link
 							key={link.to}
 							to={link.to}
-							className={`text-[#173C37] hover:text-[#173C37] transition-colors font-semibold px-2 py-1 ${
+							className={`text-[#173C37] hover:text-[#173C37] transition-colors font-semibold px-2 py-1 text-[0.875rem] font-[600] ${
 								location.pathname === link.to
 									? "underline underline-offset-4"
 									: ""
@@ -103,7 +103,7 @@ export default function Navbar() {
 						<Link
 							key={link.to}
 							to={link.to}
-							className={`block text-primary hover:text-primary font-medium py-2 ${
+							className={`block text-primary hover:text-primary font-medium py-2 text-[0.875rem] font-[600] ${
 								location.pathname === link.to
 									? "underline underline-offset-4"
 									: ""
