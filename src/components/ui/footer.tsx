@@ -2,32 +2,38 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 
-export default function Footer() {
+interface FooterProps {
+	showCTA?: boolean;
+}
+
+export default function Footer({ showCTA = true }: FooterProps) {
 	const { user } = useAuth();
 
 	return (
 		<>
 			{/* CTA Section */}
-			<section className="w-full bg-primary text-primary-foreground pb-12 md:pb-24 lg:pb-32">
-				<div className="w-full max-w-[2000px] mx-auto px-4 md:px-6 lg:px-8">
-					<div className="w-4/5 mx-auto bg-[#FAFAF5] rounded-[0.5rem] p-16">
-						<div className="flex flex-col items-start justify-center space-y-6 text-left">
-							<h2 className="text-[1.875rem] font-semibold text-[#173C37]">
-								Ready to Put Your Legacy in Order?
-							</h2>
-							<p className="text-[1rem] font-normal text-[#173C37]">
-								Simple, guided tools to help you organize what matters.
-							</p>
-							<Button
-								variant="default"
-								className="bg-[#173C37] text-white hover:bg-[#173C37]/90 rounded px-[0.625rem] py-[1.5rem] text-lg"
-							>
-								<Link to={user ? "/dashboard" : "/login"}>Write my Will</Link>
-							</Button>
+			{showCTA && (
+				<section className="w-full bg-primary text-primary-foreground pb-12 md:pb-24 lg:pb-32">
+					<div className="w-full max-w-[2000px] mx-auto px-4 md:px-6 lg:px-8">
+						<div className="w-4/5 mx-auto bg-[#FAFAF5] rounded-[0.5rem] p-16">
+							<div className="flex flex-col items-start justify-center space-y-6 text-left">
+								<h2 className="text-[1.875rem] font-semibold text-[#173C37]">
+									Ready to get your legacy in order?
+								</h2>
+								<p className="text-[1rem] font-normal text-[#173C37]">
+									Simple, guided tools to help you organize what matters.
+								</p>
+								<Button
+									variant="default"
+									className="bg-[#173C37] text-white hover:bg-[#173C37]/90 rounded px-[0.625rem] py-[1.5rem] text-lg"
+								>
+									<Link to={user ? "/dashboard" : "/login"}>Write my Will</Link>
+								</Button>
+							</div>
 						</div>
 					</div>
-				</div>
-			</section>
+				</section>
+			)}
 
 			<footer className="w-full pb-6 border-t bg-[#173C37] text-white">
 				<div className="w-full max-w-[2000px] mx-auto px-4 md:px-6 lg:px-8">
@@ -168,19 +174,19 @@ export default function Footer() {
 									&copy; {new Date().getFullYear()} Legacy In Order
 								</Link>
 								<Link
-									to="/terms"
+									to="/terms-conditions"
 									className="text-sm text-white/60 hover:text-white"
 								>
 									Terms of Service
 								</Link>
 								<Link
-									to="/privacy"
+									to="/privacy-policy"
 									className="text-sm text-white/60 hover:text-white"
 								>
 									Privacy Policy
 								</Link>
 								<Link
-									to="/privacy"
+									to="/privacy-policy"
 									className="text-sm text-white/60 hover:text-white"
 								>
 									Data &amp; Security
