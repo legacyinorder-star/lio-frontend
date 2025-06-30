@@ -184,18 +184,6 @@ export default function SpouseStep({
 					<div className="flex gap-4">
 						<Button
 							type="button"
-							variant={form.watch("hasSpouse") ? "default" : "outline"}
-							className={form.watch("hasSpouse") ? "bg-primary text-white" : ""}
-							onClick={() => {
-								form.setValue("hasSpouse", true);
-								if (!localSpouseData) setSpouseDialogOpen(true);
-							}}
-							disabled={isSubmitting}
-						>
-							Yes, I have a spouse or civil partner
-						</Button>
-						<Button
-							type="button"
 							variant={!form.watch("hasSpouse") ? "default" : "outline"}
 							className={
 								!form.watch("hasSpouse") ? "bg-primary text-white" : ""
@@ -211,6 +199,18 @@ export default function SpouseStep({
 							disabled={isSubmitting}
 						>
 							No
+						</Button>
+						<Button
+							type="button"
+							variant={form.watch("hasSpouse") ? "default" : "outline"}
+							className={form.watch("hasSpouse") ? "bg-primary text-white" : ""}
+							onClick={() => {
+								form.setValue("hasSpouse", true);
+								if (!localSpouseData) setSpouseDialogOpen(true);
+							}}
+							disabled={isSubmitting}
+						>
+							Yes, I have a spouse or civil partner
 						</Button>
 					</div>
 

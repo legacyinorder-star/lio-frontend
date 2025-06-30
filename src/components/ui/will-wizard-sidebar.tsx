@@ -87,7 +87,7 @@ export function WillWizardSidebar() {
 												status === "current"
 													? "text-[#0F433E] font-semibold"
 													: status === "completed"
-													? "text-[#173C37]"
+													? "text-[#173C37] font-semibold"
 													: "text-[#909090]"
 											}`}
 										>

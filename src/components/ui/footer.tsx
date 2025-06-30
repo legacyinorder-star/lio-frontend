@@ -18,7 +18,7 @@ export default function Footer({ showCTA = true }: FooterProps) {
 						<div className="w-4/5 mx-auto bg-[#FAFAF5] rounded-[0.5rem] p-16">
 							<div className="flex flex-col items-start justify-center space-y-6 text-left">
 								<h2 className="text-[1.875rem] font-semibold text-[#173C37]">
-									Ready to get your legacy in order?
+									Are you ready to get your legacy in order?
 								</h2>
 								<p className="text-[1rem] font-normal text-[#173C37]">
 									Simple, guided tools to help you organize what matters.
