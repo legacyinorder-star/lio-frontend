@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/custom-dropdown-menu";
 
 const NAV_LINKS = [
-	{ label: "About Us", to: "/about" },
+	{ label: "About Us", to: "/about-us" },
 	{ label: "Guides & Checklist", to: "/guides" },
 	{ label: "Pricing", to: "/pricing" },
 	{ label: "Vault", to: "/vault" },
@@ -43,9 +43,9 @@ export default function Navbar() {
 				<div className="hidden md:flex items-center gap-6">
 					{/* About Us */}
 					<Link
-						to="/about"
+						to="/about-us"
 						className={`text-[#173C37] hover:text-[#173C37] transition-colors font-semibold px-2 py-1 text-[0.875rem] font-[600] ${
-							location.pathname === "/about"
+							location.pathname === "/about-us"
 								? "underline underline-offset-4"
 								: ""
 						}`}
@@ -155,9 +155,9 @@ export default function Navbar() {
 				<div className="md:hidden bg-white border-t border-gray-light px-4 pb-6 pt-4 space-y-3 shadow-lg">
 					{/* About Us */}
 					<Link
-						to="/about"
+						to="/about-us"
 						className={`block text-primary hover:text-primary font-medium py-2 text-[0.875rem] font-[600] ${
-							location.pathname === "/about"
+							location.pathname === "/about-us"
 								? "underline underline-offset-4"
 								: ""
 						}`}

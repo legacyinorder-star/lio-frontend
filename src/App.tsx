@@ -20,6 +20,7 @@ import AdminDashboardPage from "@/pages/admin/AdminDashboardPage";
 import ManageDocumentsPage from "@/pages/admin/ManageDocumentsPage";
 import LogoutPage from "@/pages/LogoutPage";
 import HomePage from "@/pages/HomePage";
+import AboutUsPage from "@/pages/AboutUsPage";
 import NotFoundPage from "@/pages/NotFoundPage";
 import WillInfoPage from "@/pages/WillInfoPage";
 import PrivacyPolicyPage from "@/pages/PrivacyPolicyPage";
@@ -49,6 +50,14 @@ function App() {
 										element={
 											<PublicRoute>
 												<HomePage />
+											</PublicRoute>
+										}
+									/>
+									<Route
+										path="/about-us"
+										element={
+											<PublicRoute>
+												<AboutUsPage />
 											</PublicRoute>
 										}
 									/>
