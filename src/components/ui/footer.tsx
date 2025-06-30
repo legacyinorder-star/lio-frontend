@@ -13,7 +13,7 @@ export default function Footer({ showCTA = true }: FooterProps) {
 		<>
 			{/* CTA Section */}
 			{showCTA && (
-				<section className="w-full bg-primary text-primary-foreground pb-12 md:pb-24 lg:pb-32">
+				<section className="w-full bg-transparent text-primary-foreground pb-12 md:pb-24 lg:pb-32">
 					<div className="w-full max-w-[2000px] mx-auto px-4 md:px-6 lg:px-8">
 						<div className="w-4/5 mx-auto bg-[#FAFAF5] rounded-[0.5rem] p-16">
 							<div className="flex flex-col items-start justify-center space-y-6 text-left">

@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import Navbar from "@/components/ui/navbar";
 import Footer from "@/components/ui/footer";
 
-export default function PricingPage() {
+export default function WillInfoPage() {
 	const features = [
 		"Legally valid will that meets your state's requirements",
 		"Secure & encrypted data storage",
@@ -76,7 +76,7 @@ export default function PricingPage() {
 									className="w-16 h-16 mr-4 flex-shrink-0"
 								/>
 								<div>
-									<p className="text-primary text-base font-medium">
+									<p className="text-[#173C37] text-base font-medium">
 										Decide who inherits your property, money, and possessions.
 									</p>
 								</div>
@@ -89,7 +89,7 @@ export default function PricingPage() {
 									className="w-16 h-16 mr-4 flex-shrink-0"
 								/>
 								<div>
-									<p className="text-primary text-base font-medium">
+									<p className="text-[#173C37] text-base font-medium">
 										Appoint guardians for your children.
 									</p>
 								</div>
@@ -102,7 +102,7 @@ export default function PricingPage() {
 									className="w-16 h-16 mr-4 flex-shrink-0"
 								/>
 								<div>
-									<p className="text-primary text-base font-medium">
+									<p className="text-[#173C37] text-base font-medium">
 										Leave specific gifts or instructions.
 									</p>
 								</div>
@@ -117,7 +117,7 @@ export default function PricingPage() {
 									className="w-16 h-16 mr-4 flex-shrink-0"
 								/>
 								<div>
-									<p className="text-primary text-base font-medium">
+									<p className="text-[#173C37] text-base font-medium">
 										Reduce stress, delays, and costs for your loved ones.
 									</p>
 								</div>
@@ -130,13 +130,13 @@ export default function PricingPage() {
 									className="w-16 h-16 mr-4 flex-shrink-0"
 								/>
 								<div>
-									<p className="text-primary text-base font-medium">
+									<p className="text-[#173C37] text-base font-medium">
 										Prevent family disputes and legal complications.
 									</p>
 								</div>
 							</div>
 						</div>
-						<p className="text-center text-primary text-[1rem] font-semibold mt-16 mb-6 max-w-xl mx-auto">
+						<p className="text-center text-[#173C37] text-[1rem] font-semibold mt-16 mb-6 max-w-xl mx-auto">
 							Without a will, the law decides who receives your estate — and it
 							may not be who you would have chosen.
 						</p>
@@ -290,7 +290,7 @@ export default function PricingPage() {
 										</li>
 									))}
 								</ul>
-								<Button className="w-full bg-white border border-primary text-primary hover:bg-gray-50 mt-8">
+								<Button className="w-full bg-white border border-[#173C37] text-[#173C37] hover:bg-gray-50 mt-8">
 									Get Started
 								</Button>
 							</CardContent>
@@ -327,7 +327,7 @@ export default function PricingPage() {
 									))}
 								</ul>
 								<Link to="/login">
-									<Button className="w-full bg-white border border-primary text-primary hover:bg-gray-50 mt-8">
+									<Button className="w-full bg-white border border-[#173C37] text-[#173C37] hover:bg-gray-50 mt-8">
 										Get Started
 									</Button>
 								</Link>
@@ -384,7 +384,7 @@ export default function PricingPage() {
 										Advanced tax planning
 									</span>
 								</li>
-								<Button className="w-full bg-gray-600 hover:bg-gray-700 text-white mt-8">
+								<Button className="w-full bg-[#173C37] hover:bg-[#173C37]/90 text-white mt-8">
 									Get Started
 								</Button>
 							</CardContent>
@@ -396,7 +396,7 @@ export default function PricingPage() {
 				<div className="bg-white py-16">
 					<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 						<div className="text-center mb-12">
-							<h2 className="text-[3rem] font-semibold text-primary">
+							<h2 className="text-[3rem] font-semibold text-[#173C37]">
 								Secure Vault Storage
 							</h2>
 						</div>
@@ -425,7 +425,7 @@ export default function PricingPage() {
 								</p>
 								<Button
 									disabled
-									className="w-[300px] bg-white border border-primary text-primary hover:bg-gray-50 mt-6 cursor-not-allowed"
+									className="w-[300px] bg-white border border-[#173C37] text-[#173C37] hover:bg-gray-50 mt-6 cursor-not-allowed"
 								>
 									Coming soon
 								</Button>
@@ -453,7 +453,7 @@ export default function PricingPage() {
 									Upload and store your will and other legacy documents securely
 									online.
 								</p>
-								<Button className="w-[300px] bg-gray-600 hover:bg-gray-700 text-white mt-6">
+								<Button className="w-[300px] bg-[#173C37] hover:bg-[#173C37]/90 text-white mt-6">
 									Get Started
 								</Button>
 							</div>

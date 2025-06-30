@@ -414,7 +414,7 @@ export function DashboardLayout() {
 			{/* Will Wizard Step Indicator */}
 			{isInWillWizard && currentStep && (
 				<div
-					className="w-full mt-[0.15rem] py-6 px-4 text-left text-sm font-medium text-[#173C37]"
+					className="w-full max-w-[2000px] mt-[0.15rem] py-6 px-4 text-left text-sm font-medium text-[#173C37]"
 					style={{ backgroundColor: "#DFF2EB" }}
 				>
 					{(() => {

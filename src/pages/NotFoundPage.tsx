@@ -19,7 +19,10 @@ export default function NotFoundPage() {
 				</div>
 
 				<div className="flex flex-col sm:flex-row gap-2 justify-center">
-					<Button asChild>
+					<Button
+						asChild
+						className="bg-[#173C37] text-white hover:bg-[#173C37]/90"
+					>
 						<Link to="/">
 							<Home className="mr-2 h-4 w-4" />
 							Back to Home
@@ -27,13 +30,16 @@ export default function NotFoundPage() {
 					</Button>
 					{user && (
 						<Button variant="outline" asChild>
-							<Link
-								to={
-									user.role === "admin" ? "/admin/dashboard" : "/app/dashboard"
-								}
-							>
-								Go to Dashboard
-							</Link>
+							<Link to="/app/dashboard">Go to Dashboard</Link>
+						</Button>
+					)}
+					{user && user.role === "admin" && (
+						<Button
+							variant="outline"
+							asChild
+							className="bg-primary text-white hover:bg-primary/90"
+						>
+							<Link to="/admin/dashboard">Go to Admin Dashboard</Link>
 						</Button>
 					)}
 				</div>

@@ -21,7 +21,7 @@ import ManageDocumentsPage from "@/pages/admin/ManageDocumentsPage";
 import LogoutPage from "@/pages/LogoutPage";
 import HomePage from "@/pages/HomePage";
 import NotFoundPage from "@/pages/NotFoundPage";
-import PricingPage from "@/pages/PricingPage";
+import WillInfoPage from "@/pages/WillInfoPage";
 import PrivacyPolicyPage from "@/pages/PrivacyPolicyPage";
 import TermsConditionsPage from "@/pages/TermsConditionsPage";
 import { WillProvider } from "@/context/WillContext";
@@ -53,10 +53,10 @@ function App() {
 										}
 									/>
 									<Route
-										path="/pricing"
+										path="/will-information"
 										element={
 											<PublicRoute>
-												<PricingPage />
+												<WillInfoPage />
 											</PublicRoute>
 										}
 									/>
