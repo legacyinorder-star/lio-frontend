@@ -23,6 +23,7 @@ import HomePage from "@/pages/HomePage";
 import AboutUsPage from "@/pages/AboutUsPage";
 import NotFoundPage from "@/pages/NotFoundPage";
 import WillInfoPage from "@/pages/WillInfoPage";
+import PowerOfAttorneyPage from "@/pages/PowerOfAttorneyPage";
 import PrivacyPolicyPage from "@/pages/PrivacyPolicyPage";
 import TermsConditionsPage from "@/pages/TermsConditionsPage";
 import { WillProvider } from "@/context/WillContext";
@@ -66,6 +67,14 @@ function App() {
 										element={
 											<PublicRoute>
 												<WillInfoPage />
+											</PublicRoute>
+										}
+									/>
+									<Route
+										path="/power-of-attorney"
+										element={
+											<PublicRoute>
+												<PowerOfAttorneyPage />
 											</PublicRoute>
 										}
 									/>

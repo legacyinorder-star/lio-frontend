@@ -18,7 +18,7 @@ const NAV_LINKS = [
 
 const SERVICES_LINKS = [
 	{ label: "Wills", to: "/will-information" },
-	{ label: "Power of Attorney", to: "/app/power-of-attorney" },
+	{ label: "Power of Attorney", to: "/power-of-attorney" },
 	{ label: "Letter of Wishes", to: "/app/letter-of-wishes" },
 ];
 
