@@ -3,9 +3,31 @@ import Footer from "@/components/ui/footer";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { useState, useEffect } from "react";
 
 export default function HomePage() {
 	const { user } = useAuth();
+
+	// Carousel images
+	const carouselImages = [
+		"/images/header1.jpg",
+		"/images/product_1.jpg",
+		"/images/product_2.jpg",
+		"/images/will_page.png",
+	];
+
+	const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+	// Auto-rotate carousel every 4 seconds
+	useEffect(() => {
+		const interval = setInterval(() => {
+			setCurrentImageIndex(
+				(prevIndex) => (prevIndex + 1) % carouselImages.length
+			);
+		}, 4000);
+
+		return () => clearInterval(interval);
+	}, [carouselImages.length]);
 
 	return (
 		<div className="flex min-h-screen w-full flex-col">
@@ -45,15 +67,22 @@ export default function HomePage() {
 								</div>
 							</div>
 
-							{/* Right Side - Image with Text Overlay */}
+							{/* Right Side - Image Carousel with Text Overlay */}
 							<div className="relative h-full min-h-[500px] flex lg:ml-0 px-8 md:px-10 lg:px-0">
 								<div className="relative w-full h-full overflow-hidden shadow-2xl flex">
-									<img
-										src="/images/header1.jpg"
-										alt="Legacy Planning"
-										className="w-full h-full object-cover"
-									/>
-									<div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-8">
+									{carouselImages.map((image, index) => (
+										<img
+											key={index}
+											src={image}
+											alt={`Legacy Planning ${index + 1}`}
+											className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
+												index === currentImageIndex
+													? "opacity-100"
+													: "opacity-0"
+											}`}
+										/>
+									))}
+									<div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-8 z-10">
 										<p className="text-white text-xl md:text-2xl font-normal leading-relaxed">
 											Let's help you create a legacy. Start the conversation
 											today and put your loved ones in good hands.
