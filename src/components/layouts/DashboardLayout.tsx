@@ -144,7 +144,7 @@ export function DashboardLayout() {
 				<div className="flex h-16 items-center justify-between px-7">
 					<div className="flex items-center space-x-20">
 						{/* Logo */}
-						<Link to="/app/dashboard" className="flex items-center">
+						<Link to="/" className="flex items-center">
 							<img
 								src="/logos/Original.svg"
 								alt="Legacy In Order"

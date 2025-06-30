@@ -42,11 +42,13 @@ export default function Footer({ showCTA = true }: FooterProps) {
 					<div className="grid grid-cols-1 md:grid-cols-2 gap-8">
 						{/* Column 1: Logo and Social Media */}
 						<div className="flex flex-col space-y-6">
-							<img
-								src="/logos/White.svg"
-								alt="LegacyInOrder Logo"
-								className="w-40 h-auto"
-							/>
+							<Link to="/" className="flex items-center">
+								<img
+									src="/logos/White.svg"
+									alt="LegacyInOrder Logo"
+									className="w-40 h-auto"
+								/>
+							</Link>
 							<div className="flex space-x-6">
 								<a href="#" className="text-white/80 hover:text-white">
 									<svg

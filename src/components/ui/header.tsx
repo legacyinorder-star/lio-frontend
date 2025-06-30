@@ -26,7 +26,7 @@ export function Header() {
 					<div className="flex">
 						<Link to="/" className="flex items-center">
 							<img
-								src="/logos/LIO_Logo_White.svg"
+								src="/logos/Original.svg"
 								alt="Legacy In Order"
 								className="h-10"
 							/>
