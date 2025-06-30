@@ -31,6 +31,7 @@ import { apiClient } from "@/utils/apiClient";
 import { useWill } from "@/context/WillContext";
 import { mapWillDataFromAPI } from "../../utils/dataTransform";
 import { useWillWizard } from "@/context/WillWizardContext";
+import { WillWizardSidebar } from "@/components/ui/will-wizard-sidebar";
 // import { SessionStatus } from "@/components/ui/session-status";
 
 export function DashboardLayout() {
@@ -424,9 +425,18 @@ export function DashboardLayout() {
 			)}
 
 			{/* Page Content */}
-			<main className="flex-1 p-6 overflow-auto">
-				<Outlet />
-			</main>
+			{isInWillWizard ? (
+				<div className="flex-1 flex overflow-hidden">
+					<WillWizardSidebar />
+					<main className="flex-1 p-6 overflow-auto">
+						<Outlet />
+					</main>
+				</div>
+			) : (
+				<main className="flex-1 p-6 overflow-auto">
+					<Outlet />
+				</main>
+			)}
 		</div>
 	);
 }
