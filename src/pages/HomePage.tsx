@@ -171,7 +171,7 @@ export default function HomePage() {
 				</section>
 
 				{/* No Will Section */}
-				<section className="w-full bg-white py-12">
+				<section className="w-full bg-white pt-12 pb-4">
 					<div className="w-full max-w-[2000px] mx-auto px-4 md:px-6 lg:px-8">
 						<h2 className="text-[3rem] md:text-4xl font-semibold text-center text-[#173C37] pt-4 mb-18">
 							What happens if you die without a will?
@@ -293,17 +293,17 @@ export default function HomePage() {
 				{/* Video Section */}
 				<section className="w-full bg-white py-12">
 					<div className="w-full px-4 md:px-6 lg:px-8">
-						<iframe
+						<video
 							className="w-full rounded-[1.5rem] shadow-lg mb-16"
 							style={{ aspectRatio: "16/9" }}
-							src="https://www.youtube.com/embed/oUsqwIS93Bg"
-							title="Legacy Planning Video"
-							frameBorder="0"
-							allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-							allowFullScreen
-						></iframe>
+							controls
+							preload="metadata"
+						>
+							<source src="/videos/video_1.mp4" type="video/mp4" />
+							Your browser does not support the video tag.
+						</video>
 
-						<div className="mt-36 text-center max-w-4xl mx-auto">
+						<div className="mt-30 text-center max-w-4xl mx-auto">
 							<h2 className="text-[1.5rem] md:text-4xl lg:text-5xl font-semibold text-black mb-6">
 								The good news?
 							</h2>
