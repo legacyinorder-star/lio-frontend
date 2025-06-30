@@ -1,29 +1,15 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
-import {
-	Scroll,
-	FileText,
-	Shield,
-	Download,
-	Trash2,
-	Edit,
-	CreditCard,
-} from "lucide-react";
+
 import { getUserDetails } from "@/utils/auth";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
-import { apiClient } from "@/utils/apiClient";
-import { type WillData } from "@/context/WillContext";
-import { mapWillDataFromAPI } from "@/utils/dataTransform";
-import { downloadWillPDF } from "@/utils/willDownload";
+import { useWill } from "@/context/WillContext";
 
 export default function DashboardPage() {
 	const navigate = useNavigate();
+	const { activeWill } = useWill();
 	const [userName, setUserName] = useState<string>("");
-	const [wills, setWills] = useState<WillData[]>([]);
-	const [isLoading, setIsLoading] = useState(true);
-	const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
 	useEffect(() => {
 		const userDetails = getUserDetails();
@@ -34,98 +20,29 @@ export default function DashboardPage() {
 
 		const name = userDetails.first_name || userDetails.email.split("@")[0];
 		setUserName(name);
-
-		// Fetch wills from API
-		const fetchWills = async () => {
-			try {
-				const { data, error } = await apiClient<unknown[]>("/wills");
-				if (error) {
-					console.error("Error fetching wills:", error);
-					toast.error("Failed to load wills. Please try again.");
-					return;
-				}
-
-				// Transform API response from snake_case to camelCase
-				const transformedWills = Array.isArray(data)
-					? data.map((willData) => mapWillDataFromAPI(willData))
-					: [];
-
-				setWills(transformedWills);
-			} catch (error) {
-				console.error("Error fetching wills:", error);
-				toast.error("Failed to load wills. Please try again.");
-			} finally {
-				setIsLoading(false);
-			}
-		};
-
-		fetchWills();
 	}, [navigate]);
-
-	const handleDeleteWill = async (willId: string) => {
-		try {
-			const { error } = await apiClient(`/wills/${willId}`, {
-				method: "DELETE",
-			});
-
-			if (error) {
-				console.error("Error deleting will:", error);
-				toast.error("Failed to delete will. Please try again.");
-				return;
-			}
-
-			// Update local state
-			setWills((prevWills) => prevWills.filter((will) => will.id !== willId));
-			toast.success("Will deleted successfully");
-		} catch (error) {
-			console.error("Error deleting will:", error);
-			toast.error("Failed to delete will. Please try again.");
-		}
-	};
-
-	const handleEditWill = (willId: string) => {
-		navigate(`/app/create-will?edit=${willId}`);
-	};
-
-	const handleDownloadPDF = async (willId: string) => {
-		await downloadWillPDF(willId);
-	};
-
-	const handlePaymentForWill = async (willId: string) => {
-		setIsProcessingPayment(true);
-		try {
-			// Navigate directly to Stripe Checkout with the existing will ID
-			const paymentUrl = `/app/payment/checkout?willId=${willId}&description=Will Creation Service`;
-			navigate(paymentUrl);
-		} catch (error) {
-			console.error("Error starting payment for will:", error);
-			toast.error("Failed to start payment process. Please try again.");
-		} finally {
-			setIsProcessingPayment(false);
-		}
-	};
 
 	const actions = [
 		{
 			title: "Create New Will",
-			description: "Start creating your last will and testament",
-			icon: <Scroll className="h-6 w-6" />,
+			description:
+				"Share personal guidance for your loved ones that complements your formal will.",
 			href: "/create-will",
-			color: "text-blue-500",
+			action: "Start your Will",
 		},
 		{
 			title: "Power of Attorney",
-			description: "Designate someone to act on your behalf",
-			icon: <Shield className="h-6 w-6" />,
+			description:
+				"Share personal guidance for your loved ones that complements your formal will.",
 			href: "/power-of-attorney",
-			color: "text-purple-500",
+			action: "Create a Power of Attorney",
 		},
 		{
 			title: "Letter of Wishes",
-			description: "Leave a message for your loved ones",
-			icon: <FileText className="h-6 w-6" />,
-			href: "/power-of-attorney",
-			color: "text-green-500",
+			description:
+				"Share personal guidance for your loved ones that complements your formal will.",
+			href: "/letter-of-wishes",
+			action: "Add a Letter of Wishes",
 		},
 	];
 
@@ -133,19 +50,58 @@ export default function DashboardPage() {
 		<div className="space-y-8">
 			<div
 				id="dashboard-header"
-				className="flex flex-col items-start justify-between p-8 rounded-lg"
+				className="flex flex-col items-start justify-between p-8 ps-14 rounded-lg"
 				style={{ backgroundColor: "#173C37" }}
 			>
-				<h1 className="text-3xl font-bold text-white">
-					Welcome back, {userName}!
+				<h1 className="text-[2rem] font-semibold text-white">
+					Welcome {userName}
 				</h1>
-				<p className="text-white/90 mt-2">
-					Here's an overview of your legal docs
+				<p className="text-white text-sm font-normal mt-2">
+					Let's get your legacy in order
 				</p>
+
+				<div
+					className="bg-white rounded-lg p-6 mt-6 w-full max-w-md"
+					style={{ boxShadow: "0px 2px 12px 0px rgba(0, 0, 0, 0.15)" }}
+				>
+					<h3 className="text-[1.25rem] font-semibold text-black mb-2">
+						Your Will
+					</h3>
+					<p className="text-black font-normal text-sm mb-4">
+						{!activeWill
+							? "Get started with your will"
+							: "Continue where you left off. It only takes a few minutes to get started."}
+					</p>
+					<Button
+						onClick={() => navigate("/app/create-will")}
+						className="bg-primary hover:bg-primary/90 text-white flex items-center justify-center"
+					>
+						{!activeWill ? (
+							<>
+								Start your Will
+								<svg
+									width="20"
+									height="8"
+									viewBox="0 0 20 8"
+									fill="none"
+									xmlns="http://www.w3.org/2000/svg"
+									className="ml-2 w-6 h-auto"
+								>
+									<path
+										d="M19.3536 4.45707C19.5488 4.26181 19.5488 3.94523 19.3536 3.74996L16.1716 0.567983C15.9763 0.372721 15.6597 0.372721 15.4645 0.567983C15.2692 0.763245 15.2692 1.07983 15.4645 1.27509L18.2929 4.10352L15.4645 6.93194C15.2692 7.12721 15.2692 7.44379 15.4645 7.63905C15.6597 7.83431 15.9763 7.83431 16.1716 7.63905L19.3536 4.45707ZM0 4.10352L-4.37114e-08 4.60352L19 4.60352L19 4.10352L19 3.60352L4.37114e-08 3.60352L0 4.10352Z"
+										fill="currentColor"
+									/>
+								</svg>
+							</>
+						) : (
+							"Continue Will"
+						)}
+					</Button>
+				</div>
 			</div>
 
 			<div>
-				<h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
+				<h2 className="font-semibold mt-6 mb-6">Quick Links</h2>
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 					{actions.map((action) => (
 						<Link
@@ -153,17 +109,36 @@ export default function DashboardPage() {
 							to={action.href || "#"}
 							className="block transition-transform hover:scale-105"
 						>
-							<Card className="p-4 h-full">
-								<div className="flex items-start space-x-4">
-									<div className={`${action.color} shrink-0`}>
-										{action.icon}
-									</div>
-									<div>
-										<h3 className="font-medium">{action.title}</h3>
-										<p className="text-sm text-muted-foreground">
-											{action.description}
-										</p>
-									</div>
+							<Card
+								className="p-8 h-full rounded-lg bg-white"
+								style={{ boxShadow: "0px 2px 12px 0px rgba(0, 0, 0, 0.10)" }}
+							>
+								<div>
+									<h3 className="text-[1.25rem] font-semibold text-black mb-2">
+										{action.title}
+									</h3>
+									<p className="text-sm font-[400] text-muted-foreground mb-6">
+										{action.description}
+									</p>
+									<Link
+										to={action.href || "#"}
+										className="flex items-center text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
+									>
+										{action.action}
+										<svg
+											width="20"
+											height="8"
+											viewBox="0 0 20 8"
+											fill="none"
+											xmlns="http://www.w3.org/2000/svg"
+											className="ml-2 w-6 h-auto"
+										>
+											<path
+												d="M19.3536 4.45707C19.5488 4.26181 19.5488 3.94523 19.3536 3.74996L16.1716 0.567983C15.9763 0.372721 15.6597 0.372721 15.4645 0.567983C15.2692 0.763245 15.2692 1.07983 15.4645 1.27509L18.2929 4.10352L15.4645 6.93194C15.2692 7.12721 15.2692 7.44379 15.4645 7.63905C15.6597 7.83431 15.9763 7.83431 16.1716 7.63905L19.3536 4.45707ZM0 4.10352L-4.37114e-08 4.60352L19 4.60352L19 4.10352L19 3.60352L4.37114e-08 3.60352L0 4.10352Z"
+												fill="currentColor"
+											/>
+										</svg>
+									</Link>
 								</div>
 							</Card>
 						</Link>
@@ -171,130 +146,67 @@ export default function DashboardPage() {
 				</div>
 			</div>
 
-			<div>
-				<h2 className="text-xl font-semibold mb-4">Recent Documents</h2>
-				<div className="grid grid-cols-1 gap-4">
-					{isLoading ? (
-						<Card className="p-4">
-							<div className="flex items-center justify-center py-8">
-								<div className="h-8 w-8 animate-spin rounded-full border-t-2 border-b-2 border-primary"></div>
-								<p className="text-muted-foreground ml-2">Loading wills...</p>
-							</div>
-						</Card>
-					) : wills.length === 0 ? (
-						<Card className="p-4">
-							<p className="text-muted-foreground text-center py-8">
-								No documents created yet. Start by creating a will or trust.
+			<div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-28">
+				{/* Left Card - Black Background */}
+				<div
+					className="rounded-[0.5rem] p-8 text-white"
+					style={{ backgroundColor: "#000000" }}
+				>
+					<h3 className="text-[1.5rem] text-white font-semibold mb-2">
+						Try out the Legacy Vault
+					</h3>
+					<p className="text-white text-sm mb-16 font-normal leading-relaxed">
+						The Legacy Vault is a new way for you to manage all you important
+						documents, all in one place.
+					</p>
+					<div
+						onClick={() => navigate("/app/digital-estate")}
+						className="flex items-center text-white cursor-pointer hover:text-gray-300 transition-colors"
+					>
+						<span className="text-sm font-semibold">Get Started</span>
+						<svg
+							width="20"
+							height="8"
+							viewBox="0 0 20 8"
+							fill="none"
+							xmlns="http://www.w3.org/2000/svg"
+							className="ml-2 w-6 h-auto"
+						>
+							<path
+								d="M19.3536 4.45707C19.5488 4.26181 19.5488 3.94523 19.3536 3.74996L16.1716 0.567983C15.9763 0.372721 15.6597 0.372721 15.4645 0.567983C15.2692 0.763245 15.2692 1.07983 15.4645 1.27509L18.2929 4.10352L15.4645 6.93194C15.2692 7.12721 15.2692 7.44379 15.4645 7.63905C15.6597 7.83431 15.9763 7.83431 16.1716 7.63905L19.3536 4.45707ZM0 4.10352L-4.37114e-08 4.60352L19 4.60352L19 4.10352L19 3.60352L4.37114e-08 3.60352L0 4.10352Z"
+								fill="currentColor"
+							/>
+						</svg>
+					</div>
+				</div>
+
+				{/* Right Card - Light Gray Background */}
+				<div
+					className="rounded-[0.5rem] p-8"
+					style={{ backgroundColor: "#FAFAFA" }}
+				>
+					<div className="flex items-center mb-6">
+						<img
+							src="/svgs/green_shield.svg"
+							alt="Security shield"
+							className="h-12 w-auto mr-4"
+						/>
+						<div>
+							<h4 className="font-semibold text-[1.25rem] text-black">
+								100% Secure
+							</h4>
+							<p
+								className="text-[0.875rem] font-normal"
+								style={{ color: "#545454" }}
+							>
+								Your data is protected with 256-bit encryption
 							</p>
-						</Card>
-					) : (
-						wills.map((will) => (
-							<Card key={will.id} className="p-4">
-								<div className="flex justify-between items-start">
-									<div className="space-y-2">
-										<h3 className="font-medium">
-											Will for {will.owner?.firstName || "Unknown"}{" "}
-											{will.owner?.lastName || ""}
-										</h3>
-										<p className="text-sm text-muted-foreground">
-											Created on {new Date(will.createdAt).toLocaleDateString()}
-											{will.lastUpdatedAt !== will.createdAt &&
-												` (Updated on ${new Date(
-													will.lastUpdatedAt
-												).toLocaleDateString()})`}
-										</p>
-										<div className="text-sm">
-											<p>
-												<span className="font-medium">Status:</span>{" "}
-												<span
-													className={`capitalize ${
-														will.status === "draft"
-															? "text-yellow-600"
-															: will.status === "completed"
-															? "text-green-600"
-															: "text-gray-600"
-													}`}
-												>
-													{will.status}
-												</span>
-											</p>
-											{(will.status === "draft" ||
-												will.status === "completed") && (
-												<>
-													<p>
-														<span className="font-medium">Payment Status:</span>{" "}
-														<span
-															className={`capitalize ${
-																will.paymentStatus === "succeeded"
-																	? "text-green-600"
-																	: will.paymentStatus === "pending"
-																	? "text-yellow-600"
-																	: "text-red-600"
-															}`}
-														>
-															{will.paymentStatus || "unpaid"}
-														</span>
-													</p>
-													{will.paymentDate && (
-														<p>
-															<span className="font-medium">Payment Date:</span>{" "}
-															{new Date(will.paymentDate).toLocaleDateString()}
-														</p>
-													)}
-												</>
-											)}
-										</div>
-									</div>
-									<div className="flex space-x-2">
-										{will.status !== "completed" && (
-											<Button
-												variant="outline"
-												size="sm"
-												onClick={() => handleEditWill(will.id)}
-												className="hover:bg-blue-100 text-blue-600 cursor-pointer"
-											>
-												<Edit className="h-4 w-4 mr-2" />
-												Continue
-											</Button>
-										)}
-										{will.status === "draft" && (
-											<Button
-												variant="outline"
-												size="sm"
-												onClick={() => handlePaymentForWill(will.id)}
-												className="hover:bg-green-100 text-green-600 cursor-pointer"
-												disabled={isProcessingPayment}
-											>
-												<CreditCard className="h-4 w-4 mr-2" />
-												Pay
-											</Button>
-										)}
-										{will.status === "completed" && (
-											<Button
-												variant="outline"
-												size="sm"
-												onClick={() => handleDownloadPDF(will.id)}
-												className="hover:bg-light-green/10 cursor-pointer"
-												disabled={!will.owner}
-											>
-												<Download className="h-4 w-4 mr-2" />
-												Download
-											</Button>
-										)}
-										<Button
-											variant="outline"
-											size="sm"
-											onClick={() => handleDeleteWill(will.id)}
-											className="hover:bg-red-100 text-red-600 cursor-pointer"
-										>
-											<Trash2 className="h-4 w-4 mr-2" />
-											Delete
-										</Button>
-									</div>
-								</div>
-							</Card>
-						))
-					)}
+						</div>
+					</div>
+
+					<p className="text-sm font-semibold text-primary mt-20">
+						Learn how we keep you safe
+					</p>
 				</div>
 			</div>
 		</div>

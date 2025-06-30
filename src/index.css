@@ -15,7 +15,7 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --legacy-black: #212121;
+  --legacy-black: #000000;
   --legacy-white: #FFFFFF;
   --legacy-dark-gray: #818181;
   --legacy-light-gray: #F2F2EF;
@@ -78,7 +78,7 @@
 }
 
 .dark {
-  --legacy-black: #212121;
+  --legacy-black: #000000;
   --legacy-white: #FFFFFF;
   --legacy-dark-gray: #818181;
   --legacy-light-gray: #F2F2EF;

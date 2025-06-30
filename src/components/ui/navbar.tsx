@@ -62,7 +62,7 @@ export default function Navbar() {
 						</Button>
 					</a>
 					{user ? (
-						<Link to="/dashboard">
+						<Link to="/app/dashboard">
 							<Button
 								variant="default"
 								className="text-white bg-[#173C37] rounded border border-[#173C37] font-semibold hover:text-[#173C37]"
@@ -124,7 +124,7 @@ export default function Navbar() {
 						</Button>
 					</a>
 					{user ? (
-						<Link to="/dashboard" onClick={() => setMobileOpen(false)}>
+						<Link to="/app/dashboard" onClick={() => setMobileOpen(false)}>
 							<Button
 								variant="default"
 								className="w-full mt-2 text-white bg-[#173C37] rounded border border-[#173C37] font-semibold hover:text-[#173C37]"
