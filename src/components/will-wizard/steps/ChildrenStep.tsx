@@ -332,7 +332,9 @@ export default function ChildrenStep({
 
 	return (
 		<div className="space-y-4">
-			<div className="text-2xl font-semibold">Do you have children?</div>
+			<div className="text-[2rem] font-medium text-black">
+				Do you have children?
+			</div>
 			<div className="text-muted-foreground">
 				This information helps us create the appropriate provisions in your
 				will, especially regarding guardianship for minor children.

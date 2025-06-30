@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { WillFormData, QuestionType } from "./types/will.types";
 import type { ExecutorData } from "./steps/ExecutorStep";
 import WillGuard from "./WillGuard";
@@ -436,32 +435,13 @@ export default function WillWizard() {
 		}
 	};
 
-	// Calculate progress
-	const totalQuestions = 12; // Update this if you add/remove questions
-	const questionOrder: QuestionType[] = [
-		"name",
-		"address",
-		"hasSpouse",
-		"hasChildren",
-		"guardians",
-		"hasAssets",
-		"gifts",
-		"residuary",
-		"executors",
-		"witnesses",
-		"funeralInstructions",
-		"review",
-	];
-	const progress = questionOrder.indexOf(currentQuestion) + 1;
-	const progressPercent = (progress / totalQuestions) * 100;
-
 	// Render different content based on current question
 	const renderQuestion = () => {
 		// Show loading state if relationships are not loaded for spouse step
 		if (currentQuestion === "hasSpouse" && relationshipsLoading) {
 			return (
 				<div className="space-y-4">
-					<div className="text-2xl font-semibold">
+					<div className="text-[2rem] font-medium text-black">
 						Are you married or in a legally recognized civil relationship?
 					</div>
 					<div className="text-muted-foreground">
@@ -481,7 +461,7 @@ export default function WillWizard() {
 		if (currentQuestion === "hasSpouse" && relationshipsError) {
 			return (
 				<div className="space-y-4">
-					<div className="text-2xl font-semibold text-red-600">
+					<div className="text-[2rem] font-medium text-red-600">
 						Error Loading Relationships
 					</div>
 					<div className="text-muted-foreground">
@@ -623,22 +603,9 @@ export default function WillWizard() {
 	return (
 		<WillGuard currentStep={currentQuestion}>
 			<div className="container mx-auto py-8">
-				<Card className="max-w-3xl mx-auto">
-					<CardHeader>
-						<CardTitle>Create Your Will</CardTitle>
-						{/* Progress bar */}
-						<div className="w-full bg-muted h-2 rounded-full mt-4">
-							<div
-								className="bg-primary h-2 rounded-full transition-all duration-500 ease-in-out"
-								style={{ width: `${progressPercent}%` }}
-							/>
-						</div>
-						<div className="text-xs text-muted-foreground mt-1">
-							Question {progress} of {totalQuestions}
-						</div>
-					</CardHeader>
-					<CardContent className="pt-6">{renderQuestion()}</CardContent>
-				</Card>
+				<div className="max-w-3xl mx-auto">
+					<div className="pt-6">{renderQuestion()}</div>
+				</div>
 			</div>
 		</WillGuard>
 	);

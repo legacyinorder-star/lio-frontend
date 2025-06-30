@@ -249,7 +249,9 @@ export default function NameStep({
 			key={`name-form-${initialValues.firstName}-${initialValues.lastName}`}
 		>
 			<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-				<div className="text-2xl font-semibold">What is your full name?</div>
+				<div className="text-[2rem] font-medium text-black">
+					What is your full name?
+				</div>
 				<div className="text-muted-foreground">
 					We'll use this as the legal name in your will.
 				</div>

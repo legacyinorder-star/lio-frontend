@@ -820,7 +820,7 @@ export default function ExecutorStep({
 
 	return (
 		<div className="space-y-4">
-			<div className="text-2xl font-semibold">
+			<div className="text-[2rem] font-medium text-black">
 				Appoint Executors for Your Estate
 			</div>
 			<div className="text-muted-foreground">

@@ -649,7 +649,9 @@ export default function GiftsStep({ onNext, onBack }: GiftsStepProps) {
 
 	return (
 		<div className="space-y-4">
-			<div className="text-2xl font-semibold">Specify any one-off gifts</div>
+			<div className="text-[2rem] font-medium text-black">
+				Specify any one-off gifts
+			</div>
 			<div className="text-muted-foreground">
 				Add any specific gifts you'd like to leave to particular individuals.
 				This could include cash gifts, personal items, or other specific

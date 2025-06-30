@@ -792,7 +792,9 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 		if (isLoading || !reviewData) {
 			return (
 				<div className="space-y-6">
-					<div className="text-2xl font-semibold">Review Your Will</div>
+					<div className="text-[2rem] font-medium text-black">
+						Review Your Will
+					</div>
 					<LoadingSpinner
 						message="Loading will data..."
 						className="min-h-[400px]"

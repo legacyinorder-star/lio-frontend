@@ -412,7 +412,9 @@ export default function GuardiansStep({
 
 	return (
 		<div className="space-y-4">
-			<div className="text-2xl font-semibold">Guardians for Your Children</div>
+			<div className="text-[2rem] font-medium text-black">
+				Guardians for Your Children
+			</div>
 			<div className="text-muted-foreground">
 				Since you have children who require guardians, please specify who you
 				would like to appoint as guardians in your will.

@@ -157,7 +157,7 @@ export default function SpouseStep({
 	if (relationshipsLoading || isLoadingOwnerData) {
 		return (
 			<div className="space-y-4">
-				<div className="text-2xl font-semibold">
+				<div className="text-[2rem] font-medium text-black">
 					Are you married or in a legally recognized civil relationship?
 				</div>
 				<div className="text-muted-foreground">
@@ -172,7 +172,7 @@ export default function SpouseStep({
 
 	return (
 		<div className="space-y-4">
-			<div className="text-2xl font-semibold">
+			<div className="text-[2rem] font-medium text-black">
 				Are you married or in a legally recognized civil relationship?
 			</div>
 			<div className="text-muted-foreground">

@@ -189,7 +189,7 @@ export default function AssetsStep({
 
 	return (
 		<div className="space-y-4">
-			<div className="text-2xl font-semibold">
+			<div className="text-[2rem] font-medium text-black">
 				Share your assets among your loved ones
 			</div>
 			<div className="text-muted-foreground">

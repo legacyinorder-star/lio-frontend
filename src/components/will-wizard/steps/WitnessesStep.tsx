@@ -410,7 +410,9 @@ export default function WitnessesStep({
 
 	return (
 		<div className="space-y-4">
-			<div className="text-2xl font-semibold">Add Witnesses (Optional)</div>
+			<div className="text-[2rem] font-medium text-black">
+				Add Witnesses (Optional)
+			</div>
 			<div className="text-muted-foreground space-y-2">
 				<p>
 					Your will needs to be signed by two witnesses who are not
