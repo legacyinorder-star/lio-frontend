@@ -13,6 +13,7 @@ import { apiClient } from "@/utils/apiClient";
 import { useRelationships } from "@/hooks/useRelationships";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { useWillWizard } from "@/context/WillWizardContext";
 
 // Import step components
 import NameStep from "./steps/NameStep";
@@ -43,6 +44,7 @@ export default function WillWizard() {
 	// Track the current question being shown
 	const [currentQuestion, setCurrentQuestion] = useState<QuestionType>("name");
 	const { activeWill, setActiveWill } = useWill();
+	const { setWillWizardState } = useWillWizard();
 	const {
 		relationships,
 		isLoading: relationshipsLoading,
@@ -186,6 +188,16 @@ export default function WillWizard() {
 		formData.firstName,
 		formData.lastName,
 	]);
+
+	// Set will wizard state when component mounts and when step changes
+	useEffect(() => {
+		setWillWizardState(true, currentQuestion);
+
+		// Cleanup function to set wizard state to false when component unmounts
+		return () => {
+			setWillWizardState(false);
+		};
+	}, [currentQuestion, setWillWizardState]);
 
 	// Debug: Log relationships loading state
 	useEffect(() => {

@@ -30,6 +30,7 @@ import { toast } from "sonner";
 import { apiClient } from "@/utils/apiClient";
 import { useWill } from "@/context/WillContext";
 import { mapWillDataFromAPI } from "../../utils/dataTransform";
+import { useWillWizard } from "@/context/WillWizardContext";
 // import { SessionStatus } from "@/components/ui/session-status";
 
 export function DashboardLayout() {
@@ -39,6 +40,7 @@ export function DashboardLayout() {
 	const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
 	const [isLoadingWill, setIsLoadingWill] = useState(false);
 	const { activeWill, setActiveWill } = useWill();
+	const { isInWillWizard, currentStep, getStepInfo } = useWillWizard();
 
 	useEffect(() => {
 		// Only check auth once loading is complete
@@ -407,6 +409,19 @@ export function DashboardLayout() {
 
 			{/* HR Separator */}
 			<hr className="border-gray-200" />
+
+			{/* Will Wizard Step Indicator */}
+			{isInWillWizard && currentStep && (
+				<div
+					className="w-full mt-[0.15rem] py-6 px-4 text-left text-sm font-medium text-[#173C37]"
+					style={{ backgroundColor: "#DFF2EB" }}
+				>
+					{(() => {
+						const stepInfo = getStepInfo(currentStep);
+						return `Section ${stepInfo.number} of 12: ${stepInfo.name}`;
+					})()}
+				</div>
+			)}
 
 			{/* Page Content */}
 			<main className="flex-1 p-6 overflow-auto">
