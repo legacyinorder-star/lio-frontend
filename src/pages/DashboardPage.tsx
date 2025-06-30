@@ -5,11 +5,74 @@ import { getUserDetails } from "@/utils/auth";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useWill } from "@/context/WillContext";
+import { type WillData } from "@/context/WillContext";
+import { toast } from "sonner";
+import { apiClient } from "@/utils/apiClient";
+import { mapWillDataFromAPI } from "@/utils/dataTransform";
+import { downloadWillPDF } from "@/utils/willDownload";
+import { Edit, CreditCard, Download, Trash2 } from "lucide-react";
 
 export default function DashboardPage() {
 	const navigate = useNavigate();
-	const { activeWill } = useWill();
+	const { activeWill, setActiveWill } = useWill();
 	const [userName, setUserName] = useState<string>("");
+	const [wills, setWills] = useState<WillData[]>([]);
+	const [isLoading, setIsLoading] = useState(true);
+	const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+
+	// Utility function to convert text to title case
+	const toTitleCase = (text: string) => {
+		return text
+			.split(" ")
+			.map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+			.join(" ");
+	};
+
+	// Handler functions
+	const handleEditWill = (willId: string) => {
+		const will = wills.find((w) => w.id === willId);
+		if (will) {
+			setActiveWill(will);
+			navigate("/app/create-will");
+		}
+	};
+
+	const handlePaymentForWill = (willId: string) => {
+		setIsProcessingPayment(true);
+		navigate(`/app/payment?willId=${willId}`);
+	};
+
+	const handleDownloadPDF = async (willId: string) => {
+		try {
+			await downloadWillPDF(willId);
+			toast.success("Will PDF downloaded successfully");
+		} catch (error) {
+			console.error("Error downloading PDF:", error);
+			toast.error("Failed to download PDF. Please try again.");
+		}
+	};
+
+	const handleDeleteWill = async (willId: string) => {
+		if (!confirm("Are you sure you want to delete this will?")) return;
+
+		try {
+			const { error } = await apiClient(`/wills/${willId}`, {
+				method: "DELETE",
+			});
+
+			if (error) {
+				console.error("Error deleting will:", error);
+				toast.error("Failed to delete will. Please try again.");
+				return;
+			}
+
+			setWills((prev) => prev.filter((w) => w.id !== willId));
+			toast.success("Will deleted successfully");
+		} catch (error) {
+			console.error("Error deleting will:", error);
+			toast.error("Failed to delete will. Please try again.");
+		}
+	};
 
 	useEffect(() => {
 		const userDetails = getUserDetails();
@@ -20,15 +83,42 @@ export default function DashboardPage() {
 
 		const name = userDetails.first_name || userDetails.email.split("@")[0];
 		setUserName(name);
+
+		// Fetch wills from API
+		const fetchWills = async () => {
+			try {
+				const { data, error } = await apiClient<unknown[]>("/wills");
+				if (error) {
+					console.error("Error fetching wills:", error);
+					toast.error("Failed to load wills. Please try again.");
+					return;
+				}
+
+				// Transform API response from snake_case to camelCase
+				const transformedWills = Array.isArray(data)
+					? data.map((willData) => mapWillDataFromAPI(willData))
+					: [];
+
+				setWills(transformedWills);
+			} catch (error) {
+				console.error("Error fetching wills:", error);
+				toast.error("Failed to load wills. Please try again.");
+			} finally {
+				setIsLoading(false);
+			}
+		};
+
+		fetchWills();
 	}, [navigate]);
 
 	const actions = [
 		{
-			title: "Create New Will",
-			description:
-				"Share personal guidance for your loved ones that complements your formal will.",
+			title: activeWill ? "Continue Your Will" : "Create New Will",
+			description: activeWill
+				? "Continue working on your will where you left off. Complete your estate planning today."
+				: "Share personal guidance for your loved ones that complements your formal will.",
 			href: "/create-will",
-			action: "Start your Will",
+			action: activeWill ? "Continue Will" : "Start your Will",
 		},
 		{
 			title: "Power of Attorney",
@@ -144,6 +234,186 @@ export default function DashboardPage() {
 						</Link>
 					))}
 				</div>
+			</div>
+
+			{/* Recent Documents Section */}
+			<div className="mt-16">
+				<h2 className="font-semibold mb-6">Recent Documents</h2>
+				{isLoading ? (
+					<Card
+						className="p-6 h-full rounded-lg bg-white"
+						style={{ boxShadow: "0px 2px 12px 0px rgba(0, 0, 0, 0.10)" }}
+					>
+						<div className="flex items-center justify-center py-8">
+							<div className="h-8 w-8 animate-spin rounded-full border-t-2 border-b-2 border-primary"></div>
+							<p className="text-muted-foreground ml-2">Loading wills...</p>
+						</div>
+					</Card>
+				) : wills.length === 0 ? (
+					<div className="text-center py-12 bg-gray-50 rounded-lg">
+						<div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+							<svg
+								width="24"
+								height="24"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="2"
+								strokeLinecap="round"
+								strokeLinejoin="round"
+								className="text-gray-400"
+							>
+								<path d="M6 2h12a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" />
+								<path d="M6 6h12" />
+								<path d="M6 10h12" />
+								<path d="M6 14h12" />
+								<path d="M6 18h12" />
+							</svg>
+						</div>
+						<h3 className="text-lg font-semibold text-gray-900 mb-2">
+							No documents yet
+						</h3>
+						<p className="text-gray-600 mb-4">
+							Get started by creating your first will
+						</p>
+						<Button
+							onClick={() => navigate("/app/create-will")}
+							className="bg-primary hover:bg-primary/90 text-white"
+						>
+							Create Your First Will
+						</Button>
+					</div>
+				) : (
+					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+						{wills.map((will) => (
+							<Card
+								key={will.id}
+								className="p-6 h-full rounded-lg bg-white"
+								style={{ boxShadow: "0px 2px 12px 0px rgba(0, 0, 0, 0.10)" }}
+							>
+								<div className="flex items-start justify-between mb-4">
+									<div className="flex items-center">
+										<div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center mr-3">
+											<svg
+												width="20"
+												height="20"
+												viewBox="0 0 24 24"
+												fill="none"
+												stroke="currentColor"
+												strokeWidth="2"
+												strokeLinecap="round"
+												strokeLinejoin="round"
+												className="text-primary"
+											>
+												<path d="M6 2h12a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" />
+												<path d="M6 6h12" />
+												<path d="M6 10h12" />
+												<path d="M6 14h12" />
+												<path d="M6 18h12" />
+											</svg>
+										</div>
+										<div>
+											<h3 className="text-[1rem] font-semibold text-black">
+												Will for {will.owner?.firstName || "Unknown"}{" "}
+												{will.owner?.lastName || ""}
+											</h3>
+											<p className="text-xs text-muted-foreground">
+												Created: {new Date(will.createdAt).toLocaleDateString()}
+												{will.lastUpdatedAt !== will.createdAt &&
+													` • Updated: ${new Date(
+														will.lastUpdatedAt
+													).toLocaleDateString()}`}
+											</p>
+										</div>
+									</div>
+									<span
+										className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ring-1 ring-inset ${
+											will.status === "draft"
+												? "bg-yellow-50 text-yellow-700 ring-yellow-600/20"
+												: will.status === "completed"
+												? "bg-green-50 text-green-700 ring-green-600/20"
+												: "bg-gray-50 text-gray-700 ring-gray-600/20"
+										}`}
+									>
+										{toTitleCase(will.status)}
+									</span>
+								</div>
+
+								<div className="text-sm mb-4 space-y-1">
+									{will.paymentStatus && (
+										<p>
+											<span className="font-medium text-muted-foreground">
+												Payment:
+											</span>{" "}
+											<span
+												className={`${
+													will.paymentStatus === "paid"
+														? "text-green-600"
+														: will.paymentStatus === "pending"
+														? "text-yellow-600"
+														: "text-red-600"
+												}`}
+											>
+												{toTitleCase(will.paymentStatus || "unpaid")}
+											</span>
+											{will.paymentDate && (
+												<span className="text-muted-foreground ml-2">
+													on {new Date(will.paymentDate).toLocaleDateString()}
+												</span>
+											)}
+										</p>
+									)}
+								</div>
+
+								<div className="flex gap-2 mt-auto">
+									{will.status !== "completed" && (
+										<Button
+											variant="outline"
+											size="sm"
+											onClick={() => handleEditWill(will.id)}
+											className="flex-1 hover:bg-blue-50 text-blue-600"
+										>
+											<Edit className="h-4 w-4 mr-2" />
+											Continue
+										</Button>
+									)}
+									{will.status === "draft" && (
+										<Button
+											variant="outline"
+											size="sm"
+											onClick={() => handlePaymentForWill(will.id)}
+											className="flex-1 hover:bg-green-50 text-green-600"
+											disabled={isProcessingPayment}
+										>
+											<CreditCard className="h-4 w-4 mr-2" />
+											Pay
+										</Button>
+									)}
+									{will.status === "completed" && (
+										<Button
+											variant="outline"
+											size="sm"
+											onClick={() => handleDownloadPDF(will.id)}
+											className="flex-1 hover:bg-green-50 text-green-600"
+											disabled={!will.owner}
+										>
+											<Download className="h-4 w-4 mr-2" />
+											Download
+										</Button>
+									)}
+									<Button
+										variant="outline"
+										size="sm"
+										onClick={() => handleDeleteWill(will.id)}
+										className="hover:bg-red-50 text-red-600"
+									>
+										<Trash2 className="h-4 w-4" />
+									</Button>
+								</div>
+							</Card>
+						))}
+					</div>
+				)}
 			</div>
 
 			<div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-28">
