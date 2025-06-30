@@ -185,9 +185,7 @@ export default function SpouseStep({
 						<Button
 							type="button"
 							variant={form.watch("hasSpouse") ? "default" : "outline"}
-							className={
-								form.watch("hasSpouse") ? "bg-light-green text-black" : ""
-							}
+							className={form.watch("hasSpouse") ? "bg-primary text-white" : ""}
 							onClick={() => {
 								form.setValue("hasSpouse", true);
 								if (!localSpouseData) setSpouseDialogOpen(true);
@@ -200,7 +198,7 @@ export default function SpouseStep({
 							type="button"
 							variant={!form.watch("hasSpouse") ? "default" : "outline"}
 							className={
-								!form.watch("hasSpouse") ? "bg-light-green text-black" : ""
+								!form.watch("hasSpouse") ? "bg-primary text-white" : ""
 							}
 							onClick={() => {
 								if (spouseData) {
@@ -262,7 +260,7 @@ export default function SpouseStep({
 						</Button>
 						<Button
 							type="submit"
-							className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
+							className="cursor-pointer bg-primary hover:bg-primary/90 text-white"
 							disabled={isSubmitting}
 						>
 							{isSubmitting ? (

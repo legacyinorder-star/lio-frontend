@@ -57,7 +57,7 @@ export default function WillSuccessPage() {
 						<Button
 							onClick={handleDownloadWill}
 							disabled={isDownloading}
-							className="w-full bg-light-green hover:bg-light-green/90 text-black"
+							className="w-full bg-primary hover:bg-primary/90 text-white"
 						>
 							<Download className="mr-2 h-4 w-4" />
 							{isDownloading ? "Generating PDF..." : "Download Your Will"}

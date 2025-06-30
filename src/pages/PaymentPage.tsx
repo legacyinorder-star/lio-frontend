@@ -327,7 +327,7 @@ export default function PaymentPage() {
 						<div className="flex gap-3">
 							<Button
 								onClick={handleContinueToWill}
-								className="flex-1 bg-light-green hover:bg-light-green/90 text-black"
+								className="flex-1 bg-primary hover:bg-primary/90 text-white"
 							>
 								Continue
 							</Button>

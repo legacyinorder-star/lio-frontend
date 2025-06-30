@@ -117,7 +117,7 @@ export function NewBeneficiaryDialog({
 							onClick={() => setBeneficiaryType("individual")}
 							className={`border-b-2 transition-colors cursor-pointer ${
 								beneficiaryType === "individual"
-									? "bg-light-green text-black border-light-green"
+									? "bg-primary text-white border-primary"
 									: "border-transparent hover:border-primary/50"
 							}`}
 						>
@@ -128,7 +128,7 @@ export function NewBeneficiaryDialog({
 							onClick={() => setBeneficiaryType("charity")}
 							className={`border-b-2 transition-colors cursor-pointer ${
 								beneficiaryType === "charity"
-									? "bg-light-green text-black border-light-green"
+									? "bg-primary text-white border-primary"
 									: "border-transparent hover:border-primary/50"
 							}`}
 						>
@@ -235,7 +235,7 @@ export function NewBeneficiaryDialog({
 									!newBeneficiaryForm.relationshipId)) ||
 							(beneficiaryType === "charity" && !newBeneficiaryForm.charityName)
 						}
-						className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
+						className="cursor-pointer bg-primary hover:bg-primary/90 text-white"
 					>
 						Add Beneficiary
 					</Button>

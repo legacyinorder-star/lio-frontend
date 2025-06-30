@@ -1017,7 +1017,7 @@ export default function ExecutorStep({
 										}
 										className={`cursor-pointer ${
 											executorForm.type === "individual"
-												? "bg-light-green text-black"
+												? "bg-primary text-white"
 												: ""
 										}`}
 									>
@@ -1035,7 +1035,7 @@ export default function ExecutorStep({
 										}
 										className={`cursor-pointer ${
 											executorForm.type === "corporate"
-												? "bg-light-green text-black"
+												? "bg-primary text-white"
 												: ""
 										}`}
 									>
@@ -1131,7 +1131,7 @@ export default function ExecutorStep({
 									<Button
 										onClick={handleSaveExecutor}
 										disabled={!isFormValid() || isSubmitting}
-										className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
+										className="cursor-pointer bg-primary hover:bg-primary/90 text-white"
 									>
 										{isSubmitting ? "Saving..." : "Save"}
 									</Button>
@@ -1300,7 +1300,7 @@ export default function ExecutorStep({
 							executors.filter((executor) => executor.isPrimary).length > 1 ||
 							executors.filter((executor) => executor.isPrimary).length === 0
 						}
-						className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
+						className="cursor-pointer bg-primary hover:bg-primary/90 text-white"
 					>
 						Next <ArrowRight className="ml-2 h-4 w-4" />
 					</Button>

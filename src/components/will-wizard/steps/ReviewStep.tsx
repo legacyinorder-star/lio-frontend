@@ -1339,7 +1339,7 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 					</Button>
 					<Button
 						type="button"
-						className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black px-8 py-3 font-medium"
+						className="cursor-pointer bg-primary hover:bg-primary/90 text-white px-8 py-3 font-medium"
 						onClick={handleProceedToPayment}
 					>
 						Proceed to Payment

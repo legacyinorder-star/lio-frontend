@@ -518,7 +518,7 @@ export default function GuardiansStep({
 									</Button>
 									<Button
 										onClick={handleSaveGuardian}
-										className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
+										className="cursor-pointer bg-primary hover:bg-primary/90 text-white"
 										disabled={isSubmitting}
 									>
 										{isSubmitting ? (
@@ -640,7 +640,7 @@ export default function GuardiansStep({
 					<Button
 						onClick={onNext}
 						disabled={!areGuardiansValid()}
-						className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
+						className="cursor-pointer bg-primary hover:bg-primary/90 text-white"
 					>
 						Next <ArrowRight className="ml-2 h-4 w-4" />
 					</Button>

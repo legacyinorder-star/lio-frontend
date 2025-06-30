@@ -346,7 +346,7 @@ export function AssetDialog({
 								onClick={() => handleDistributionTypeChange("equal")}
 								className={`cursor-pointer ${
 									assetForm.distributionType === "equal"
-										? "bg-light-green text-black"
+										? "bg-primary text-white"
 										: ""
 								}`}
 							>
@@ -361,7 +361,7 @@ export function AssetDialog({
 								onClick={() => handleDistributionTypeChange("percentage")}
 								className={`cursor-pointer ${
 									assetForm.distributionType === "percentage"
-										? "bg-light-green text-black"
+										? "bg-primary text-white"
 										: ""
 								}`}
 							>
@@ -582,7 +582,7 @@ export function AssetDialog({
 									) - 100
 								) > 0.01)
 						}
-						className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
+						className="cursor-pointer bg-primary hover:bg-primary/90 text-white"
 					>
 						{editingAsset ? "Save Changes" : "Add Asset"}
 					</Button>

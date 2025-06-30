@@ -71,7 +71,7 @@ const AssetTypePill = ({
 				whitespace-nowrap overflow-hidden
 				${
 					selected
-						? "bg-light-green text-black border-light-green"
+						? "bg-primary text-white border-primary"
 						: "bg-background hover:bg-muted border-input"
 				}
 				${onClick ? "cursor-pointer" : ""}

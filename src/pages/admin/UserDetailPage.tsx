@@ -173,7 +173,7 @@ export default function UserDetailPage() {
 						className={`gap-2 cursor-pointer ${
 							user.is_active
 								? "text-[#FF0000] border-[#DADADA] hover:bg-red-50"
-								: "bg-light-green text-black border-[#DADADA] hover:bg-light-green/90"
+								: "bg-primary text-white border-[#DADADA] hover:bg-primary/90"
 						}`}
 						onClick={toggleUserStatus}
 					>

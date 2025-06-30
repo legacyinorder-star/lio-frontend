@@ -181,7 +181,7 @@ const GiftTypePill = ({
 				whitespace-nowrap overflow-hidden
 				${
 					selected
-						? "bg-light-green text-black border-light-green"
+						? "bg-primary text-white border-primary"
 						: "bg-background hover:bg-muted border-input"
 				}
 				${onClick ? "cursor-pointer" : ""}
@@ -806,7 +806,7 @@ export default function GiftsStep({ onNext, onBack }: GiftsStepProps) {
 						<Button
 							type="submit"
 							disabled={hasAnyDeletedBeneficiaries}
-							className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black disabled:bg-gray-300 disabled:cursor-not-allowed"
+							className="cursor-pointer bg-primary hover:bg-primary/90 text-white disabled:bg-gray-300 disabled:cursor-not-allowed"
 						>
 							Next <ArrowRight className="ml-2 h-4 w-4" />
 						</Button>
@@ -1049,7 +1049,7 @@ export default function GiftsStep({ onNext, onBack }: GiftsStepProps) {
 								!giftForm.description ||
 								(!giftForm.peopleId && !giftForm.charitiesId)
 							}
-							className="bg-light-green hover:bg-light-green/90 text-black cursor-pointer"
+							className="bg-primary hover:bg-primary/90 text-white cursor-pointer"
 						>
 							{editingGift ? "Save Changes" : "Add Gift"}
 						</Button>

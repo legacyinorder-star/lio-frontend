@@ -339,7 +339,7 @@ export default function FuneralInstructionsStep({
 									<Button
 										type="submit"
 										disabled={isSaving || !form.watch("wishes")}
-										className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black disabled:opacity-50 disabled:cursor-not-allowed"
+										className="cursor-pointer bg-primary hover:bg-primary/90 text-white disabled:opacity-50 disabled:cursor-not-allowed"
 									>
 										{isSaving ? (
 											<div className="h-4 w-4 animate-spin rounded-full border-t-2 border-b-2 border-black mr-2" />
@@ -375,7 +375,7 @@ export default function FuneralInstructionsStep({
 												<AlertDialogCancel>Cancel</AlertDialogCancel>
 												<AlertDialogAction
 													onClick={handleSkip}
-													className="bg-light-green hover:bg-light-green/90 text-black"
+													className="bg-primary hover:bg-primary/90 text-white"
 												>
 													Skip Anyway
 												</AlertDialogAction>
@@ -385,7 +385,7 @@ export default function FuneralInstructionsStep({
 									<Button
 										type="submit"
 										disabled={isSaving || !form.watch("wishes")}
-										className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black disabled:opacity-50 disabled:cursor-not-allowed"
+										className="cursor-pointer bg-primary hover:bg-primary/90 text-white disabled:opacity-50 disabled:cursor-not-allowed"
 									>
 										{isSaving ? (
 											<div className="h-4 w-4 animate-spin rounded-full border-t-2 border-b-2 border-black mr-2" />

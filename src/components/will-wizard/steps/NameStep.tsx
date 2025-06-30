@@ -288,7 +288,7 @@ export default function NameStep({
 				<div className="flex justify-end">
 					<Button
 						type="submit"
-						className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
+						className="cursor-pointer bg-primary hover:bg-primary/90 text-white"
 						disabled={!isValid || isSubmitting}
 					>
 						{isSubmitting ? (

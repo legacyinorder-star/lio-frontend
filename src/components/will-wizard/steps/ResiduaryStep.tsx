@@ -628,7 +628,7 @@ export default function ResiduaryStep({
 								onClick={() => setIsEqualDistribution(true)}
 								className={`flex items-center gap-2 ${
 									isEqualDistribution
-										? "bg-light-green hover:bg-light-green/90 text-black"
+										? "bg-primary hover:bg-primary/90 text-white"
 										: ""
 								}`}
 							>
@@ -641,7 +641,7 @@ export default function ResiduaryStep({
 								onClick={() => setIsEqualDistribution(false)}
 								className={`flex items-center gap-2 ${
 									!isEqualDistribution
-										? "bg-light-green hover:bg-light-green/90 text-black"
+										? "bg-primary hover:bg-primary/90 text-white"
 										: ""
 								}`}
 							>
@@ -831,7 +831,7 @@ export default function ResiduaryStep({
 						</Button>
 						<Button
 							onClick={handleSubmit}
-							className="flex items-center gap-2 bg-light-green hover:bg-light-green/90 text-black cursor-pointer"
+							className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-white cursor-pointer"
 							disabled={
 								isSubmitting ||
 								selectedBeneficiaries.size === 0 ||

@@ -109,7 +109,7 @@ export default function PaymentSuccessPage() {
 						<Button
 							variant="default"
 							onClick={handleGoToDashboard}
-							className="w-full bg-light-green hover:bg-light-green/90 text-black"
+							className="w-full bg-primary hover:bg-primary/90 text-white"
 						>
 							<ArrowRight className="mr-2 h-4 w-4" />
 							Continue to Dashboard

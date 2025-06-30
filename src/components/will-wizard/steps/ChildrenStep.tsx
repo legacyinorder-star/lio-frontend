@@ -344,9 +344,7 @@ export default function ChildrenStep({
 							variant="outline"
 							onClick={() => setHasChildren(false)}
 							className={`cursor-pointer ${
-								!hasChildren
-									? "bg-light-green text-black border-light-green"
-									: ""
+								!hasChildren ? "bg-primary text-white border-primary" : ""
 							}`}
 						>
 							No
@@ -355,9 +353,7 @@ export default function ChildrenStep({
 							variant="outline"
 							onClick={() => setHasChildren(true)}
 							className={`cursor-pointer ${
-								hasChildren
-									? "bg-light-green text-black border-light-green"
-									: ""
+								hasChildren ? "bg-primary text-white border-primary" : ""
 							}`}
 						>
 							Yes
@@ -461,7 +457,7 @@ export default function ChildrenStep({
 										</Button>
 										<Button
 											onClick={handleSaveChild}
-											className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
+											className="cursor-pointer bg-primary hover:bg-primary/90 text-white"
 											disabled={isSubmitting}
 										>
 											{isSubmitting ? (
@@ -553,7 +549,7 @@ export default function ChildrenStep({
 							<Button
 								onClick={handleSubmit}
 								disabled={children.length === 0 || isLoadingChildren}
-								className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
+								className="cursor-pointer bg-primary hover:bg-primary/90 text-white"
 							>
 								Next <ArrowRight className="ml-2 h-4 w-4" />
 							</Button>

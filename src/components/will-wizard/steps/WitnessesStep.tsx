@@ -539,7 +539,7 @@ export default function WitnessesStep({
 												type="button"
 												onClick={handleSaveWitness}
 												disabled={isSubmitting}
-												className="bg-light-green hover:bg-light-green/90 text-black cursor-pointer"
+												className="bg-primary hover:bg-primary/90 text-white cursor-pointer"
 											>
 												{isSubmitting ? "Saving..." : "Save"}
 											</Button>
@@ -660,7 +660,7 @@ export default function WitnessesStep({
 										<AlertDialogAction
 											onClick={handleSkip}
 											disabled={isSkipping}
-											className="bg-light-green hover:bg-light-green/90 text-black cursor-pointer"
+											className="bg-primary hover:bg-primary/90 text-white cursor-pointer"
 										>
 											{isSkipping
 												? "Removing witnesses..."
@@ -671,7 +671,7 @@ export default function WitnessesStep({
 							</AlertDialog>
 							<Button
 								type="submit"
-								className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black"
+								className="cursor-pointer bg-primary hover:bg-primary/90 text-white"
 								disabled={witnesses.length !== 2}
 								onClick={handleSubmit}
 							>

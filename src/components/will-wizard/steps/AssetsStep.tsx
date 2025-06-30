@@ -292,7 +292,7 @@ export default function AssetsStep({
 							type="button"
 							onClick={handleSubmit}
 							disabled={hasAnyDeletedBeneficiaries}
-							className="cursor-pointer bg-light-green hover:bg-light-green/90 text-black disabled:bg-gray-300 disabled:cursor-not-allowed"
+							className="cursor-pointer bg-primary hover:bg-primary/90 text-white disabled:bg-gray-300 disabled:cursor-not-allowed"
 						>
 							Next <ArrowRight className="ml-2 h-4 w-4" />
 						</Button>
