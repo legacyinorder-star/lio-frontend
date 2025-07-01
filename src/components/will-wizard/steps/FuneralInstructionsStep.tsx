@@ -249,7 +249,10 @@ export default function FuneralInstructionsStep({
 														value="cremated"
 														checked={field.value === "cremated"}
 														onChange={(e) => field.onChange(e.target.value)}
-														className="h-4 w-4 text-primary border-gray-300 focus:ring-primary"
+														className="h-4 w-4 border-gray-300 focus:ring-2 focus:ring-[#173C37]"
+														style={{
+															accentColor: "#173C37",
+														}}
 													/>
 												</FormControl>
 												<FormLabel
@@ -267,7 +270,10 @@ export default function FuneralInstructionsStep({
 														value="buried"
 														checked={field.value === "buried"}
 														onChange={(e) => field.onChange(e.target.value)}
-														className="h-4 w-4 text-primary border-gray-300 focus:ring-primary"
+														className="h-4 w-4 border-gray-300 focus:ring-2 focus:ring-[#173C37]"
+														style={{
+															accentColor: "#173C37",
+														}}
 													/>
 												</FormControl>
 												<FormLabel
