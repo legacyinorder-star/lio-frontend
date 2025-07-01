@@ -11,6 +11,16 @@ import { apiClient } from "@/utils/apiClient";
 import { mapWillDataFromAPI } from "@/utils/dataTransform";
 import { downloadWillPDF } from "@/utils/willDownload";
 import { Edit, CreditCard, Download, Trash2 } from "lucide-react";
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function DashboardPage() {
 	const navigate = useNavigate();
@@ -19,6 +29,11 @@ export default function DashboardPage() {
 	const [wills, setWills] = useState<WillData[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
 	const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+	const [deleteModal, setDeleteModal] = useState<{
+		open: boolean;
+		willId: string | null;
+		willOwnerName: string | null;
+	}>({ open: false, willId: null, willOwnerName: null });
 
 	// Utility function to convert text to title case
 	const toTitleCase = (text: string) => {
@@ -52,11 +67,25 @@ export default function DashboardPage() {
 		}
 	};
 
-	const handleDeleteWill = async (willId: string) => {
-		if (!confirm("Are you sure you want to delete this will?")) return;
+	const handleDeleteWill = (willId: string) => {
+		const will = wills.find((w) => w.id === willId);
+		const ownerName =
+			will?.owner?.firstName && will?.owner?.lastName
+				? `${will.owner.firstName} ${will.owner.lastName}`
+				: "Unknown";
+
+		setDeleteModal({
+			open: true,
+			willId,
+			willOwnerName: ownerName,
+		});
+	};
+
+	const confirmDeleteWill = async () => {
+		if (!deleteModal.willId) return;
 
 		try {
-			const { error } = await apiClient(`/wills/${willId}`, {
+			const { error } = await apiClient(`/wills/${deleteModal.willId}`, {
 				method: "DELETE",
 			});
 
@@ -66,11 +95,18 @@ export default function DashboardPage() {
 				return;
 			}
 
-			setWills((prev) => prev.filter((w) => w.id !== willId));
+			// Clear active will if it's the one being deleted
+			if (activeWill && activeWill.id === deleteModal.willId) {
+				setActiveWill(null);
+			}
+
+			setWills((prev) => prev.filter((w) => w.id !== deleteModal.willId));
 			toast.success("Will deleted successfully");
 		} catch (error) {
 			console.error("Error deleting will:", error);
 			toast.error("Failed to delete will. Please try again.");
+		} finally {
+			setDeleteModal({ open: false, willId: null, willOwnerName: null });
 		}
 	};
 
@@ -405,7 +441,7 @@ export default function DashboardPage() {
 										variant="outline"
 										size="sm"
 										onClick={() => handleDeleteWill(will.id)}
-										className="hover:bg-red-50 text-red-600"
+										className="hover:bg-red-500 hover:text-white text-red-600"
 									>
 										<Trash2 className="h-4 w-4" />
 									</Button>
@@ -479,6 +515,39 @@ export default function DashboardPage() {
 					</p>
 				</div>
 			</div>
+
+			{/* Delete Confirmation Modal */}
+			<AlertDialog
+				open={deleteModal.open}
+				onOpenChange={(open) =>
+					!open &&
+					setDeleteModal({ open: false, willId: null, willOwnerName: null })
+				}
+			>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>Delete Will</AlertDialogTitle>
+						<AlertDialogDescription>
+							Are you sure you want to delete the will for{" "}
+							<span className="font-semibold">{deleteModal.willOwnerName}</span>
+							?
+							<br />
+							<br />
+							This action cannot be undone and will permanently remove all data
+							associated with this will.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel>Cancel</AlertDialogCancel>
+						<AlertDialogAction
+							onClick={confirmDeleteWill}
+							className="bg-red-600 hover:bg-red-700 focus:ring-red-600 text-white font-semibold"
+						>
+							Delete Will
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 		</div>
 	);
 }

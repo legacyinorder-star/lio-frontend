@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
+import { useWill } from "@/context/WillContext";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -31,6 +32,7 @@ export function AdminLayout() {
 	const navigate = useNavigate();
 	const location = useLocation();
 	const { user, logout, isLoading } = useAuth();
+	const { setActiveWill } = useWill();
 	const [isAuthLoading, setIsAuthLoading] = useState(true);
 
 	useEffect(() => {
@@ -62,6 +64,10 @@ export function AdminLayout() {
 	};
 
 	const handleLogout = () => {
+		// Clear active will from memory
+		setActiveWill(null);
+
+		// Logout user
 		logout();
 		navigate("/login");
 	};
