@@ -466,7 +466,7 @@ export default function DashboardPage() {
 						documents, all in one place.
 					</p>
 					<div
-						onClick={() => navigate("/app/digital-estate")}
+						onClick={() => navigate("/app/vault")}
 						className="flex items-center text-white cursor-pointer hover:text-gray-300 transition-colors"
 					>
 						<span className="text-sm font-semibold">Get Started</span>
