@@ -586,14 +586,43 @@ export default function ResiduaryStep({
 		lastName: string,
 		relationshipId: string
 	) => {
-		await addIndividualBeneficiary(firstName, lastName, relationshipId);
+		const newBeneficiary = await addIndividualBeneficiary(
+			firstName,
+			lastName,
+			relationshipId
+		);
+
+		// Automatically add the new beneficiary to selected beneficiaries
+		if (newBeneficiary?.id) {
+			setSelectedBeneficiaries((prev) => {
+				const newSet = new Set(prev);
+				newSet.add(newBeneficiary.id);
+				return newSet;
+			});
+			toast.success(
+				`${firstName} ${lastName} added and selected for residuary estate`
+			);
+		}
 	};
 
 	const handleAddCharityBeneficiary = async (
 		charityName: string,
 		registrationNumber?: string
 	) => {
-		await addCharityBeneficiary(charityName, registrationNumber);
+		const newBeneficiary = await addCharityBeneficiary(
+			charityName,
+			registrationNumber
+		);
+
+		// Automatically add the new charity to selected beneficiaries
+		if (newBeneficiary?.id) {
+			setSelectedBeneficiaries((prev) => {
+				const newSet = new Set(prev);
+				newSet.add(newBeneficiary.id);
+				return newSet;
+			});
+			toast.success(`${charityName} added and selected for residuary estate`);
+		}
 	};
 
 	return (
