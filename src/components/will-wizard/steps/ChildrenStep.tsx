@@ -339,39 +339,28 @@ export default function ChildrenStep({
 				This information helps us create the appropriate provisions in your
 				will, especially regarding guardianship for minor children.
 			</div>
-			{!hasChildren ? (
-				<>
-					<div className="flex space-x-4 mt-4">
-						<Button
-							variant="outline"
-							onClick={() => setHasChildren(false)}
-							className={`cursor-pointer ${
-								!hasChildren ? "bg-primary text-white border-primary" : ""
-							}`}
-						>
-							No
-						</Button>
-						<Button
-							variant="outline"
-							onClick={() => setHasChildren(true)}
-							className={`cursor-pointer ${
-								hasChildren ? "bg-primary text-white border-primary" : ""
-							}`}
-						>
-							Yes
-						</Button>
-					</div>
-					<div className="flex justify-end mt-6">
-						<Button
-							variant="outline"
-							onClick={onBack}
-							className="cursor-pointer"
-						>
-							<ArrowLeft className="mr-2 h-4 w-4" /> Back
-						</Button>
-					</div>
-				</>
-			) : (
+			<div className="flex space-x-4 mt-4">
+				<Button
+					variant="outline"
+					onClick={() => setHasChildren(false)}
+					className={`cursor-pointer ${
+						!hasChildren ? "bg-primary text-white border-primary" : ""
+					}`}
+				>
+					No
+				</Button>
+				<Button
+					variant="outline"
+					onClick={() => setHasChildren(true)}
+					className={`cursor-pointer ${
+						hasChildren ? "bg-primary text-white border-primary" : ""
+					}`}
+				>
+					Yes
+				</Button>
+			</div>
+
+			{hasChildren && (
 				<div className="space-y-6 mt-6">
 					<div className="flex justify-between items-center">
 						<h3 className="text-lg font-medium">Your Children</h3>
@@ -530,35 +519,22 @@ export default function ChildrenStep({
 							))}
 						</div>
 					)}
-
-					<div className="flex justify-between pt-4">
-						<Button
-							variant="outline"
-							onClick={onBack}
-							className="cursor-pointer"
-						>
-							<ArrowLeft className="mr-2 h-4 w-4" /> Back
-						</Button>
-						<div className="flex space-x-4">
-							<Button
-								variant="outline"
-								onClick={() => setHasChildren(false)}
-								className="cursor-pointer"
-								disabled={isLoadingChildren}
-							>
-								No Children
-							</Button>
-							<Button
-								onClick={handleSubmit}
-								disabled={children.length === 0 || isLoadingChildren}
-								className="cursor-pointer bg-primary hover:bg-primary/90 text-white"
-							>
-								Next <ArrowRight className="ml-2 h-4 w-4" />
-							</Button>
-						</div>
-					</div>
 				</div>
 			)}
+
+			{/* Navigation buttons - always visible */}
+			<div className="flex justify-between pt-6">
+				<Button variant="outline" onClick={onBack} className="cursor-pointer">
+					<ArrowLeft className="mr-2 h-4 w-4" /> Back
+				</Button>
+				<Button
+					onClick={handleSubmit}
+					disabled={hasChildren && children.length === 0}
+					className="cursor-pointer bg-primary hover:bg-primary/90 text-white"
+				>
+					Next <ArrowRight className="ml-2 h-4 w-4" />
+				</Button>
+			</div>
 
 			{/* Delete Confirmation Dialog */}
 			<AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
