@@ -14,6 +14,7 @@ import { useRelationships } from "@/hooks/useRelationships";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useWillWizard } from "@/context/WillWizardContext";
+import KnowledgeBaseSidebar from "./components/KnowledgeBaseSidebar";
 
 // Import step components
 import NameStep from "./steps/NameStep";
@@ -614,10 +615,16 @@ export default function WillWizard() {
 
 	return (
 		<WillGuard currentStep={currentQuestion}>
-			<div className="container mx-auto py-8">
-				<div className="max-w-3xl mx-auto">
-					<div className="pt-6">{renderQuestion()}</div>
+			<div className="flex">
+				{/* Main Content Area */}
+				<div className="flex-1 container mx-auto py-8">
+					<div className="max-w-3xl mx-auto">
+						<div className="pt-6">{renderQuestion()}</div>
+					</div>
 				</div>
+
+				{/* Knowledge Base Sidebar */}
+				<KnowledgeBaseSidebar currentStep={currentQuestion} />
 			</div>
 		</WillGuard>
 	);
