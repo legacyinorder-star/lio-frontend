@@ -244,68 +244,73 @@ export default function NameStep({
 	};
 
 	return (
-		<Form
-			{...form}
-			key={`name-form-${initialValues.firstName}-${initialValues.lastName}`}
-		>
-			<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-				<div className="text-[2rem] font-medium text-black">
-					What is your full name?
-				</div>
-				<div className="text-muted-foreground">
-					We'll use this as the legal name in your will.
-				</div>
-				<div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-md">
-					<div className="space-y-2">
-						<FormField
-							control={form.control}
-							name="firstName"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>First Name</FormLabel>
-									<FormControl>
-										<Input placeholder="John" {...field} className="w-full" />
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
+		<div className="space-y-6 w-full max-w-4xl mx-auto">
+			<div className="text-[2rem] font-medium text-black">
+				What is your full name?
+			</div>
+			<div className="text-muted-foreground">
+				We'll use this as the legal name in your will.
+			</div>
+			<Form
+				{...form}
+				key={`name-form-${initialValues.firstName}-${initialValues.lastName}`}
+			>
+				<form
+					onSubmit={form.handleSubmit(onSubmit)}
+					className="space-y-6 w-full"
+				>
+					<div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-md">
+						<div className="space-y-2">
+							<FormField
+								control={form.control}
+								name="firstName"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>First Name</FormLabel>
+										<FormControl>
+											<Input placeholder="John" {...field} className="w-full" />
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+						</div>
+						<div className="space-y-2">
+							<FormField
+								control={form.control}
+								name="lastName"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Last Name</FormLabel>
+										<FormControl>
+											<Input placeholder="Doe" {...field} className="w-full" />
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+						</div>
 					</div>
-					<div className="space-y-2">
-						<FormField
-							control={form.control}
-							name="lastName"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Last Name</FormLabel>
-									<FormControl>
-										<Input placeholder="Doe" {...field} className="w-full" />
-									</FormControl>
-									<FormMessage />
-								</FormItem>
+					<div className="flex justify-end pt-4 max-w-md">
+						<Button
+							type="submit"
+							className="cursor-pointer bg-primary hover:bg-primary/90 text-white"
+							disabled={!isValid || isSubmitting}
+						>
+							{isSubmitting ? (
+								<>
+									<div className="h-4 w-4 animate-spin rounded-full border-t-2 border-b-2 border-black mr-2" />
+									Saving...
+								</>
+							) : (
+								<>
+									Next <ArrowRight className="ml-2 h-4 w-4" />
+								</>
 							)}
-						/>
+						</Button>
 					</div>
-				</div>
-				<div className="flex justify-end">
-					<Button
-						type="submit"
-						className="cursor-pointer bg-primary hover:bg-primary/90 text-white"
-						disabled={!isValid || isSubmitting}
-					>
-						{isSubmitting ? (
-							<>
-								<div className="h-4 w-4 animate-spin rounded-full border-t-2 border-b-2 border-black mr-2" />
-								Saving...
-							</>
-						) : (
-							<>
-								Next <ArrowRight className="ml-2 h-4 w-4" />
-							</>
-						)}
-					</Button>
-				</div>
-			</form>
-		</Form>
+				</form>
+			</Form>
+		</div>
 	);
 }
