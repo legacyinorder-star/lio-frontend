@@ -135,7 +135,14 @@ export default function DashboardPage() {
 					? data.map((willData) => mapWillDataFromAPI(willData))
 					: [];
 
-				setWills(transformedWills);
+				// Sort wills by created date (newest first)
+				const sortedWills = transformedWills.sort((a, b) => {
+					const dateA = new Date(a.createdAt).getTime();
+					const dateB = new Date(b.createdAt).getTime();
+					return dateB - dateA; // Descending order (newest first)
+				});
+
+				setWills(sortedWills);
 			} catch (error) {
 				console.error("Error fetching wills:", error);
 				toast.error("Failed to load wills. Please try again.");
@@ -153,21 +160,21 @@ export default function DashboardPage() {
 			description: activeWill
 				? "Continue working on your will where you left off. Complete your estate planning today."
 				: "Share personal guidance for your loved ones that complements your formal will.",
-			href: "/create-will",
+			href: "/app/create-will",
 			action: activeWill ? "Continue Will" : "Start your Will",
 		},
 		{
 			title: "Power of Attorney",
 			description:
 				"Share personal guidance for your loved ones that complements your formal will.",
-			href: "/power-of-attorney",
+			href: "/app/power-of-attorney",
 			action: "Create a Power of Attorney",
 		},
 		{
 			title: "Letter of Wishes",
 			description:
 				"Share personal guidance for your loved ones that complements your formal will.",
-			href: "/letter-of-wishes",
+			href: "/app/letter-of-wishes",
 			action: "Add a Letter of Wishes",
 		},
 	];
@@ -246,10 +253,7 @@ export default function DashboardPage() {
 									<p className="text-sm font-[400] text-muted-foreground mb-6">
 										{action.description}
 									</p>
-									<Link
-										to={action.href || "#"}
-										className="flex items-center text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
-									>
+									<div className="flex items-center text-sm font-semibold text-primary hover:text-primary/80 transition-colors">
 										{action.action}
 										<svg
 											width="20"
@@ -264,7 +268,7 @@ export default function DashboardPage() {
 												fill="currentColor"
 											/>
 										</svg>
-									</Link>
+									</div>
 								</div>
 							</Card>
 						</Link>
