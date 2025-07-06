@@ -6,6 +6,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { apiClient } from "@/utils/apiClient";
 import { getFormattedRelationshipNameById } from "@/utils/relationships";
 import { useNavigate } from "react-router-dom";
+import { useWill } from "@/context/WillContext";
 
 // Create a type for the review data
 type ReviewData = {
@@ -60,6 +61,10 @@ type ReviewData = {
 	pets?: {
 		hasPets: boolean;
 		guardianName?: string;
+	};
+	petsGuardian?: {
+		fullName: string;
+		relationship: string;
 	};
 	gifts: Array<{
 		type: string;
@@ -156,6 +161,24 @@ interface CompleteWillData {
 		guardian_id: string;
 		guardian_name: string;
 	}>;
+	pets_guardian?: {
+		id: string;
+		created_at: string;
+		user_id: string;
+		will_id: string;
+		guardian_id: string;
+		person: {
+			id: string;
+			user_id: string;
+			will_id: string;
+			relationship_id: string;
+			first_name: string;
+			last_name: string;
+			is_minor: boolean;
+			created_at: string;
+			is_witness: boolean;
+		};
+	};
 	assets: Array<{
 		id: string;
 		will_id: string;
@@ -679,6 +702,14 @@ const transformWillDataToReviewFormat = (
 					wishes: willData.funeral_instructions.wishes,
 			  }
 			: undefined,
+		petsGuardian: willData.pets_guardian?.person
+			? {
+					fullName: `${willData.pets_guardian.person.first_name} ${willData.pets_guardian.person.last_name}`,
+					relationship: getFormattedRelationshipNameById(
+						willData.pets_guardian.person.relationship_id
+					),
+			  }
+			: undefined,
 	};
 };
 
@@ -688,12 +719,19 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 		const [reviewData, setReviewData] = useState<ReviewData | null>(null);
 		const [willId, setWillId] = useState<string | null>(null);
 		const navigate = useNavigate();
+		const { activeWill } = useWill();
 
 		// Load complete will data from single endpoint
 		const loadCompleteWillData = async () => {
+			if (!activeWill?.id) {
+				toast.error("No active will found");
+				setIsLoading(false);
+				return;
+			}
+
 			try {
 				const { data, error } = await apiClient<CompleteWillData>(
-					"/wills/get-user-active-will"
+					`/wills/${activeWill.id}/get-full-will`
 				);
 
 				if (error) {
@@ -704,6 +742,14 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 
 				const willData = Array.isArray(data) ? data[0] : data;
 				console.log("Raw will data:", willData);
+
+				// Add specific debugging for funeral instructions
+				console.log("=== REVIEW STEP FUNERAL INSTRUCTIONS DEBUG ===");
+				console.log(
+					"Raw funeral_instructions:",
+					willData?.funeral_instructions
+				);
+
 				if (willData) {
 					// Store the will ID for payment flow
 					setWillId(willData.id);
@@ -713,6 +759,8 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 					console.log("- spouse:", willData.spouse);
 					console.log("- children:", willData.children);
 					console.log("- guardians:", willData.guardians);
+					console.log("- pets:", willData.pets);
+					console.log("- pets_guardian:", willData.pets_guardian);
 					console.log("- assets:", willData.assets);
 					console.log("- gifts:", willData.gifts);
 					console.log("- executors:", willData.executors);
@@ -744,6 +792,14 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 					const transformedData = transformWillDataToReviewFormat(willData);
 					console.log("Transformed data:", transformedData);
 					console.log("Transformed executors:", transformedData.executors);
+					console.log(
+						"Transformed funeral instructions:",
+						transformedData.funeralInstructions
+					);
+					console.log(
+						"Transformed pets guardian:",
+						transformedData.petsGuardian
+					);
 					setReviewData(transformedData);
 
 					// Update will status to draft
@@ -841,24 +897,26 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 								Personal Information
 							</h3>
 						</div>
-						<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-							<div className="space-y-2">
-								<label className="block text-sm font-medium text-gray-700">
-									Full Name
-								</label>
-								<p className="text-gray-900 font-medium">
-									{reviewData.personal.fullName}
-								</p>
+						<div className="space-y-6">
+							<div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+								<div className="space-y-2">
+									<label className="block text-sm font-medium text-gray-700">
+										Full Name
+									</label>
+									<p className="text-gray-900 font-medium">
+										{reviewData.personal.fullName}
+									</p>
+								</div>
+								<div className="space-y-2">
+									<label className="block text-sm font-medium text-gray-700">
+										Marital Status
+									</label>
+									<p className="text-gray-900 font-medium capitalize">
+										{reviewData.personal.maritalStatus}
+									</p>
+								</div>
 							</div>
 							<div className="space-y-2">
-								<label className="block text-sm font-medium text-gray-700">
-									Marital Status
-								</label>
-								<p className="text-gray-900 font-medium capitalize">
-									{reviewData.personal.maritalStatus}
-								</p>
-							</div>
-							<div className="md:col-span-2 space-y-2">
 								<label className="block text-sm font-medium text-gray-700">
 									Address
 								</label>
@@ -1033,6 +1091,46 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 				),
 			},
 			{
+				shouldShow: !!reviewData.petsGuardian,
+				render: (num: number) => (
+					<section
+						className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm"
+						key="pets-guardian"
+					>
+						<div className="flex items-center space-x-3 mb-6">
+							<div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
+								<span className="text-emerald-600 font-semibold text-sm">
+									{num}
+								</span>
+							</div>
+							<h3 className="text-xl font-semibold text-gray-900">
+								Pet Guardian
+							</h3>
+						</div>
+						<div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
+							<div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+								<div className="space-y-2">
+									<label className="block text-sm font-medium text-gray-700">
+										Full Name
+									</label>
+									<p className="text-gray-900 font-medium">
+										{reviewData.petsGuardian?.fullName}
+									</p>
+								</div>
+								<div className="space-y-2">
+									<label className="block text-sm font-medium text-gray-700">
+										Relationship
+									</label>
+									<p className="text-gray-900">
+										{reviewData.petsGuardian?.relationship}
+									</p>
+								</div>
+							</div>
+						</div>
+					</section>
+				),
+			},
+			{
 				shouldShow: reviewData.assets && reviewData.assets.length > 0,
 				render: (num: number) => (
 					<section
@@ -1053,22 +1151,26 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 									key={idx}
 									className="bg-gray-50 rounded-lg p-6 border border-gray-100"
 								>
-									<div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-										<div className="space-y-2">
-											<label className="block text-sm font-medium text-gray-700">
-												Asset Type
-											</label>
-											<p className="text-gray-900 font-medium">{asset.type}</p>
+									<div className="space-y-4 mb-4">
+										<div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+											<div className="space-y-2">
+												<label className="block text-sm font-medium text-gray-700">
+													Asset Type
+												</label>
+												<p className="text-gray-900 font-medium">
+													{asset.type}
+												</p>
+											</div>
+											<div className="space-y-2">
+												<label className="block text-sm font-medium text-gray-700">
+													Distribution Type
+												</label>
+												<p className="text-gray-900 font-medium capitalize">
+													{asset.distributionType}
+												</p>
+											</div>
 										</div>
 										<div className="space-y-2">
-											<label className="block text-sm font-medium text-gray-700">
-												Distribution Type
-											</label>
-											<p className="text-gray-900 font-medium capitalize">
-												{asset.distributionType}
-											</p>
-										</div>
-										<div className="md:col-span-2 space-y-2">
 											<label className="block text-sm font-medium text-gray-700">
 												Description
 											</label>
@@ -1140,12 +1242,22 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 									key={idx}
 									className="bg-gray-50 rounded-lg p-6 border border-gray-100"
 								>
-									<div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-										<div className="space-y-2">
-											<label className="block text-sm font-medium text-gray-700">
-												Gift Type
-											</label>
-											<p className="text-gray-900 font-medium">{gift.type}</p>
+									<div className="space-y-4 mb-4">
+										<div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+											<div className="space-y-2">
+												<label className="block text-sm font-medium text-gray-700">
+													Gift Type
+												</label>
+												<p className="text-gray-900 font-medium">{gift.type}</p>
+											</div>
+											<div className="space-y-2">
+												<label className="block text-sm font-medium text-gray-700">
+													Beneficiary
+												</label>
+												<p className="text-gray-900 font-medium">
+													{gift.beneficiaryName}
+												</p>
+											</div>
 										</div>
 										{gift.value && (
 											<div className="space-y-2">
@@ -1158,14 +1270,6 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 											</div>
 										)}
 										<div className="space-y-2">
-											<label className="block text-sm font-medium text-gray-700">
-												Beneficiary
-											</label>
-											<p className="text-gray-900 font-medium">
-												{gift.beneficiaryName}
-											</p>
-										</div>
-										<div className="md:col-span-3 space-y-2">
 											<label className="block text-sm font-medium text-gray-700">
 												Description
 											</label>
@@ -1248,33 +1352,35 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 									key={idx}
 									className="bg-gray-50 rounded-lg p-4 border border-gray-100"
 								>
-									<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-										<div className="space-y-2">
-											<label className="block text-sm font-medium text-gray-700">
-												{executor.type === "individual"
-													? "Name"
-													: "Company Name"}
-											</label>
-											<div className="flex items-center gap-2">
-												<p className="text-gray-900 font-medium">
+									<div className="space-y-4">
+										<div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+											<div className="space-y-2">
+												<label className="block text-sm font-medium text-gray-700">
 													{executor.type === "individual"
-														? executor.fullName
-														: executor.companyName}
-												</p>
-												{executor.isPrimary && (
-													<span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-														Primary Executor
-													</span>
-												)}
+														? "Name"
+														: "Company Name"}
+												</label>
+												<div className="flex items-center gap-2">
+													<p className="text-gray-900 font-medium">
+														{executor.type === "individual"
+															? executor.fullName
+															: executor.companyName}
+													</p>
+													{executor.isPrimary && (
+														<span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+															Primary Executor
+														</span>
+													)}
+												</div>
 											</div>
-										</div>
-										<div className="space-y-2">
-											<label className="block text-sm font-medium text-gray-700">
-												Type
-											</label>
-											<p className="text-gray-900 font-medium capitalize">
-												{executor.type}
-											</p>
+											<div className="space-y-2">
+												<label className="block text-sm font-medium text-gray-700">
+													Type
+												</label>
+												<p className="text-gray-900 font-medium capitalize">
+													{executor.type}
+												</p>
+											</div>
 										</div>
 										{executor.type === "individual" &&
 											executor.relationship && (
@@ -1370,13 +1476,16 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 		return (
 			<div data-review-step className="space-y-8">
 				{/* Header Section */}
-				<div className="text-center space-y-4">
+				<div className="text-left space-y-4">
 					<div className="text-3xl font-bold text-gray-900">
 						Review Your Will
 					</div>
 					<div className="text-lg text-gray-600 max-w-2xl mx-auto">
 						Please carefully review all the information below before proceeding
-						to payment. This document will be legally binding once completed.
+						to payment.
+					</div>
+					<div className="text-lg text-gray-600 max-w-2xl mx-auto">
+						This document will be legally binding once completed.
 					</div>
 				</div>
 
