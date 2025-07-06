@@ -11,6 +11,7 @@ export function WillWizardSidebar() {
 		"hasSpouse",
 		"hasChildren",
 		"guardians",
+		"pets",
 		"hasAssets",
 		"gifts",
 		"residuary",

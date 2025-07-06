@@ -30,13 +30,14 @@ export function WillWizardProvider({ children }: { children: ReactNode }) {
 			hasSpouse: { number: 3, name: "Spouse Information" },
 			hasChildren: { number: 4, name: "Children Information" },
 			guardians: { number: 5, name: "Guardians" },
-			hasAssets: { number: 6, name: "Assets" },
-			gifts: { number: 7, name: "Gifts" },
-			residuary: { number: 8, name: "Residuary Estate" },
-			executors: { number: 9, name: "Executors" },
-			witnesses: { number: 10, name: "Witnesses" },
-			funeralInstructions: { number: 11, name: "Funeral Instructions" },
-			review: { number: 12, name: "Review" },
+			pets: { number: 6, name: "Pet Care" },
+			hasAssets: { number: 7, name: "Assets" },
+			gifts: { number: 8, name: "Gifts" },
+			residuary: { number: 9, name: "Residuary Estate" },
+			executors: { number: 10, name: "Executors" },
+			witnesses: { number: 11, name: "Witnesses" },
+			funeralInstructions: { number: 12, name: "Funeral Instructions" },
+			review: { number: 13, name: "Review" },
 		};
 		return stepMap[step];
 	};

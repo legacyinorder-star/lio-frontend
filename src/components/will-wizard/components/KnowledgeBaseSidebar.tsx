@@ -81,6 +81,20 @@ const stepArticles: Record<QuestionType, KnowledgeArticle[]> = {
 			url: "#",
 		},
 	],
+	pets: [
+		{
+			title: "Pet Guardianship in Estate Planning",
+			description:
+				"How to ensure your beloved pets are cared for after you're gone.",
+			url: "#",
+		},
+		{
+			title: "Legal Considerations for Pet Guardians",
+			description:
+				"Understanding the legal aspects of designating pet guardians in your will.",
+			url: "#",
+		},
+	],
 	hasAssets: [
 		{
 			title: "Asset Inventory for Estate Planning",

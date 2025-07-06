@@ -419,7 +419,7 @@ export function DashboardLayout() {
 				>
 					{(() => {
 						const stepInfo = getStepInfo(currentStep);
-						return `Section ${stepInfo.number} of 12: ${stepInfo.name}`;
+						return `Section ${stepInfo.number} of 13: ${stepInfo.name}`;
 					})()}
 				</div>
 			)}

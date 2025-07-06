@@ -29,6 +29,7 @@ import FuneralInstructionsStep from "./steps/FuneralInstructionsStep";
 import ReviewStep from "./steps/ReviewStep";
 import ExecutorStep from "./steps/ExecutorStep";
 import GuardiansStep from "./steps/GuardiansStep";
+import PetsStep from "./steps/PetsStep";
 
 // Spouse API response interface
 interface PersonResponse {
@@ -77,6 +78,7 @@ export default function WillWizard() {
 		hasChildren: false,
 		children: [],
 		guardians: [],
+		hasPets: false,
 		hasAssets: false,
 		assets: [],
 		otherBeneficiaries: [],
@@ -369,10 +371,13 @@ export default function WillWizard() {
 				) {
 					setCurrentQuestion("guardians");
 				} else {
-					setCurrentQuestion("hasAssets");
+					setCurrentQuestion("pets");
 				}
 				break;
 			case "guardians":
+				setCurrentQuestion("pets");
+				break;
+			case "pets":
 				setCurrentQuestion("hasAssets");
 				break;
 			case "hasAssets":
@@ -410,7 +415,7 @@ export default function WillWizard() {
 			case "guardians":
 				setCurrentQuestion("hasChildren");
 				break;
-			case "hasAssets":
+			case "pets":
 				if (
 					activeWill?.children &&
 					activeWill.children.length > 0 &&
@@ -426,6 +431,9 @@ export default function WillWizard() {
 				} else {
 					setCurrentQuestion("hasChildren");
 				}
+				break;
+			case "hasAssets":
+				setCurrentQuestion("pets");
 				break;
 			case "gifts":
 				setCurrentQuestion("hasAssets");
@@ -538,6 +546,9 @@ export default function WillWizard() {
 
 			case "guardians":
 				return <GuardiansStep {...commonProps} />;
+
+			case "pets":
+				return <PetsStep {...commonProps} guardians={formData.guardians} />;
 
 			case "hasAssets":
 				return <AssetsStep {...commonProps} />;

@@ -5,6 +5,7 @@ export type QuestionType =
 	| "hasSpouse"
 	| "hasChildren"
 	| "guardians"
+	| "pets"
 	| "hasAssets"
 	| "gifts"
 	| "residuary"
@@ -46,6 +47,8 @@ export interface Guardian extends BasePerson {
 	relationship: string;
 	isPrimary: boolean;
 }
+
+// Pet Types (removed individual pet tracking)
 
 // Asset Types
 export type AssetType =
@@ -137,6 +140,8 @@ export interface WillFormData {
 	hasChildren: boolean;
 	children: Child[];
 	guardians: Guardian[];
+	hasPets: boolean;
+	petGuardianId?: string;
 	hasAssets: boolean;
 	assets: Asset[];
 	otherBeneficiaries: NewBeneficiary[];

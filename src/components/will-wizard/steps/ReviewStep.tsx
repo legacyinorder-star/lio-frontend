@@ -57,6 +57,10 @@ type ReviewData = {
 		relationship: string;
 		isPrimary: boolean;
 	}>;
+	pets?: {
+		hasPets: boolean;
+		guardianName?: string;
+	};
 	gifts: Array<{
 		type: string;
 		description: string;
@@ -144,6 +148,13 @@ interface CompleteWillData {
 			created_at: string;
 			is_witness: boolean;
 		};
+	}>;
+	pets?: Array<{
+		id: string;
+		name: string;
+		type: string;
+		guardian_id: string;
+		guardian_name: string;
 	}>;
 	assets: Array<{
 		id: string;
@@ -616,6 +627,13 @@ const transformWillDataToReviewFormat = (
 							isPrimary: guardian.is_primary,
 						}))
 				: [],
+		pets:
+			willData.pets && Array.isArray(willData.pets) && willData.pets.length > 0
+				? {
+						hasPets: true,
+						guardianName: willData.pets[0]?.guardian_name,
+				  }
+				: undefined,
 		gifts:
 			willData.gifts && Array.isArray(willData.gifts)
 				? willData.gifts.map((gift) => {
@@ -972,6 +990,44 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 									</div>
 								</div>
 							))}
+						</div>
+					</section>
+				),
+			},
+			{
+				shouldShow: reviewData.pets && reviewData.pets.hasPets,
+				render: (num: number) => (
+					<section
+						className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm"
+						key="pets"
+					>
+						<div className="flex items-center space-x-3 mb-6">
+							<div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
+								<span className="text-emerald-600 font-semibold text-sm">
+									{num}
+								</span>
+							</div>
+							<h3 className="text-xl font-semibold text-gray-900">Pet Care</h3>
+						</div>
+						<div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
+							<div className="space-y-4">
+								<div className="space-y-1">
+									<label className="block text-sm font-medium text-gray-700">
+										Pet Care Status
+									</label>
+									<p className="text-gray-900 font-medium">You have pets</p>
+								</div>
+								{reviewData.pets?.guardianName && (
+									<div className="space-y-1">
+										<label className="block text-sm font-medium text-gray-700">
+											Guardian
+										</label>
+										<p className="text-gray-900 font-medium">
+											{reviewData.pets.guardianName}
+										</p>
+									</div>
+								)}
+							</div>
 						</div>
 					</section>
 				),
