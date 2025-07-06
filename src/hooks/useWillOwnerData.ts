@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { apiClient } from "@/utils/apiClient";
 
 // API response interfaces
@@ -53,6 +53,7 @@ export interface UseWillOwnerDataReturn {
 	error: string | null;
 	loadWillOwnerData: (willId: string) => Promise<void>;
 	saveWillOwnerData: (data: Partial<WillOwnerData>) => Promise<boolean>;
+	resetForNewWill: () => void;
 }
 
 export function useWillOwnerData(): UseWillOwnerDataReturn {
@@ -63,71 +64,110 @@ export function useWillOwnerData(): UseWillOwnerDataReturn {
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
-	const loadWillOwnerData = useCallback(async (willId: string) => {
-		if (!willId) {
-			setError("Will ID is required");
-			return;
-		}
+	// Track the last loaded will ID to prevent duplicate calls
+	const lastLoadedWillId = useRef<string | null>(null);
+	const loadingWillId = useRef<string | null>(null);
 
-		setIsLoading(true);
-		setError(null);
-
-		try {
-			// Load will owner data
-			const { data: ownerResponse, error: ownerError } =
-				await apiClient<WillOwnerApiResponse>(
-					`/will_owner/get-by-will/${willId}`
-				);
-
-			if (ownerError) {
-				console.error("Error loading will owner:", ownerError);
-				setError("Failed to load will owner information");
+	const loadWillOwnerData = useCallback(
+		async (willId: string) => {
+			if (!willId) {
+				setError("Will ID is required");
 				return;
 			}
 
-			if (ownerResponse) {
-				const transformedOwnerData: WillOwnerData = {
-					id: ownerResponse.id,
-					willId: ownerResponse.will_id,
-					firstName: ownerResponse.first_name,
-					lastName: ownerResponse.last_name,
-					maritalStatus: ownerResponse.marital_status,
-					address: ownerResponse.address,
-					city: ownerResponse.city,
-					state: ownerResponse.state,
-					postCode: ownerResponse.post_code,
-					country: ownerResponse.country,
-				};
-				setWillOwnerData(transformedOwnerData);
-
-				// If married, load spouse data
-				if (ownerResponse.marital_status === "married") {
-					const { data: spouseResponse, error: spouseError } =
-						await apiClient<SpouseApiResponse>(
-							`/people/spouse/get-by-will/${willId}`
-						);
-
-					if (spouseError) {
-						console.error("Error loading spouse:", spouseError);
-						// Don't set error here as spouse data is optional
-					} else if (spouseResponse) {
-						const transformedSpouseData: SpouseData = {
-							id: spouseResponse.id,
-							firstName: spouseResponse.first_name,
-							lastName: spouseResponse.last_name,
-						};
-						setSpouseData(transformedSpouseData);
-					}
-				} else {
-					setSpouseData(null);
-				}
+			// Prevent duplicate calls for the same will ID
+			if (
+				willId === lastLoadedWillId.current ||
+				willId === loadingWillId.current
+			) {
+				console.log(`Skipping duplicate call for will ID: ${willId}`);
+				return;
 			}
-		} catch (err) {
-			console.error("Error in loadWillOwnerData:", err);
-			setError("An error occurred while loading will owner data");
-		} finally {
-			setIsLoading(false);
-		}
+
+			// Prevent concurrent calls
+			if (isLoading) {
+				console.log(`Already loading, skipping call for will ID: ${willId}`);
+				return;
+			}
+
+			loadingWillId.current = willId;
+			setIsLoading(true);
+			setError(null);
+
+			try {
+				console.log(`Loading will owner data for will ID: ${willId}`);
+
+				// Load will owner data
+				const { data: ownerResponse, error: ownerError } =
+					await apiClient<WillOwnerApiResponse>(
+						`/will_owner/get-by-will/${willId}`
+					);
+
+				if (ownerError) {
+					console.error("Error loading will owner:", ownerError);
+					setError("Failed to load will owner information");
+					return;
+				}
+
+				if (ownerResponse) {
+					const transformedOwnerData: WillOwnerData = {
+						id: ownerResponse.id,
+						willId: ownerResponse.will_id,
+						firstName: ownerResponse.first_name,
+						lastName: ownerResponse.last_name,
+						maritalStatus: ownerResponse.marital_status,
+						address: ownerResponse.address,
+						city: ownerResponse.city,
+						state: ownerResponse.state,
+						postCode: ownerResponse.post_code,
+						country: ownerResponse.country,
+					};
+					setWillOwnerData(transformedOwnerData);
+
+					// If married, load spouse data
+					if (ownerResponse.marital_status === "married") {
+						console.log(`Loading spouse data for will ID: ${willId}`);
+						const { data: spouseResponse, error: spouseError } =
+							await apiClient<SpouseApiResponse>(
+								`/people/spouse/get-by-will/${willId}`
+							);
+
+						if (spouseError) {
+							console.error("Error loading spouse:", spouseError);
+							// Don't set error here as spouse data is optional
+						} else if (spouseResponse) {
+							const transformedSpouseData: SpouseData = {
+								id: spouseResponse.id,
+								firstName: spouseResponse.first_name,
+								lastName: spouseResponse.last_name,
+							};
+							setSpouseData(transformedSpouseData);
+						}
+					} else {
+						setSpouseData(null);
+					}
+
+					// Mark this will ID as successfully loaded
+					lastLoadedWillId.current = willId;
+				}
+			} catch (err) {
+				console.error("Error in loadWillOwnerData:", err);
+				setError("An error occurred while loading will owner data");
+			} finally {
+				setIsLoading(false);
+				loadingWillId.current = null;
+			}
+		},
+		[isLoading]
+	); // Add isLoading as dependency since we check it
+
+	// Reset tracking when will changes
+	const resetForNewWill = useCallback(() => {
+		lastLoadedWillId.current = null;
+		loadingWillId.current = null;
+		setWillOwnerData(null);
+		setSpouseData(null);
+		setError(null);
 	}, []);
 
 	const saveWillOwnerData = useCallback(
@@ -187,5 +227,6 @@ export function useWillOwnerData(): UseWillOwnerDataReturn {
 		error,
 		loadWillOwnerData,
 		saveWillOwnerData,
+		resetForNewWill, // Add this for manual reset if needed
 	};
 }

@@ -46,7 +46,7 @@ interface WillDataState {
 	error: string | null;
 }
 
-export function useWillData() {
+export function useWillData(shouldLoad: boolean = true) {
 	const [state, setState] = useState<WillDataState>({
 		allBeneficiaries: [],
 		isLoading: false,
@@ -58,12 +58,20 @@ export function useWillData() {
 	const { relationships, isLoading: isLoadingRelationships } =
 		useRelationships();
 
-	// Check if all dependencies are ready
+	// Check if all dependencies are ready AND we should load
 	const dependenciesReady = useMemo(() => {
 		return (
-			!isLoadingRelationships && relationships.length > 0 && activeWill?.id
+			shouldLoad &&
+			!isLoadingRelationships &&
+			relationships.length > 0 &&
+			activeWill?.id
 		);
-	}, [isLoadingRelationships, relationships.length, activeWill?.id]);
+	}, [
+		shouldLoad,
+		isLoadingRelationships,
+		relationships.length,
+		activeWill?.id,
+	]);
 
 	// Combine all beneficiary sources into a single array
 	const combineAllBeneficiaries = useCallback(
@@ -219,15 +227,17 @@ export function useWillData() {
 		loadAllBeneficiaryData,
 	]);
 
-	// Reset state when will changes
+	// Reset state when will changes or shouldLoad changes
 	useEffect(() => {
-		setState((prev) => ({
-			...prev,
-			allBeneficiaries: [],
-			isReady: false,
-			error: null,
-		}));
-	}, [activeWill?.id]);
+		if (!shouldLoad) {
+			setState((prev) => ({
+				...prev,
+				allBeneficiaries: [],
+				isReady: false,
+				error: null,
+			}));
+		}
+	}, [activeWill?.id, shouldLoad]);
 
 	// Provide methods for adding new beneficiaries
 	const addIndividualBeneficiary = useCallback(

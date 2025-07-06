@@ -40,7 +40,8 @@ interface ApiGiftResponse {
 
 export function useGiftManagement(
 	initialGifts: Gift[] = [],
-	beneficiaries: EnhancedBeneficiary[] = []
+	beneficiaries: EnhancedBeneficiary[] = [],
+	shouldLoad: boolean = true
 ) {
 	const [gifts, setGifts] = useState<Gift[]>(initialGifts);
 	const [isLoadingGifts, setIsLoadingGifts] = useState(false);
@@ -51,22 +52,30 @@ export function useGiftManagement(
 	// Use provided beneficiaries parameter
 	const availableBeneficiaries = beneficiaries;
 
-	// Load gifts from API only
+	// Load gifts from API only when shouldLoad is true
 	useEffect(() => {
 		const loadGiftsFromAPIEffect = async () => {
 			if (
+				shouldLoad &&
 				activeWill?.id &&
 				relationships.length > 0 &&
 				!hasLoadedInitialGifts.current
 			) {
-				// Load gifts from API
 				await loadGiftsFromAPI();
 				hasLoadedInitialGifts.current = true;
 			}
 		};
 
 		loadGiftsFromAPIEffect();
-	}, [activeWill?.id, relationships.length]);
+	}, [shouldLoad, activeWill?.id, relationships.length]);
+
+	// Reset when shouldLoad changes
+	useEffect(() => {
+		if (!shouldLoad) {
+			setGifts([]);
+			hasLoadedInitialGifts.current = false;
+		}
+	}, [shouldLoad]);
 
 	// Function to update gift relationships using relationships context
 	const updateGiftRelationships = (willGifts: WillGift[]) => {

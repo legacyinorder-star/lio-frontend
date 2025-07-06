@@ -43,29 +43,37 @@ interface ApiAssetResponse {
 	}>;
 }
 
-export function useAssetManagement() {
+export function useAssetManagement(shouldLoad: boolean = true) {
 	const [assets, setAssets] = useState<Asset[]>([]);
 	const [isLoadingAssets, setIsLoadingAssets] = useState(false);
 	const { activeWill, setActiveWill } = useWill();
 	const { relationships } = useRelationships();
 	const hasLoadedInitialAssets = useRef(false);
 
-	// Load assets from API only
+	// Load assets from API only when shouldLoad is true
 	useEffect(() => {
 		const loadAssetsFromAPIEffect = async () => {
 			if (
+				shouldLoad &&
 				activeWill?.id &&
 				relationships.length > 0 &&
 				!hasLoadedInitialAssets.current
 			) {
-				// Load assets from API
 				await loadAssetsFromAPI();
 				hasLoadedInitialAssets.current = true;
 			}
 		};
 
 		loadAssetsFromAPIEffect();
-	}, [activeWill?.id, relationships.length]);
+	}, [shouldLoad, activeWill?.id, relationships.length]);
+
+	// Reset when shouldLoad changes
+	useEffect(() => {
+		if (!shouldLoad) {
+			setAssets([]);
+			hasLoadedInitialAssets.current = false;
+		}
+	}, [shouldLoad]);
 
 	// Function to map beneficiary details from API response to WillContext structure
 	const mapBeneficiaryDetails = (
