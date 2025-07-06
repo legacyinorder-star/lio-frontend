@@ -1198,14 +1198,23 @@ export default function ExecutorStep({
 											)}
 										</div>
 										<div className="flex space-x-2">
-											<Button
-												variant="ghost"
-												size="icon"
-												onClick={() => handleEditExecutor(executor)}
-												className="cursor-pointer"
-											>
-												<Edit2 className="h-4 w-4" />
-											</Button>
+											{/* Conditionally render edit button */}
+											{executor.type === "corporate" &&
+											executor.name === "Legacy In Order" ? (
+												// Show a disabled/non-clickable placeholder for Legacy In Order
+												" "
+											) : (
+												// Show normal edit button for other executors
+												<Button
+													variant="ghost"
+													size="icon"
+													onClick={() => handleEditExecutor(executor)}
+													className="cursor-pointer"
+												>
+													<Edit2 className="h-4 w-4" />
+												</Button>
+											)}
+											{/* Always show delete button */}
 											<Button
 												variant="ghost"
 												size="icon"
