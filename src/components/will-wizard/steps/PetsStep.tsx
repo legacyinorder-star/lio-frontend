@@ -289,8 +289,13 @@ export default function PetsStep({
 					});
 
 					if (error) {
-						toast.error("Failed to update pet guardian information");
-						return;
+						console.error("PATCH error:", error);
+						toast.error(
+							"Failed to update pet guardian information. Please try again."
+						);
+						// Don't return - allow navigation to continue
+					} else {
+						toast.success("Pet guardian information updated successfully");
 					}
 				} else {
 					// POST new record
@@ -303,22 +308,29 @@ export default function PetsStep({
 					);
 
 					if (error) {
-						toast.error("Failed to save pet guardian information");
-						return;
-					}
-
-					// Store the new record ID for future updates
-					if (petRecord?.id) {
-						setExistingPetRecordId(petRecord.id);
+						console.error("POST error:", error);
+						toast.error(
+							"Failed to save pet guardian information. Please try again."
+						);
+						// Don't return - allow navigation to continue
+					} else {
+						toast.success("Pet guardian information saved successfully");
+						// Store the new record ID for future updates
+						if (petRecord?.id) {
+							setExistingPetRecordId(petRecord.id);
+						}
 					}
 				}
 			} catch (error) {
 				console.error("Error saving pet data:", error);
-				toast.error("An error occurred while saving pet information");
-				return;
+				toast.error(
+					"An error occurred while saving pet information. Please try again."
+				);
+				// Don't return - allow navigation to continue
 			}
 		}
 
+		// Always proceed to next step, even if API call failed
 		onNext();
 	};
 

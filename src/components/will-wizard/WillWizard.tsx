@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { WillFormData, QuestionType } from "./types/will.types";
 import type { ExecutorData } from "./steps/ExecutorStep";
 import WillGuard from "./WillGuard";
@@ -59,7 +59,23 @@ export default function WillWizard() {
 		loadWillOwnerData,
 		saveWillOwnerData,
 	} = useWillOwnerData();
-	const { refetch } = useWillData();
+
+	// Conditional data loading based on current step
+	const needsBeneficiaryData = [
+		"hasAssets",
+		"gifts",
+		"residuary",
+		"review",
+	].includes(currentQuestion);
+
+	// Only load beneficiary data when needed
+	const {
+		allBeneficiaries,
+		isLoading: isLoadingBeneficiaries,
+		refetch,
+		addIndividualBeneficiary,
+		addCharityBeneficiary,
+	} = useWillData(needsBeneficiaryData);
 
 	// Data collection
 	const [formData, setFormData] = useState<WillFormData>({
@@ -91,22 +107,31 @@ export default function WillWizard() {
 		},
 	});
 
-	// Load will owner data when activeWill changes
+	// Load will owner data when activeWill changes - FIXED VERSION
 	useEffect(() => {
 		if (activeWill?.id && !willOwnerData) {
+			console.log("Loading will owner data for will:", activeWill.id);
 			loadWillOwnerData(activeWill.id);
 		}
-	}, [activeWill?.id, willOwnerData, loadWillOwnerData]);
+	}, [activeWill?.id, willOwnerData]); // ✅ Removed loadWillOwnerData from deps
 
-	// Update activeWill context when willOwnerData changes
+	// Memoize the setActiveWill to prevent unnecessary re-renders
+	const updateActiveWill = useCallback(
+		(updates: Partial<typeof activeWill>) => {
+			setActiveWill((prev) => (prev ? { ...prev, ...updates } : null));
+		},
+		[setActiveWill]
+	);
+
+	// Update activeWill context when willOwnerData changes - OPTIMIZED VERSION
 	useEffect(() => {
 		if (
 			willOwnerData &&
 			activeWill &&
 			willOwnerData.id !== activeWill.owner?.id
 		) {
-			setActiveWill({
-				...activeWill,
+			console.log("Updating activeWill with willOwnerData");
+			updateActiveWill({
 				owner: {
 					...activeWill.owner,
 					id: willOwnerData.id,
@@ -128,22 +153,7 @@ export default function WillWizard() {
 				}),
 			});
 		}
-	}, [
-		willOwnerData?.id,
-		willOwnerData?.firstName,
-		willOwnerData?.lastName,
-		willOwnerData?.maritalStatus,
-		willOwnerData?.address,
-		willOwnerData?.city,
-		willOwnerData?.state,
-		willOwnerData?.postCode,
-		willOwnerData?.country,
-		spouseData?.id,
-		spouseData?.firstName,
-		spouseData?.lastName,
-		activeWill?.owner?.id,
-		setActiveWill,
-	]);
+	}, [willOwnerData, spouseData, activeWill?.owner?.id, updateActiveWill]); // ✅ Simplified deps
 
 	// Load active will data into formData when component mounts or activeWill changes
 	useEffect(() => {
@@ -551,64 +561,34 @@ export default function WillWizard() {
 				return <PetsStep {...commonProps} guardians={formData.guardians} />;
 
 			case "hasAssets":
-				return <AssetsStep {...commonProps} />;
-
-			case "gifts":
-				return <GiftsStep {...commonProps} />;
-
-			case "residuary":
-				return <ResiduaryStep {...commonProps} />;
-
-			case "executors": {
-				// Convert formData.executors to ExecutorData format for ExecutorStep
-				const executorData: ExecutorData = formData.executors.map(
-					(executor) => ({
-						id: executor.id,
-						type: executor.type,
-						firstName: executor.firstName,
-						lastName: executor.lastName,
-						relationshipId: executor.relationship,
-						name: executor.companyName,
-						rc_number: executor.registrationNumber,
-						isPrimary: executor.isPrimary,
-					})
-				);
-
 				return (
-					<ExecutorStep
-						data={executorData}
-						onUpdate={(data: ExecutorData) => {
-							// Convert ExecutorData back to WillFormData.executors format
-							const convertedExecutors = data.map((executor) => ({
-								id: executor.id,
-								type: executor.type,
-								firstName: executor.firstName || "",
-								lastName: executor.lastName || "",
-								relationship: executor.relationshipId || "",
-								companyName: executor.name || "",
-								registrationNumber: executor.rc_number || "",
-								contactPerson: "",
-								isPrimary: executor.isPrimary,
-								address: {
-									address: "",
-									city: "",
-									state: "",
-									postCode: "",
-									country: "",
-								},
-								email: "",
-								phone: "",
-							}));
-							setFormData((prev) => ({
-								...prev,
-								executors: convertedExecutors,
-							}));
-						}}
-						onNext={handleNext}
-						onBack={handleBack}
+					<AssetsStep
+						{...commonProps}
+						beneficiaries={needsBeneficiaryData ? allBeneficiaries : []}
+						isLoadingBeneficiaries={isLoadingBeneficiaries}
 					/>
 				);
-			}
+
+			case "gifts":
+				return (
+					<GiftsStep
+						{...commonProps}
+						beneficiaries={needsBeneficiaryData ? allBeneficiaries : []}
+						isLoadingBeneficiaries={isLoadingBeneficiaries}
+					/>
+				);
+
+			case "residuary":
+				return (
+					<ResiduaryStep
+						{...commonProps}
+						beneficiaries={needsBeneficiaryData ? allBeneficiaries : []}
+						isLoadingBeneficiaries={isLoadingBeneficiaries}
+					/>
+				);
+
+			case "executors":
+				return <ExecutorStep {...commonProps} />;
 
 			case "witnesses":
 				return <WitnessesStep {...commonProps} />;
@@ -617,7 +597,13 @@ export default function WillWizard() {
 				return <FuneralInstructionsStep {...commonProps} />;
 
 			case "review":
-				return <ReviewStep onBack={handleBack} />;
+				return (
+					<ReviewStep
+						{...commonProps}
+						beneficiaries={needsBeneficiaryData ? allBeneficiaries : []}
+						isLoadingBeneficiaries={isLoadingBeneficiaries}
+					/>
+				);
 
 			default:
 				return null;
