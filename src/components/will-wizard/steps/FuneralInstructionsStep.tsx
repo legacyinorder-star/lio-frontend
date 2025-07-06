@@ -81,13 +81,17 @@ export default function FuneralInstructionsStep({
 					`/funeral_instructions/get-by-will/${activeWill.id}`
 				);
 
+				console.log("=== LOADING FUNERAL WISHES DEBUG ===");
+				console.log("API Response:", data);
+				console.log("API Error:", error);
+
 				if (error) {
-					// If no funeral wishes exist yet, that's okay
 					console.log("No existing funeral wishes found");
 					return;
 				}
 
 				if (data) {
+					console.log("Setting form value to:", data.wishes);
 					form.setValue("wishes", data.wishes);
 					setExistingWishes(data);
 				}
@@ -132,7 +136,7 @@ export default function FuneralInstructionsStep({
 			toast.success("Funeral wishes saved successfully");
 			onNext({
 				funeralInstructions: {
-					wishes: `Preference: ${values.wishes}`,
+					wishes: values.wishes,
 				},
 			});
 		} catch (error) {
