@@ -119,9 +119,6 @@ export interface Executor {
 	registrationNumber?: string;
 	contactPerson?: string;
 	isPrimary: boolean;
-	address: Address;
-	email: string;
-	phone: string;
 }
 
 // Funeral Instructions Types

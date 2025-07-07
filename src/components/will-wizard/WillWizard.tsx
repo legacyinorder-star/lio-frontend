@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 import { WillFormData, QuestionType } from "./types/will.types";
-import type { ExecutorData } from "./steps/ExecutorStep";
 import WillGuard from "./WillGuard";
 import {
 	useWill,
@@ -70,11 +69,9 @@ export default function WillWizard() {
 
 	// Only load beneficiary data when needed
 	const {
-		allBeneficiaries,
-		isLoading: isLoadingBeneficiaries,
+		allBeneficiaries: _allBeneficiaries,
+		isLoading: _isLoadingBeneficiaries,
 		refetch,
-		addIndividualBeneficiary,
-		addCharityBeneficiary,
 	} = useWillData(needsBeneficiaryData);
 
 	// Data collection
@@ -117,10 +114,12 @@ export default function WillWizard() {
 
 	// Memoize the setActiveWill to prevent unnecessary re-renders
 	const updateActiveWill = useCallback(
-		(updates: Partial<typeof activeWill>) => {
-			setActiveWill((prev) => (prev ? { ...prev, ...updates } : null));
+		(updates: Partial<WillData>) => {
+			if (activeWill) {
+				setActiveWill({ ...activeWill, ...updates });
+			}
 		},
-		[setActiveWill]
+		[activeWill, setActiveWill]
 	);
 
 	// Update activeWill context when willOwnerData changes - OPTIMIZED VERSION
@@ -563,32 +562,48 @@ export default function WillWizard() {
 			case "hasAssets":
 				return (
 					<AssetsStep
-						{...commonProps}
-						beneficiaries={needsBeneficiaryData ? allBeneficiaries : []}
-						isLoadingBeneficiaries={isLoadingBeneficiaries}
+						onUpdate={commonProps.onUpdate}
+						onNext={commonProps.onNext}
+						onBack={commonProps.onBack}
 					/>
 				);
 
 			case "gifts":
 				return (
 					<GiftsStep
-						{...commonProps}
-						beneficiaries={needsBeneficiaryData ? allBeneficiaries : []}
-						isLoadingBeneficiaries={isLoadingBeneficiaries}
+						onNext={(data) => {
+							commonProps.onUpdate(data);
+							commonProps.onNext();
+						}}
+						onBack={commonProps.onBack}
 					/>
 				);
 
 			case "residuary":
 				return (
 					<ResiduaryStep
-						{...commonProps}
-						beneficiaries={needsBeneficiaryData ? allBeneficiaries : []}
-						isLoadingBeneficiaries={isLoadingBeneficiaries}
+						onNext={(data) => {
+							commonProps.onUpdate(data);
+							commonProps.onNext();
+						}}
+						onBack={commonProps.onBack}
+						initialData={{
+							residuaryBeneficiaries: formData.residuaryBeneficiaries || [],
+						}}
 					/>
 				);
 
 			case "executors":
-				return <ExecutorStep {...commonProps} />;
+				return (
+					<ExecutorStep
+						data={formData.executors || []}
+						onUpdate={(data) => {
+							commonProps.onUpdate({ executors: data });
+						}}
+						onNext={commonProps.onNext}
+						onBack={commonProps.onBack}
+					/>
+				);
 
 			case "witnesses":
 				return <WitnessesStep {...commonProps} />;
@@ -598,11 +613,7 @@ export default function WillWizard() {
 
 			case "review":
 				return (
-					<ReviewStep
-						{...commonProps}
-						beneficiaries={needsBeneficiaryData ? allBeneficiaries : []}
-						isLoadingBeneficiaries={isLoadingBeneficiaries}
-					/>
+					<ReviewStep onSave={commonProps.onNext} onBack={commonProps.onBack} />
 				);
 
 			default:
