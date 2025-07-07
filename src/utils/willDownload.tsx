@@ -213,6 +213,24 @@ interface CompleteWillData {
 		will_id: string;
 		user_id: string;
 	};
+	pets_guardian?: {
+		id: string;
+		created_at: string;
+		user_id: string;
+		will_id: string;
+		guardian_id: string;
+		person: {
+			id: string;
+			user_id: string;
+			will_id: string;
+			relationship_id: string;
+			first_name: string;
+			last_name: string;
+			is_minor: boolean;
+			created_at: string;
+			is_witness: boolean;
+		};
+	};
 }
 
 // PDF data structure that matches WillPDF component expectations
@@ -281,6 +299,14 @@ interface PDFData {
 	residuaryDistributionType?: "equal" | "manual" | undefined;
 	funeralInstructions?: {
 		wishes: string;
+	};
+	pets?: {
+		hasPets: boolean;
+		guardianName?: string;
+	};
+	petsGuardian?: {
+		fullName: string;
+		relationship: string;
 	};
 }
 
@@ -533,6 +559,20 @@ const transformWillDataToPDFFormat = (willData: CompleteWillData): PDFData => {
 		funeralInstructions: willData.funeral_instructions
 			? {
 					wishes: willData.funeral_instructions.wishes,
+			  }
+			: undefined,
+		pets: willData.pets_guardian
+			? {
+					hasPets: true,
+					guardianName: `${willData.pets_guardian.person.first_name} ${willData.pets_guardian.person.last_name}`,
+			  }
+			: undefined,
+		petsGuardian: willData.pets_guardian?.person
+			? {
+					fullName: `${willData.pets_guardian.person.first_name} ${willData.pets_guardian.person.last_name}`,
+					relationship: getFormattedRelationshipNameById(
+						willData.pets_guardian.person.relationship_id
+					),
 			  }
 			: undefined,
 	};

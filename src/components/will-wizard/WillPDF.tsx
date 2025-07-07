@@ -318,6 +318,14 @@ interface WillPDFProps {
 		funeralInstructions?: {
 			wishes: string;
 		};
+		pets?: {
+			hasPets: boolean;
+			guardianName?: string;
+		};
+		petsGuardian?: {
+			fullName: string;
+			relationship: string;
+		};
 	};
 }
 
@@ -337,6 +345,11 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 		return data.guardians && data.guardians.length > 0;
 	};
 
+	// Helper function to check if pets section should be shown
+	const shouldShowPetsSection = () => {
+		return data.pets?.hasPets && data.petsGuardian;
+	};
+
 	// Helper function to calculate section numbers
 	const getSectionNumber = () => {
 		let sectionNum = 1;
@@ -345,6 +358,7 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 			funeral: data.funeralInstructions ? sectionNum++ : null,
 			executors: sectionNum++,
 			guardians: shouldShowGuardiansSection() ? sectionNum++ : null,
+			pets: shouldShowPetsSection() ? sectionNum++ : null,
 			distribution: sectionNum++,
 			gifts: data.gifts && data.gifts.length > 0 ? sectionNum++ : null,
 			administration: sectionNum++,
@@ -609,6 +623,42 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 							make decisions regarding the care, education, and welfare of my
 							minor children, including but not limited to decisions about their
 							residence, education, healthcare, and general upbringing.
+						</Text>
+					</View>
+				)}
+
+				{/* Pet Care Section */}
+				{shouldShowPetsSection() && (
+					<View style={styles.guardianSection}>
+						<Text style={styles.guardianTitle}>
+							{sections.pets}. Pet Care Provision
+						</Text>
+
+						<Text style={styles.guardianText}>
+							I give and bequeath my pet(s) to{" "}
+							<Text style={{ fontWeight: "bold" }}>
+								{data.petsGuardian?.fullName}
+								{data.petsGuardian?.relationship
+									? ` (my ${data.petsGuardian.relationship.toLowerCase()})`
+									: ""}
+							</Text>
+							.
+						</Text>
+
+						<Text style={styles.guardianText}>
+							I request that this person provide a loving home for my pet(s) and
+							care for them according to their individual needs. This includes
+							providing adequate food, water, shelter, veterinary care,
+							exercise, and companionship for the remainder of their natural
+							lives.
+						</Text>
+
+						<Text style={styles.guardianText}>
+							If this designated caregiver is unable or unwilling to accept
+							responsibility for my pet(s), I direct my executors to make
+							appropriate arrangements for their care, including placement with
+							a suitable alternative caregiver or, if necessary, a reputable
+							animal rescue organization.
 						</Text>
 					</View>
 				)}
