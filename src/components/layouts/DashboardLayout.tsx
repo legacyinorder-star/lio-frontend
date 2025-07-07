@@ -362,10 +362,57 @@ export function DashboardLayout() {
 							</Button>
 							<DropdownMenuContent
 								id="user-menu"
-								className="w-48 sm:w-56 bg-white border border-[#ECECEC] shadow-md max-w-[calc(100vw-2rem)]"
+								className="w-48 sm:w-56 bg-white border border-[#ECECEC] shadow-md max-w-[calc(100vw-2rem)] absolute right-0"
 								align="end"
 							>
-								<DropdownMenuLabel className="font-normal">
+								{/* Mobile Navigation Links - Only visible on mobile */}
+								<div className="md:hidden">
+									<DropdownMenuLabel className="font-medium text-xs text-muted-foreground uppercase tracking-wide">
+										Navigation
+									</DropdownMenuLabel>
+									<DropdownMenuItem
+										asChild
+										className="cursor-pointer hover:bg-[#F5F5F5]"
+									>
+										<Link to="/app/dashboard" className="flex items-center">
+											<img
+												src="/svgs/dashboard_icons/home.svg"
+												alt="Home"
+												className="mr-2 h-4 w-4"
+											/>
+											<span>Home</span>
+										</Link>
+									</DropdownMenuItem>
+									<DropdownMenuItem
+										asChild
+										className="cursor-pointer hover:bg-[#F5F5F5]"
+									>
+										<Link to="/app/documents" className="flex items-center">
+											<img
+												src="/svgs/dashboard_icons/documents.svg"
+												alt="Documents"
+												className="mr-2 h-4 w-4"
+											/>
+											<span>Documents</span>
+										</Link>
+									</DropdownMenuItem>
+									<DropdownMenuItem
+										asChild
+										className="cursor-pointer hover:bg-[#F5F5F5]"
+									>
+										<Link to="/app/vault" className="flex items-center">
+											<img
+												src="/svgs/dashboard_icons/vault.svg"
+												alt="Vault"
+												className="mr-2 h-4 w-4"
+											/>
+											<span>My Vault</span>
+										</Link>
+									</DropdownMenuItem>
+									<DropdownMenuSeparator />
+								</div>
+
+								{/* <DropdownMenuLabel className="font-normal">
 									<div className="flex flex-col space-y-1">
 										<p className="text-sm font-medium leading-none">
 											{userDetails.first_name + " " + userDetails.last_name}
@@ -375,7 +422,7 @@ export function DashboardLayout() {
 										</p>
 									</div>
 								</DropdownMenuLabel>
-								<DropdownMenuSeparator />
+								<DropdownMenuSeparator /> */}
 								{userDetails.role === "admin" && (
 									<>
 										<DropdownMenuItem
