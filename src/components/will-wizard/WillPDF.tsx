@@ -117,6 +117,21 @@ const styles = StyleSheet.create({
 		fontSize: 14,
 		marginBottom: 15,
 	},
+	funeralSection: {
+		marginTop: 30,
+		marginBottom: 20,
+	},
+	funeralTitle: {
+		fontSize: 24,
+		fontWeight: "bold",
+		marginBottom: 20,
+		textAlign: "left",
+	},
+	funeralText: {
+		textAlign: "justify",
+		fontSize: 14,
+		marginBottom: 15,
+	},
 	executorSection: {
 		marginTop: 30,
 		marginBottom: 20,
@@ -498,11 +513,11 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 
 				{/* Funeral Instructions Section */}
 				{data.funeralInstructions && (
-					<View style={styles.scopeSection}>
-						<Text style={styles.scopeTitle}>
+					<View style={styles.funeralSection}>
+						<Text style={styles.funeralTitle}>
 							{sections.funeral}. Funeral wishes
 						</Text>
-						<Text style={styles.scopeText}>
+						<Text style={styles.funeralText}>
 							I want my body to be {data.funeralInstructions.wishes}.
 						</Text>
 					</View>
