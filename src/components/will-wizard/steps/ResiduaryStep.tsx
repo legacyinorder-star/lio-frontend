@@ -628,7 +628,7 @@ export default function ResiduaryStep({
 	return (
 		<div className="space-y-6">
 			<div className="space-y-2">
-				<h2 className="text-[2rem] font-medium text-black">
+				<h2 className="text-xl sm:text-2xl lg:text-[2rem] font-medium text-black">
 					Distribution of Residuary Estate
 				</h2>
 				<p className="text-muted-foreground">

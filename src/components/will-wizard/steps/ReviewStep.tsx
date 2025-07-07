@@ -866,7 +866,7 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 		if (isLoading || !reviewData) {
 			return (
 				<div className="space-y-6">
-					<div className="text-[2rem] font-medium text-black">
+					<div className="text-xl sm:text-2xl lg:text-[2rem] font-medium text-black">
 						Review Your Will
 					</div>
 					<LoadingSpinner

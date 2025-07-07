@@ -200,7 +200,10 @@ export default function KnowledgeBaseSidebar({
 	const articles = stepArticles[currentStep] || [];
 
 	return (
-		<div className="w-80 p-6 self-start" style={{ backgroundColor: "#EDFBF6" }}>
+		<div
+			className="w-full lg:w-80 p-4 lg:p-6 self-start"
+			style={{ backgroundColor: "#EDFBF6" }}
+		>
 			<h3
 				className="text-black font-semibold mb-4"
 				style={{ fontSize: "1rem" }}
@@ -223,7 +226,7 @@ export default function KnowledgeBaseSidebar({
 				))}
 			</div>
 
-			<div className="mt-8 p-4 bg-white/50 rounded-lg">
+			<div className="mt-6 lg:mt-8 p-3 lg:p-4 bg-white/50 rounded-lg">
 				<h4 className="font-medium text-gray-900 mb-2 text-sm">
 					Need More Help?
 				</h4>

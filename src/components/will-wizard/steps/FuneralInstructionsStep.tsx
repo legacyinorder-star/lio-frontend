@@ -211,7 +211,7 @@ export default function FuneralInstructionsStep({
 	if (isLoading) {
 		return (
 			<div className="space-y-4">
-				<div className="text-[2rem] font-medium text-black">
+				<div className="text-xl sm:text-2xl lg:text-[2rem] font-medium text-black">
 					Funeral Wishes (Optional)
 				</div>
 				<div className="flex items-center justify-center py-8">
@@ -226,7 +226,9 @@ export default function FuneralInstructionsStep({
 
 	return (
 		<div className="space-y-4">
-			<div className="text-[2rem] font-medium text-black">Funeral Wishes</div>
+			<div className="text-xl sm:text-2xl lg:text-[2rem] font-medium text-black">
+				Funeral Wishes
+			</div>
 			<div className="text-muted-foreground">
 				Please indicate your preference for funeral arrangements. This
 				information will help your loved ones carry out your wishes.

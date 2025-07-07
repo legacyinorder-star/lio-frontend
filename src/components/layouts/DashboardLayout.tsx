@@ -138,22 +138,22 @@ export function DashboardLayout() {
 	}
 
 	return (
-		<div className="min-h-screen flex flex-col px-4">
+		<div className="min-h-screen flex flex-col px-0 sm:px-4">
 			{/* Header */}
 			<header className="sticky top-0 z-40 border-b bg-background">
-				<div className="flex h-16 items-center justify-between px-7">
-					<div className="flex items-center space-x-20">
+				<div className="flex h-16 items-center justify-between px-4 sm:px-7">
+					<div className="flex items-center space-x-4 sm:space-x-8 lg:space-x-20">
 						{/* Logo */}
-						<Link to="/" className="flex items-center">
+						<Link to="/" className="flex items-center flex-shrink-0">
 							<img
 								src="/logos/Original.svg"
 								alt="Legacy In Order"
-								className="h-10"
+								className="h-8 sm:h-10"
 							/>
 						</Link>
 
-						{/* Navigation Links */}
-						<nav className="flex items-center space-x-8">
+						{/* Navigation Links - Hidden on mobile */}
+						<nav className="hidden md:flex items-center space-x-6 lg:space-x-8">
 							<Link
 								to="/app/dashboard"
 								className={cn(
@@ -205,27 +205,30 @@ export function DashboardLayout() {
 						</nav>
 					</div>
 
-					<div className="flex items-center space-x-4">
+					<div className="flex items-center space-x-2 sm:space-x-4">
 						{/* {userDetails.role === "admin" && (
 							<SessionStatus showInDropdown compact />
 						)} */}
-						<Button
-							variant="ghost"
-							size="icon"
-							className="relative"
-							aria-label="Help & Support"
-						>
-							<MessageCircleQuestion className="h-5 w-5" />
-						</Button>
-						<Button
-							variant="ghost"
-							size="icon"
-							className="relative"
-							aria-label="Notifications"
-						>
-							<Bell className="h-5 w-5" />
-							<span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500"></span>
-						</Button>
+						{/* Help & Notifications - Hidden on small mobile, visible on sm+ */}
+						<div className="hidden sm:flex items-center space-x-2">
+							<Button
+								variant="ghost"
+								size="icon"
+								className="relative"
+								aria-label="Help & Support"
+							>
+								<MessageCircleQuestion className="h-5 w-5" />
+							</Button>
+							<Button
+								variant="ghost"
+								size="icon"
+								className="relative"
+								aria-label="Notifications"
+							>
+								<Bell className="h-5 w-5" />
+								<span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500"></span>
+							</Button>
+						</div>
 						<DropdownMenu
 							onOpenChange={(open) => {
 								if (!open) {
@@ -240,7 +243,7 @@ export function DashboardLayout() {
 						>
 							<Button
 								variant="default"
-								className="bg-primary hover:bg-primary/90 text-white cursor-pointer"
+								className="bg-primary hover:bg-primary/90 text-white cursor-pointer text-sm px-3 sm:px-4"
 								onClick={(e) => {
 									e.preventDefault();
 									e.stopPropagation();
@@ -257,19 +260,21 @@ export function DashboardLayout() {
 								{isLoadingWill ? (
 									<>
 										<div className="h-4 w-4 animate-spin rounded-full border-t-2 border-b-2 border-black mr-2" />
-										Loading...
+										<span className="hidden sm:inline">Loading...</span>
 									</>
 								) : (
 									<>
 										{activeWill ? (
 											<>
-												<Edit className="mr-2 h-4 w-4" />
-												Continue Will
+												<Edit className="mr-1 sm:mr-2 h-4 w-4" />
+												<span className="hidden sm:inline">Continue Will</span>
+												<span className="sm:hidden">Continue</span>
 											</>
 										) : (
 											<>
-												<Plus className="mr-2 h-4 w-4" />
-												Create Will
+												<Plus className="mr-1 sm:mr-2 h-4 w-4" />
+												<span className="hidden sm:inline">Create Will</span>
+												<span className="sm:hidden">Create</span>
 											</>
 										)}
 									</>
@@ -277,7 +282,8 @@ export function DashboardLayout() {
 							</Button>
 							<DropdownMenuContent
 								id="create-document-menu"
-								className="w-56 bg-white border border-[#ECECEC] shadow-md"
+								className="w-48 sm:w-56 bg-white border border-[#ECECEC] shadow-md max-w-[calc(100vw-2rem)]"
+								align="end"
 							>
 								<DropdownMenuLabel className="font-medium">
 									Create New Document
@@ -329,7 +335,6 @@ export function DashboardLayout() {
 						</DropdownMenu>
 
 						<DropdownMenu
-							align="end"
 							onOpenChange={(open) => {
 								if (!open) {
 									const triggerButton = document.querySelector(
@@ -343,21 +348,22 @@ export function DashboardLayout() {
 						>
 							<Button
 								variant="ghost"
-								className="flex items-center space-x-2 px-2 hover:bg-transparent"
+								className="flex items-center space-x-1 sm:space-x-2 px-1 sm:px-2 hover:bg-transparent"
 								data-user-menu-trigger
 								aria-haspopup="menu"
 							>
 								<Avatar className="h-4 w-4 bg-black/10">
 									<User className="h-4 w-4 text-black" />
 								</Avatar>
-								<span className="text-sm font-[400]">
+								<span className="text-sm font-[400] hidden sm:inline">
 									{userDetails.first_name + " " + userDetails.last_name}
 								</span>
 								<ChevronDown className="h-4 w-4 text-muted-foreground" />
 							</Button>
 							<DropdownMenuContent
 								id="user-menu"
-								className="w-56 bg-white border border-[#ECECEC] shadow-md"
+								className="w-48 sm:w-56 bg-white border border-[#ECECEC] shadow-md max-w-[calc(100vw-2rem)]"
+								align="end"
 							>
 								<DropdownMenuLabel className="font-normal">
 									<div className="flex flex-col space-y-1">
@@ -414,12 +420,21 @@ export function DashboardLayout() {
 			{/* Will Wizard Step Indicator */}
 			{isInWillWizard && currentStep && (
 				<div
-					className="w-full max-w-[2000px] mt-[0.15rem] py-6 px-4 text-left text-sm font-medium text-[#173C37]"
+					className="w-full max-w-[2000px] mt-[0.15rem] py-4 sm:py-6 px-4 text-left text-xs sm:text-sm font-medium text-[#173C37]"
 					style={{ backgroundColor: "#DFF2EB" }}
 				>
 					{(() => {
 						const stepInfo = getStepInfo(currentStep);
-						return `Section ${stepInfo.number} of 13: ${stepInfo.name}`;
+						return (
+							<>
+								<span className="hidden sm:inline">
+									Section {stepInfo.number} of 13: {stepInfo.name}
+								</span>
+								<span className="sm:hidden">
+									{stepInfo.number}/13: {stepInfo.name}
+								</span>
+							</>
+						);
 					})()}
 				</div>
 			)}
@@ -427,13 +442,15 @@ export function DashboardLayout() {
 			{/* Page Content */}
 			{isInWillWizard ? (
 				<div className="flex-1 flex overflow-hidden">
-					<WillWizardSidebar />
-					<main className="flex-1 p-6 overflow-auto">
+					<div className="hidden lg:block">
+						<WillWizardSidebar />
+					</div>
+					<main className="flex-1 p-4 sm:p-6 overflow-auto">
 						<Outlet />
 					</main>
 				</div>
 			) : (
-				<main className="flex-1 p-6 overflow-auto">
+				<main className="flex-1 p-4 sm:p-6 overflow-auto">
 					<Outlet />
 				</main>
 			)}

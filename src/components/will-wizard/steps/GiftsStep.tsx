@@ -649,7 +649,7 @@ export default function GiftsStep({ onNext, onBack }: GiftsStepProps) {
 
 	return (
 		<div className="space-y-4">
-			<div className="text-[2rem] font-medium text-black">
+			<div className="text-xl sm:text-2xl lg:text-[2rem] font-medium text-black">
 				Specify any one-off gifts
 			</div>
 			<div className="text-muted-foreground">

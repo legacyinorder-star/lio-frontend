@@ -412,7 +412,7 @@ export default function GuardiansStep({
 
 	return (
 		<div className="space-y-4">
-			<div className="text-[2rem] font-medium text-black">
+			<div className="text-xl sm:text-2xl lg:text-[2rem] font-medium text-black">
 				Guardians for Your Children
 			</div>
 			<div className="text-muted-foreground">

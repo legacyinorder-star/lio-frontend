@@ -348,7 +348,7 @@ export default function PetsStep({
 
 	return (
 		<div className="space-y-6 w-full max-w-4xl mx-auto">
-			<div className="text-[2rem] font-medium text-black">
+			<div className="text-xl sm:text-2xl lg:text-[2rem] font-medium text-black">
 				Do you have pets?
 			</div>
 			<div className="text-muted-foreground">

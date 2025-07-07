@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useWillWizard } from "@/context/WillWizardContext";
 import KnowledgeBaseSidebar from "./components/KnowledgeBaseSidebar";
+import { BookOpen, X } from "lucide-react";
 
 // Import step components
 import NameStep from "./steps/NameStep";
@@ -44,6 +45,7 @@ interface PersonResponse {
 export default function WillWizard() {
 	// Track the current question being shown
 	const [currentQuestion, setCurrentQuestion] = useState<QuestionType>("name");
+	const [showKnowledgeBase, setShowKnowledgeBase] = useState(false);
 	const { activeWill, setActiveWill } = useWill();
 	const { setWillWizardState } = useWillWizard();
 	const {
@@ -471,7 +473,7 @@ export default function WillWizard() {
 		if (currentQuestion === "hasSpouse" && relationshipsLoading) {
 			return (
 				<div className="space-y-4">
-					<div className="text-[2rem] font-medium text-black">
+					<div className="text-xl sm:text-2xl lg:text-[2rem] font-medium text-black">
 						Are you married or in a legally recognized civil relationship?
 					</div>
 					<div className="text-muted-foreground">
@@ -491,7 +493,7 @@ export default function WillWizard() {
 		if (currentQuestion === "hasSpouse" && relationshipsError) {
 			return (
 				<div className="space-y-4">
-					<div className="text-[2rem] font-medium text-red-600">
+					<div className="text-xl sm:text-2xl lg:text-[2rem] font-medium text-red-600">
 						Error Loading Relationships
 					</div>
 					<div className="text-muted-foreground">
@@ -623,16 +625,47 @@ export default function WillWizard() {
 
 	return (
 		<WillGuard currentStep={currentQuestion}>
-			<div className="flex">
+			<div className="flex flex-col lg:flex-row min-h-screen">
 				{/* Main Content Area */}
-				<div className="flex-1 container mx-auto py-8">
+				<div className="flex-1 container mx-auto py-4 lg:py-8 px-4 lg:px-8">
 					<div className="max-w-3xl mx-auto">
-						<div className="pt-6">{renderQuestion()}</div>
+						{/* Mobile Knowledge Base Toggle */}
+						<div className="lg:hidden mb-4">
+							<Button
+								variant="outline"
+								size="sm"
+								onClick={() => setShowKnowledgeBase(!showKnowledgeBase)}
+								className="flex items-center gap-2"
+							>
+								{showKnowledgeBase ? (
+									<>
+										<X className="h-4 w-4" />
+										Hide Help
+									</>
+								) : (
+									<>
+										<BookOpen className="h-4 w-4" />
+										Show Help
+									</>
+								)}
+							</Button>
+						</div>
+
+						{/* Mobile Knowledge Base */}
+						{showKnowledgeBase && (
+							<div className="lg:hidden mb-6">
+								<KnowledgeBaseSidebar currentStep={currentQuestion} />
+							</div>
+						)}
+
+						<div className="pt-2 lg:pt-6 space-y-6">{renderQuestion()}</div>
 					</div>
 				</div>
 
-				{/* Knowledge Base Sidebar */}
-				<KnowledgeBaseSidebar currentStep={currentQuestion} />
+				{/* Knowledge Base Sidebar - Hidden on mobile, visible on large screens */}
+				<div className="hidden lg:block">
+					<KnowledgeBaseSidebar currentStep={currentQuestion} />
+				</div>
 			</div>
 		</WillGuard>
 	);
