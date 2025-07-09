@@ -36,7 +36,7 @@ import PaymentCancelPage from "@/pages/PaymentCancelPage";
 import StripeCheckoutPage from "@/pages/StripeCheckoutPage";
 import WillSuccessPage from "@/pages/WillSuccessPage";
 import RateLimitTestPage from "@/pages/RateLimitTestPage";
-import VaultComingSoonPage from "@/pages/VaultComingSoonPage";
+import { VaultPage } from "@/pages/VaultPage";
 import DocumentsPage from "@/pages/DocumentsPage";
 
 function App() {
@@ -125,7 +125,7 @@ function App() {
 										<Route path="documents" element={<DocumentsPage />} />
 										<Route path="create-will" element={<WillWizard />} />
 										<Route path="manage-profile" element={<ProfilePage />} />
-										<Route path="vault" element={<VaultComingSoonPage />} />
+										<Route path="vault" element={<VaultPage />} />
 									</Route>
 									<Route
 										path="/admin"
