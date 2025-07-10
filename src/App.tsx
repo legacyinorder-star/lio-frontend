@@ -37,6 +37,7 @@ import StripeCheckoutPage from "@/pages/StripeCheckoutPage";
 import WillSuccessPage from "@/pages/WillSuccessPage";
 import RateLimitTestPage from "@/pages/RateLimitTestPage";
 import { VaultPage } from "@/pages/VaultPage";
+import { FolderViewPage } from "@/pages/FolderViewPage";
 import DocumentsPage from "@/pages/DocumentsPage";
 
 function App() {
@@ -126,6 +127,10 @@ function App() {
 										<Route path="create-will" element={<WillWizard />} />
 										<Route path="manage-profile" element={<ProfilePage />} />
 										<Route path="vault" element={<VaultPage />} />
+										<Route
+											path="vault/folder/:folderId"
+											element={<FolderViewPage />}
+										/>
 									</Route>
 									<Route
 										path="/admin"

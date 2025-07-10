@@ -1,5 +1,6 @@
 import { MoreVertical, Plus, Eye, Trash2, Edit } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { apiClient } from "@/utils/apiClient";
 import {
@@ -30,6 +31,7 @@ interface Folder {
 }
 
 export function VaultPage() {
+	const navigate = useNavigate();
 	const [selectedCard, setSelectedCard] = useState<string | null>(null);
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [folderName, setFolderName] = useState("");
@@ -159,9 +161,8 @@ export function VaultPage() {
 		}
 	};
 
-	const handleViewFolder = (folderName: string) => {
-		toast.info(`Opening folder: ${folderName}`);
-		// Add logic to navigate to folder view
+	const handleViewFolder = (folderId: string) => {
+		navigate(`/app/vault/folder/${folderId}`);
 	};
 
 	const handleEditFolder = (folder: Folder) => {
@@ -324,7 +325,7 @@ export function VaultPage() {
 													className="cursor-pointer"
 													onClick={(e) => {
 														e.stopPropagation();
-														handleViewFolder(folder.name);
+														handleViewFolder(folder.id);
 													}}
 												>
 													<Eye className="mr-2 h-4 w-4" />
