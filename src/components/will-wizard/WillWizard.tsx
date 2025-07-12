@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { WillFormData, QuestionType } from "./types/will.types";
+import { WillFormData } from "./types/will.types";
 import WillGuard from "./WillGuard";
 import {
 	useWill,
@@ -13,6 +13,7 @@ import { useRelationships } from "@/hooks/useRelationships";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useWillWizard } from "@/context/WillWizardContext";
+import { useWillWizardNavigation } from "@/hooks/useWillWizardNavigation";
 import KnowledgeBaseSidebar from "./components/KnowledgeBaseSidebar";
 import { BookOpen, X } from "lucide-react";
 
@@ -43,11 +44,15 @@ interface PersonResponse {
 }
 
 export default function WillWizard() {
-	// Track the current question being shown
-	const [currentQuestion, setCurrentQuestion] = useState<QuestionType>("name");
 	const [showKnowledgeBase, setShowKnowledgeBase] = useState(false);
 	const { activeWill, setActiveWill } = useWill();
-	const { setWillWizardState } = useWillWizard();
+	const { setWillWizardState, setActiveWillId, markStepComplete } =
+		useWillWizard();
+	const { currentUrlStep, navigateToStep } = useWillWizardNavigation();
+
+	// Use URL-based current step, fallback to "name" if not available
+	const currentQuestion = currentUrlStep || "name";
+
 	const {
 		relationships,
 		isLoading: relationshipsLoading,
@@ -213,6 +218,18 @@ export default function WillWizard() {
 		};
 	}, [currentQuestion, setWillWizardState]);
 
+	// Initialize progress tracking when activeWill is available
+	useEffect(() => {
+		console.log("🎯 WillWizard: activeWill changed to:", activeWill?.id);
+		if (activeWill?.id) {
+			console.log(
+				"🚀 WillWizard: Calling setActiveWillId with:",
+				activeWill.id
+			);
+			setActiveWillId(activeWill.id);
+		}
+	}, [activeWill?.id, setActiveWillId]);
+
 	// Debug: Log relationships loading state
 	useEffect(() => {
 		console.log("WillWizard - Relationships state:", {
@@ -358,15 +375,18 @@ export default function WillWizard() {
 	};
 
 	const handleNext = () => {
+		// Mark current step as complete before moving to next step
+		markStepComplete(currentQuestion);
+
 		switch (currentQuestion) {
 			case "name":
-				setCurrentQuestion("address");
+				navigateToStep("address");
 				break;
 			case "address":
-				setCurrentQuestion("hasSpouse");
+				navigateToStep("hasSpouse");
 				break;
 			case "hasSpouse":
-				setCurrentQuestion("hasChildren");
+				navigateToStep("hasChildren");
 				break;
 			case "hasChildren":
 				if (
@@ -380,34 +400,34 @@ export default function WillWizard() {
 						return child.isMinor || childAny.is_minor || false;
 					})
 				) {
-					setCurrentQuestion("guardians");
+					navigateToStep("guardians");
 				} else {
-					setCurrentQuestion("pets");
+					navigateToStep("pets");
 				}
 				break;
 			case "guardians":
-				setCurrentQuestion("pets");
+				navigateToStep("pets");
 				break;
 			case "pets":
-				setCurrentQuestion("hasAssets");
+				navigateToStep("hasAssets");
 				break;
 			case "hasAssets":
-				setCurrentQuestion("gifts");
+				navigateToStep("gifts");
 				break;
 			case "gifts":
-				setCurrentQuestion("residuary");
+				navigateToStep("residuary");
 				break;
 			case "residuary":
-				setCurrentQuestion("executors");
+				navigateToStep("executors");
 				break;
 			case "executors":
-				setCurrentQuestion("witnesses");
+				navigateToStep("witnesses");
 				break;
 			case "witnesses":
-				setCurrentQuestion("funeralInstructions");
+				navigateToStep("funeralInstructions");
 				break;
 			case "funeralInstructions":
-				setCurrentQuestion("review");
+				navigateToStep("review");
 				break;
 		}
 	};
@@ -415,16 +435,16 @@ export default function WillWizard() {
 	const handleBack = () => {
 		switch (currentQuestion) {
 			case "address":
-				setCurrentQuestion("name");
+				navigateToStep("name");
 				break;
 			case "hasSpouse":
-				setCurrentQuestion("address");
+				navigateToStep("address");
 				break;
 			case "hasChildren":
-				setCurrentQuestion("hasSpouse");
+				navigateToStep("hasSpouse");
 				break;
 			case "guardians":
-				setCurrentQuestion("hasChildren");
+				navigateToStep("hasChildren");
 				break;
 			case "pets":
 				if (
@@ -438,31 +458,31 @@ export default function WillWizard() {
 						return child.isMinor || childAny.is_minor || false;
 					})
 				) {
-					setCurrentQuestion("guardians");
+					navigateToStep("guardians");
 				} else {
-					setCurrentQuestion("hasChildren");
+					navigateToStep("hasChildren");
 				}
 				break;
 			case "hasAssets":
-				setCurrentQuestion("pets");
+				navigateToStep("pets");
 				break;
 			case "gifts":
-				setCurrentQuestion("hasAssets");
+				navigateToStep("hasAssets");
 				break;
 			case "residuary":
-				setCurrentQuestion("gifts");
+				navigateToStep("gifts");
 				break;
 			case "executors":
-				setCurrentQuestion("residuary");
+				navigateToStep("residuary");
 				break;
 			case "witnesses":
-				setCurrentQuestion("executors");
+				navigateToStep("executors");
 				break;
 			case "funeralInstructions":
-				setCurrentQuestion("witnesses");
+				navigateToStep("witnesses");
 				break;
 			case "review":
-				setCurrentQuestion("funeralInstructions");
+				navigateToStep("funeralInstructions");
 				break;
 		}
 	};

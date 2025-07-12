@@ -1,8 +1,11 @@
 import { useWillWizard } from "@/context/WillWizardContext";
+import { useWillWizardNavigation } from "@/hooks/useWillWizardNavigation";
 import { QuestionType } from "@/components/will-wizard/types/will.types";
 
 export function WillWizardSidebar() {
-	const { currentStep, getStepInfo } = useWillWizard();
+	const { currentStep, getStepInfo, completedSteps, canAccessStep } =
+		useWillWizard();
+	const { navigateToStep } = useWillWizardNavigation();
 
 	// Define the step order
 	const stepOrder: QuestionType[] = [
@@ -21,12 +24,17 @@ export function WillWizardSidebar() {
 		"review",
 	];
 
-	const currentStepIndex = currentStep ? stepOrder.indexOf(currentStep) : -1;
+	const getStepStatus = (step: QuestionType) => {
+		if (completedSteps[step]) return "completed";
+		if (step === currentStep) return "current";
+		if (canAccessStep(step)) return "accessible";
+		return "locked";
+	};
 
-	const getStepStatus = (stepIndex: number) => {
-		if (stepIndex < currentStepIndex) return "completed";
-		if (stepIndex === currentStepIndex) return "current";
-		return "upcoming";
+	const handleStepClick = (step: QuestionType) => {
+		if (canAccessStep(step)) {
+			navigateToStep(step);
+		}
 	};
 
 	return (
@@ -41,8 +49,8 @@ export function WillWizardSidebar() {
 							borderRadius: "1.5rem",
 						}}
 					>
-						{stepOrder.map((step, index) => {
-							const status = getStepStatus(index);
+						{stepOrder.map((step, _index) => {
+							const status = getStepStatus(step);
 
 							return (
 								<div
@@ -62,6 +70,8 @@ export function WillWizardSidebar() {
 											filter:
 												status === "current"
 													? "brightness(0) saturate(100%) invert(15%) sepia(30%) saturate(1084%) hue-rotate(118deg) brightness(94%) contrast(93%)"
+													: status === "locked"
+													? "brightness(0) saturate(100%) invert(75%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(100%) contrast(100%)"
 													: undefined,
 										}}
 									/>
@@ -73,9 +83,10 @@ export function WillWizardSidebar() {
 					{/* Section Names */}
 					<div className="flex-1">
 						<ul className="space-y-4 mt-3">
-							{stepOrder.map((step, index) => {
+							{stepOrder.map((step, _index) => {
 								const stepInfo = getStepInfo(step);
-								const status = getStepStatus(index);
+								const status = getStepStatus(step);
+								const isClickable = canAccessStep(step);
 
 								return (
 									<li
@@ -89,8 +100,15 @@ export function WillWizardSidebar() {
 													? "text-[#0F433E] font-semibold"
 													: status === "completed"
 													? "text-[#173C37] font-semibold"
+													: status === "accessible"
+													? "text-[#0F433E] font-medium"
 													: "text-[#909090]"
+											} ${
+												isClickable
+													? "cursor-pointer hover:text-[#0F433E]"
+													: "cursor-not-allowed"
 											}`}
+											onClick={() => handleStepClick(step)}
 										>
 											{stepInfo.name}
 										</div>

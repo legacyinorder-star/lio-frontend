@@ -314,13 +314,13 @@ export default function DashboardPage() {
 							No documents yet
 						</h3>
 						<p className="text-gray-600 mb-4">
-							Get started by creating your first will
+							Get started by creating your will
 						</p>
 						<Button
 							onClick={() => navigate("/app/create-will")}
 							className="bg-primary hover:bg-primary/90 text-white"
 						>
-							Create Your First Will
+							Create Your Will
 						</Button>
 					</div>
 				) : (

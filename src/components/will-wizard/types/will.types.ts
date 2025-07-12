@@ -14,6 +14,17 @@ export type QuestionType =
 	| "funeralInstructions"
 	| "review";
 
+// Add step completion tracking
+export type StepCompletion = {
+	[key in QuestionType]: boolean;
+};
+
+export interface WillProgress {
+	completedSteps: StepCompletion;
+	currentStep: QuestionType;
+	lastCompletedStep: QuestionType | null;
+}
+
 // Common Types
 export type FormChangeEvent = React.ChangeEvent<HTMLInputElement>;
 

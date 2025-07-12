@@ -125,6 +125,7 @@ function App() {
 										<Route path="dashboard" element={<DashboardPage />} />
 										<Route path="documents" element={<DocumentsPage />} />
 										<Route path="create-will" element={<WillWizard />} />
+										<Route path="create-will/:step" element={<WillWizard />} />
 										<Route path="manage-profile" element={<ProfilePage />} />
 										<Route path="vault" element={<VaultPage />} />
 										<Route
