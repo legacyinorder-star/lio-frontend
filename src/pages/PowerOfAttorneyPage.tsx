@@ -97,14 +97,14 @@ export default function PowerOfAttorneyPage() {
 									<h3 className="text-[1.25rem] font-semibold mb-4 mt-0 pt-0 text-[#173C37]">
 										Health & Welfare LPA
 									</h3>
-									<p className="text-secondary text-[1rem]">
-										Empowers your attorney to decide on:
+									<div className="text-secondary text-[1rem]">
+										<p>Empowers your attorney to decide on:</p>
 										<ul className="list-disc list-inside">
 											<li>Medical treatment and care</li>
 											<li>Where you live and who supports you</li>
 											<li>Life-sustaining treatment (if you permit it)</li>
 										</ul>
-									</p>
+									</div>
 								</div>
 							</div>
 
@@ -121,14 +121,14 @@ export default function PowerOfAttorneyPage() {
 									<h3 className="text-[1.25rem] font-semibold mb-4 mt-0 pt-0 text-[#173C37]">
 										Property & Financial Affairs LPA
 									</h3>
-									<p className="text-secondary text-[1rem]">
-										Gives your attorney authority to:
+									<div className="text-secondary text-[1rem]">
+										<p>Gives your attorney authority to:</p>
 										<ul className="list-disc list-inside">
 											<li>Manage bank accounts</li>
 											<li>Pay bills and mortgage</li>
 											<li>Handle investments and pensions</li>
 										</ul>
-									</p>
+									</div>
 								</div>
 							</div>
 						</div>
