@@ -256,6 +256,72 @@ const styles = StyleSheet.create({
 		fontSize: 14,
 		marginBottom: 10,
 	},
+	appendixSection: {
+		marginTop: 40,
+		marginBottom: 20,
+	},
+	appendixTitle: {
+		fontSize: 24,
+		fontWeight: "bold",
+		marginBottom: 20,
+		textAlign: "left",
+	},
+	appendixText: {
+		fontSize: 14,
+		textAlign: "justify",
+		marginBottom: 15,
+	},
+	assetTable: {
+		border: "1px solid #000000",
+		borderCollapse: "collapse",
+		width: "100%",
+	},
+	assetTableHeader: {
+		backgroundColor: "#e0e0e0",
+		borderBottom: "1px solid #000000",
+		fontWeight: "bold",
+	},
+	assetTableHeaderCell: {
+		border: "1px solid #000000",
+		padding: 8,
+		textAlign: "left",
+	},
+	assetTableRow: {
+		borderBottom: "1px solid #000000",
+	},
+	assetTableCell: {
+		border: "1px solid #000000",
+		padding: 8,
+		textAlign: "left",
+	},
+	appendixPage: { padding: 40, backgroundColor: "#fff" },
+	appendixIntro: { fontSize: 14, marginBottom: 20, textAlign: "justify" },
+	assetDetailsTitle: {
+		fontSize: 18,
+		fontWeight: "bold",
+		marginTop: 20,
+		marginBottom: 10,
+	},
+	assetDetailsIntro: { fontSize: 14, marginBottom: 20, textAlign: "justify" },
+	assetList: { marginTop: 10 },
+	assetListItem: { fontSize: 13, marginBottom: 8, textAlign: "left" },
+	assetListItemRow: {
+		flexDirection: "row",
+		alignItems: "flex-start",
+		marginBottom: 8,
+	},
+	assetBullet: {
+		fontSize: 16,
+		fontWeight: "bold",
+		marginRight: 8,
+		lineHeight: 18,
+	},
+	assetListItemText: {
+		fontSize: 13,
+		fontWeight: 600,
+		textAlign: "left",
+		flex: 1,
+	},
 });
 
 interface WillPDFProps {
@@ -677,15 +743,22 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 						I give, devise, and bequeath my estate as follows:
 					</Text>
 
-					{data.assets.map((asset, index) => (
-						<View key={index} style={styles.assetItem}>
-							<Text style={styles.assetDescription}>
-								{index + 1}. <Text>{asset.description}</Text> (
-								<Text>{asset.type}</Text>) to{" "}
-								{renderAssetDistributionText(asset)}.
-							</Text>
-						</View>
-					))}
+					{data.assets
+						.filter(
+							(asset) =>
+								asset.distributionType &&
+								asset.beneficiaries &&
+								asset.beneficiaries.length > 0
+						)
+						.map((asset, index) => (
+							<View key={index} style={styles.assetItem}>
+								<Text style={styles.assetDescription}>
+									{index + 1}. <Text>{asset.description}</Text> (
+									<Text>{asset.type}</Text>) to{" "}
+									{renderAssetDistributionText(asset)}.
+								</Text>
+							</View>
+						))}
 				</View>
 
 				{/* Estate Administration Section */}
@@ -1008,6 +1081,38 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 						Signed by the testator in our presence and then by us in the
 						presence of the testator and each other on the date shown above.
 					</Text>
+				</View>
+			</Page>
+
+			{/* Appendix: New Page */}
+			<Page style={styles.appendixPage} break>
+				<View style={styles.appendixSection}>
+					<Text style={styles.appendixTitle}>Appendix</Text>
+					<Text style={styles.appendixIntro}>
+						I have included an Appendix to this Will which is not a testamentary
+						document but has been placed with this Will to assist my Trustees.
+					</Text>
+
+					<Text style={styles.assetDetailsTitle}>Asset Details</Text>
+					<Text style={styles.assetDetailsIntro}>
+						I have included details of my assets to help my Trustees to
+						administer my estate. This list is accurate at the time of writing,
+						though not necessarily exhaustive, and appropriate efforts should
+						still be made to locate additional assets that may not be listed
+						here.
+					</Text>
+
+					{data.assets && data.assets.length > 0 ? (
+						<View style={styles.assetList}>
+							{data.assets.map((asset, idx) => (
+								<Text key={idx} style={styles.assetListItem}>
+									- {asset.description} ({asset.type})
+								</Text>
+							))}
+						</View>
+					) : (
+						<Text style={styles.appendixText}>No assets have been added.</Text>
+					)}
 				</View>
 			</Page>
 		</Document>

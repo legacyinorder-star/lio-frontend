@@ -1079,75 +1079,82 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 							<h3 className="text-xl font-semibold text-gray-900">Assets</h3>
 						</div>
 						<div className="grid gap-6">
-							{reviewData.assets?.map((asset, idx) => (
-								<div
-									key={idx}
-									className="bg-gray-50 rounded-lg p-6 border border-gray-100"
-								>
-									<div className="space-y-4 mb-4">
-										<div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-											<div className="space-y-2">
-												<label className="block text-sm font-medium text-gray-700">
-													Asset Type
-												</label>
-												<p className="text-gray-900 font-medium">
-													{asset.type}
-												</p>
+							{reviewData.assets
+								.filter(
+									(asset) =>
+										asset.distributionType &&
+										asset.beneficiaries &&
+										asset.beneficiaries.length > 0
+								)
+								.map((asset, idx) => (
+									<div
+										key={idx}
+										className="bg-gray-50 rounded-lg p-6 border border-gray-100"
+									>
+										<div className="space-y-4 mb-4">
+											<div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+												<div className="space-y-2">
+													<label className="block text-sm font-medium text-gray-700">
+														Asset Type
+													</label>
+													<p className="text-gray-900 font-medium">
+														{asset.type}
+													</p>
+												</div>
+												<div className="space-y-2">
+													<label className="block text-sm font-medium text-gray-700">
+														Distribution Type
+													</label>
+													<p className="text-gray-900 font-medium capitalize">
+														{asset.distributionType}
+													</p>
+												</div>
 											</div>
 											<div className="space-y-2">
 												<label className="block text-sm font-medium text-gray-700">
-													Distribution Type
+													Description
 												</label>
-												<p className="text-gray-900 font-medium capitalize">
-													{asset.distributionType}
-												</p>
+												<p className="text-gray-900">{asset.description}</p>
 											</div>
 										</div>
-										<div className="space-y-2">
-											<label className="block text-sm font-medium text-gray-700">
-												Description
-											</label>
-											<p className="text-gray-900">{asset.description}</p>
-										</div>
-									</div>
-									{asset.beneficiaries && asset.beneficiaries.length > 0 && (
-										<div className="border-t border-gray-200 pt-4">
-											<label className="block text-sm font-medium text-gray-700 mb-3">
-												Beneficiaries
-											</label>
-											<div className="space-y-3">
-												{asset.beneficiaries.map((beneficiary, bidx) => (
-													<div
-														key={bidx}
-														className="bg-white rounded-lg p-3 border border-gray-200"
-													>
-														<div className="flex flex-col md:flex-row md:items-center md:justify-between">
-															<div className="space-y-1">
-																<p className="text-gray-900 font-medium">
-																	{beneficiary.beneficiaryName}
-																</p>
-																<p className="text-sm text-gray-600">
-																	{beneficiary.relationship}
-																</p>
+										{asset.beneficiaries && asset.beneficiaries.length > 0 && (
+											<div className="border-t border-gray-200 pt-4">
+												<label className="block text-sm font-medium text-gray-700 mb-3">
+													Beneficiaries
+												</label>
+												<div className="space-y-3">
+													{asset.beneficiaries.map((beneficiary, bidx) => (
+														<div
+															key={bidx}
+															className="bg-white rounded-lg p-3 border border-gray-200"
+														>
+															<div className="flex flex-col md:flex-row md:items-center md:justify-between">
+																<div className="space-y-1">
+																	<p className="text-gray-900 font-medium">
+																		{beneficiary.beneficiaryName}
+																	</p>
+																	<p className="text-sm text-gray-600">
+																		{beneficiary.relationship}
+																	</p>
+																</div>
+																{asset.beneficiaries.length > 1 &&
+																	asset.distributionType === "percentage" && (
+																		<div className="mt-2 md:mt-0">
+																			<span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+																				{beneficiary.percentage
+																					? `${beneficiary.percentage}%`
+																					: "Equal share"}
+																			</span>
+																		</div>
+																	)}
 															</div>
-															{asset.beneficiaries.length > 1 &&
-																asset.distributionType === "percentage" && (
-																	<div className="mt-2 md:mt-0">
-																		<span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-																			{beneficiary.percentage
-																				? `${beneficiary.percentage}%`
-																				: "Equal share"}
-																		</span>
-																	</div>
-																)}
 														</div>
-													</div>
-												))}
+													))}
+												</div>
 											</div>
-										</div>
-									)}
-								</div>
-							))}
+										)}
+									</div>
+								))}
 						</div>
 					</section>
 				),
