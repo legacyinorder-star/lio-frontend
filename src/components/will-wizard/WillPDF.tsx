@@ -264,6 +264,21 @@ const styles = StyleSheet.create({
 		width: "60%",
 		marginBottom: 5,
 	},
+	finalDeclarationSection: {
+		marginTop: 30,
+		marginBottom: 20,
+	},
+	finalDeclarationTitle: {
+		fontSize: 24,
+		fontWeight: "bold",
+		marginBottom: 20,
+		textAlign: "left",
+	},
+	finalDeclarationText: {
+		textAlign: "justify",
+		fontSize: 14,
+		marginBottom: 10,
+	},
 });
 
 interface WillPDFProps {
@@ -385,6 +400,7 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 			powers: sectionNum++,
 			protection: sectionNum++,
 			definitions: sectionNum++,
+			finalDeclaration: sectionNum++, // Add Final Declaration before witnesses
 			witnesses: sectionNum++,
 		};
 		return sections;
@@ -925,6 +941,7 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 					</Text>
 				</View>
 
+				{/* Definitions Section */}
 				<View style={styles.distributionSection}>
 					<Text style={styles.distributionTitle}>
 						{sections.definitions}. Meaning of words used in this will
@@ -961,6 +978,29 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 						4. inheritance tax for which my executors are liable under this will
 						and which is treated as part of the general testamentary and
 						administration expenses of my Estate
+					</Text>
+				</View>
+
+				{/* Final Declaration Section */}
+				<View style={styles.finalDeclarationSection}>
+					<Text style={styles.finalDeclarationTitle}>
+						{sections.finalDeclaration}. Final Declaration
+					</Text>
+					<Text style={styles.finalDeclarationText}>I declare that:</Text>
+					<Text style={styles.finalDeclarationText}>1. I am over 18;</Text>
+					<Text style={styles.finalDeclarationText}>
+						2. I am mentally capable of making my own decisions about my will;
+					</Text>
+					<Text style={styles.finalDeclarationText}>
+						3. I am freely and voluntarily making this will;
+					</Text>
+					<Text style={styles.finalDeclarationText}>
+						4. I have considered all those persons I might reasonably be
+						expected to provide for by my will; and
+					</Text>
+					<Text style={styles.finalDeclarationText}>
+						5. I understand this will and approve it as a true reflection of my
+						wishes.
 					</Text>
 				</View>
 

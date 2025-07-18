@@ -79,11 +79,16 @@ export function DashboardLayout() {
 				return;
 			}
 
+			console.log("📡 Raw API response:", data);
+
 			// Handle both array and single object responses
 			const willData = Array.isArray(data) ? data[0] : data;
 			if (willData) {
+				console.log("📦 Will data before transformation:", willData);
 				// Transform API data to camelCase format
 				const transformedWillData = mapWillDataFromAPI(willData);
+				console.log("🔄 Transformed will data:", transformedWillData);
+				console.log("🔄 Progress data:", transformedWillData.progress);
 				setActiveWill(transformedWillData);
 			}
 		} catch (error) {
@@ -115,12 +120,17 @@ export function DashboardLayout() {
 	];
 
 	const handleWillAction = () => {
-		console.log(activeWill);
+		console.log(" handleWillAction - activeWill:", activeWill);
+		console.log("🔍 activeWill.progress:", activeWill?.progress);
+
 		if (activeWill?.id) {
-			// Continue existing will
-			navigate("/app/create-will");
+			// Continue existing will - navigate to the current step from progress
+			const currentStep = activeWill.progress?.currentStep || "name";
+			console.log(" Navigating to step:", currentStep);
+			navigate(`/app/create-will/${currentStep}`);
 		} else {
 			// Create new will
+			console.log("🚀 Creating new will");
 			navigate("/app/create-will");
 		}
 	};

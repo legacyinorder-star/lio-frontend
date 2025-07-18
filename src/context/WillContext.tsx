@@ -1,5 +1,8 @@
 import React, { createContext, useContext, useState } from "react";
 
+// Add import for QuestionType
+import { QuestionType } from "@/components/will-wizard/types/will.types";
+
 // Use the Will interface from DashboardPage for type safety
 export interface Address {
 	address: string;
@@ -102,6 +105,16 @@ export interface WillResiduary {
 	}>;
 }
 
+export interface WillProgress {
+	id: string;
+	createdAt: string;
+	willId: string;
+	userId: string;
+	completedSteps: Record<QuestionType, boolean>;
+	currentStep: QuestionType;
+	updatedAt: string;
+}
+
 export interface WillData {
 	id: string;
 	lastUpdatedAt: string;
@@ -142,6 +155,8 @@ export interface WillData {
 	witnesses: WillWitness[];
 	// Residuary estate
 	residuary?: WillResiduary;
+	// Progress data
+	progress?: WillProgress;
 }
 
 interface WillContextType {

@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 
 import { getUserDetails } from "@/utils/auth";
@@ -48,7 +48,9 @@ export default function DashboardPage() {
 		const will = wills.find((w) => w.id === willId);
 		if (will) {
 			setActiveWill(will);
-			navigate("/app/create-will");
+			// Navigate to the current step from progress
+			const currentStep = will.progress?.currentStep || "name";
+			navigate(`/app/create-will/${currentStep}`);
 		}
 	};
 
@@ -154,6 +156,9 @@ export default function DashboardPage() {
 		fetchWills();
 	}, [navigate]);
 
+	// Check if there's at least one completed will
+	const hasCompletedWill = wills.some((will) => will.status === "completed");
+
 	const actions = [
 		{
 			title: activeWill ? "Continue Your Will" : "Create New Will",
@@ -170,13 +175,18 @@ export default function DashboardPage() {
 			href: "/app/power-of-attorney",
 			action: "Create a Power of Attorney",
 		},
-		{
-			title: "Letter of Wishes",
-			description:
-				"Share personal guidance for your loved ones that complements your formal will.",
-			href: "/app/letter-of-wishes",
-			action: "Add a Letter of Wishes",
-		},
+		// Only include Letter of Wishes if there's at least one completed will
+		...(hasCompletedWill
+			? [
+					{
+						title: "Letter of Wishes",
+						description:
+							"Share personal guidance for your loved ones that complements your formal will.",
+						href: "/app/letter-of-wishes",
+						action: "Add a Letter of Wishes",
+					},
+			  ]
+			: []),
 	];
 
 	return (
@@ -206,7 +216,13 @@ export default function DashboardPage() {
 							: "Continue where you left off. It only takes a few minutes to get started."}
 					</p>
 					<Button
-						onClick={() => navigate("/app/create-will")}
+						onClick={() => {
+							if (activeWill) {
+								handleEditWill(activeWill.id);
+							} else {
+								navigate("/app/create-will");
+							}
+						}}
 						className="bg-primary hover:bg-primary/90 text-white flex items-center justify-center"
 					>
 						{!activeWill ? (
@@ -237,10 +253,16 @@ export default function DashboardPage() {
 				<h2 className="font-semibold mt-6 mb-6">Quick Links</h2>
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 					{actions.map((action) => (
-						<Link
+						<div
 							key={action.title}
-							to={action.href || "#"}
-							className="block transition-transform hover:scale-105"
+							onClick={() => {
+								if (action.title === "Continue Your Will" && activeWill) {
+									handleEditWill(activeWill.id);
+								} else {
+									navigate(action.href || "/app/create-will");
+								}
+							}}
+							className="block transition-transform hover:scale-105 cursor-pointer"
 						>
 							<Card
 								className="p-8 h-full rounded-lg bg-white"
@@ -271,7 +293,7 @@ export default function DashboardPage() {
 									</div>
 								</div>
 							</Card>
-						</Link>
+						</div>
 					))}
 				</div>
 			</div>

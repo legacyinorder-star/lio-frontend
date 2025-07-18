@@ -7,6 +7,7 @@ import {
 	WillWitness,
 } from "../context/WillContext";
 import { getFormattedRelationshipNameById } from "./relationships";
+import { QuestionType } from "@/components/will-wizard/types/will.types";
 
 /**
  * Converts a snake_case string to camelCase
@@ -366,6 +367,25 @@ export function mapWillDataFromAPI(apiData: unknown): WillData {
 					},
 				})
 			) || [],
+
+		// Progress data
+		progress: converted.progress
+			? {
+					id: (converted.progress as Record<string, unknown>).id as string,
+					createdAt: (converted.progress as Record<string, unknown>)
+						.createdAt as string,
+					willId: (converted.progress as Record<string, unknown>)
+						.willId as string,
+					userId: (converted.progress as Record<string, unknown>)
+						.userId as string,
+					completedSteps: (converted.progress as Record<string, unknown>)
+						.completedSteps as Record<QuestionType, boolean>,
+					currentStep: (converted.progress as Record<string, unknown>)
+						.currentStep as QuestionType,
+					updatedAt: (converted.progress as Record<string, unknown>)
+						.updatedAt as string,
+			  }
+			: undefined,
 	};
 }
 
