@@ -35,7 +35,6 @@ import PaymentSuccessPage from "@/pages/PaymentSuccessPage";
 import PaymentCancelPage from "@/pages/PaymentCancelPage";
 import StripeCheckoutPage from "@/pages/StripeCheckoutPage";
 import WillSuccessPage from "@/pages/WillSuccessPage";
-import RateLimitTestPage from "@/pages/RateLimitTestPage";
 import { VaultPage } from "@/pages/VaultPage";
 import { FolderViewPage } from "@/pages/FolderViewPage";
 import DocumentsPage from "@/pages/DocumentsPage";
@@ -214,10 +213,6 @@ function App() {
 									/>
 
 									{/* 404 - This must be the last route to catch all unknown URLs */}
-									<Route
-										path="/rate-limit-test"
-										element={<RateLimitTestPage />}
-									/>
 									<Route path="*" element={<NotFoundPage />} />
 								</Routes>
 								<Toaster />
