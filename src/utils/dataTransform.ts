@@ -222,65 +222,6 @@ export function mapWillDataFromAPI(apiData: unknown): WillData {
 				})
 			) || [],
 
-		// Gifts data
-		gifts:
-			(converted.gifts as Array<Record<string, unknown>>)?.map(
-				(gift: Record<string, unknown>) => ({
-					id: gift.id as string,
-					type: (gift.type as string) || "",
-					description: (gift.description as string) || "",
-					value: gift.value as number | undefined,
-					currency: gift.currency as string | undefined,
-					peopleId: (gift.people_id as string) || "",
-					charitiesId: (gift.charities_id as string) || "",
-					person: gift.person
-						? {
-								id: (gift.person as Record<string, unknown>).id as string,
-								firstName:
-									((gift.person as Record<string, unknown>)
-										.firstName as string) ||
-									((gift.person as Record<string, unknown>)
-										.first_name as string) ||
-									"",
-								lastName:
-									((gift.person as Record<string, unknown>)
-										.lastName as string) ||
-									((gift.person as Record<string, unknown>)
-										.last_name as string) ||
-									"",
-								relationship:
-									((gift.person as Record<string, unknown>)
-										.relationship as string) || "",
-								relationshipId:
-									((gift.person as Record<string, unknown>)
-										.relationshipId as string) ||
-									((gift.person as Record<string, unknown>)
-										.relationship_id as string) ||
-									"",
-								isMinor:
-									((gift.person as Record<string, unknown>)
-										.isMinor as boolean) ||
-									((gift.person as Record<string, unknown>)
-										.is_minor as boolean) ||
-									false,
-						  }
-						: undefined,
-					charity: gift.charity
-						? {
-								id: (gift.charity as Record<string, unknown>).id as string,
-								name:
-									((gift.charity as Record<string, unknown>).name as string) ||
-									"",
-								registrationNumber:
-									((gift.charity as Record<string, unknown>)
-										.registrationNumber as string) ||
-									((gift.charity as Record<string, unknown>)
-										.rc_number as string),
-						  }
-						: undefined,
-				})
-			) || [],
-
 		// Other arrays
 		beneficiaries:
 			(converted.beneficiaries as Array<Record<string, unknown>>)?.map(

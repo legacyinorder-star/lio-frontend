@@ -23,7 +23,7 @@ import AddressStep from "./steps/AddressStep";
 import SpouseStep from "./steps/SpouseStep";
 import ChildrenStep from "./steps/ChildrenStep";
 import AssetsStep from "./steps/AssetsStep";
-import GiftsStep from "./steps/GiftsStep";
+
 import ResiduaryStep from "./steps/ResiduaryStep";
 import WitnessesStep from "./steps/WitnessesStep";
 import FuneralInstructionsStep from "./steps/FuneralInstructionsStep";
@@ -67,12 +67,9 @@ export default function WillWizard() {
 	} = useWillOwnerData();
 
 	// Conditional data loading based on current step
-	const needsBeneficiaryData = [
-		"hasAssets",
-		"gifts",
-		"residuary",
-		"review",
-	].includes(currentQuestion);
+	const needsBeneficiaryData = ["hasAssets", "residuary", "review"].includes(
+		currentQuestion
+	);
 
 	// Only load beneficiary data when needed
 	const {
@@ -102,7 +99,7 @@ export default function WillWizard() {
 		hasAssets: false,
 		assets: [],
 		otherBeneficiaries: [],
-		gifts: [],
+
 		residuaryBeneficiaries: [],
 		executors: [],
 		witnesses: [],
@@ -412,9 +409,6 @@ export default function WillWizard() {
 				navigateToStep("hasAssets");
 				break;
 			case "hasAssets":
-				navigateToStep("gifts");
-				break;
-			case "gifts":
 				navigateToStep("residuary");
 				break;
 			case "residuary":
@@ -466,11 +460,8 @@ export default function WillWizard() {
 			case "hasAssets":
 				navigateToStep("pets");
 				break;
-			case "gifts":
-				navigateToStep("hasAssets");
-				break;
 			case "residuary":
-				navigateToStep("gifts");
+				navigateToStep("hasAssets");
 				break;
 			case "executors":
 				navigateToStep("residuary");
@@ -586,17 +577,6 @@ export default function WillWizard() {
 					<AssetsStep
 						onUpdate={commonProps.onUpdate}
 						onNext={commonProps.onNext}
-						onBack={commonProps.onBack}
-					/>
-				);
-
-			case "gifts":
-				return (
-					<GiftsStep
-						onNext={(data) => {
-							commonProps.onUpdate(data);
-							commonProps.onNext();
-						}}
 						onBack={commonProps.onBack}
 					/>
 				);

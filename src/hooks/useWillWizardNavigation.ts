@@ -12,7 +12,7 @@ const STEP_ORDER: QuestionType[] = [
 	"guardians",
 	"pets",
 	"hasAssets",
-	"gifts",
+
 	"residuary",
 	"executors",
 	"witnesses",

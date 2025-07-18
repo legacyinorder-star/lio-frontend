@@ -66,13 +66,7 @@ type ReviewData = {
 		fullName: string;
 		relationship: string;
 	};
-	gifts: Array<{
-		type: string;
-		description: string;
-		value?: string;
-		beneficiaryId: string;
-		beneficiaryName: string;
-	}>;
+
 	residuaryBeneficiaries: Array<{
 		id: string;
 		beneficiaryId: string;
@@ -217,36 +211,7 @@ interface CompleteWillData {
 			};
 		}>;
 	}>;
-	gifts: Array<{
-		id: string;
-		will_id: string;
-		type: string;
-		created_at: string;
-		description: string;
-		currency: string;
-		value: string;
-		people_id: string;
-		charities_id: string;
-		person?: {
-			id: string;
-			user_id: string;
-			will_id: string;
-			relationship_id: string;
-			first_name: string;
-			last_name: string;
-			is_minor: boolean;
-			created_at: string;
-			is_witness: boolean;
-		};
-		charity?: {
-			id: string;
-			created_at: string;
-			will_id: string;
-			name: string;
-			rc_number: string;
-			user_id: string;
-		};
-	}>;
+
 	residuary: {
 		id: string;
 		created_at: string;
@@ -394,20 +359,6 @@ const transformWillDataToReviewFormat = (
 							isMinor: beneficiary.person.is_minor,
 						});
 					}
-				});
-			}
-		});
-	}
-
-	// Add people from gifts
-	if (willData.gifts && Array.isArray(willData.gifts)) {
-		willData.gifts.forEach((gift) => {
-			if (gift.person) {
-				allPeople.set(gift.person.id, {
-					firstName: gift.person.first_name,
-					lastName: gift.person.last_name,
-					relationshipId: gift.person.relationship_id,
-					isMinor: gift.person.is_minor,
 				});
 			}
 		});
@@ -657,25 +608,7 @@ const transformWillDataToReviewFormat = (
 						guardianName: willData.pets[0]?.guardian_name,
 				  }
 				: undefined,
-		gifts:
-			willData.gifts && Array.isArray(willData.gifts)
-				? willData.gifts.map((gift) => {
-						let beneficiaryName = "Unknown Beneficiary";
-						if (gift.person) {
-							beneficiaryName = `${gift.person.first_name} ${gift.person.last_name}`;
-						} else if (gift.charity) {
-							beneficiaryName = gift.charity.name;
-						}
 
-						return {
-							type: gift.type,
-							description: gift.description,
-							value: gift.value,
-							beneficiaryId: gift.people_id || gift.charities_id || "",
-							beneficiaryName,
-						};
-				  })
-				: [],
 		residuaryBeneficiaries:
 			willData.residuary &&
 			willData.residuary.beneficiaries &&
@@ -762,7 +695,7 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 					console.log("- pets:", willData.pets);
 					console.log("- pets_guardian:", willData.pets_guardian);
 					console.log("- assets:", willData.assets);
-					console.log("- gifts:", willData.gifts);
+
 					console.log("- executors:", willData.executors);
 					console.log("- witnesses:", willData.witnesses);
 					console.log("- residuary:", willData.residuary);
@@ -1219,69 +1152,7 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 					</section>
 				),
 			},
-			{
-				shouldShow: reviewData.gifts && reviewData.gifts.length > 0,
-				render: (num: number) => (
-					<section
-						className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm"
-						key="gifts"
-					>
-						<div className="flex items-center space-x-3 mb-6">
-							<div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center">
-								<span className="text-indigo-600 font-semibold text-sm">
-									{num}
-								</span>
-							</div>
-							<h3 className="text-xl font-semibold text-gray-900">
-								Specific Bequests
-							</h3>
-						</div>
-						<div className="grid gap-6">
-							{reviewData.gifts?.map((gift, idx) => (
-								<div
-									key={idx}
-									className="bg-gray-50 rounded-lg p-6 border border-gray-100"
-								>
-									<div className="space-y-4 mb-4">
-										<div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-											<div className="space-y-2">
-												<label className="block text-sm font-medium text-gray-700">
-													Gift Type
-												</label>
-												<p className="text-gray-900 font-medium">{gift.type}</p>
-											</div>
-											<div className="space-y-2">
-												<label className="block text-sm font-medium text-gray-700">
-													Beneficiary
-												</label>
-												<p className="text-gray-900 font-medium">
-													{gift.beneficiaryName}
-												</p>
-											</div>
-										</div>
-										{gift.value && (
-											<div className="space-y-2">
-												<label className="block text-sm font-medium text-gray-700">
-													Value
-												</label>
-												<p className="text-gray-900 font-medium">
-													{gift.value}
-												</p>
-											</div>
-										)}
-										<div className="space-y-2">
-											<label className="block text-sm font-medium text-gray-700">
-												Description
-											</label>
-											<p className="text-gray-900">{gift.description}</p>
-										</div>
-									</div>
-								</div>
-							))}
-						</div>
-					</section>
-				),
-			},
+
 			{
 				shouldShow:
 					reviewData.residuaryBeneficiaries &&

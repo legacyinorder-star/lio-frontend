@@ -109,20 +109,7 @@ const stepArticles: Record<QuestionType, KnowledgeArticle[]> = {
 			url: "#",
 		},
 	],
-	gifts: [
-		{
-			title: "Specific Gifts vs. Monetary Bequests",
-			description:
-				"Understanding the difference and when to use each type of gift.",
-			url: "#",
-		},
-		{
-			title: "Tax Implications of Gifts",
-			description:
-				"How gifts in your will may affect taxes for your beneficiaries.",
-			url: "#",
-		},
-	],
+
 	residuary: [
 		{
 			title: "Understanding Residuary Beneficiaries",

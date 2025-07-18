@@ -7,7 +7,6 @@ export type QuestionType =
 	| "guardians"
 	| "pets"
 	| "hasAssets"
-	| "gifts"
 	| "residuary"
 	| "executors"
 	| "witnesses"
@@ -106,19 +105,6 @@ export interface NewBeneficiary extends BasePerson {
 	allocation: string;
 }
 
-// Gift Types
-export type GiftType = "Cash" | "Item" | "Other";
-
-export interface Gift {
-	id: string;
-	type: GiftType;
-	description: string;
-	value?: number;
-	currency?: string;
-	peopleId?: string;
-	charitiesId?: string;
-}
-
 // Executor Types
 export interface Executor {
 	id: string;
@@ -153,7 +139,6 @@ export interface WillFormData {
 	hasAssets: boolean;
 	assets: Asset[];
 	otherBeneficiaries: NewBeneficiary[];
-	gifts: Gift[];
 	residuaryBeneficiaries: Array<{
 		id: string;
 		beneficiaryId: string;

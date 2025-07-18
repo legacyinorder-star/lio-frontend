@@ -39,7 +39,7 @@ const DEFAULT_COMPLETION: StepCompletion = {
 	guardians: false,
 	pets: false,
 	hasAssets: false,
-	gifts: false,
+
 	residuary: false,
 	executors: false,
 	witnesses: false,
@@ -55,7 +55,7 @@ const STEP_ORDER: QuestionType[] = [
 	"guardians",
 	"pets",
 	"hasAssets",
-	"gifts",
+
 	"residuary",
 	"executors",
 	"witnesses",
@@ -235,7 +235,7 @@ export function WillWizardProvider({ children }: { children: ReactNode }) {
 			guardians: { number: 5, name: "Guardians" },
 			pets: { number: 6, name: "Pet Care" },
 			hasAssets: { number: 7, name: "Assets" },
-			gifts: { number: 8, name: "Gifts" },
+
 			residuary: { number: 9, name: "Residuary Estate" },
 			executors: { number: 10, name: "Executors" },
 			witnesses: { number: 11, name: "Witnesses" },

@@ -102,36 +102,7 @@ interface CompleteWillData {
 			};
 		}>;
 	}>;
-	gifts: Array<{
-		id: string;
-		will_id: string;
-		type: string;
-		created_at: string;
-		description: string;
-		currency: string;
-		value: string;
-		people_id: string;
-		charities_id: string;
-		person?: {
-			id: string;
-			user_id: string;
-			will_id: string;
-			relationship_id: string;
-			first_name: string;
-			last_name: string;
-			is_minor: boolean;
-			created_at: string;
-			is_witness: boolean;
-		};
-		charity?: {
-			id: string;
-			created_at: string;
-			will_id: string;
-			name: string;
-			rc_number: string;
-			user_id: string;
-		};
-	}>;
+
 	residuary: {
 		id: string;
 		created_at: string;
@@ -284,13 +255,7 @@ interface PDFData {
 		isPrimary: boolean;
 		address?: string;
 	}>;
-	gifts?: Array<{
-		type: string;
-		description: string;
-		value?: string;
-		beneficiaryId: string;
-		beneficiaryName: string;
-	}>;
+
 	residuaryBeneficiaries?: Array<{
 		id: string;
 		beneficiaryId: string;
@@ -374,20 +339,6 @@ const transformWillDataToPDFFormat = (willData: CompleteWillData): PDFData => {
 							isMinor: beneficiary.person.is_minor,
 						});
 					}
-				});
-			}
-		});
-	}
-
-	// Add people from gifts
-	if (willData.gifts && Array.isArray(willData.gifts)) {
-		willData.gifts.forEach((gift) => {
-			if (gift.person) {
-				allPeople.set(gift.person.id, {
-					firstName: gift.person.first_name,
-					lastName: gift.person.last_name,
-					relationshipId: gift.person.relationship_id,
-					isMinor: gift.person.is_minor,
 				});
 			}
 		});
@@ -522,25 +473,7 @@ const transformWillDataToPDFFormat = (willData: CompleteWillData): PDFData => {
 							address: "", // Not available in API
 						}))
 				: [],
-		gifts:
-			willData.gifts && Array.isArray(willData.gifts)
-				? willData.gifts.map((gift) => {
-						let beneficiaryName = "Unknown Beneficiary";
-						if (gift.person) {
-							beneficiaryName = `${gift.person.first_name} ${gift.person.last_name}`;
-						} else if (gift.charity) {
-							beneficiaryName = gift.charity.name;
-						}
 
-						return {
-							type: gift.type,
-							description: gift.description,
-							value: gift.value,
-							beneficiaryId: gift.people_id || gift.charities_id || "",
-							beneficiaryName,
-						};
-				  })
-				: [],
 		residuaryBeneficiaries:
 			willData.residuary &&
 			willData.residuary.beneficiaries &&

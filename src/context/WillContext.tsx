@@ -56,18 +56,6 @@ export interface WillAsset {
 	beneficiaries: WillAssetBeneficiary[];
 }
 
-export interface WillGift {
-	id: string;
-	type: string;
-	description: string;
-	value?: number;
-	currency?: string;
-	peopleId?: string;
-	charitiesId?: string;
-	person?: WillPerson;
-	charity?: WillCharity;
-}
-
 export interface WillBeneficiary {
 	firstName: string;
 	lastName: string;
@@ -149,7 +137,6 @@ export interface WillData {
 	}>;
 	// Arrays
 	assets: WillAsset[];
-	gifts: WillGift[];
 	beneficiaries: WillBeneficiary[];
 	executors: WillExecutor[];
 	witnesses: WillWitness[];

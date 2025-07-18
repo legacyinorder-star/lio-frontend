@@ -103,7 +103,7 @@ export default function WillInfoPage() {
 								/>
 								<div>
 									<p className="text-[#173C37] text-base font-medium">
-										Leave specific gifts or instructions.
+										Leave specific bequests or instructions.
 									</p>
 								</div>
 							</div>

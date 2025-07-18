@@ -197,7 +197,7 @@ export default function AssetsStep({
 				your beneficiaries.
 			</div>
 			<div className="text-muted-foreground">
-				Do not include cash gifts in this section.
+				Do not include cash bequests in this section.
 			</div>
 
 			<Form {...form}>

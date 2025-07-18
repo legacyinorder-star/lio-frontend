@@ -202,30 +202,7 @@ const styles = StyleSheet.create({
 		marginBottom: 10,
 		paddingLeft: 20,
 	},
-	giftSection: {
-		marginTop: 30,
-		marginBottom: 20,
-	},
-	giftTitle: {
-		fontSize: 24,
-		fontWeight: "bold",
-		marginBottom: 20,
-		textAlign: "left",
-	},
-	giftText: {
-		textAlign: "justify",
-		fontSize: 14,
-		marginBottom: 15,
-	},
-	giftItem: {
-		marginBottom: 20,
-	},
-	giftDescription: {
-		textAlign: "justify",
-		fontSize: 14,
-		marginBottom: 10,
-		paddingLeft: 20,
-	},
+
 	witnessSection: {
 		marginTop: 40,
 		marginBottom: 20,
@@ -332,13 +309,7 @@ interface WillPDFProps {
 			isPrimary: boolean;
 			address?: string;
 		}>;
-		gifts?: Array<{
-			type: string;
-			description: string;
-			value?: string;
-			beneficiaryId: string;
-			beneficiaryName: string;
-		}>;
+
 		residuaryBeneficiaries?: Array<{
 			id: string;
 			beneficiaryId: string;
@@ -390,7 +361,7 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 			guardians: shouldShowGuardiansSection() ? sectionNum++ : null,
 			pets: shouldShowPetsSection() ? sectionNum++ : null,
 			distribution: sectionNum++,
-			gifts: data.gifts && data.gifts.length > 0 ? sectionNum++ : null,
+
 			administration: sectionNum++,
 			residuary:
 				data.residuaryBeneficiaries && data.residuaryBeneficiaries.length > 0
@@ -715,43 +686,6 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 					))}
 				</View>
 
-				{/* Specific Bequests Section */}
-				{data.gifts && data.gifts.length > 0 && (
-					<View style={styles.giftSection}>
-						<Text style={styles.giftTitle}>
-							{sections.gifts}. Specific Bequests
-						</Text>
-						<Text style={styles.giftText}>
-							I hereby make the following specific bequests:
-						</Text>
-
-						{data.gifts.map((gift, index) => (
-							<View key={index} style={styles.giftItem}>
-								<Text style={styles.giftDescription}>
-									{index + 1}. I give and bequeath{" "}
-									{gift.type === "Cash" && gift.value
-										? `the sum of $${Number(gift.value).toLocaleString()} (${
-												gift.description
-										  })${" "}`
-										: `my ${gift.description}${" "}`}
-									to{" "}
-									<Text style={{ fontWeight: "bold" }}>
-										{gift.beneficiaryName}
-									</Text>
-									.
-								</Text>
-							</View>
-						))}
-
-						<Text style={styles.giftText}>
-							I direct that these specific bequests shall be paid or delivered
-							as soon as practicable after my death, and that any interest
-							accruing on cash bequests shall be paid to the respective
-							beneficiaries.
-						</Text>
-					</View>
-				)}
-
 				{/* Estate Administration Section */}
 				<View style={styles.distributionSection}>
 					<Text style={styles.distributionTitle}>
@@ -770,7 +704,7 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 					</Text>
 
 					<Text style={styles.distributionText}>
-						3. all the previous gifts in this will.
+						3. all the previous bequests in this will.
 					</Text>
 
 					<Text style={styles.distributionText}>
@@ -785,7 +719,7 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 					data.residuaryBeneficiaries.length > 0 && (
 						<View style={styles.distributionSection}>
 							<Text style={styles.distributionTitle}>
-								{sections.residuary}. Gifts of my Residuary Estate
+								{sections.residuary}. Distribution of my Residuary Estate
 							</Text>
 
 							<Text style={styles.distributionText}>
@@ -892,7 +826,7 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 
 				<View style={styles.distributionSection}>
 					<Text style={styles.distributionTitle}>
-						{sections.disclaimer}. Power for beneficiaries to disclaim gifts
+						{sections.disclaimer}. Power for beneficiaries to disclaim bequests
 					</Text>
 					<Text style={styles.distributionText}>
 						Any beneficiary of this will may disclaim any interest in my Estate
