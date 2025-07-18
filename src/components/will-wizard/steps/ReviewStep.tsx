@@ -1349,6 +1349,49 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 					</section>
 				),
 			},
+			{
+				shouldShow: reviewData.assets && reviewData.assets.length > 0,
+				render: (num: number) => (
+					<section
+						className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm"
+						key="all-assets"
+					>
+						<div className="flex items-center space-x-3 mb-6">
+							<div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center">
+								<span className="text-indigo-600 font-semibold text-sm">
+									{num}
+								</span>
+							</div>
+							<h3 className="text-xl font-semibold text-gray-900">
+								All Assets
+							</h3>
+						</div>
+						<div className="grid gap-4">
+							{reviewData.assets.map((asset, idx) => (
+								<div
+									key={idx}
+									className="bg-gray-50 rounded-lg p-4 border border-gray-100"
+								>
+									<div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+										<div className="space-y-2">
+											<label className="block text-sm font-medium text-gray-700">
+												Asset Type
+											</label>
+											<p className="text-gray-900 font-medium">{asset.type}</p>
+										</div>
+										<div className="space-y-2">
+											<label className="block text-sm font-medium text-gray-700">
+												Description
+											</label>
+											<p className="text-gray-900">{asset.description}</p>
+										</div>
+									</div>
+								</div>
+							))}
+						</div>
+					</section>
+				),
+			},
 		];
 
 		return (
