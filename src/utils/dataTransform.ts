@@ -150,76 +150,83 @@ export function mapWillDataFromAPI(apiData: unknown): WillData {
 		// Assets data
 		assets:
 			(converted.assets as Array<Record<string, unknown>>)?.map(
-				(asset: Record<string, unknown>) => ({
-					id: asset.id as string,
-					assetType:
-						(asset.assetType as string) || (asset.asset_type as string) || "",
-					description: (asset.description as string) || "",
-					distributionType:
-						(asset.distributionType as "equal" | "percentage") ||
-						(asset.distribution_type as "equal" | "percentage") ||
-						"equal",
-					beneficiaries:
-						(asset.beneficiaries as Array<Record<string, unknown>>)?.map(
-							(beneficiary: Record<string, unknown>) => ({
-								id: beneficiary.id as string,
-								percentage: (beneficiary.percentage as number) || 0,
-								peopleId:
-									(beneficiary.peopleId as string) ||
-									(beneficiary.people_id as string),
-								charitiesId:
-									(beneficiary.charitiesId as string) ||
-									(beneficiary.charities_id as string),
-								person: beneficiary.person
-									? {
-											id: (beneficiary.person as Record<string, unknown>)
-												.id as string,
-											firstName:
-												((beneficiary.person as Record<string, unknown>)
-													.firstName as string) ||
-												((beneficiary.person as Record<string, unknown>)
-													.first_name as string) ||
-												"",
-											lastName:
-												((beneficiary.person as Record<string, unknown>)
-													.lastName as string) ||
-												((beneficiary.person as Record<string, unknown>)
-													.last_name as string) ||
-												"",
-											relationship:
-												((beneficiary.person as Record<string, unknown>)
-													.relationship as string) || "",
-											relationshipId:
-												((beneficiary.person as Record<string, unknown>)
-													.relationshipId as string) ||
-												((beneficiary.person as Record<string, unknown>)
-													.relationship_id as string) ||
-												"",
-											isMinor:
-												((beneficiary.person as Record<string, unknown>)
-													.isMinor as boolean) ||
-												((beneficiary.person as Record<string, unknown>)
-													.is_minor as boolean) ||
-												false,
-									  }
-									: undefined,
-								charity: beneficiary.charity
-									? {
-											id: (beneficiary.charity as Record<string, unknown>)
-												.id as string,
-											name:
-												((beneficiary.charity as Record<string, unknown>)
-													.name as string) || "",
-											registrationNumber:
-												((beneficiary.charity as Record<string, unknown>)
-													.registrationNumber as string) ||
-												((beneficiary.charity as Record<string, unknown>)
-													.rc_number as string),
-									  }
-									: undefined,
-							})
-						) || [],
-				})
+				(asset: Record<string, unknown>) => {
+					const beneficiaries =
+						(asset.beneficiaries as Array<Record<string, unknown>>) || [];
+					return {
+						id: asset.id as string,
+						assetType:
+							(asset.assetType as string) || (asset.asset_type as string) || "",
+						description: (asset.description as string) || "",
+						hasBeneficiaries: beneficiaries.length > 0,
+						distributionType:
+							beneficiaries.length > 0
+								? (asset.distributionType as "equal" | "percentage") ||
+								  (asset.distribution_type as "equal" | "percentage") ||
+								  "equal"
+								: undefined,
+						beneficiaries:
+							(asset.beneficiaries as Array<Record<string, unknown>>)?.map(
+								(beneficiary: Record<string, unknown>) => ({
+									id: beneficiary.id as string,
+									percentage: (beneficiary.percentage as number) || 0,
+									peopleId:
+										(beneficiary.peopleId as string) ||
+										(beneficiary.people_id as string),
+									charitiesId:
+										(beneficiary.charitiesId as string) ||
+										(beneficiary.charities_id as string),
+									person: beneficiary.person
+										? {
+												id: (beneficiary.person as Record<string, unknown>)
+													.id as string,
+												firstName:
+													((beneficiary.person as Record<string, unknown>)
+														.firstName as string) ||
+													((beneficiary.person as Record<string, unknown>)
+														.first_name as string) ||
+													"",
+												lastName:
+													((beneficiary.person as Record<string, unknown>)
+														.lastName as string) ||
+													((beneficiary.person as Record<string, unknown>)
+														.last_name as string) ||
+													"",
+												relationship:
+													((beneficiary.person as Record<string, unknown>)
+														.relationship as string) || "",
+												relationshipId:
+													((beneficiary.person as Record<string, unknown>)
+														.relationshipId as string) ||
+													((beneficiary.person as Record<string, unknown>)
+														.relationship_id as string) ||
+													"",
+												isMinor:
+													((beneficiary.person as Record<string, unknown>)
+														.isMinor as boolean) ||
+													((beneficiary.person as Record<string, unknown>)
+														.is_minor as boolean) ||
+													false,
+										  }
+										: undefined,
+									charity: beneficiary.charity
+										? {
+												id: (beneficiary.charity as Record<string, unknown>)
+													.id as string,
+												name:
+													((beneficiary.charity as Record<string, unknown>)
+														.name as string) || "",
+												registrationNumber:
+													((beneficiary.charity as Record<string, unknown>)
+														.registrationNumber as string) ||
+													((beneficiary.charity as Record<string, unknown>)
+														.rc_number as string),
+										  }
+										: undefined,
+								})
+							) || [],
+					};
+				}
 			) || [],
 
 		// Other arrays

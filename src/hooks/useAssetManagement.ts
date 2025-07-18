@@ -113,9 +113,11 @@ export function useAssetManagement(shouldLoad: boolean = true) {
 					id: assetData.id,
 					assetType: assetData.asset_type as AssetType,
 					description: assetData.description,
-					distributionType: assetData.distribution_type as
-						| "equal"
-						| "percentage",
+					hasBeneficiaries: assetData.beneficiaries.length > 0,
+					distributionType:
+						assetData.beneficiaries.length > 0
+							? (assetData.distribution_type as "equal" | "percentage")
+							: undefined,
 					beneficiaries: assetData.beneficiaries.map((b) => ({
 						id: b.id,
 						percentage: b.percentage,
@@ -127,9 +129,11 @@ export function useAssetManagement(shouldLoad: boolean = true) {
 					id: assetData.id,
 					assetType: assetData.asset_type,
 					description: assetData.description,
-					distributionType: assetData.distribution_type as
-						| "equal"
-						| "percentage",
+					hasBeneficiaries: assetData.beneficiaries.length > 0,
+					distributionType:
+						assetData.beneficiaries.length > 0
+							? (assetData.distribution_type as "equal" | "percentage")
+							: undefined,
 					beneficiaries: mappedBeneficiaries,
 				};
 
@@ -167,14 +171,29 @@ export function useAssetManagement(shouldLoad: boolean = true) {
 		}
 
 		try {
-			const payload = {
+			const payload: {
+				will_id: string;
+				name: string;
+				asset_type: string;
+				description: string;
+				beneficiaries: Array<{
+					id: string;
+					percentage: number;
+					type: "charity" | "individual";
+				}>;
+				distribution_type?: "equal" | "percentage";
+			} = {
 				will_id: activeWill.id,
 				name: assetForm.assetType,
 				asset_type: assetForm.assetType,
 				description: assetForm.description,
-				distribution_type: assetForm.distributionType,
 				beneficiaries: beneficiariesWithPercentages,
 			};
+
+			// Only include distribution_type if there are beneficiaries
+			if (assetForm.hasBeneficiaries && assetForm.distributionType) {
+				payload.distribution_type = assetForm.distributionType;
+			}
 
 			// Use PATCH for updates, POST for new assets
 			const endpoint = editingAssetId ? `/assets/${editingAssetId}` : "/assets";
@@ -196,7 +215,11 @@ export function useAssetManagement(shouldLoad: boolean = true) {
 				id: assetData.id,
 				assetType: assetData.asset_type as AssetType,
 				description: assetData.description,
-				distributionType: assetData.distribution_type as "equal" | "percentage",
+				hasBeneficiaries: assetData.beneficiaries.length > 0,
+				distributionType:
+					assetData.beneficiaries.length > 0
+						? (assetData.distribution_type as "equal" | "percentage")
+						: undefined,
 				beneficiaries: assetData.beneficiaries.map((b) => ({
 					id: b.id,
 					percentage: b.percentage,
@@ -221,9 +244,11 @@ export function useAssetManagement(shouldLoad: boolean = true) {
 								id: assetData.id,
 								assetType: assetData.asset_type,
 								description: assetData.description,
-								distributionType: assetData.distribution_type as
-									| "equal"
-									| "percentage",
+								hasBeneficiaries: assetData.beneficiaries.length > 0,
+								distributionType:
+									assetData.beneficiaries.length > 0
+										? (assetData.distribution_type as "equal" | "percentage")
+										: undefined,
 								beneficiaries: mappedBeneficiaries,
 						  }
 						: willAsset
@@ -242,9 +267,11 @@ export function useAssetManagement(shouldLoad: boolean = true) {
 					id: assetData.id,
 					assetType: assetData.asset_type,
 					description: assetData.description,
-					distributionType: assetData.distribution_type as
-						| "equal"
-						| "percentage",
+					hasBeneficiaries: assetData.beneficiaries.length > 0,
+					distributionType:
+						assetData.beneficiaries.length > 0
+							? (assetData.distribution_type as "equal" | "percentage")
+							: undefined,
 					beneficiaries: mappedBeneficiaries,
 				};
 

@@ -73,7 +73,8 @@ export interface Asset {
 	id: string;
 	assetType: AssetType;
 	description: string;
-	distributionType: "equal" | "percentage";
+	hasBeneficiaries: boolean;
+	distributionType?: "equal" | "percentage";
 	beneficiaries: {
 		id: string;
 		percentage?: number;

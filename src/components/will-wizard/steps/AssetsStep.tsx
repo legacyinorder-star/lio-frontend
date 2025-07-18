@@ -99,11 +99,13 @@ export default function AssetsStep({
 		return false;
 	};
 
-	// Check if any asset has deleted beneficiaries
-	const hasAnyDeletedBeneficiaries = assets.some((asset) =>
-		asset.beneficiaries.some((beneficiary) =>
-			isBeneficiaryDeleted(beneficiary.id, asset.id)
-		)
+	// Check if any asset has deleted beneficiaries (only for assets with beneficiaries)
+	const hasAnyDeletedBeneficiaries = assets.some(
+		(asset) =>
+			asset.hasBeneficiaries &&
+			asset.beneficiaries.some((beneficiary) =>
+				isBeneficiaryDeleted(beneficiary.id, asset.id)
+			)
 	);
 
 	// Show loading state if data is not ready
@@ -197,7 +199,11 @@ export default function AssetsStep({
 				your beneficiaries.
 			</div>
 			<div className="text-muted-foreground">
-				Do not include cash bequests in this section.
+				We will attach an appendix to your Will listing all assets.
+			</div>
+			<div className="text-muted-foreground font-semibold">
+				Assets with no beneficiaries will be added to your residuary estate to
+				be given to your residuary beneficiaries.
 			</div>
 
 			<Form {...form}>
@@ -226,11 +232,12 @@ export default function AssetsStep({
 						) : (
 							<div className="space-y-4">
 								{assets.map((asset) => {
-									// Check if this specific asset has deleted beneficiaries
-									const hasDeletedBeneficiaries = asset.beneficiaries.some(
-										(beneficiary) =>
+									// Check if this specific asset has deleted beneficiaries (only for assets with beneficiaries)
+									const hasDeletedBeneficiaries =
+										asset.hasBeneficiaries &&
+										asset.beneficiaries.some((beneficiary) =>
 											isBeneficiaryDeleted(beneficiary.id, asset.id)
-									);
+										);
 
 									return (
 										<AssetCard

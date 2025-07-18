@@ -270,6 +270,7 @@ interface WillPDFProps {
 		assets: Array<{
 			type: string;
 			description: string;
+			hasBeneficiaries?: boolean;
 			distributionType?: "equal" | "percentage";
 			beneficiaries?: Array<{
 				id?: string;
@@ -383,6 +384,7 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 	const renderAssetDistributionText = (_asset: {
 		type: string;
 		description: string;
+		hasBeneficiaries?: boolean;
 		distributionType?: "equal" | "percentage";
 		beneficiaries?: {
 			id?: string;
@@ -392,8 +394,8 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 	}) => {
 		const relevantBeneficiaries = _asset.beneficiaries || [];
 
-		if (relevantBeneficiaries.length === 0) {
-			return <Text>No beneficiaries specified</Text>;
+		if (!_asset.hasBeneficiaries || relevantBeneficiaries.length === 0) {
+			return <Text>my residuary estate</Text>;
 		}
 
 		// Handle single beneficiary case

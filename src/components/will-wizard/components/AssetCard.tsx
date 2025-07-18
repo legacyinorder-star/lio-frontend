@@ -117,76 +117,131 @@ export function AssetCard({
 						<p className="text-sm">{asset.description}</p>
 						<div className="mt-2">
 							<p className="text-sm font-medium">Distribution:</p>
-							<ul className="text-sm text-muted-foreground list-disc list-inside">
-								{asset.beneficiaries.map((beneficiary) => {
-									// Get the will asset from activeWill context
-									const willAsset = activeWill?.assets.find(
-										(willAsset) => willAsset.id === asset.id
-									);
-
-									// Find the beneficiary in the will asset
-									const willBeneficiary = willAsset?.beneficiaries.find(
-										(wb) => wb.id === beneficiary.id
-									);
-
-									// If will asset not found, display basic beneficiary info
-									if (!willAsset) {
-										return (
-											<li
-												key={beneficiary.id}
-												className="text-muted-foreground"
-											>
-												Beneficiary ID: {beneficiary.id}
-												{asset.beneficiaries.length > 1 && (
-													<>
-														{asset.distributionType === "percentage" &&
-															` (${beneficiary.percentage}%)`}
-														{asset.distributionType === "equal" &&
-															" (equal share)"}
-													</>
-												)}
-											</li>
+							{!asset.hasBeneficiaries ? (
+								<p className="text-sm text-muted-foreground">
+									This asset will be distributed according to your residuary
+									estate.
+								</p>
+							) : (
+								<ul className="text-sm text-muted-foreground list-disc list-inside">
+									{asset.beneficiaries.map((beneficiary) => {
+										// Get the will asset from activeWill context
+										const willAsset = activeWill?.assets.find(
+											(willAsset) => willAsset.id === asset.id
 										);
-									}
 
-									// If beneficiary not found in will asset, it might be deleted
-									if (!willBeneficiary) {
-										return (
-											<li
-												key={beneficiary.id}
-												className="text-red-600 font-medium"
-											>
-												Unknown Beneficiary (Deleted)
-												{asset.beneficiaries.length > 1 && (
-													<>
-														{asset.distributionType === "percentage" &&
-															` (${beneficiary.percentage}%)`}
-														{asset.distributionType === "equal" &&
-															" (equal share)"}
-													</>
-												)}
-											</li>
+										// Find the beneficiary in the will asset
+										const willBeneficiary = willAsset?.beneficiaries.find(
+											(wb) => wb.id === beneficiary.id
 										);
-									}
 
-									// Check if it's an individual or charity
-									const isIndividual = willBeneficiary.peopleId !== undefined;
-									const isCharity = willBeneficiary.charitiesId !== undefined;
+										// If will asset not found, display basic beneficiary info
+										if (!willAsset) {
+											return (
+												<li
+													key={beneficiary.id}
+													className="text-muted-foreground"
+												>
+													Beneficiary ID: {beneficiary.id}
+													{asset.beneficiaries.length > 1 && (
+														<>
+															{asset.distributionType === "percentage" &&
+																` (${beneficiary.percentage}%)`}
+															{asset.distributionType === "equal" &&
+																" (equal share)"}
+														</>
+													)}
+												</li>
+											);
+										}
 
-									// Check if this beneficiary is deleted
-									const isDeleted = isBeneficiaryDeleted(beneficiary.id);
+										// If beneficiary not found in will asset, it might be deleted
+										if (!willBeneficiary) {
+											return (
+												<li
+													key={beneficiary.id}
+													className="text-red-600 font-medium"
+												>
+													Unknown Beneficiary (Deleted)
+													{asset.beneficiaries.length > 1 && (
+														<>
+															{asset.distributionType === "percentage" &&
+																` (${beneficiary.percentage}%)`}
+															{asset.distributionType === "equal" &&
+																" (equal share)"}
+														</>
+													)}
+												</li>
+											);
+										}
 
-									if (isDeleted) {
+										// Check if it's an individual or charity
+										const isIndividual = willBeneficiary.peopleId !== undefined;
+										const isCharity = willBeneficiary.charitiesId !== undefined;
+
+										// Check if this beneficiary is deleted
+										const isDeleted = isBeneficiaryDeleted(beneficiary.id);
+
+										if (isDeleted) {
+											return (
+												<li
+													key={beneficiary.id}
+													className="text-red-600 font-medium"
+												>
+													{isIndividual
+														? "Unknown Person (Deleted Beneficiary)"
+														: isCharity
+														? "Unknown Charity (Deleted Beneficiary)"
+														: "Unknown Beneficiary (Deleted)"}
+													{asset.beneficiaries.length > 1 && (
+														<>
+															{asset.distributionType === "percentage" &&
+																` (${willBeneficiary.percentage}%)`}
+															{asset.distributionType === "equal" &&
+																" (equal share)"}
+														</>
+													)}
+												</li>
+											);
+										}
+
+										// Display the beneficiary details
+										let beneficiaryName: string = "";
+										let relationship: string = "";
+										let registrationNumber: string = "";
+
+										if (isIndividual && willBeneficiary.person) {
+											beneficiaryName = `${willBeneficiary.person.firstName} ${willBeneficiary.person.lastName}`;
+											if (willBeneficiary.person.relationshipId) {
+												relationship = getFormattedRelationshipNameById(
+													willBeneficiary.person.relationshipId
+												);
+											} else {
+												relationship =
+													willBeneficiary.person.relationship ??
+													"Unknown Relationship";
+											}
+										} else if (isCharity && willBeneficiary.charity) {
+											beneficiaryName = willBeneficiary.charity.name;
+											relationship = "Charity";
+											registrationNumber = String(
+												willBeneficiary.charity.registrationNumber ?? ""
+											);
+										} else {
+											beneficiaryName = "Unknown Beneficiary";
+											relationship = "Unknown";
+											registrationNumber = "";
+										}
+
 										return (
-											<li
-												key={beneficiary.id}
-												className="text-red-600 font-medium"
-											>
-												{isIndividual
-													? "Unknown Person (Deleted Beneficiary)"
-													: isCharity
-													? "Unknown Charity (Deleted Beneficiary)"
-													: "Unknown Beneficiary (Deleted)"}
+											<li key={beneficiary.id}>
+												{beneficiaryName}
+												<span className="text-muted-foreground">
+													{" "}
+													({relationship})
+													{registrationNumber &&
+														` - Reg: ${registrationNumber}`}
+												</span>
 												{asset.beneficiaries.length > 1 && (
 													<>
 														{asset.distributionType === "percentage" &&
@@ -197,56 +252,9 @@ export function AssetCard({
 												)}
 											</li>
 										);
-									}
-
-									// Display the beneficiary details
-									let beneficiaryName: string = "";
-									let relationship: string = "";
-									let registrationNumber: string = "";
-
-									if (isIndividual && willBeneficiary.person) {
-										beneficiaryName = `${willBeneficiary.person.firstName} ${willBeneficiary.person.lastName}`;
-										if (willBeneficiary.person.relationshipId) {
-											relationship = getFormattedRelationshipNameById(
-												willBeneficiary.person.relationshipId
-											);
-										} else {
-											relationship =
-												willBeneficiary.person.relationship ??
-												"Unknown Relationship";
-										}
-									} else if (isCharity && willBeneficiary.charity) {
-										beneficiaryName = willBeneficiary.charity.name;
-										relationship = "Charity";
-										registrationNumber = String(
-											willBeneficiary.charity.registrationNumber ?? ""
-										);
-									} else {
-										beneficiaryName = "Unknown Beneficiary";
-										relationship = "Unknown";
-										registrationNumber = "";
-									}
-
-									return (
-										<li key={beneficiary.id}>
-											{beneficiaryName}
-											<span className="text-muted-foreground">
-												{" "}
-												({relationship})
-												{registrationNumber && ` - Reg: ${registrationNumber}`}
-											</span>
-											{asset.beneficiaries.length > 1 && (
-												<>
-													{asset.distributionType === "percentage" &&
-														` (${willBeneficiary.percentage}%)`}
-													{asset.distributionType === "equal" &&
-														" (equal share)"}
-												</>
-											)}
-										</li>
-									);
-								})}
-							</ul>
+									})}
+								</ul>
+							)}
 						</div>
 					</div>
 					<div className="flex space-x-2">

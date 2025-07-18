@@ -52,7 +52,8 @@ export interface WillAsset {
 	id: string;
 	assetType: string;
 	description: string;
-	distributionType: "equal" | "percentage";
+	hasBeneficiaries: boolean;
+	distributionType?: "equal" | "percentage";
 	beneficiaries: WillAssetBeneficiary[];
 }
 

@@ -66,6 +66,7 @@ export function AssetDialog({
 	const [assetForm, setAssetForm] = useState<Omit<Asset, "id">>({
 		assetType: "Property" as AssetType,
 		description: "",
+		hasBeneficiaries: false,
 		distributionType: "equal",
 		beneficiaries: [],
 	});
@@ -78,6 +79,7 @@ export function AssetDialog({
 			setAssetForm({
 				assetType: editingAsset.assetType,
 				description: editingAsset.description,
+				hasBeneficiaries: editingAsset.hasBeneficiaries,
 				distributionType: editingAsset.distributionType,
 				beneficiaries: editingAsset.beneficiaries,
 			});
@@ -86,6 +88,7 @@ export function AssetDialog({
 			setAssetForm({
 				assetType: "Property" as AssetType,
 				description: "",
+				hasBeneficiaries: false,
 				distributionType: "equal",
 				beneficiaries: [],
 			});
@@ -106,6 +109,15 @@ export function AssetDialog({
 				[field]: e.target.value,
 			}));
 		};
+
+	const handleHasBeneficiariesChange = (checked: boolean) => {
+		setAssetForm((prev) => ({
+			...prev,
+			hasBeneficiaries: checked,
+			// Clear beneficiaries if unchecking
+			beneficiaries: checked ? prev.beneficiaries : [],
+		}));
+	};
 
 	const handleDistributionTypeChange = (type: "equal" | "percentage") => {
 		setAssetForm((prev) => ({
@@ -159,8 +171,9 @@ export function AssetDialog({
 	const handleSave = () => {
 		if (
 			!assetForm.description ||
-			assetForm.beneficiaries.length === 0 ||
-			(assetForm.distributionType === "percentage" &&
+			(assetForm.hasBeneficiaries && assetForm.beneficiaries.length === 0) ||
+			(assetForm.hasBeneficiaries &&
+				assetForm.distributionType === "percentage" &&
 				Math.abs(
 					assetForm.beneficiaries.reduce(
 						(sum, b) => sum + (b.percentage || 0),
@@ -171,29 +184,29 @@ export function AssetDialog({
 			return;
 		}
 
-		// Calculate percentages for beneficiaries
-		const beneficiariesWithPercentages = assetForm.beneficiaries.map(
-			(beneficiary) => {
-				const beneficiaryDetails = enhancedBeneficiaries.find(
-					(b) => b.id === beneficiary.id
-				);
+		// Calculate percentages for beneficiaries (only if hasBeneficiaries is true)
+		const beneficiariesWithPercentages = assetForm.hasBeneficiaries
+			? assetForm.beneficiaries.map((beneficiary) => {
+					const beneficiaryDetails = enhancedBeneficiaries.find(
+						(b) => b.id === beneficiary.id
+					);
 
-				let percentage: number;
-				if (assetForm.distributionType === "equal") {
-					percentage = Math.round(100 / assetForm.beneficiaries.length);
-				} else {
-					percentage = beneficiary.percentage || 0;
-				}
+					let percentage: number;
+					if (assetForm.distributionType === "equal") {
+						percentage = Math.round(100 / assetForm.beneficiaries.length);
+					} else {
+						percentage = beneficiary.percentage || 0;
+					}
 
-				return {
-					id: beneficiary.id,
-					percentage,
-					type: (beneficiaryDetails?.type === "charity"
-						? "charity"
-						: "individual") as "charity" | "individual",
-				};
-			}
-		);
+					return {
+						id: beneficiary.id,
+						percentage,
+						type: (beneficiaryDetails?.type === "charity"
+							? "charity"
+							: "individual") as "charity" | "individual",
+					};
+			  })
+			: [];
 
 		// Call onSave with the form data
 		onSave(assetForm, beneficiariesWithPercentages);
@@ -336,245 +349,273 @@ export function AssetDialog({
 							className="w-full min-h-[100px] p-2 border rounded-md"
 						/>
 					</div>
+					{/* Checkbox for beneficiaries */}
 					<div className="space-y-2">
-						<Label>Distribution Method</Label>
-						<div className="flex space-x-4">
-							<Button
-								variant={
-									assetForm.distributionType === "equal" ? "default" : "outline"
-								}
-								onClick={() => handleDistributionTypeChange("equal")}
-								className={`cursor-pointer ${
-									assetForm.distributionType === "equal"
-										? "bg-primary text-white"
-										: ""
-								}`}
-							>
-								Equal Distribution
-							</Button>
-							<Button
-								variant={
-									assetForm.distributionType === "percentage"
-										? "default"
-										: "outline"
-								}
-								onClick={() => handleDistributionTypeChange("percentage")}
-								className={`cursor-pointer ${
-									assetForm.distributionType === "percentage"
-										? "bg-primary text-white"
-										: ""
-								}`}
-							>
-								Percentage Distribution
-							</Button>
+						<div className="flex items-center space-x-2">
+							<input
+								type="checkbox"
+								id="hasBeneficiaries"
+								checked={assetForm.hasBeneficiaries}
+								onChange={(e) => handleHasBeneficiariesChange(e.target.checked)}
+								className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+							/>
+							<Label htmlFor="hasBeneficiaries" className="text-sm font-medium">
+								I want to give this asset to specific beneficiaries
+							</Label>
 						</div>
 					</div>
-					<div className="space-y-2">
-						<div className="flex justify-between items-center">
-							<Label>Beneficiaries</Label>
-							<Button
-								variant="outline"
-								size="sm"
-								onClick={onAddNewBeneficiary}
-								className="cursor-pointer"
-							>
-								<Plus className="mr-2 h-4 w-4" />
-								Add New Beneficiary
-							</Button>
-						</div>
-						{isLoadingBeneficiaries ? (
-							<LoadingSpinner message="Loading beneficiaries..." />
-						) : (
-							<div className="space-y-4">
-								{/* Beneficiary Select Box */}
-								<div className="w-full">
-									<DropdownMenu
-										open={isDropdownOpen}
-										onOpenChange={setIsDropdownOpen}
-										className="w-[600px] max-h-[300px] "
+
+					{/* Distribution and Beneficiaries Section - Only show if hasBeneficiaries is true */}
+					{assetForm.hasBeneficiaries && (
+						<>
+							<div className="space-y-2">
+								<Label>Distribution Method</Label>
+								<div className="flex space-x-4">
+									<Button
+										variant={
+											assetForm.distributionType === "equal"
+												? "default"
+												: "outline"
+										}
+										onClick={() => handleDistributionTypeChange("equal")}
+										className={`cursor-pointer ${
+											assetForm.distributionType === "equal"
+												? "bg-primary text-white"
+												: ""
+										}`}
 									>
-										<Button
-											variant="outline"
-											role="combobox"
-											aria-expanded={isDropdownOpen}
-											className="w-full justify-between"
-										>
-											{searchQuery || "Search beneficiary..."}
-											<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-										</Button>
-										<DropdownMenuContent className="w-[600px] max-h-[300px] overflow-y-auto">
-											<div className="p-2">
-												<Input
-													placeholder="Search beneficiaries..."
-													value={searchQuery}
-													onChange={(e) => setSearchQuery(e.target.value)}
-													className="mb-2"
-												/>
-												{filteredBeneficiaries.length === 0 ? (
-													<div className="text-sm text-muted-foreground p-2">
-														No beneficiaries found.
-													</div>
-												) : (
-													<div className="space-y-1">
-														{filteredBeneficiaries.map((beneficiary) => {
-															const beneficiaryDetails =
-																enhancedBeneficiaries.find(
-																	(b) => b.id === beneficiary.id
-																);
-
-															if (!beneficiaryDetails) return null;
-
-															const relationship =
-																beneficiaryDetails.relationshipId
-																	? getFormattedRelationshipNameById(
-																			beneficiaryDetails.relationshipId
-																	  ) || beneficiaryDetails.relationship
-																	: beneficiaryDetails.relationship;
-
-															return (
-																<DropdownMenuItem
-																	key={beneficiary.id}
-																	onSelect={() =>
-																		handleSelectBeneficiary(beneficiary.id)
-																	}
-																	className="cursor-pointer"
-																>
-																	{beneficiaryDetails.type === "charity"
-																		? beneficiaryDetails.firstName
-																		: `${beneficiaryDetails.firstName} ${beneficiaryDetails.lastName}`}
-																	<span className="text-muted-foreground ps-[0.25rem]">
-																		({relationship})
-																		{beneficiaryDetails.type === "charity" &&
-																			beneficiaryDetails.registrationNumber &&
-																			` - Reg: ${beneficiaryDetails.registrationNumber}`}
-																	</span>
-																</DropdownMenuItem>
-															);
-														})}
-													</div>
-												)}
-											</div>
-										</DropdownMenuContent>
-									</DropdownMenu>
+										Equal Distribution
+									</Button>
+									<Button
+										variant={
+											assetForm.distributionType === "percentage"
+												? "default"
+												: "outline"
+										}
+										onClick={() => handleDistributionTypeChange("percentage")}
+										className={`cursor-pointer ${
+											assetForm.distributionType === "percentage"
+												? "bg-primary text-white"
+												: ""
+										}`}
+									>
+										Percentage Distribution
+									</Button>
 								</div>
-
-								{/* Selected Beneficiaries List */}
-								{assetForm.beneficiaries.length === 0 ? (
-									<p className="text-sm text-muted-foreground">
-										No beneficiaries selected. Use the dropdown above to add
-										beneficiaries.
-									</p>
-								) : (
-									<div className="space-y-2">
-										<p className="text-sm text-muted-foreground mb-2">
-											Selected beneficiaries:
-										</p>
-										{assetForm.beneficiaries.map((beneficiary) => {
-											const beneficiaryDetails = getBeneficiaryDetails(
-												beneficiary.id
-											);
-											if (!beneficiaryDetails) return null;
-
-											const relationship = beneficiaryDetails.relationshipId
-												? getFormattedRelationshipNameById(
-														beneficiaryDetails.relationshipId
-												  ) || beneficiaryDetails.relationship
-												: beneficiaryDetails.relationship;
-
-											const isDeleted =
-												isBeneficiaryDeleted(beneficiaryDetails);
-
-											return (
-												<div
-													key={beneficiary.id}
-													className={`flex items-center justify-between p-2 border rounded-md transition-colors ${
-														isDeleted
-															? "bg-red-50 border-red-200 hover:bg-red-100"
-															: "hover:bg-gray-50"
-													}`}
-												>
-													<div>
-														<span
-															className={`font-medium ${
-																isDeleted ? "text-red-600" : ""
-															}`}
-														>
-															{beneficiaryDetails.type === "charity"
-																? beneficiaryDetails.firstName
-																: `${beneficiaryDetails.firstName} ${beneficiaryDetails.lastName}`}
-														</span>
-														<span className="text-sm text-muted-foreground ml-2">
-															({relationship})
-															{beneficiaryDetails.type === "charity" &&
-																beneficiaryDetails.registrationNumber &&
-																` - Reg: ${beneficiaryDetails.registrationNumber}`}
-														</span>
-														{assetForm.distributionType === "percentage" && (
-															<span className="text-sm text-muted-foreground ml-2">
-																({beneficiary.percentage}%)
-															</span>
-														)}
-														{isDeleted && (
-															<span className="text-sm text-red-600 ml-2">
-																(Deleted - Please remove)
-															</span>
-														)}
-													</div>
-													<div className="flex items-center space-x-2">
-														{assetForm.distributionType === "percentage" && (
-															<Input
-																type="number"
-																min="0"
-																max="100"
-																value={beneficiary.percentage ?? ""}
-																onChange={(e) => {
-																	const inputValue = e.target.value;
-																	if (inputValue === "") {
-																		handleBeneficiaryPercentageChange(
-																			beneficiary.id,
-																			undefined
-																		);
-																	} else {
-																		const value = Math.min(
-																			100,
-																			Math.max(0, Number(inputValue))
-																		);
-																		handleBeneficiaryPercentageChange(
-																			beneficiary.id,
-																			value
-																		);
-																	}
-																}}
-																className="w-20"
-															/>
-														)}
-														<Button
-															variant="ghost"
-															size="icon"
-															onClick={() =>
-																handleRemoveBeneficiary(beneficiary.id)
-															}
-															className="cursor-pointer"
-														>
-															<X className="h-4 w-4" />
-														</Button>
-													</div>
-												</div>
-											);
-										})}
-									</div>
-								)}
 							</div>
-						)}
-					</div>
+						</>
+					)}
+					{/* Beneficiaries Section - Only show if hasBeneficiaries is true */}
+					{assetForm.hasBeneficiaries && (
+						<div className="space-y-2">
+							<div className="flex justify-between items-center">
+								<Label>Beneficiaries</Label>
+								<Button
+									variant="outline"
+									size="sm"
+									onClick={onAddNewBeneficiary}
+									className="cursor-pointer"
+								>
+									<Plus className="mr-2 h-4 w-4" />
+									Add New Beneficiary
+								</Button>
+							</div>
+							{isLoadingBeneficiaries ? (
+								<LoadingSpinner message="Loading beneficiaries..." />
+							) : (
+								<div className="space-y-4">
+									{/* Beneficiary Select Box */}
+									<div className="w-full">
+										<DropdownMenu
+											open={isDropdownOpen}
+											onOpenChange={setIsDropdownOpen}
+											className="w-[600px] max-h-[300px] "
+										>
+											<Button
+												variant="outline"
+												role="combobox"
+												aria-expanded={isDropdownOpen}
+												className="w-full justify-between"
+											>
+												{searchQuery || "Search beneficiary..."}
+												<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+											</Button>
+											<DropdownMenuContent className="w-[600px] max-h-[300px] overflow-y-auto">
+												<div className="p-2">
+													<Input
+														placeholder="Search beneficiaries..."
+														value={searchQuery}
+														onChange={(e) => setSearchQuery(e.target.value)}
+														className="mb-2"
+													/>
+													{filteredBeneficiaries.length === 0 ? (
+														<div className="text-sm text-muted-foreground p-2">
+															No beneficiaries found.
+														</div>
+													) : (
+														<div className="space-y-1">
+															{filteredBeneficiaries.map((beneficiary) => {
+																const beneficiaryDetails =
+																	enhancedBeneficiaries.find(
+																		(b) => b.id === beneficiary.id
+																	);
+
+																if (!beneficiaryDetails) return null;
+
+																const relationship =
+																	beneficiaryDetails.relationshipId
+																		? getFormattedRelationshipNameById(
+																				beneficiaryDetails.relationshipId
+																		  ) || beneficiaryDetails.relationship
+																		: beneficiaryDetails.relationship;
+
+																return (
+																	<DropdownMenuItem
+																		key={beneficiary.id}
+																		onSelect={() =>
+																			handleSelectBeneficiary(beneficiary.id)
+																		}
+																		className="cursor-pointer"
+																	>
+																		{beneficiaryDetails.type === "charity"
+																			? beneficiaryDetails.firstName
+																			: `${beneficiaryDetails.firstName} ${beneficiaryDetails.lastName}`}
+																		<span className="text-muted-foreground ps-[0.25rem]">
+																			({relationship})
+																			{beneficiaryDetails.type === "charity" &&
+																				beneficiaryDetails.registrationNumber &&
+																				` - Reg: ${beneficiaryDetails.registrationNumber}`}
+																		</span>
+																	</DropdownMenuItem>
+																);
+															})}
+														</div>
+													)}
+												</div>
+											</DropdownMenuContent>
+										</DropdownMenu>
+									</div>
+
+									{/* Selected Beneficiaries List */}
+									{assetForm.beneficiaries.length === 0 ? (
+										<p className="text-sm text-muted-foreground">
+											No beneficiaries selected. Use the dropdown above to add
+											beneficiaries.
+										</p>
+									) : (
+										<div className="space-y-2">
+											<p className="text-sm text-muted-foreground mb-2">
+												Selected beneficiaries:
+											</p>
+											{assetForm.beneficiaries.map((beneficiary) => {
+												const beneficiaryDetails = getBeneficiaryDetails(
+													beneficiary.id
+												);
+												if (!beneficiaryDetails) return null;
+
+												const relationship = beneficiaryDetails.relationshipId
+													? getFormattedRelationshipNameById(
+															beneficiaryDetails.relationshipId
+													  ) || beneficiaryDetails.relationship
+													: beneficiaryDetails.relationship;
+
+												const isDeleted =
+													isBeneficiaryDeleted(beneficiaryDetails);
+
+												return (
+													<div
+														key={beneficiary.id}
+														className={`flex items-center justify-between p-2 border rounded-md transition-colors ${
+															isDeleted
+																? "bg-red-50 border-red-200 hover:bg-red-100"
+																: "hover:bg-gray-50"
+														}`}
+													>
+														<div>
+															<span
+																className={`font-medium ${
+																	isDeleted ? "text-red-600" : ""
+																}`}
+															>
+																{beneficiaryDetails.type === "charity"
+																	? beneficiaryDetails.firstName
+																	: `${beneficiaryDetails.firstName} ${beneficiaryDetails.lastName}`}
+															</span>
+															<span className="text-sm text-muted-foreground ml-2">
+																({relationship})
+																{beneficiaryDetails.type === "charity" &&
+																	beneficiaryDetails.registrationNumber &&
+																	` - Reg: ${beneficiaryDetails.registrationNumber}`}
+															</span>
+															{assetForm.distributionType === "percentage" && (
+																<span className="text-sm text-muted-foreground ml-2">
+																	({beneficiary.percentage}%)
+																</span>
+															)}
+															{isDeleted && (
+																<span className="text-sm text-red-600 ml-2">
+																	(Deleted - Please remove)
+																</span>
+															)}
+														</div>
+														<div className="flex items-center space-x-2">
+															{assetForm.distributionType === "percentage" && (
+																<Input
+																	type="number"
+																	min="0"
+																	max="100"
+																	value={beneficiary.percentage ?? ""}
+																	onChange={(e) => {
+																		const inputValue = e.target.value;
+																		if (inputValue === "") {
+																			handleBeneficiaryPercentageChange(
+																				beneficiary.id,
+																				undefined
+																			);
+																		} else {
+																			const value = Math.min(
+																				100,
+																				Math.max(0, Number(inputValue))
+																			);
+																			handleBeneficiaryPercentageChange(
+																				beneficiary.id,
+																				value
+																			);
+																		}
+																	}}
+																	className="w-20"
+																/>
+															)}
+															<Button
+																variant="ghost"
+																size="icon"
+																onClick={() =>
+																	handleRemoveBeneficiary(beneficiary.id)
+																}
+																className="cursor-pointer"
+															>
+																<X className="h-4 w-4" />
+															</Button>
+														</div>
+													</div>
+												);
+											})}
+										</div>
+									)}
+								</div>
+							)}
+						</div>
+					)}
 				</div>
 				<DialogFooter>
 					<Button
 						onClick={handleSave}
 						disabled={
 							!assetForm.description ||
-							assetForm.beneficiaries.length === 0 ||
-							(assetForm.distributionType === "percentage" &&
+							(assetForm.hasBeneficiaries &&
+								assetForm.beneficiaries.length === 0) ||
+							(assetForm.hasBeneficiaries &&
+								assetForm.distributionType === "percentage" &&
 								Math.abs(
 									assetForm.beneficiaries.reduce(
 										(sum, b) => sum + (b.percentage || 0),

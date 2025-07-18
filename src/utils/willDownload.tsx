@@ -72,7 +72,7 @@ interface CompleteWillData {
 		asset_type: string;
 		description: string;
 		created_at: string;
-		distribution_type: string;
+		distribution_type?: string;
 		beneficiaries: Array<{
 			id: string;
 			created_at: string;
@@ -216,6 +216,7 @@ interface PDFData {
 	assets: Array<{
 		type: string;
 		description: string;
+		hasBeneficiaries?: boolean;
 		distributionType?: "equal" | "percentage";
 		beneficiaries?: Array<{
 			id?: string;
@@ -372,12 +373,19 @@ const transformWillDataToPDFFormat = (willData: CompleteWillData): PDFData => {
 		},
 		assets:
 			willData.assets && Array.isArray(willData.assets)
-				? willData.assets.map((asset) => ({
-						type: asset.asset_type,
-						description: asset.description,
-						distributionType: asset.distribution_type as "equal" | "percentage",
-						beneficiaries:
-							asset.beneficiaries && Array.isArray(asset.beneficiaries)
+				? willData.assets.map((asset) => {
+						const hasBeneficiaries =
+							asset.beneficiaries &&
+							Array.isArray(asset.beneficiaries) &&
+							asset.beneficiaries.length > 0;
+						return {
+							type: asset.asset_type,
+							description: asset.description,
+							hasBeneficiaries,
+							distributionType: hasBeneficiaries
+								? (asset.distribution_type as "equal" | "percentage")
+								: undefined,
+							beneficiaries: hasBeneficiaries
 								? asset.beneficiaries.map((beneficiary) => {
 										let beneficiaryName = "Unknown Beneficiary";
 										if (beneficiary.person) {
@@ -393,7 +401,8 @@ const transformWillDataToPDFFormat = (willData: CompleteWillData): PDFData => {
 										};
 								  })
 								: [],
-				  }))
+						};
+				  })
 				: [],
 		beneficiaries: Array.from(allPeople.entries()).map(([id, person]) => ({
 			id,
