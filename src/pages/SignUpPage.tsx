@@ -15,9 +15,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { Card, CardContent } from "@/components/ui/card";
-import type { ApiError } from "@/types/api";
 import { AuthPageHeader } from "@/components/auth/auth-page-header";
 import { Eye, EyeOff } from "lucide-react";
+import { apiClient } from "@/utils/apiClient";
+
+interface SignupResponse {
+	otp_id: string;
+	otp?: string;
+}
 
 const formSchema = z
 	.object({
@@ -58,27 +63,23 @@ export default function SignupPage() {
 	async function onSubmit(values: z.infer<typeof formSchema>) {
 		setIsLoading(true);
 		try {
-			const response = await fetch(
-				"https://x8ki-letl-twmt.n7.xano.io/api:XXA97u_a/auth/signup",
-				{
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify({
-						email: values.email,
-						password: values.password,
-						first_name: values.firstName,
-						last_name: values.lastName,
-					}),
-				}
-			);
+			const { data, error } = await apiClient<SignupResponse>("/auth/signup", {
+				method: "POST",
+				authenticated: false, // Signup doesn't require authentication
+				body: JSON.stringify({
+					email: values.email,
+					password: values.password,
+					first_name: values.firstName,
+					last_name: values.lastName,
+				}),
+			});
 
-			const data = await response.json();
+			if (error) {
+				throw new Error(error);
+			}
 
-			if (!response.ok) {
-				const error = data as ApiError;
-				throw new Error(error.message || "Signup failed");
+			if (!data) {
+				throw new Error("No response data received");
 			}
 
 			console.log(data);
