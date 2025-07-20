@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle, ArrowRight, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { apiClient } from "@/utils/apiClient";
+import { uploadWillPDF } from "@/utils/willUpload";
 
 export default function PaymentSuccessPage() {
 	const navigate = useNavigate();
@@ -42,6 +43,20 @@ export default function PaymentSuccessPage() {
 			// Success - 200 response
 			setIsValid(true);
 			toast.success("Payment completed successfully!");
+
+			// Generate and upload the will PDF to the server
+			if (willId) {
+				console.log(
+					"🔄 Starting will PDF generation after successful payment..."
+				);
+				const uploadSuccess = await uploadWillPDF(willId);
+				if (uploadSuccess) {
+					console.log("✅ Will PDF saved successfully after payment");
+				} else {
+					console.error("❌ Failed to save will PDF after payment");
+					// Don't show error toast as this is not critical for payment success
+				}
+			}
 		} catch (error) {
 			console.error("Error validating payment success:", error);
 			toast.error("Failed to validate payment. Please contact support.");
