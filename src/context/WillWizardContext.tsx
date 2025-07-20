@@ -91,13 +91,17 @@ export function WillWizardProvider({ children }: { children: ReactNode }) {
 	// Progress tracking functions
 	const markStepComplete = useCallback(
 		async (step: QuestionType) => {
-			if (!willId) return;
+			if (!willId) {
+				console.log("❌ No willId available for marking step complete:", step);
+				return;
+			}
 
+			console.log("✅ Marking step as complete:", step);
 			const updatedCompletion = { ...completedSteps, [step]: true };
 			setCompletedSteps(updatedCompletion);
 
 			try {
-				await apiClient(`/wills/${willId}/progress`, {
+				const { error } = await apiClient(`/wills/${willId}/progress`, {
 					method: "PUT",
 					authenticated: true,
 					headers: { "Content-Type": "application/json" },
@@ -106,8 +110,16 @@ export function WillWizardProvider({ children }: { children: ReactNode }) {
 						current_step: step,
 					}),
 				});
+
+				if (error) {
+					console.error("❌ Error saving progress to API:", error);
+					// Revert on error
+					setCompletedSteps(completedSteps);
+				} else {
+					console.log("✅ Progress saved successfully for step:", step);
+				}
 			} catch (error) {
-				console.error("Error saving progress:", error);
+				console.error("❌ Error saving progress:", error);
 				// Revert on error
 				setCompletedSteps(completedSteps);
 			}
@@ -118,14 +130,20 @@ export function WillWizardProvider({ children }: { children: ReactNode }) {
 	const canAccessStep = useCallback(
 		(step: QuestionType): boolean => {
 			const stepIndex = STEP_ORDER.indexOf(step);
+			console.log(`🔍 Checking access for step: ${step} (index: ${stepIndex})`);
+			console.log(`📊 Current completed steps:`, completedSteps);
 
 			// Check if all previous required steps are completed
 			for (let i = 0; i < stepIndex; i++) {
 				const prevStep = STEP_ORDER[i];
 				if (REQUIRED_STEPS.includes(prevStep) && !completedSteps[prevStep]) {
+					console.log(
+						`❌ Step ${step} blocked by incomplete required step: ${prevStep}`
+					);
 					return false;
 				}
 			}
+			console.log(`✅ Step ${step} is accessible`);
 			return true;
 		},
 		[completedSteps]
@@ -215,6 +233,10 @@ export function WillWizardProvider({ children }: { children: ReactNode }) {
 		console.log("🔄 willId changed to:", willId);
 		if (willId) {
 			loadProgress();
+		} else {
+			// Reset to default state when no willId
+			setCompletedSteps(DEFAULT_COMPLETION);
+			setCurrentStep(null);
 		}
 	}, [willId, loadProgress]);
 

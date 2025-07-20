@@ -153,7 +153,7 @@ export default function ChildrenStep({
 		}
 	};
 
-	const handleSubmit = () => {
+	const handleSubmit = async () => {
 		// Update the form data with current children state
 		onUpdate({
 			hasChildren,
@@ -162,7 +162,7 @@ export default function ChildrenStep({
 
 		// Let the parent WillWizard handle navigation
 		// It will check if there are minor children and navigate to guardians or assets accordingly
-		onNext();
+		await onNext();
 	};
 
 	const handleChildFormChange =

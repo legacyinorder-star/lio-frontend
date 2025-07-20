@@ -640,7 +640,7 @@ export default function GuardiansStep({
 						<ArrowLeft className="mr-2 h-4 w-4" /> Back
 					</Button>
 					<Button
-						onClick={onNext}
+						onClick={async () => await onNext()}
 						disabled={!areGuardiansValid()}
 						className="cursor-pointer bg-primary hover:bg-primary/90 text-white"
 					>

@@ -371,9 +371,10 @@ export default function WillWizard() {
 		}
 	};
 
-	const handleNext = () => {
+	const handleNext = async () => {
 		// Mark current step as complete before moving to next step
-		markStepComplete(currentQuestion);
+		console.log("🚀 handleNext called for step:", currentQuestion);
+		await markStepComplete(currentQuestion);
 
 		switch (currentQuestion) {
 			case "name":
@@ -529,7 +530,9 @@ export default function WillWizard() {
 			onUpdate: (data: Partial<WillFormData>) => {
 				setFormData((prev) => ({ ...prev, ...data }));
 			},
-			onNext: handleNext,
+			onNext: async () => {
+				await handleNext();
+			},
 			onBack: handleBack,
 		};
 
@@ -584,9 +587,9 @@ export default function WillWizard() {
 			case "residuary":
 				return (
 					<ResiduaryStep
-						onNext={(data) => {
+						onNext={async (data) => {
 							commonProps.onUpdate(data);
-							commonProps.onNext();
+							await commonProps.onNext();
 						}}
 						onBack={commonProps.onBack}
 						initialData={{
@@ -602,7 +605,9 @@ export default function WillWizard() {
 						onUpdate={(data) => {
 							commonProps.onUpdate({ executors: data });
 						}}
-						onNext={commonProps.onNext}
+						onNext={async () => {
+							await commonProps.onNext();
+						}}
 						onBack={commonProps.onBack}
 					/>
 				);

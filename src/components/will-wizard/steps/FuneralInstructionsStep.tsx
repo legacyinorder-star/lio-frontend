@@ -134,7 +134,7 @@ export default function FuneralInstructionsStep({
 			}
 
 			toast.success("Funeral wishes saved successfully");
-			onNext({
+			await onNext({
 				funeralInstructions: {
 					wishes: values.wishes,
 				},
@@ -201,7 +201,7 @@ export default function FuneralInstructionsStep({
 			}
 		}
 
-		onNext({
+		await onNext({
 			funeralInstructions: {
 				wishes: "",
 			},

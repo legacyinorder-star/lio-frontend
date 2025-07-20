@@ -331,7 +331,7 @@ export default function PetsStep({
 		}
 
 		// Always proceed to next step, even if API call failed
-		onNext();
+		await onNext();
 	};
 
 	const getGuardianName = (guardianId: string) => {

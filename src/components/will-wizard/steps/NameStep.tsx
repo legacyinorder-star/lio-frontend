@@ -232,7 +232,7 @@ export default function NameStep({
 			toast.success("Name saved successfully");
 
 			// Proceed to next step
-			onNext();
+			await onNext();
 		} catch (error) {
 			console.error("Error in name submission:", error);
 			toast.error(

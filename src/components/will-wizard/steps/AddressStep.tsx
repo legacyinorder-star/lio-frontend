@@ -219,7 +219,7 @@ export default function AddressStep({
 			toast.success("Address saved successfully");
 
 			// Proceed to next step
-			onNext();
+			await onNext();
 		} catch (error) {
 			console.error("Error in address submission:", error);
 			toast.error(

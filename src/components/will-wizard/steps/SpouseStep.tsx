@@ -87,8 +87,8 @@ export default function SpouseStep({
 		}
 	}, [willOwnerData, spouseData, initialData, hasSpouseFromData, form]);
 
-	const handleSubmit = (values: z.infer<typeof spouseSchema>) => {
-		onNext({
+	const handleSubmit = async (values: z.infer<typeof spouseSchema>) => {
+		await onNext({
 			hasSpouse: values.hasSpouse,
 			spouse: localSpouseData,
 		});

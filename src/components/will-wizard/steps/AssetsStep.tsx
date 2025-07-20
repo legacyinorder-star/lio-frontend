@@ -118,9 +118,9 @@ export default function AssetsStep({
 		);
 	}
 
-	const handleSubmit = () => {
+	const handleSubmit = async () => {
 		onUpdate({ assets });
-		onNext();
+		await onNext();
 	};
 
 	const handleSaveAsset = async (

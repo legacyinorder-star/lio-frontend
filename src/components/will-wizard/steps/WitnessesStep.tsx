@@ -92,8 +92,8 @@ export default function WitnessesStep({
 		},
 	});
 
-	const handleSubmit = () => {
-		onNext();
+	const handleSubmit = async () => {
+		await onNext();
 	};
 
 	// Update parent component when witnesses change
@@ -210,7 +210,7 @@ export default function WitnessesStep({
 		onUpdate({ witnesses: [] });
 		setIsSkipping(false);
 		setSkipDialogOpen(false);
-		onNext();
+		await onNext();
 	};
 
 	const handleConfirmSkip = () => {
