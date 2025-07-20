@@ -1,3 +1,4 @@
+import React from "react";
 import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 
 // Helper function to format date
@@ -491,24 +492,24 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 
 			if (_asset.distributionType === "equal") {
 				return (
-					<>
+					<React.Fragment key={`beneficiary-${b.id || idx}`}>
 						{prefix}
 						<Text>{beneficiaryName}</Text>
-					</>
+					</React.Fragment>
 				);
 			} else if (_asset.distributionType === "percentage") {
 				return (
-					<>
+					<React.Fragment key={`beneficiary-${b.id || idx}`}>
 						{prefix}
 						<Text>{beneficiaryName}</Text> ({b.percentage}%)
-					</>
+					</React.Fragment>
 				);
 			} else {
 				return (
-					<>
+					<React.Fragment key={`beneficiary-${b.id || idx}`}>
 						{prefix}
 						<Text>{beneficiaryName}</Text>
-					</>
+					</React.Fragment>
 				);
 			}
 		});
