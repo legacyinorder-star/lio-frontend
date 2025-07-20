@@ -155,7 +155,7 @@ export class PaymentService {
 
 		// For Stripe checkout, we need to make a direct request to the full URL
 		// since apiClient prepends the base URL
-		const url = "https://x8ki-letl-twmt.n7.xano.io/api:qsbh4CxS/sessions";
+		const url = "https://xx4z-bjeb-pp4s.e2.xano.io/api:qsbh4CxS/sessions";
 		console.log("🌐 Using direct fetch URL:", url);
 
 		try {
