@@ -273,6 +273,7 @@ const DigitalAssetsStep: React.FC<DigitalAssetsStepProps> = ({
 					<Button
 						type="button"
 						className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-white cursor-pointer"
+						onClick={handleNext}
 						disabled={!selectedBeneficiary || isLoading || isFetching}
 					>
 						{isLoading ? (

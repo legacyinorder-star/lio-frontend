@@ -1,6 +1,5 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useCallback, useEffect } from "react";
-import { toast } from "sonner";
 import { QuestionType } from "@/components/will-wizard/types/will.types";
 import { useWillWizard } from "@/context/WillWizardContext";
 
