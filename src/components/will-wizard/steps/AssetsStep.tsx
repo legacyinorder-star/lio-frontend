@@ -192,18 +192,15 @@ export default function AssetsStep({
 	return (
 		<div className="space-y-4">
 			<div className="text-xl sm:text-2xl lg:text-[2rem] font-medium text-black">
-				Share your assets among your loved ones
+				List your accounts and property
 			</div>
 			<div className="text-muted-foreground">
-				Add your assets and specify how you'd like them to be distributed among
-				your beneficiaries.
+				This includes your bank accounts, investments, property and life
+				insurance policies. It helps your executors, the people who will deal
+				with your estate after you die, know which providers to contact.
 			</div>
 			<div className="text-muted-foreground">
-				We will attach an appendix to your Will listing all assets.
-			</div>
-			<div className="text-muted-foreground font-semibold">
-				Assets with no beneficiaries will be added to your residuary estate to
-				be given to your residuary beneficiaries.
+				We will not ask for specific details like account or policy numbers.
 			</div>
 
 			<Form {...form}>
