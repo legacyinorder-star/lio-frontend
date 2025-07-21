@@ -1064,7 +1064,14 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 				),
 			},
 			{
-				shouldShow: reviewData.assets && reviewData.assets.length > 0,
+				shouldShow:
+					reviewData.assets &&
+					reviewData.assets.some(
+						(asset) =>
+							asset.distributionType &&
+							asset.beneficiaries &&
+							asset.beneficiaries.length > 0
+					),
 				render: (num: number) => (
 					<section
 						className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm"
@@ -1076,7 +1083,7 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 									{num}
 								</span>
 							</div>
-							<h3 className="text-xl font-semibold text-gray-900">Assets</h3>
+							<h3 className="text-xl font-semibold text-gray-900">Gifts</h3>
 						</div>
 						<div className="grid gap-6">
 							{reviewData.assets

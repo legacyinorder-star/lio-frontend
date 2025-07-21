@@ -735,32 +735,40 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 				)}
 
 				{/* Asset Distribution Section */}
-				<View style={styles.distributionSection}>
-					<Text style={styles.distributionTitle}>
-						{sections.distribution}. Distribution of Assets
-					</Text>
+				{data.assets &&
+					data.assets.some(
+						(asset) =>
+							asset.distributionType &&
+							asset.beneficiaries &&
+							asset.beneficiaries.length > 0
+					) && (
+						<View style={styles.distributionSection}>
+							<Text style={styles.distributionTitle}>
+								{sections.distribution}. Distribution of Assets
+							</Text>
 
-					<Text style={styles.distributionText}>
-						I give, devise, and bequeath my estate as follows:
-					</Text>
+							<Text style={styles.distributionText}>
+								I give, devise, and bequeath my estate as follows:
+							</Text>
 
-					{data.assets
-						.filter(
-							(asset) =>
-								asset.distributionType &&
-								asset.beneficiaries &&
-								asset.beneficiaries.length > 0
-						)
-						.map((asset, index) => (
-							<View key={index} style={styles.assetItem}>
-								<Text style={styles.assetDescription}>
-									{index + 1}. <Text>{asset.description}</Text> (
-									<Text>{asset.type}</Text>) to{" "}
-									{renderAssetDistributionText(asset)}.
-								</Text>
-							</View>
-						))}
-				</View>
+							{data.assets
+								.filter(
+									(asset) =>
+										asset.distributionType &&
+										asset.beneficiaries &&
+										asset.beneficiaries.length > 0
+								)
+								.map((asset, index) => (
+									<View key={index} style={styles.assetItem}>
+										<Text style={styles.assetDescription}>
+											{index + 1}. <Text>{asset.description}</Text> (
+											<Text>{asset.type}</Text>) to{" "}
+											{renderAssetDistributionText(asset)}.
+										</Text>
+									</View>
+								))}
+						</View>
+					)}
 
 				{/* Estate Administration Section */}
 				<View style={styles.distributionSection}>
