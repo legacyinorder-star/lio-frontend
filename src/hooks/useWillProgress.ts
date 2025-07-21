@@ -124,12 +124,15 @@ export function useWillProgress(willId?: string) {
 	// Navigation functions
 	const navigateToStep = useCallback(
 		(step: QuestionType) => {
-			if (canAccessStep(step, completedSteps)) {
-				setCurrentStep(step);
-				navigate(`/app/create-will/${step}`);
-			} else {
-				toast.error("Please complete previous steps first");
-			}
+			// ToDO: Implement this
+			// if (canAccessStep(step, completedSteps)) {
+			// 	setCurrentStep(step);
+			// 	navigate(`/app/create-will/${step}`);
+			// } else {
+			// 	toast.error("Please complete previous steps first");
+			// }
+			setCurrentStep(step);
+			navigate(`/app/create-will/${step}`);
 		},
 		[completedSteps, navigate]
 	);

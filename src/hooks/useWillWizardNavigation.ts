@@ -29,12 +29,15 @@ export function useWillWizardNavigation() {
 	// Navigate to a specific step
 	const navigateToStep = useCallback(
 		(step: QuestionType) => {
-			if (canAccessStep(step)) {
-				setWillWizardState(true, step);
-				navigate(`/app/create-will/${step}`);
-			} else {
-				toast.error("Please complete previous steps first");
-			}
+			// ToDO: Implement this
+			// if (canAccessStep(step)) {
+			// 	setWillWizardState(true, step);
+			// 	navigate(`/app/create-will/${step}`);
+			// } else {
+			// 	toast.error("Please complete previous steps first");
+			// }
+			setWillWizardState(true, step);
+			navigate(`/app/create-will/${step}`);
 		},
 		[canAccessStep, navigate, setWillWizardState]
 	);
