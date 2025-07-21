@@ -201,6 +201,23 @@ interface CompleteWillData {
 			is_witness: boolean;
 		};
 	};
+	digital_asset?: {
+		id: string;
+		created_at: string;
+		will_id: string;
+		beneficiary_id: string;
+		person?: {
+			id: string;
+			user_id: string;
+			will_id: string;
+			relationship_id: string;
+			first_name: string;
+			last_name: string;
+			is_minor: boolean;
+			created_at: string;
+			is_witness: boolean;
+		};
+	};
 }
 
 // PDF Data interface (same as in willDownload.tsx)
@@ -255,6 +272,11 @@ interface PDFData {
 		isPrimary: boolean;
 		address?: string;
 	}>;
+	digitalAssets?: {
+		beneficiaryId: string;
+		beneficiaryName?: string;
+		relationship?: string;
+	};
 	residuaryBeneficiaries?: Array<{
 		id: string;
 		beneficiaryId: string;
@@ -388,6 +410,19 @@ const transformWillDataToPDFFormat = (willData: CompleteWillData): PDFData => {
 							address: "", // Not available in API
 						}))
 				: [],
+		digitalAssets: willData.digital_asset
+			? {
+					beneficiaryId: willData.digital_asset.beneficiary_id,
+					beneficiaryName: willData.digital_asset.person
+						? `${willData.digital_asset.person.first_name} ${willData.digital_asset.person.last_name}`
+						: "Unknown Beneficiary",
+					relationship: willData.digital_asset.person
+						? getFormattedRelationshipNameById(
+								willData.digital_asset.person.relationship_id
+						  )
+						: "Unknown Relationship",
+			  }
+			: undefined,
 		residuaryBeneficiaries:
 			willData.residuary &&
 			willData.residuary.beneficiaries &&
