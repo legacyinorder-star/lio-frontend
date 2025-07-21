@@ -20,6 +20,11 @@ export const API_CONFIG = {
 } as const;
 
 export const getApiUrl = (endpoint: string) => {
+	// If endpoint is already a full URL, return it as-is
+	if (endpoint.startsWith("http://") || endpoint.startsWith("https://")) {
+		return endpoint;
+	}
+	// Otherwise, append to base URL
 	return `${API_CONFIG.baseUrl}${endpoint}`;
 };
 
