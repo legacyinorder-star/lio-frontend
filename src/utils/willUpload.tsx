@@ -425,10 +425,17 @@ const transformWillDataToPDFFormat = (willData: CompleteWillData): PDFData => {
 	};
 };
 
+interface UploadResponse {
+	path: string;
+	name: string;
+}
+
 /**
  * Generate and upload a will PDF to the server
  */
-export const uploadWillPDF = async (willId: string): Promise<boolean> => {
+export const uploadWillPDF = async (
+	willId: string
+): Promise<UploadResponse | null> => {
 	try {
 		console.log("🔄 Starting will PDF generation and upload for will:", willId);
 
@@ -440,21 +447,64 @@ export const uploadWillPDF = async (willId: string): Promise<boolean> => {
 		if (error) {
 			console.error("❌ Error loading complete will data:", error);
 			toast.error("Failed to load will data");
-			return false;
+			return null;
 		}
 
 		const willData = Array.isArray(data) ? data[0] : data;
 		if (!willData) {
 			console.error("❌ Will not found");
 			toast.error("Will not found");
-			return false;
+			return null;
 		}
 
 		console.log("✅ Will data loaded successfully");
+		console.log("📋 Will data structure:", {
+			id: willData.id,
+			owner: willData.owner?.first_name + " " + willData.owner?.last_name,
+			assetsCount: willData.assets?.length || 0,
+			executorsCount: willData.executors?.length || 0,
+			beneficiariesCount: willData.beneficiaries?.length || 0,
+		});
 
 		// Transform the data using the same logic as willDownload.tsx
-		const pdfData = transformWillDataToPDFFormat(willData);
-		const pdfDoc = pdf(<WillPDF data={pdfData} />);
+		console.log("🔄 Transforming will data to PDF format...");
+		let pdfData: PDFData;
+		try {
+			pdfData = transformWillDataToPDFFormat(willData);
+			console.log("✅ PDF data transformed successfully");
+		} catch (transformError) {
+			console.error("❌ Error transforming will data:", transformError);
+			console.error("❌ Transform error details:", {
+				name: transformError instanceof Error ? transformError.name : "Unknown",
+				message:
+					transformError instanceof Error
+						? transformError.message
+						: String(transformError),
+				stack:
+					transformError instanceof Error
+						? transformError.stack
+						: "No stack trace",
+			});
+			toast.error("Failed to process will data");
+			return null;
+		}
+
+		console.log("🔄 Creating PDF document...");
+		let pdfDoc;
+		try {
+			pdfDoc = pdf(<WillPDF data={pdfData} />);
+			console.log("✅ PDF document created successfully");
+		} catch (pdfError) {
+			console.error("❌ Error creating PDF document:", pdfError);
+			console.error("❌ PDF creation error details:", {
+				name: pdfError instanceof Error ? pdfError.name : "Unknown",
+				message:
+					pdfError instanceof Error ? pdfError.message : String(pdfError),
+				stack: pdfError instanceof Error ? pdfError.stack : "No stack trace",
+			});
+			toast.error("Failed to create PDF document");
+			return null;
+		}
 
 		console.log("🔄 Generating PDF blob...");
 
@@ -486,29 +536,34 @@ export const uploadWillPDF = async (willId: string): Promise<boolean> => {
 				"and filename:",
 				fileName
 			);
-			const { error: uploadError } = await apiClient(
-				`/wills/${willId}/upload-will-document`,
-				{
-					method: "POST",
-					authenticated: true,
-					body: formData,
-					// Don't set Content-Type header for FormData, let the browser set it with boundary
-				}
-			);
+			const { data: uploadResponse, error: uploadError } = await apiClient<{
+				name: string;
+				path: string;
+			}>(`/wills/${willId}/upload-will-document`, {
+				method: "POST",
+				authenticated: true,
+				body: formData,
+				// Don't set Content-Type header for FormData, let the browser set it with boundary
+			});
 
 			if (uploadError) {
 				console.error("❌ Error saving PDF:", uploadError);
-				return false;
+				return null;
 			}
 
 			console.log("✅ PDF saved successfully");
-			toast.success("Will document saved successfully");
-			return true;
+			return uploadResponse || null;
 		} catch (blobError) {
 			console.error(
 				"❌ Direct blob generation failed, trying buffer:",
 				blobError
 			);
+			console.error("❌ Blob error details:", {
+				name: blobError instanceof Error ? blobError.name : "Unknown",
+				message:
+					blobError instanceof Error ? blobError.message : String(blobError),
+				stack: blobError instanceof Error ? blobError.stack : "No stack trace",
+			});
 			try {
 				// If direct blob generation fails, try using buffer
 				const buffer = await pdfDoc.toBuffer();
@@ -527,34 +582,47 @@ export const uploadWillPDF = async (willId: string): Promise<boolean> => {
 				console.log("🔄 Saving PDF to server...");
 
 				// Upload the PDF to the server
-				const { error: uploadError } = await apiClient(
-					`/wills/${willId}/upload-will-document`,
-					{
-						method: "POST",
-						authenticated: true,
-						body: formData,
-						// Don't set Content-Type header for FormData, let the browser set it with boundary
-					}
-				);
+				const { data: uploadResponse, error: uploadError } = await apiClient<{
+					name: string;
+					path: string;
+				}>(`/wills/${willId}/upload-will-document`, {
+					method: "POST",
+					authenticated: true,
+					body: formData,
+					// Don't set Content-Type header for FormData, let the browser set it with boundary
+				});
 
 				if (uploadError) {
 					console.error("❌ Error saving PDF:", uploadError);
-					return false;
+					return null;
 				}
 
 				console.log("✅ PDF saved successfully");
-				toast.success("Will document saved successfully");
-				return true;
+				return uploadResponse || null;
 			} catch (bufferError) {
 				console.error("❌ Buffer generation failed:", bufferError);
+				console.error("❌ Buffer error details:", {
+					name: bufferError instanceof Error ? bufferError.name : "Unknown",
+					message:
+						bufferError instanceof Error
+							? bufferError.message
+							: String(bufferError),
+					stack:
+						bufferError instanceof Error ? bufferError.stack : "No stack trace",
+				});
 				throw new Error("Failed to generate PDF document");
 			}
 		}
 	} catch (error) {
 		console.error("❌ Error saving will:", error);
+		console.error("❌ Main error details:", {
+			name: error instanceof Error ? error.name : "Unknown",
+			message: error instanceof Error ? error.message : String(error),
+			stack: error instanceof Error ? error.stack : "No stack trace",
+		});
 		toast.error(
 			"Failed to generate and save PDF. Please try again or contact support if the issue persists."
 		);
-		return false;
+		return null;
 	}
 };

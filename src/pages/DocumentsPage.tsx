@@ -35,7 +35,7 @@ import { getUserDetails } from "@/utils/auth";
 import { toast } from "sonner";
 import { apiClient } from "@/utils/apiClient";
 import { mapWillDataFromAPI } from "@/utils/dataTransform";
-import { downloadWillPDF } from "@/utils/willDownload";
+import { smartDownloadWill } from "@/utils/willSmartDownload";
 
 export default function DocumentsPage() {
 	const navigate = useNavigate();
@@ -76,7 +76,13 @@ export default function DocumentsPage() {
 
 	const handleDownloadPDF = async (documentId: string) => {
 		try {
-			await downloadWillPDF(documentId);
+			const document = documents.find((d) => d.id === documentId);
+			if (!document) {
+				toast.error("Document not found");
+				return;
+			}
+
+			await smartDownloadWill(document);
 			toast.success("Document PDF downloaded successfully");
 		} catch (error) {
 			console.error("Error downloading PDF:", error);

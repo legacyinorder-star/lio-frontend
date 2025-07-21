@@ -61,6 +61,65 @@ export function mapWillDataFromAPI(apiData: unknown): WillData {
 			(converted.payment_status as string),
 		paymentDate:
 			(converted.paymentDate as string) || (converted.payment_date as string),
+		// Document data
+		document: converted.document
+			? {
+					willId:
+						((converted.document as Record<string, unknown>)
+							.willId as string) ||
+						((converted.document as Record<string, unknown>)
+							.will_id as string) ||
+						"",
+					userId:
+						((converted.document as Record<string, unknown>)
+							.userId as string) ||
+						((converted.document as Record<string, unknown>)
+							.user_id as string) ||
+						"",
+					document: {
+						url:
+							((
+								(converted.document as Record<string, unknown>)
+									.document as Record<string, unknown>
+							)?.url as string) || "",
+						meta:
+							((
+								(converted.document as Record<string, unknown>)
+									.document as Record<string, unknown>
+							)?.meta as Record<string, unknown>) || {},
+						mime:
+							((
+								(converted.document as Record<string, unknown>)
+									.document as Record<string, unknown>
+							)?.mime as string) || "",
+						name:
+							((
+								(converted.document as Record<string, unknown>)
+									.document as Record<string, unknown>
+							)?.name as string) || "",
+						path:
+							((
+								(converted.document as Record<string, unknown>)
+									.document as Record<string, unknown>
+							)?.path as string) || "",
+						size:
+							((
+								(converted.document as Record<string, unknown>)
+									.document as Record<string, unknown>
+							)?.size as number) || 0,
+						type:
+							((
+								(converted.document as Record<string, unknown>)
+									.document as Record<string, unknown>
+							)?.type as string) || "",
+						access:
+							((
+								(converted.document as Record<string, unknown>)
+									.document as Record<string, unknown>
+							)?.access as Record<string, unknown>) || {},
+					},
+			  }
+			: undefined,
 
 		// Owner data
 		owner: {

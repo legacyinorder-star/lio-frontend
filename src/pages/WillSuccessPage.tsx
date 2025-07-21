@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, Download, ArrowRight } from "lucide-react";
 import { useState } from "react";
-import { downloadWillPDF } from "@/utils/willDownload";
+import { smartDownloadWill } from "@/utils/willSmartDownload";
 import { useWill } from "@/context/WillContext";
 import { toast } from "sonner";
 
@@ -13,14 +13,14 @@ export default function WillSuccessPage() {
 	const { activeWill } = useWill();
 
 	const handleDownloadWill = async () => {
-		if (!activeWill?.id) {
+		if (!activeWill) {
 			toast.error("No will found to download");
 			return;
 		}
 
 		setIsDownloading(true);
 		try {
-			await downloadWillPDF(activeWill.id);
+			await smartDownloadWill(activeWill);
 		} catch (error) {
 			console.error("Error downloading will:", error);
 			toast.error("Failed to download will. Please try again.");

@@ -113,6 +113,21 @@ export interface WillData {
 	// Payment data
 	paymentStatus?: string;
 	paymentDate?: string;
+	// Document data
+	document?: {
+		willId: string;
+		userId: string;
+		document: {
+			url: string; // Full URL to download the will
+			meta: Record<string, unknown>;
+			mime: string;
+			name: string; // Name of the file
+			path: string;
+			size: number;
+			type: string;
+			access: Record<string, unknown>;
+		};
+	};
 	// Owner data
 	owner: WillPersonalData;
 	// Spouse data

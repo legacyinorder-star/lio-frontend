@@ -438,28 +438,40 @@ export const smartDownloadWill = async (will: WillData): Promise<boolean> => {
 		console.log("🔄 Starting smart will download for will:", will.id);
 
 		// Check if document URL already exists
-		if (will.document?.document) {
+		if (will.document?.document?.url) {
 			console.log("✅ Found existing document URL, downloading directly...");
-			return await downloadFromURL(will.document.document, will);
+			console.log("📋 Document info:", {
+				url: will.document.document.url,
+				name: will.document.document.name,
+				size: will.document.document.size,
+				type: will.document.document.type,
+			});
+			const success = await downloadFromURL(
+				will.document.document.url,
+				will,
+				will.document.document.name
+			);
+			if (success) {
+				toast.success("Will downloaded successfully");
+			}
+			return success;
 		}
 
 		// No existing document URL, generate and upload
 		console.log(
 			"📝 No existing document URL found, generating and uploading..."
 		);
-		const uploadSuccess = await uploadWillPDF(will.id);
+		const uploadResult = await uploadWillPDF(will.id);
 
-		if (uploadSuccess) {
-			// After successful upload, the backend should return the document URL
-			// We need to fetch the updated will data to get the new document URL
-			console.log("🔄 Fetching updated will data to get document URL...");
-
-			// For now, we'll assume the upload was successful and the document is available
-			// In a real implementation, you might want to fetch the updated will data
-			// and then download from the returned URL
-
-			toast.success("Will document generated and saved successfully");
-			return true;
+		if (uploadResult) {
+			// After successful upload, download the file from the returned path
+			const fullUrl = `https://xx4z-bjeb-pp4s.e2.xano.io${uploadResult.path}`;
+			console.log("✅ Upload successful, downloading from URL:", fullUrl);
+			const success = await downloadFromURL(fullUrl, will, uploadResult.name);
+			if (success) {
+				toast.success("Will generated and downloaded successfully");
+			}
+			return success;
 		} else {
 			console.error("❌ Failed to generate and upload will document");
 			toast.error("Failed to generate will document. Please try again.");
@@ -477,7 +489,8 @@ export const smartDownloadWill = async (will: WillData): Promise<boolean> => {
  */
 const downloadFromURL = async (
 	url: string,
-	will: WillData
+	will: WillData,
+	customFilename?: string
 ): Promise<boolean> => {
 	try {
 		console.log("🔄 Downloading will from URL:", url);
@@ -486,15 +499,21 @@ const downloadFromURL = async (
 		const link = document.createElement("a");
 		link.href = url;
 
-		// Generate filename based on will owner name
-		const ownerName =
-			will.owner?.firstName && will.owner?.lastName
-				? `${will.owner.firstName} ${will.owner.lastName}`
-				: "will";
+		// Use custom filename if provided, otherwise generate based on will owner name
+		const filename =
+			customFilename ||
+			(() => {
+				const ownerName =
+					will.owner?.firstName && will.owner?.lastName
+						? `${will.owner.firstName} ${will.owner.lastName}`
+						: "will";
+				return `${ownerName.toLowerCase().replace(/\s+/g, "-")}-${
+					new Date().toISOString().split("T")[0]
+				}.pdf`;
+			})();
 
-		link.download = `${ownerName.toLowerCase().replace(/\s+/g, "-")}-${
-			new Date().toISOString().split("T")[0]
-		}.pdf`;
+		link.download = filename;
+		console.log("📁 Downloading file as:", filename);
 
 		// Set target to _blank to open in new tab if download doesn't work
 		link.target = "_blank";
@@ -505,7 +524,6 @@ const downloadFromURL = async (
 		document.body.removeChild(link);
 
 		console.log("✅ Will downloaded successfully from URL");
-		toast.success("Will downloaded successfully");
 		return true;
 	} catch (error) {
 		console.error("❌ Error downloading from URL:", error);
@@ -574,7 +592,8 @@ export const uploadWillPDFAndGetURL = async (
 
 			// Upload the PDF to the server
 			const { data: uploadResponse, error: uploadError } = await apiClient<{
-				document_url: string;
+				name: string;
+				path: string;
 			}>(`/wills/${willId}/upload-will-document`, {
 				method: "POST",
 				authenticated: true,
@@ -588,10 +607,9 @@ export const uploadWillPDFAndGetURL = async (
 			}
 
 			console.log("✅ PDF saved successfully");
-			toast.success("Will document saved successfully");
 
-			// Return the document URL from the response
-			return uploadResponse?.document_url || null;
+			// Return the document path from the response
+			return uploadResponse?.path || null;
 		} catch (blobError) {
 			console.error(
 				"❌ Direct blob generation failed, trying buffer:",
@@ -616,7 +634,8 @@ export const uploadWillPDFAndGetURL = async (
 
 				// Upload the PDF to the server
 				const { data: uploadResponse, error: uploadError } = await apiClient<{
-					document_url: string;
+					name: string;
+					path: string;
 				}>(`/wills/${willId}/upload-will-document`, {
 					method: "POST",
 					authenticated: true,
@@ -630,10 +649,9 @@ export const uploadWillPDFAndGetURL = async (
 				}
 
 				console.log("✅ PDF saved successfully");
-				toast.success("Will document saved successfully");
 
-				// Return the document URL from the response
-				return uploadResponse?.document_url || null;
+				// Return the document path from the response
+				return uploadResponse?.path || null;
 			} catch (bufferError) {
 				console.error("❌ Buffer generation failed:", bufferError);
 				throw new Error("Failed to generate PDF document");

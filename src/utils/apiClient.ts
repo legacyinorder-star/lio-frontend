@@ -26,7 +26,11 @@ export async function apiClient<T = unknown>(
 
 	// Prepare headers
 	const headers = new Headers(fetchOptions.headers);
-	headers.set("Content-Type", "application/json");
+
+	// Don't set Content-Type for FormData - let the browser set it with boundary
+	if (!(fetchOptions.body instanceof FormData)) {
+		headers.set("Content-Type", "application/json");
+	}
 
 	// Add authentication token if required
 	if (authenticated) {
@@ -56,6 +60,35 @@ export async function apiClient<T = unknown>(
 	}
 
 	const url = getApiUrl(endpoint);
+
+	// Debug logging for FormData requests
+	if (fetchOptions.body instanceof FormData) {
+		console.log("🔄 Making FormData request to:", url);
+		console.log("📋 FormData entries:");
+		for (const [key, value] of fetchOptions.body.entries()) {
+			if (value instanceof File) {
+				console.log(
+					`  ${key}:`,
+					value.name || "unnamed",
+					`(${value.size} bytes, ${value.type})`
+				);
+			} else if (
+				typeof value === "object" &&
+				value !== null &&
+				"size" in value &&
+				"type" in value
+			) {
+				console.log(
+					`  ${key}:`,
+					"blob",
+					`(${(value as Blob).size} bytes, ${(value as Blob).type})`
+				);
+			} else {
+				console.log(`  ${key}:`, value);
+			}
+		}
+	}
+
 	try {
 		const response = await fetch(url, {
 			...fetchOptions,
@@ -67,9 +100,16 @@ export async function apiClient<T = unknown>(
 			data = await response.json();
 		}
 		if (!response.ok) {
+			console.error(`❌ HTTP ${response.status} error for ${url}`);
+			console.error(
+				"Response headers:",
+				Object.fromEntries(response.headers.entries())
+			);
+			console.error("Response data:", data);
+
 			const message =
 				typeof data === "object" && data !== null && "message" in data
-					? String((data as any).message)
+					? String((data as { message: string }).message)
 					: `Request failed with status ${response.status}`;
 			if (response.status === 401) {
 				handleAuthError(AUTH_ERROR_CODES.UNAUTHORIZED);

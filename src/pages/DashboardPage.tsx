@@ -9,7 +9,7 @@ import { type WillData } from "@/context/WillContext";
 import { toast } from "sonner";
 import { apiClient } from "@/utils/apiClient";
 import { mapWillDataFromAPI } from "@/utils/dataTransform";
-import { downloadWillPDF } from "@/utils/willDownload";
+import { smartDownloadWill } from "@/utils/willSmartDownload";
 import { Edit, CreditCard, Download, Trash2 } from "lucide-react";
 import {
 	AlertDialog,
@@ -61,8 +61,13 @@ export default function DashboardPage() {
 
 	const handleDownloadPDF = async (willId: string) => {
 		try {
-			await downloadWillPDF(willId);
-			toast.success("Will PDF downloaded successfully");
+			const will = wills.find((w) => w.id === willId);
+			if (!will) {
+				toast.error("Will not found");
+				return;
+			}
+
+			await smartDownloadWill(will);
 		} catch (error) {
 			console.error("Error downloading PDF:", error);
 			toast.error("Failed to download PDF. Please try again.");

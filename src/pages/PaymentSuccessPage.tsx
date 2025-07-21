@@ -49,8 +49,8 @@ export default function PaymentSuccessPage() {
 				console.log(
 					"🔄 Starting will PDF generation after successful payment..."
 				);
-				const uploadSuccess = await uploadWillPDF(willId);
-				if (uploadSuccess) {
+				const uploadResult = await uploadWillPDF(willId);
+				if (uploadResult) {
 					console.log("✅ Will PDF saved successfully after payment");
 				} else {
 					console.error("❌ Failed to save will PDF after payment");
