@@ -109,6 +109,20 @@ const stepArticles: Record<QuestionType, KnowledgeArticle[]> = {
 			url: "#",
 		},
 	],
+	digitalAssets: [
+		{
+			title: "Digital Assets in Your Will",
+			description:
+				"Learn about digital assets and how to include them in your will.",
+			url: "#",
+		},
+		{
+			title: "Managing Digital Legacy",
+			description:
+				"Understanding how to handle online accounts and digital property.",
+			url: "#",
+		},
+	],
 
 	residuary: [
 		{

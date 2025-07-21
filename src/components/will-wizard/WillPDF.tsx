@@ -345,6 +345,11 @@ interface WillPDFProps {
 				beneficiaryName?: string;
 			}>;
 		}>;
+		digitalAssets?: {
+			beneficiaryId: string;
+			beneficiaryName?: string;
+			relationship?: string;
+		};
 		beneficiaries: Array<{
 			id?: string;
 			fullName: string;
@@ -429,6 +434,7 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 			guardians: shouldShowGuardiansSection() ? sectionNum++ : null,
 			pets: shouldShowPetsSection() ? sectionNum++ : null,
 			distribution: sectionNum++,
+			digitalAssets: data.digitalAssets?.beneficiaryId ? sectionNum++ : null,
 
 			administration: sectionNum++,
 			residuary:
@@ -769,6 +775,51 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 								))}
 						</View>
 					)}
+
+				{/* Digital Assets Section */}
+				{data.digitalAssets?.beneficiaryId && (
+					<View style={styles.distributionSection}>
+						<Text style={styles.distributionTitle}>
+							{sections.digitalAssets}. Digital Assets
+						</Text>
+						<Text style={styles.distributionText}>
+							I give all of my digitally stored information, digital
+							collections, social media accounts, online shopping accounts, and
+							paid subscription accounts (except for any specific items gifted
+							elsewhere in this Will or in any codicil), free of all taxes and
+							death duties, to{" "}
+							<Text style={{ fontWeight: "bold" }}>
+								{data.digitalAssets.beneficiaryName ||
+									"my designated beneficiary"}
+							</Text>
+							{data.digitalAssets.relationship && (
+								<> (my {data.digitalAssets.relationship.toLowerCase()})</>
+							)}
+							, absolutely.
+						</Text>
+						<Text style={styles.distributionText}>
+							I authorise my Executors and the beneficiary of my digital assets
+							to access, manage, and transfer any of my digital accounts, files,
+							and assets, including bypassing passwords or digital locks,{" "}
+							<Text style={{ fontWeight: "bold" }}>
+								insofar as permitted by applicable law
+							</Text>
+							.
+						</Text>
+						<Text style={styles.distributionText}>
+							I request (but do not require) that{" "}
+							<Text style={{ fontWeight: "bold" }}>
+								{data.digitalAssets.beneficiaryName ||
+									"my designated beneficiary"}
+							</Text>{" "}
+							have regard to any Letter of wishes I may leave concerning the
+							use, management, or disposal of my digital assets, provided such
+							memorandum comes to their attention within one month of my death.
+							The Letter shall not create any binding obligation and shall not
+							confer any rights on any third party.
+						</Text>
+					</View>
+				)}
 
 				{/* Estate Administration Section */}
 				<View style={styles.distributionSection}>

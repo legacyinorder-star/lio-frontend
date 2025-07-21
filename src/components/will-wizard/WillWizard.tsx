@@ -23,6 +23,7 @@ import AddressStep from "./steps/AddressStep";
 import SpouseStep from "./steps/SpouseStep";
 import ChildrenStep from "./steps/ChildrenStep";
 import AssetsStep from "./steps/AssetsStep";
+import DigitalAssetsStep from "./steps/DigitalAssetsStep";
 
 import ResiduaryStep from "./steps/ResiduaryStep";
 import WitnessesStep from "./steps/WitnessesStep";
@@ -98,6 +99,7 @@ export default function WillWizard() {
 		hasPets: false,
 		hasAssets: false,
 		assets: [],
+		digitalAssets: undefined,
 		otherBeneficiaries: [],
 
 		residuaryBeneficiaries: [],
@@ -579,6 +581,14 @@ export default function WillWizard() {
 				return (
 					<AssetsStep
 						onUpdate={commonProps.onUpdate}
+						onNext={commonProps.onNext}
+						onBack={commonProps.onBack}
+					/>
+				);
+
+			case "digitalAssets":
+				return (
+					<DigitalAssetsStep
 						onNext={commonProps.onNext}
 						onBack={commonProps.onBack}
 					/>

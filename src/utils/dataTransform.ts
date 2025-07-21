@@ -288,6 +288,18 @@ export function mapWillDataFromAPI(apiData: unknown): WillData {
 				}
 			) || [],
 
+		// Digital assets data
+		digitalAssets: converted.digitalAssets
+			? {
+					beneficiaryId:
+						((converted.digitalAssets as Record<string, unknown>)
+							.beneficiaryId as string) ||
+						((converted.digitalAssets as Record<string, unknown>)
+							.beneficiary_id as string) ||
+						"",
+			  }
+			: undefined,
+
 		// Other arrays
 		beneficiaries:
 			(converted.beneficiaries as Array<Record<string, unknown>>)?.map(

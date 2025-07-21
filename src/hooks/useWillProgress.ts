@@ -17,6 +17,7 @@ const DEFAULT_COMPLETION: StepCompletion = {
 	guardians: false,
 	pets: false,
 	hasAssets: false,
+	digitalAssets: false,
 
 	residuary: false,
 	executors: false,

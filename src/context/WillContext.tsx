@@ -156,6 +156,10 @@ export interface WillData {
 	beneficiaries: WillBeneficiary[];
 	executors: WillExecutor[];
 	witnesses: WillWitness[];
+	// Digital assets
+	digitalAssets?: {
+		beneficiaryId: string;
+	};
 	// Residuary estate
 	residuary?: WillResiduary;
 	// Progress data

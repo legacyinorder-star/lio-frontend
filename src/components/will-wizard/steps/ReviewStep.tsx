@@ -34,6 +34,11 @@ type ReviewData = {
 			relationship?: string;
 		}>;
 	}>;
+	digitalAssets?: {
+		beneficiaryId: string;
+		beneficiaryName?: string;
+		relationship?: string;
+	};
 	beneficiaries: Array<{
 		id: string;
 		fullName: string;
@@ -211,6 +216,24 @@ interface CompleteWillData {
 			};
 		}>;
 	}>;
+
+	digital_assets?: {
+		id: string;
+		created_at: string;
+		will_id: string;
+		beneficiary_id: string;
+		person?: {
+			id: string;
+			user_id: string;
+			will_id: string;
+			relationship_id: string;
+			first_name: string;
+			last_name: string;
+			is_minor: boolean;
+			created_at: string;
+			is_witness: boolean;
+		};
+	};
 
 	residuary: {
 		id: string;
@@ -502,6 +525,19 @@ const transformWillDataToReviewFormat = (
 								: [],
 				  }))
 				: [],
+		digitalAssets: willData.digital_assets
+			? {
+					beneficiaryId: willData.digital_assets.beneficiary_id,
+					beneficiaryName: willData.digital_assets.person
+						? `${willData.digital_assets.person.first_name} ${willData.digital_assets.person.last_name}`
+						: "Unknown Beneficiary",
+					relationship: willData.digital_assets.person
+						? getFormattedRelationshipNameById(
+								willData.digital_assets.person.relationship_id
+						  )
+						: "Unknown Relationship",
+			  }
+			: undefined,
 		beneficiaries: Array.from(allPeople.entries()).map(([id, person]) => ({
 			id,
 			fullName: `${person.firstName} ${person.lastName}`,
@@ -1352,6 +1388,41 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 							<p className="text-gray-900">
 								I want to be {reviewData.funeralInstructions?.wishes}
 							</p>
+						</div>
+					</section>
+				),
+			},
+			{
+				shouldShow: reviewData.digitalAssets?.beneficiaryId,
+				render: (num: number) => (
+					<section
+						className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm"
+						key="digital-assets"
+					>
+						<div className="flex items-center space-x-3 mb-6">
+							<div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+								<span className="text-purple-600 font-semibold text-sm">
+									{num}
+								</span>
+							</div>
+							<h3 className="text-xl font-semibold text-gray-900">
+								Digital Assets
+							</h3>
+						</div>
+						<div className="space-y-4">
+							<div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
+								<div className="space-y-2">
+									<label className="block text-sm font-medium text-gray-700">
+										Digital Assets Beneficiary
+									</label>
+									<p className="text-gray-900 font-medium">
+										{reviewData.digitalAssets?.beneficiaryName}
+									</p>
+									<p className="text-sm text-gray-600">
+										{reviewData.digitalAssets?.relationship}
+									</p>
+								</div>
+							</div>
 						</div>
 					</section>
 				),

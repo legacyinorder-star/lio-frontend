@@ -7,6 +7,7 @@ export type QuestionType =
 	| "guardians"
 	| "pets"
 	| "hasAssets"
+	| "digitalAssets"
 	| "residuary"
 	| "executors"
 	| "witnesses"
@@ -139,6 +140,9 @@ export interface WillFormData {
 	petGuardianId?: string;
 	hasAssets: boolean;
 	assets: Asset[];
+	digitalAssets?: {
+		beneficiaryId: string;
+	};
 	otherBeneficiaries: NewBeneficiary[];
 	residuaryBeneficiaries: Array<{
 		id: string;

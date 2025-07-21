@@ -39,6 +39,7 @@ const DEFAULT_COMPLETION: StepCompletion = {
 	guardians: false,
 	pets: false,
 	hasAssets: false,
+	digitalAssets: false,
 
 	residuary: false,
 	executors: false,
@@ -257,6 +258,7 @@ export function WillWizardProvider({ children }: { children: ReactNode }) {
 			guardians: { number: 5, name: "Guardians" },
 			pets: { number: 6, name: "Pet Care" },
 			hasAssets: { number: 7, name: "Assets" },
+			digitalAssets: { number: 8, name: "Digital Assets" },
 
 			residuary: { number: 9, name: "Residuary Estate" },
 			executors: { number: 10, name: "Executors" },
