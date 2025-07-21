@@ -186,7 +186,7 @@ export class PaymentService {
 		console.log("📤 Sending request body:", requestBody);
 
 		const { data, error } = await apiClient<CreateCheckoutSessionResponse>(
-			"/sessions",
+			"https://xx4z-bjeb-pp4s.e2.xano.io/api:qsbh4CxS/sessions",
 			{
 				method: "POST",
 				authenticated: true,

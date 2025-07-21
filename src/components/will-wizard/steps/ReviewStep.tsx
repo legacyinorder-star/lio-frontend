@@ -1,7 +1,7 @@
 import { forwardRef, useImperativeHandle, useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, CreditCard } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { apiClient } from "@/utils/apiClient";
 import { getFormattedRelationshipNameById } from "@/utils/relationships";
@@ -217,7 +217,7 @@ interface CompleteWillData {
 		}>;
 	}>;
 
-	digital_assets?: {
+	digital_asset?: {
 		id: string;
 		created_at: string;
 		will_id: string;
@@ -525,15 +525,15 @@ const transformWillDataToReviewFormat = (
 								: [],
 				  }))
 				: [],
-		digitalAssets: willData.digital_assets
+		digitalAssets: willData.digital_asset
 			? {
-					beneficiaryId: willData.digital_assets.beneficiary_id,
-					beneficiaryName: willData.digital_assets.person
-						? `${willData.digital_assets.person.first_name} ${willData.digital_assets.person.last_name}`
+					beneficiaryId: willData.digital_asset.beneficiary_id,
+					beneficiaryName: willData.digital_asset.person
+						? `${willData.digital_asset.person.first_name} ${willData.digital_asset.person.last_name}`
 						: "Unknown Beneficiary",
-					relationship: willData.digital_assets.person
+					relationship: willData.digital_asset.person
 						? getFormattedRelationshipNameById(
-								willData.digital_assets.person.relationship_id
+								willData.digital_asset.person.relationship_id
 						  )
 						: "Unknown Relationship",
 			  }
@@ -760,6 +760,7 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 
 					const transformedData = transformWillDataToReviewFormat(willData);
 					console.log("Transformed data:", transformedData);
+
 					console.log("Transformed executors:", transformedData.executors);
 					console.log(
 						"Transformed funeral instructions:",
@@ -1202,6 +1203,41 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 					</section>
 				),
 			},
+			{
+				shouldShow: reviewData.digitalAssets?.beneficiaryId,
+				render: (num: number) => (
+					<section
+						className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm"
+						key="digital-assets"
+					>
+						<div className="flex items-center space-x-3 mb-6">
+							<div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+								<span className="text-purple-600 font-semibold text-sm">
+									{num}
+								</span>
+							</div>
+							<h3 className="text-xl font-semibold text-gray-900">
+								Digital Assets
+							</h3>
+						</div>
+						<div className="space-y-4">
+							<div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
+								<div className="space-y-2">
+									<label className="block text-sm font-medium text-gray-700">
+										Digital Assets Beneficiary
+									</label>
+									<p className="text-gray-900 font-medium">
+										{reviewData.digitalAssets?.beneficiaryName}
+									</p>
+									<p className="text-sm text-gray-600">
+										{reviewData.digitalAssets?.relationship}
+									</p>
+								</div>
+							</div>
+						</div>
+					</section>
+				),
+			},
 
 			{
 				shouldShow:
@@ -1392,41 +1428,7 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 					</section>
 				),
 			},
-			{
-				shouldShow: reviewData.digitalAssets?.beneficiaryId,
-				render: (num: number) => (
-					<section
-						className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm"
-						key="digital-assets"
-					>
-						<div className="flex items-center space-x-3 mb-6">
-							<div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-								<span className="text-purple-600 font-semibold text-sm">
-									{num}
-								</span>
-							</div>
-							<h3 className="text-xl font-semibold text-gray-900">
-								Digital Assets
-							</h3>
-						</div>
-						<div className="space-y-4">
-							<div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
-								<div className="space-y-2">
-									<label className="block text-sm font-medium text-gray-700">
-										Digital Assets Beneficiary
-									</label>
-									<p className="text-gray-900 font-medium">
-										{reviewData.digitalAssets?.beneficiaryName}
-									</p>
-									<p className="text-sm text-gray-600">
-										{reviewData.digitalAssets?.relationship}
-									</p>
-								</div>
-							</div>
-						</div>
-					</section>
-				),
-			},
+
 			{
 				shouldShow: reviewData.assets && reviewData.assets.length > 0,
 				render: (num: number) => (
@@ -1508,7 +1510,7 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 						className="cursor-pointer bg-primary hover:bg-primary/90 text-white px-8 py-3 font-medium"
 						onClick={handleProceedToPayment}
 					>
-						Proceed to Payment
+						<CreditCard className="mr-2 h-4 w-4" /> Proceed to Payment
 					</Button>
 				</div>
 			</div>

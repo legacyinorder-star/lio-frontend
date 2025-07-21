@@ -56,7 +56,9 @@ export default function DashboardPage() {
 
 	const handlePaymentForWill = (willId: string) => {
 		setIsProcessingPayment(true);
-		navigate(`/app/payment?willId=${willId}`);
+		// Navigate directly to Stripe Checkout (same as Review step)
+		const paymentUrl = `/app/payment/checkout?willId=${willId}&description=Will Creation Service`;
+		navigate(paymentUrl);
 	};
 
 	const handleDownloadPDF = async (willId: string) => {
