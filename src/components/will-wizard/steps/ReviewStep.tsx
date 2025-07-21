@@ -1479,11 +1479,11 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 					<div className="text-3xl font-bold text-gray-900">
 						Review Your Will
 					</div>
-					<div className="text-lg text-gray-600 max-w-2xl mx-auto">
+					<div className="text-lg text-gray-600 mx-auto">
 						Please carefully review all the information below before proceeding
 						to payment.
 					</div>
-					<div className="text-lg text-gray-600 max-w-2xl mx-auto">
+					<div className="text-lg text-gray-600 mx-auto">
 						This document will be legally binding once completed.
 					</div>
 				</div>

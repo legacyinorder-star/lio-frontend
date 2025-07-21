@@ -8,6 +8,7 @@ import {
 	DialogHeader,
 	DialogTitle,
 	DialogFooter,
+	DialogDescription,
 } from "@/components/ui/dialog";
 import {
 	DropdownMenu,
@@ -21,6 +22,7 @@ import { EnhancedBeneficiary } from "@/hooks/useWillData";
 import { getFormattedRelationshipNameById } from "@/utils/relationships";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { useWill } from "@/context/WillContext";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface AssetDialogProps {
 	open: boolean;
@@ -328,6 +330,9 @@ export function AssetDialog({
 				<DialogHeader>
 					<DialogTitle>{editingAsset ? "Edit Asset" : "Add Asset"}</DialogTitle>
 				</DialogHeader>
+				<DialogDescription>
+					Please provide details about the asset and its beneficiaries.
+				</DialogDescription>
 				<div className="space-y-4 py-4">
 					<AssetTypeSelector
 						selectedType={assetForm.assetType}
@@ -352,12 +357,10 @@ export function AssetDialog({
 					{/* Checkbox for beneficiaries */}
 					<div className="space-y-2">
 						<div className="flex items-center space-x-2">
-							<input
-								type="checkbox"
+							<Checkbox
 								id="hasBeneficiaries"
 								checked={assetForm.hasBeneficiaries}
-								onChange={(e) => handleHasBeneficiariesChange(e.target.checked)}
-								className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+								onCheckedChange={handleHasBeneficiariesChange}
 							/>
 							<Label htmlFor="hasBeneficiaries" className="text-sm font-medium">
 								I want to give this asset to specific beneficiaries

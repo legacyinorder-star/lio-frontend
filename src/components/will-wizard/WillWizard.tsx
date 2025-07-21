@@ -412,6 +412,9 @@ export default function WillWizard() {
 				navigateToStep("hasAssets");
 				break;
 			case "hasAssets":
+				navigateToStep("digitalAssets");
+				break;
+			case "digitalAssets":
 				navigateToStep("residuary");
 				break;
 			case "residuary":
@@ -463,8 +466,11 @@ export default function WillWizard() {
 			case "hasAssets":
 				navigateToStep("pets");
 				break;
-			case "residuary":
+			case "digitalAssets":
 				navigateToStep("hasAssets");
+				break;
+			case "residuary":
+				navigateToStep("digitalAssets");
 				break;
 			case "executors":
 				navigateToStep("residuary");

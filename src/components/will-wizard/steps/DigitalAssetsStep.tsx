@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import {
 	Select,
@@ -11,7 +10,9 @@ import {
 } from "@/components/ui/select";
 import { useWill } from "@/context/WillContext";
 import { useWillData } from "@/hooks/useWillData";
+import { apiClient } from "@/utils/apiClient";
 import { toast } from "sonner";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 
 export interface DigitalAssetsStepProps {
 	onNext?: () => void;
@@ -25,36 +26,135 @@ const DigitalAssetsStep: React.FC<DigitalAssetsStepProps> = ({
 	const { activeWill, setActiveWill } = useWill();
 	const { allBeneficiaries } = useWillData();
 	const [selectedBeneficiary, setSelectedBeneficiary] = useState<string>("");
+	const [digitalAssetId, setDigitalAssetId] = useState<string | null>(null);
 	const [isLoading, setIsLoading] = useState(false);
+	const [isFetching, setIsFetching] = useState(true);
+	const [showConfirm, setShowConfirm] = useState(false);
 
-	// Load existing digital assets beneficiary on component mount
+	// Fetch digital asset data on mount
 	useEffect(() => {
-		if (activeWill?.digitalAssets?.beneficiaryId) {
-			setSelectedBeneficiary(activeWill.digitalAssets.beneficiaryId);
-		}
-	}, [activeWill?.digitalAssets?.beneficiaryId]);
+		const fetchDigitalAsset = async () => {
+			if (!activeWill?.id) {
+				setIsFetching(false);
+				return;
+			}
+			try {
+				const { data, error } = await apiClient(
+					`/digital-assets/get-by-will/${activeWill.id}`
+				);
+				if (
+					data &&
+					typeof data === "object" &&
+					"beneficiary_id" in data &&
+					typeof data.beneficiary_id === "string" &&
+					"id" in data &&
+					typeof data.id === "string"
+				) {
+					setSelectedBeneficiary(data.beneficiary_id);
+					setDigitalAssetId(data.id);
+				} else {
+					setSelectedBeneficiary("");
+					setDigitalAssetId(null);
+				}
+				if (error) {
+					console.error("Error fetching digital assets:", error);
+				}
+			} catch (err) {
+				console.error("Error fetching digital assets:", err);
+			} finally {
+				setIsFetching(false);
+			}
+		};
+		fetchDigitalAsset();
+	}, [activeWill?.id]);
 
 	const handleNext = async () => {
 		if (!selectedBeneficiary) {
 			toast.error("Please select a beneficiary for your digital assets");
 			return;
 		}
-
+		if (!activeWill?.id) {
+			toast.error("No active will found. Please try again.");
+			return;
+		}
 		setIsLoading(true);
 		try {
-			if (activeWill) {
-				setActiveWill({
-					...activeWill,
-					digitalAssets: {
-						beneficiaryId: selectedBeneficiary,
-					},
-				});
+			const { data, error } = await apiClient("/digital-assets", {
+				method: "POST",
+				body: JSON.stringify({
+					will_id: activeWill.id,
+					beneficiary_id: selectedBeneficiary,
+				}),
+			});
+			if (error || !data) {
+				console.error("❌ Error saving digital assets to API:", error);
+				toast.error("Failed to save digital assets beneficiary");
+				return;
+			}
+			setActiveWill({
+				...activeWill,
+				digitalAssets: {
+					beneficiaryId: selectedBeneficiary,
+				},
+			});
+			if (
+				data &&
+				typeof data === "object" &&
+				"id" in data &&
+				typeof data.id === "string"
+			) {
+				setDigitalAssetId(data.id);
+			} else {
+				setDigitalAssetId(null);
 			}
 			toast.success("Digital assets beneficiary saved");
 			onNext?.();
 		} catch (error) {
-			console.error("Error saving digital assets:", error);
+			console.error("💥 Error saving digital assets:", error);
 			toast.error("Failed to save digital assets beneficiary");
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	const handleSkip = async () => {
+		if (!selectedBeneficiary || !digitalAssetId) {
+			onNext?.();
+			return;
+		}
+		setShowConfirm(true);
+	};
+
+	const confirmSkip = async () => {
+		if (!digitalAssetId) {
+			setShowConfirm(false);
+			onNext?.();
+			return;
+		}
+		setIsLoading(true);
+		try {
+			const { error } = await apiClient(`/digital-assets/${digitalAssetId}`, {
+				method: "DELETE",
+			});
+			if (error) {
+				console.error("Error deleting digital asset:", error);
+				toast.error("Failed to remove digital assets beneficiary");
+				setIsLoading(false);
+				setShowConfirm(false);
+				return;
+			}
+			setSelectedBeneficiary("");
+			setDigitalAssetId(null);
+			setActiveWill({
+				...activeWill!,
+				digitalAssets: undefined,
+			});
+			toast.success("Digital assets beneficiary removed");
+			setShowConfirm(false);
+			onNext?.();
+		} catch (err) {
+			console.error("Error deleting digital asset:", err);
+			toast.error("Failed to remove digital assets beneficiary");
 		} finally {
 			setIsLoading(false);
 		}
@@ -63,113 +163,167 @@ const DigitalAssetsStep: React.FC<DigitalAssetsStepProps> = ({
 	const getBeneficiaryDisplayName = (beneficiaryId: string) => {
 		const beneficiary = allBeneficiaries.find((b) => b.id === beneficiaryId);
 		if (!beneficiary) return "Unknown Beneficiary";
-
 		return `${beneficiary.firstName} ${beneficiary.lastName} (${beneficiary.relationship})`;
 	};
 
+	if (isFetching) {
+		return (
+			<div className="flex items-center justify-center min-h-[200px]">
+				<span>Loading digital assets...</span>
+			</div>
+		);
+	}
+
 	return (
-		<div className="max-w-4xl mx-auto space-y-8">
-			{/* Header */}
-			<div className="text-center space-y-4">
-				<h1 className="text-3xl font-bold text-gray-900">Digital Assets</h1>
-				<p className="text-lg text-gray-600 max-w-2xl mx-auto">
-					Specify who should inherit your digital assets, including online
-					accounts, digital files, cryptocurrencies, and other digital property.
-				</p>
+		<div className="space-y-4">
+			<div className="text-xl sm:text-2xl lg:text-[2rem] font-medium text-black">
+				Digital Assets
 			</div>
 
 			{/* Main Content */}
-			<Card className="w-full">
-				<CardHeader>
-					<CardTitle className="text-xl font-semibold text-gray-900">
-						Digital Assets Beneficiary
-					</CardTitle>
-				</CardHeader>
-				<CardContent className="space-y-6">
-					<div className="space-y-4">
-						<div className="space-y-2">
-							<Label
-								htmlFor="digital-assets-beneficiary"
-								className="text-base font-medium"
-							>
-								Who should inherit your digital assets?
-							</Label>
-							<p className="text-sm text-gray-600">
-								This includes your online accounts, digital files,
-								cryptocurrencies, social media accounts, and other digital
-								property.
+			<div className="space-y-6">
+				<div className="space-y-4">
+					<div className="space-y-2">
+						<Label
+							htmlFor="digital-assets-beneficiary"
+							className="text-base font-medium"
+						>
+							Who should inherit your digital assets?
+						</Label>
+						<p className="text-sm text-gray-600">
+							This includes your online accounts, digital files,
+							cryptocurrencies, social media accounts, and other digital
+							property.
+						</p>
+
+						{/* Information Box */}
+						<div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+							<h4 className="font-medium text-gray-900 mb-2">
+								What are Digital Assets?
+							</h4>
+							<ul className="text-sm text-gray-700 space-y-1">
+								<li>• Online banking and financial accounts</li>
+								<li>
+									• Social media accounts (Facebook, Instagram, Twitter, etc.)
+								</li>
+								<li>• Email accounts and cloud storage</li>
+								<li>• Cryptocurrencies and digital wallets</li>
+								<li>• Digital photos, videos, and documents</li>
+								<li>• Online subscriptions and memberships</li>
+								<li>• Domain names and websites</li>
+								<li>• Digital music, books, and media collections</li>
+							</ul>
+						</div>
+					</div>
+
+					<Select
+						value={selectedBeneficiary}
+						onValueChange={setSelectedBeneficiary}
+					>
+						<SelectTrigger className="w-full">
+							<SelectValue placeholder="Select a beneficiary for your digital assets" />
+						</SelectTrigger>
+						<SelectContent className="bg-white">
+							{allBeneficiaries.map((beneficiary) => (
+								<SelectItem key={beneficiary.id} value={beneficiary.id}>
+									{getBeneficiaryDisplayName(beneficiary.id)}
+								</SelectItem>
+							))}
+						</SelectContent>
+					</Select>
+
+					{selectedBeneficiary && (
+						<div className="bg-primary/10 border border-primary rounded-lg p-4">
+							<h4 className="font-medium text-primary mb-2 text-[1.5rem]">
+								Selected Beneficiary
+							</h4>
+							<p className="text-black">
+								<span className="font-[600]">
+									{getBeneficiaryDisplayName(selectedBeneficiary)}
+								</span>{" "}
+								will inherit all your digital assets.
 							</p>
 						</div>
-
-						<Select
-							value={selectedBeneficiary}
-							onValueChange={setSelectedBeneficiary}
-						>
-							<SelectTrigger className="w-full">
-								<SelectValue placeholder="Select a beneficiary for your digital assets" />
-							</SelectTrigger>
-							<SelectContent>
-								{allBeneficiaries.map((beneficiary) => (
-									<SelectItem key={beneficiary.id} value={beneficiary.id}>
-										{getBeneficiaryDisplayName(beneficiary.id)}
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
-
-						{selectedBeneficiary && (
-							<div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-								<h4 className="font-medium text-blue-900 mb-2">
-									Selected Beneficiary
-								</h4>
-								<p className="text-blue-800">
-									{getBeneficiaryDisplayName(selectedBeneficiary)} will inherit
-									all your digital assets.
-								</p>
-							</div>
-						)}
-					</div>
-
-					{/* Information Box */}
-					<div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-						<h4 className="font-medium text-gray-900 mb-2">
-							What are Digital Assets?
-						</h4>
-						<ul className="text-sm text-gray-700 space-y-1">
-							<li>• Online banking and financial accounts</li>
-							<li>
-								• Social media accounts (Facebook, Instagram, Twitter, etc.)
-							</li>
-							<li>• Email accounts and cloud storage</li>
-							<li>• Cryptocurrencies and digital wallets</li>
-							<li>• Digital photos, videos, and documents</li>
-							<li>• Online subscriptions and memberships</li>
-							<li>• Domain names and websites</li>
-							<li>• Digital music, books, and media collections</li>
-						</ul>
-					</div>
-				</CardContent>
-			</Card>
+					)}
+				</div>
+			</div>
 
 			{/* Navigation Buttons */}
-			<div className="flex justify-between pt-8 border-t border-gray-200">
+			<div className="flex justify-between">
 				<Button
 					type="button"
 					variant="outline"
 					onClick={onBack}
-					className="cursor-pointer px-8 py-3"
+					className="flex items-center gap-2 cursor-pointer"
+					disabled={isLoading || isFetching}
 				>
+					<ArrowLeft className="h-4 w-4" />
 					Back
 				</Button>
-				<Button
-					type="button"
-					onClick={handleNext}
-					disabled={!selectedBeneficiary || isLoading}
-					className="cursor-pointer bg-primary hover:bg-primary/90 text-white px-8 py-3 font-medium"
-				>
-					{isLoading ? "Saving..." : "Continue"}
-				</Button>
+				<div className="flex gap-4">
+					<Button
+						type="button"
+						variant="outline"
+						onClick={handleSkip}
+						className="cursor-pointer"
+						disabled={isLoading || isFetching}
+					>
+						Skip & Continue
+					</Button>
+					<Button
+						type="button"
+						className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-white cursor-pointer"
+						disabled={!selectedBeneficiary || isLoading || isFetching}
+					>
+						{isLoading ? (
+							<>
+								<div className="h-4 w-4 animate-spin rounded-full border-t-2 border-b-2 border-black"></div>
+								Saving...
+							</>
+						) : (
+							<>
+								Next
+								<ArrowRight className="h-4 w-4" />
+							</>
+						)}
+					</Button>
+				</div>
 			</div>
+
+			{/* Confirmation Dialog */}
+			{showConfirm && (
+				<div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+					<div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full">
+						<h3 className="text-lg font-semibold mb-4">
+							Remove Digital Assets Beneficiary?
+						</h3>
+						<p className="mb-6 text-gray-700">
+							You have already selected a beneficiary for your digital assets.
+							Skipping will{" "}
+							<span className="font-semibold text-red-600">
+								delete your current selection
+							</span>
+							. Are you sure you want to continue?
+						</p>
+						<div className="flex justify-end gap-4">
+							<Button
+								variant="outline"
+								onClick={() => setShowConfirm(false)}
+								disabled={isLoading}
+							>
+								Cancel
+							</Button>
+							<Button
+								variant="destructive"
+								onClick={confirmSkip}
+								disabled={isLoading}
+							>
+								{isLoading ? "Deleting..." : "Delete & Continue"}
+							</Button>
+						</div>
+					</div>
+				</div>
+			)}
 		</div>
 	);
 };

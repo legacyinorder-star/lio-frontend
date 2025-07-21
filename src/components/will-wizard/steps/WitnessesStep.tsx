@@ -629,7 +629,7 @@ export default function WitnessesStep({
 										onClick={handleConfirmSkip}
 										className="cursor-pointer"
 									>
-										Skip
+										Skip & Continue
 									</Button>
 								</AlertDialogTrigger>
 								<AlertDialogContent>
