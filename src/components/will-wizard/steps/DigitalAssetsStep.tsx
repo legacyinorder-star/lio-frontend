@@ -204,7 +204,8 @@ const DigitalAssetsStep: React.FC<DigitalAssetsStepProps> = ({
 							<ul className="text-sm text-gray-700 space-y-1">
 								<li>• Online banking and financial accounts</li>
 								<li>
-									• Social media accounts (Facebook, Instagram, Twitter, etc.)
+									• Social media accounts (Facebook, Instagram, Twitter (X),
+									TikTok, etc.)
 								</li>
 								<li>• Email accounts and cloud storage</li>
 								<li>• Cryptocurrencies and digital wallets</li>

@@ -155,11 +155,11 @@ export default function Footer({ showCTA = true }: FooterProps) {
 									Contact Us
 								</h3>
 								<address className="not-italic text-white/80">
-									1st Floor
+									128, City Road,
 									<br />
-									27 Downham Road
+									London, EC1V 2NX
 									<br />
-									London N1 5AA123
+									United Kingdom
 								</address>
 							</div>
 						</div>

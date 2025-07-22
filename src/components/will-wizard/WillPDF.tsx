@@ -556,7 +556,8 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 						I am {data.personal.fullName} of {data.personal.address}.
 					</Text>
 					<Text style={styles.scopeText}>
-						This is my last will, disposing of all my worldwide assets.
+						This is my last will, disposing of all my assets in the United
+						Kingdom.
 					</Text>
 					<Text style={styles.scopeText}>
 						I declare, being of sound mind, that this will is made in accordance

@@ -419,7 +419,7 @@ export default function GuardiansStep({
 				Since you have children who require guardians, please specify who you
 				would like to appoint as guardians in your will.
 			</div>
-			<div className="font-bold text-red-500">
+			<div className="font-bold text-black">
 				You have to appoint at least two guardians (a primary and a backup) in
 				case the primary guardian is unable to serve.
 			</div>
