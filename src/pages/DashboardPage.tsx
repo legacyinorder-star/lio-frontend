@@ -6,11 +6,12 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useWill } from "@/context/WillContext";
 import { type WillData } from "@/context/WillContext";
+import { useLetterOfWishes } from "@/context/LetterOfWishesContext";
 import { toast } from "sonner";
 import { apiClient } from "@/utils/apiClient";
 import { mapWillDataFromAPI } from "@/utils/dataTransform";
 import { smartDownloadWill } from "@/utils/willSmartDownload";
-import { Edit, CreditCard, Download, Trash2 } from "lucide-react";
+import { Edit, CreditCard, Download, Trash2, Heart } from "lucide-react";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -25,6 +26,7 @@ import {
 export default function DashboardPage() {
 	const navigate = useNavigate();
 	const { activeWill, setActiveWill } = useWill();
+	const { setWillData } = useLetterOfWishes();
 	const [userName, setUserName] = useState<string>("");
 	const [wills, setWills] = useState<WillData[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
@@ -73,6 +75,18 @@ export default function DashboardPage() {
 		} catch (error) {
 			console.error("Error downloading PDF:", error);
 			toast.error("Failed to download PDF. Please try again.");
+		}
+	};
+
+	const handleCreateLetterOfWishes = (willId: string) => {
+		const will = wills.find((w) => w.id === willId);
+		if (will) {
+			// Store the will data in the Letter of Wishes context
+			setWillData(will);
+			// Navigate to letter of wishes with will ID
+			navigate(`/app/letter-of-wishes?willId=${willId}`);
+		} else {
+			toast.error("Will not found");
 		}
 	};
 
@@ -459,16 +473,28 @@ export default function DashboardPage() {
 										</Button>
 									)}
 									{will.status === "completed" && (
-										<Button
-											variant="outline"
-											size="sm"
-											onClick={() => handleDownloadPDF(will.id)}
-											className="flex-1 hover:bg-green-50 text-green-600"
-											disabled={!will.owner}
-										>
-											<Download className="h-4 w-4 mr-2" />
-											Download
-										</Button>
+										<>
+											<Button
+												variant="outline"
+												size="sm"
+												onClick={() => handleDownloadPDF(will.id)}
+												className="flex-1 hover:bg-green-50 text-green-600"
+												disabled={!will.owner}
+											>
+												<Download className="h-4 w-4 mr-2" />
+												Download
+											</Button>
+											<Button
+												variant="outline"
+												size="sm"
+												onClick={() => handleCreateLetterOfWishes(will.id)}
+												className="flex-1 hover:bg-purple-50 text-purple-600"
+												title="Add Letter of Wishes"
+											>
+												<Heart className="h-4 w-4 mr-2" />
+												Letter
+											</Button>
+										</>
 									)}
 									<Button
 										variant="outline"
