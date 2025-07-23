@@ -34,6 +34,15 @@ type ReviewData = {
 			relationship?: string;
 		}>;
 	}>;
+	gifts: Array<{
+		id: string;
+		type: string;
+		description: string;
+		value?: number;
+		currency?: string;
+		beneficiaryName: string;
+		relationship: string;
+	}>;
 	digitalAssets?: {
 		beneficiaryId: string;
 		beneficiaryName?: string;
@@ -215,6 +224,38 @@ interface CompleteWillData {
 				user_id: string;
 			};
 		}>;
+	}>;
+
+	gifts?: Array<{
+		id: string;
+		created_at: string;
+		will_id: string;
+		user_id: string;
+		type: string;
+		description: string;
+		value?: number;
+		currency?: string;
+		people_id?: string;
+		charities_id?: string;
+		person?: {
+			id: string;
+			user_id: string;
+			will_id: string;
+			relationship_id: string;
+			first_name: string;
+			last_name: string;
+			is_minor: boolean;
+			created_at: string;
+			is_witness: boolean;
+		};
+		charity?: {
+			id: string;
+			created_at: string;
+			will_id: string;
+			name: string;
+			rc_number?: string;
+			user_id: string;
+		};
 	}>;
 
 	digital_asset?: {
@@ -524,6 +565,33 @@ const transformWillDataToReviewFormat = (
 								  })
 								: [],
 				  }))
+				: [],
+		gifts:
+			willData.gifts && Array.isArray(willData.gifts)
+				? willData.gifts.map((gift) => {
+						let beneficiaryName = "Unknown Beneficiary";
+						let relationship = "Unknown";
+
+						if (gift.person) {
+							beneficiaryName = `${gift.person.first_name} ${gift.person.last_name}`;
+							relationship = getFormattedRelationshipNameById(
+								gift.person.relationship_id
+							);
+						} else if (gift.charity) {
+							beneficiaryName = gift.charity.name;
+							relationship = "Charity";
+						}
+
+						return {
+							id: gift.id,
+							type: gift.type,
+							description: gift.description,
+							value: gift.value,
+							currency: gift.currency,
+							beneficiaryName,
+							relationship,
+						};
+				  })
 				: [],
 		digitalAssets: willData.digital_asset
 			? {
@@ -1120,7 +1188,7 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 									{num}
 								</span>
 							</div>
-							<h3 className="text-xl font-semibold text-gray-900">Gifts</h3>
+							<h3 className="text-xl font-semibold text-gray-900">Assets</h3>
 						</div>
 						<div className="grid gap-6">
 							{reviewData.assets
@@ -1199,6 +1267,72 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 										)}
 									</div>
 								))}
+						</div>
+					</section>
+				),
+			},
+			{
+				shouldShow: reviewData.gifts && reviewData.gifts.length > 0,
+				render: (num: number) => (
+					<section
+						className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm"
+						key="gifts"
+					>
+						<div className="flex items-center space-x-3 mb-6">
+							<div className="w-8 h-8 bg-pink-100 rounded-full flex items-center justify-center">
+								<span className="text-pink-600 font-semibold text-sm">
+									{num}
+								</span>
+							</div>
+							<h3 className="text-xl font-semibold text-gray-900">Gifts</h3>
+						</div>
+						<div className="grid gap-4">
+							{reviewData.gifts.map((gift) => (
+								<div
+									key={gift.id}
+									className="bg-gray-50 rounded-lg p-4 border border-gray-100"
+								>
+									<div className="space-y-4">
+										<div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+											<div className="space-y-2">
+												<label className="block text-sm font-medium text-gray-700">
+													Gift Type
+												</label>
+												<div className="flex items-center gap-2">
+													<p className="text-gray-900 font-medium">
+														{gift.type}
+													</p>
+													{gift.type === "Cash" && gift.value && (
+														<span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+															{gift.currency || "$"}
+															{gift.value.toLocaleString()}
+														</span>
+													)}
+												</div>
+											</div>
+											<div className="space-y-2">
+												<label className="block text-sm font-medium text-gray-700">
+													Beneficiary
+												</label>
+												<div className="space-y-1">
+													<p className="text-gray-900 font-medium">
+														{gift.beneficiaryName}
+													</p>
+													<p className="text-sm text-gray-600">
+														{gift.relationship}
+													</p>
+												</div>
+											</div>
+										</div>
+										<div className="space-y-2">
+											<label className="block text-sm font-medium text-gray-700">
+												Description
+											</label>
+											<p className="text-gray-900">{gift.description}</p>
+										</div>
+									</div>
+								</div>
+							))}
 						</div>
 					</section>
 				),
