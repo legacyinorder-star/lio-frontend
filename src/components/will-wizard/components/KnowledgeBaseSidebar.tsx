@@ -216,8 +216,6 @@ export default function KnowledgeBaseSidebar({
 				{articles.map((article, index) => (
 					<div key={index} className="underline">
 						<a
-							href={article.url}
-							target="_blank"
 							rel="noopener noreferrer"
 							className="block text-gray-900 hover:text-primary text-sm font-medium"
 						>

@@ -12,7 +12,8 @@ import { useWill } from "@/context/WillContext";
 import { useWillData } from "@/hooks/useWillData";
 import { apiClient } from "@/utils/apiClient";
 import { toast } from "sonner";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, Trash2, Plus } from "lucide-react";
+import { NewBeneficiaryDialog } from "../components/NewBeneficiaryDialog";
 
 export interface DigitalAssetsStepProps {
 	onNext?: () => void;
@@ -24,12 +25,15 @@ const DigitalAssetsStep: React.FC<DigitalAssetsStepProps> = ({
 	onBack,
 }) => {
 	const { activeWill, setActiveWill } = useWill();
-	const { allBeneficiaries } = useWillData();
+	const { allBeneficiaries, addIndividualBeneficiary, addCharityBeneficiary } =
+		useWillData();
 	const [selectedBeneficiary, setSelectedBeneficiary] = useState<string>("");
 	const [digitalAssetId, setDigitalAssetId] = useState<string | null>(null);
 	const [isLoading, setIsLoading] = useState(false);
 	const [isFetching, setIsFetching] = useState(true);
 	const [showConfirm, setShowConfirm] = useState(false);
+	const [newBeneficiaryDialogOpen, setNewBeneficiaryDialogOpen] =
+		useState(false);
 
 	// Fetch digital asset data on mount
 	useEffect(() => {
@@ -166,6 +170,46 @@ const DigitalAssetsStep: React.FC<DigitalAssetsStepProps> = ({
 		return `${beneficiary.firstName} ${beneficiary.lastName} (${beneficiary.relationship})`;
 	};
 
+	const handleAddNewBeneficiary = () => {
+		setNewBeneficiaryDialogOpen(true);
+	};
+
+	const handleAddIndividualBeneficiary = async (
+		firstName: string,
+		lastName: string,
+		relationshipId: string
+	) => {
+		const newBeneficiary = await addIndividualBeneficiary(
+			firstName,
+			lastName,
+			relationshipId
+		);
+
+		// Automatically select the new beneficiary
+		if (newBeneficiary?.id) {
+			setSelectedBeneficiary(newBeneficiary.id);
+			toast.success(
+				`${firstName} ${lastName} added and selected for digital assets`
+			);
+		}
+	};
+
+	const handleAddCharityBeneficiary = async (
+		charityName: string,
+		registrationNumber?: string
+	) => {
+		const newBeneficiary = await addCharityBeneficiary(
+			charityName,
+			registrationNumber
+		);
+
+		// Automatically select the new beneficiary
+		if (newBeneficiary?.id) {
+			setSelectedBeneficiary(newBeneficiary.id);
+			toast.success(`${charityName} added and selected for digital assets`);
+		}
+	};
+
 	if (isFetching) {
 		return (
 			<div className="flex items-center justify-center min-h-[200px]">
@@ -184,12 +228,14 @@ const DigitalAssetsStep: React.FC<DigitalAssetsStepProps> = ({
 			<div className="space-y-6">
 				<div className="space-y-4">
 					<div className="space-y-2">
-						<Label
-							htmlFor="digital-assets-beneficiary"
-							className="text-base font-medium"
-						>
-							Who should inherit your digital assets?
-						</Label>
+						<div className="flex justify-between items-center">
+							<Label
+								htmlFor="digital-assets-beneficiary"
+								className="text-base font-medium"
+							>
+								Who should inherit your digital assets?
+							</Label>
+						</div>
 						<p className="text-sm text-gray-600">
 							This includes your online accounts, digital files,
 							cryptocurrencies, social media accounts, and other digital
@@ -216,7 +262,20 @@ const DigitalAssetsStep: React.FC<DigitalAssetsStepProps> = ({
 							</ul>
 						</div>
 					</div>
-
+				</div>
+				<div className="space-y-4">
+					<div className="flex justify-between items-center">
+						<h3 className="text-lg font-medium">Select Beneficiary</h3>
+						<Button
+							variant="outline"
+							size="sm"
+							onClick={handleAddNewBeneficiary}
+							className="cursor-pointer"
+						>
+							<Plus className="mr-2 h-4 w-4" />
+							Add New Beneficiary
+						</Button>
+					</div>
 					<Select
 						value={selectedBeneficiary}
 						onValueChange={setSelectedBeneficiary}
@@ -266,10 +325,15 @@ const DigitalAssetsStep: React.FC<DigitalAssetsStepProps> = ({
 						type="button"
 						variant="outline"
 						onClick={handleSkip}
-						className="cursor-pointer"
+						className={`cursor-pointer flex items-center gap-2 ${
+							selectedBeneficiary
+								? "bg-red-500 hover:bg-red-600 hover:text-white text-white"
+								: ""
+						}`}
 						disabled={isLoading || isFetching}
 					>
-						Skip & Continue
+						{selectedBeneficiary && <Trash2 className="h-4 w-4" />}
+						{selectedBeneficiary ? "Remove & Continue" : "Skip & Continue"}
 					</Button>
 					<Button
 						type="button"
@@ -316,16 +380,35 @@ const DigitalAssetsStep: React.FC<DigitalAssetsStepProps> = ({
 								Cancel
 							</Button>
 							<Button
-								variant="destructive"
+								variant="outline"
 								onClick={confirmSkip}
 								disabled={isLoading}
+								className="flex items-center gap-2 bg-red-500 hover:bg-red-600 hover:text-white text-white"
 							>
-								{isLoading ? "Deleting..." : "Delete & Continue"}
+								{isLoading ? (
+									<>
+										<div className="h-4 w-4 animate-spin rounded-full border-t-2 border-b-2 border-white"></div>
+										Deleting...
+									</>
+								) : (
+									<>
+										<Trash2 className="h-4 w-4" />
+										Delete & Continue
+									</>
+								)}
 							</Button>
 						</div>
 					</div>
 				</div>
 			)}
+
+			{/* New Beneficiary Dialog */}
+			<NewBeneficiaryDialog
+				open={newBeneficiaryDialogOpen}
+				onOpenChange={setNewBeneficiaryDialogOpen}
+				onAddIndividual={handleAddIndividualBeneficiary}
+				onAddCharity={handleAddCharityBeneficiary}
+			/>
 		</div>
 	);
 };
