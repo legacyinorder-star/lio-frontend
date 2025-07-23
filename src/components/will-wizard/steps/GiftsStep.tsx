@@ -937,9 +937,9 @@ export default function GiftsStep({ onNext, onBack }: GiftsStepProps) {
 									Add New Beneficiary
 								</Button>
 							</div>
-							<div className="w-[600px]">
+							<div className="w-full">
 								<DropdownMenu
-									className="w-[600px] max-h-[300px]"
+									className="w-full max-h-[300px]"
 									onOpenChange={setIsBeneficiaryDropdownOpen}
 								>
 									<Button
@@ -969,7 +969,7 @@ export default function GiftsStep({ onNext, onBack }: GiftsStepProps) {
 										)}
 										<ChevronsUpDown className="h-4 w-4" />
 									</Button>
-									<DropdownMenuContent className="w-[600px] max-h-[300px] overflow-y-auto">
+									<DropdownMenuContent className="w-full max-h-[300px] overflow-y-auto">
 										<div className="p-2">
 											<Input
 												placeholder="Search beneficiaries..."
