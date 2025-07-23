@@ -323,6 +323,30 @@ const styles = StyleSheet.create({
 		textAlign: "left",
 		flex: 1,
 	},
+	giftSection: {
+		marginTop: 30,
+		marginBottom: 20,
+	},
+	giftTitle: {
+		fontSize: 24,
+		fontWeight: "bold",
+		marginBottom: 20,
+		textAlign: "left",
+	},
+	giftText: {
+		textAlign: "justify",
+		fontSize: 14,
+		marginBottom: 15,
+	},
+	giftItem: {
+		marginBottom: 20,
+	},
+	giftDescription: {
+		textAlign: "justify",
+		fontSize: 14,
+		marginBottom: 10,
+		paddingLeft: 20,
+	},
 });
 
 interface WillPDFProps {
@@ -344,6 +368,13 @@ interface WillPDFProps {
 				percentage?: number;
 				beneficiaryName?: string;
 			}>;
+		}>;
+		gifts?: Array<{
+			type: string;
+			description: string;
+			value?: string;
+			beneficiaryId: string;
+			beneficiaryName: string;
 		}>;
 		digitalAssets?: {
 			beneficiaryId: string;
@@ -434,6 +465,7 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 			guardians: shouldShowGuardiansSection() ? sectionNum++ : null,
 			pets: shouldShowPetsSection() ? sectionNum++ : null,
 			distribution: sectionNum++,
+			gifts: data.gifts && data.gifts.length > 0 ? sectionNum++ : null,
 			digitalAssets: data.digitalAssets?.beneficiaryId ? sectionNum++ : null,
 
 			administration: sectionNum++,
@@ -776,6 +808,43 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 								))}
 						</View>
 					)}
+
+				{/* Specific Bequests Section */}
+				{data.gifts && data.gifts.length > 0 && (
+					<View style={styles.giftSection}>
+						<Text style={styles.giftTitle}>
+							{sections.gifts}. Specific Bequests
+						</Text>
+						<Text style={styles.giftText}>
+							I hereby make the following specific bequests:
+						</Text>
+
+						{data.gifts.map((gift, index) => (
+							<View key={index} style={styles.giftItem}>
+								<Text style={styles.giftDescription}>
+									{index + 1}. I give and bequeath{" "}
+									{gift.type === "Cash" && gift.value
+										? `the sum of $${Number(gift.value).toLocaleString()} (${
+												gift.description
+										  })${" "}`
+										: `my ${gift.description}${" "}`}
+									to{" "}
+									<Text style={{ fontWeight: "bold" }}>
+										{gift.beneficiaryName}
+									</Text>
+									.
+								</Text>
+							</View>
+						))}
+
+						<Text style={styles.giftText}>
+							I direct that these specific bequests shall be paid or delivered
+							as soon as practicable after my death, and that any interest
+							accruing on cash bequests shall be paid to the respective
+							beneficiaries.
+						</Text>
+					</View>
+				)}
 
 				{/* Digital Assets Section */}
 				{data.digitalAssets?.beneficiaryId && (
