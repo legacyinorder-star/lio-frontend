@@ -17,8 +17,8 @@ const DEFAULT_COMPLETION: StepCompletion = {
 	guardians: false,
 	pets: false,
 	hasAssets: false,
+	gifts: false,
 	digitalAssets: false,
-
 	residuary: false,
 	executors: false,
 	witnesses: false,
@@ -34,7 +34,8 @@ const STEP_ORDER: QuestionType[] = [
 	"guardians",
 	"pets",
 	"hasAssets",
-
+	"gifts",
+	"digitalAssets",
 	"residuary",
 	"executors",
 	"witnesses",

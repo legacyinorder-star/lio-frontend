@@ -39,8 +39,8 @@ const DEFAULT_COMPLETION: StepCompletion = {
 	guardians: false,
 	pets: false,
 	hasAssets: false,
+	gifts: false,
 	digitalAssets: false,
-
 	residuary: false,
 	executors: false,
 	witnesses: false,
@@ -56,6 +56,7 @@ const STEP_ORDER: QuestionType[] = [
 	"guardians",
 	"pets",
 	"hasAssets",
+	"gifts",
 	"digitalAssets",
 	"residuary",
 	"executors",
@@ -259,13 +260,13 @@ export function WillWizardProvider({ children }: { children: ReactNode }) {
 			guardians: { number: 5, name: "Guardians" },
 			pets: { number: 6, name: "Pet Care" },
 			hasAssets: { number: 7, name: "Assets" },
-			digitalAssets: { number: 8, name: "Digital Assets" },
-
-			residuary: { number: 9, name: "Residuary Estate" },
-			executors: { number: 10, name: "Executors" },
-			witnesses: { number: 11, name: "Witnesses" },
-			funeralInstructions: { number: 12, name: "Funeral Instructions" },
-			review: { number: 13, name: "Review" },
+			gifts: { number: 8, name: "Gifts" },
+			digitalAssets: { number: 9, name: "Digital Assets" },
+			residuary: { number: 10, name: "Residuary Estate" },
+			executors: { number: 11, name: "Executors" },
+			witnesses: { number: 12, name: "Witnesses" },
+			funeralInstructions: { number: 13, name: "Funeral Instructions" },
+			review: { number: 14, name: "Review" },
 		};
 		return stepMap[step];
 	};

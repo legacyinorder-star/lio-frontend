@@ -216,7 +216,7 @@ export default function NameStep({
 								country: "",
 							},
 							assets: [],
-
+							gifts: [],
 							beneficiaries: [],
 							executors: [],
 							witnesses: [],

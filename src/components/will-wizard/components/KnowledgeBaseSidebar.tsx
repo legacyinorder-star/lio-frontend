@@ -109,6 +109,20 @@ const stepArticles: Record<QuestionType, KnowledgeArticle[]> = {
 			url: "#",
 		},
 	],
+	gifts: [
+		{
+			title: "Specific Gifts and Bequests",
+			description:
+				"Learn how to make specific gifts to individuals in your will.",
+			url: "#",
+		},
+		{
+			title: "Cash vs Item Gifts",
+			description:
+				"Understanding the difference between monetary and physical gifts.",
+			url: "#",
+		},
+	],
 	digitalAssets: [
 		{
 			title: "Digital Assets in Your Will",
@@ -233,10 +247,7 @@ export default function KnowledgeBaseSidebar({
 					Our comprehensive knowledge base covers all aspects of estate
 					planning.
 				</p>
-				<a
-					href="#"
-					className="inline-flex items-center text-primary hover:text-primary/80 text-xs font-medium"
-				>
+				<a className="inline-flex items-center text-primary hover:text-primary/80 text-xs font-medium">
 					Browse All Articles
 					<ExternalLink className="ml-1 h-3 w-3" />
 				</a>

@@ -23,6 +23,7 @@ import AddressStep from "./steps/AddressStep";
 import SpouseStep from "./steps/SpouseStep";
 import ChildrenStep from "./steps/ChildrenStep";
 import AssetsStep from "./steps/AssetsStep";
+import GiftsStep from "./steps/GiftsStep";
 import DigitalAssetsStep from "./steps/DigitalAssetsStep";
 
 import ResiduaryStep from "./steps/ResiduaryStep";
@@ -68,9 +69,12 @@ export default function WillWizard() {
 	} = useWillOwnerData();
 
 	// Conditional data loading based on current step
-	const needsBeneficiaryData = ["hasAssets", "residuary", "review"].includes(
-		currentQuestion
-	);
+	const needsBeneficiaryData = [
+		"hasAssets",
+		"gifts",
+		"residuary",
+		"review",
+	].includes(currentQuestion);
 
 	// Only load beneficiary data when needed
 	const {
@@ -101,6 +105,7 @@ export default function WillWizard() {
 		assets: [],
 		digitalAssets: undefined,
 		otherBeneficiaries: [],
+		gifts: [],
 
 		residuaryBeneficiaries: [],
 		executors: [],
@@ -412,6 +417,9 @@ export default function WillWizard() {
 				navigateToStep("hasAssets");
 				break;
 			case "hasAssets":
+				navigateToStep("gifts");
+				break;
+			case "gifts":
 				navigateToStep("digitalAssets");
 				break;
 			case "digitalAssets":
@@ -466,8 +474,11 @@ export default function WillWizard() {
 			case "hasAssets":
 				navigateToStep("pets");
 				break;
-			case "digitalAssets":
+			case "gifts":
 				navigateToStep("hasAssets");
+				break;
+			case "digitalAssets":
+				navigateToStep("gifts");
 				break;
 			case "residuary":
 				navigateToStep("digitalAssets");
@@ -588,6 +599,17 @@ export default function WillWizard() {
 					<AssetsStep
 						onUpdate={commonProps.onUpdate}
 						onNext={commonProps.onNext}
+						onBack={commonProps.onBack}
+					/>
+				);
+
+			case "gifts":
+				return (
+					<GiftsStep
+						onNext={(data) => {
+							commonProps.onUpdate(data);
+							commonProps.onNext();
+						}}
 						onBack={commonProps.onBack}
 					/>
 				);

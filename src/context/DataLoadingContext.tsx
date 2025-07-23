@@ -13,7 +13,7 @@ interface LoadingStates {
 	relationships: boolean;
 	beneficiaries: boolean;
 	assets: boolean;
-
+	gifts: boolean;
 	residuary: boolean;
 	executors: boolean;
 	witnesses: boolean;
@@ -32,6 +32,7 @@ const DataLoadingContext = createContext<DataLoadingContextType>({
 		relationships: true,
 		beneficiaries: false,
 		assets: false,
+		gifts: false,
 		residuary: false,
 		executors: false,
 		witnesses: false,
@@ -49,6 +50,7 @@ export const DataLoadingProvider: React.FC<{ children: React.ReactNode }> = ({
 		relationships: true,
 		beneficiaries: false,
 		assets: false,
+		gifts: false,
 		residuary: false,
 		executors: false,
 		witnesses: false,
@@ -95,6 +97,7 @@ export const DataLoadingProvider: React.FC<{ children: React.ReactNode }> = ({
 			relationships: Boolean(isLoadingRelationships),
 			beneficiaries: false,
 			assets: false,
+			gifts: false,
 			residuary: false,
 			executors: false,
 			witnesses: false,
