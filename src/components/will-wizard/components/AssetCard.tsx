@@ -15,7 +15,7 @@ import { Edit2, Trash2 } from "lucide-react";
 import { Asset } from "../types/will.types";
 import { ASSET_TYPES } from "./AssetTypeSelector";
 import { useWill } from "@/context/WillContext";
-import { getFormattedRelationshipNameById } from "@/utils/relationships";
+// import { getFormattedRelationshipNameById } from "@/utils/relationships";
 
 interface AssetCardProps {
 	asset: Asset;

@@ -22,7 +22,7 @@ import { EnhancedBeneficiary } from "@/hooks/useWillData";
 import { getFormattedRelationshipNameById } from "@/utils/relationships";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { useWill } from "@/context/WillContext";
-import { Checkbox } from "@/components/ui/checkbox";
+// import { Checkbox } from "@/components/ui/checkbox";
 
 interface AssetDialogProps {
 	open: boolean;
@@ -112,14 +112,14 @@ export function AssetDialog({
 			}));
 		};
 
-	const handleHasBeneficiariesChange = (checked: boolean) => {
-		setAssetForm((prev) => ({
-			...prev,
-			hasBeneficiaries: checked,
-			// Clear beneficiaries if unchecking
-			beneficiaries: checked ? prev.beneficiaries : [],
-		}));
-	};
+	// const handleHasBeneficiariesChange = (checked: boolean) => {
+	// 	setAssetForm((prev) => ({
+	// 		...prev,
+	// 		hasBeneficiaries: checked,
+	// 		// Clear beneficiaries if unchecking
+	// 		beneficiaries: checked ? prev.beneficiaries : [],
+	// 	}));
+	// };
 
 	const handleDistributionTypeChange = (type: "equal" | "percentage") => {
 		setAssetForm((prev) => ({
