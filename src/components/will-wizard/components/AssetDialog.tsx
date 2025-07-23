@@ -355,7 +355,7 @@ export function AssetDialog({
 						/>
 					</div>
 					{/* Checkbox for beneficiaries */}
-					<div className="space-y-2">
+					{/* <div className="space-y-2">
 						<div className="flex items-center space-x-2">
 							<Checkbox
 								id="hasBeneficiaries"
@@ -366,7 +366,7 @@ export function AssetDialog({
 								I want to give this asset to specific beneficiaries
 							</Label>
 						</div>
-					</div>
+					</div> */}
 
 					{/* Distribution and Beneficiaries Section - Only show if hasBeneficiaries is true */}
 					{assetForm.hasBeneficiaries && (

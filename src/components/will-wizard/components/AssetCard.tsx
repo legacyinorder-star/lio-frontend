@@ -115,7 +115,7 @@ export function AssetCard({
 							})()}
 						</div>
 						<p className="text-sm">{asset.description}</p>
-						<div className="mt-2">
+						{/* <div className="mt-2">
 							<p className="text-sm font-medium">Distribution:</p>
 							{!asset.hasBeneficiaries ? (
 								<p className="text-sm text-muted-foreground">
@@ -255,7 +255,7 @@ export function AssetCard({
 									})}
 								</ul>
 							)}
-						</div>
+						</div> */}
 					</div>
 					<div className="flex space-x-2">
 						<Button
