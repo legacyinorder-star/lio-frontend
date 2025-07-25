@@ -17,6 +17,22 @@ import { useWill } from "@/context/WillContext";
 import { apiClient } from "@/utils/apiClient";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
+import Select from "react-select";
+import countryRegionData from "country-region-data/data.json";
+
+interface RegionType {
+	name: string;
+	shortCode?: string;
+}
+interface CountryType {
+	countryName: string;
+	countryShortCode: string;
+	regions: RegionType[];
+}
+interface OptionType {
+	value: string;
+	label: string;
+}
 
 const addressSchema = z.object({
 	address: z.string().min(1, "Address is required"),
@@ -111,6 +127,34 @@ export default function AddressStep({
 		setValue,
 	} = form;
 
+	const [selectedCountry, setSelectedCountry] = useState<CountryType | null>(
+		(countryRegionData as unknown as CountryType[]).find(
+			(c: CountryType) =>
+				c.countryName === initialValues.country ||
+				c.countryShortCode === initialValues.country
+		) || null
+	);
+	const [selectedRegion, setSelectedRegion] = useState<OptionType | null>(
+		initialValues.state
+			? { value: initialValues.state, label: initialValues.state }
+			: null
+	);
+
+	const countryOptions: OptionType[] = (
+		countryRegionData as unknown as CountryType[]
+	).map((c: CountryType) => ({
+		value: c.countryShortCode,
+		label: c.countryName,
+	}));
+
+	const regionOptions: OptionType[] =
+		selectedCountry && selectedCountry.regions.length > 0
+			? selectedCountry.regions.map((r) => ({
+					value: r.shortCode || r.name,
+					label: r.name,
+			  }))
+			: [];
+
 	// Pre-fill form when willOwnerData changes
 	useEffect(() => {
 		if (willOwnerData) {
@@ -153,6 +197,26 @@ export default function AddressStep({
 			});
 		}
 	}, [willOwnerData, activeWill, data, setValue]);
+
+	// Sync react-select with react-hook-form
+	useEffect(() => {
+		if (selectedCountry) {
+			setValue("country", selectedCountry.countryName, {
+				shouldValidate: true,
+			});
+			if (selectedCountry.regions.length === 0) {
+				setValue("state", form.getValues("state"), { shouldValidate: true });
+			} else if (!selectedRegion) {
+				setValue("state", "", { shouldValidate: true });
+			}
+		}
+	}, [selectedCountry, setValue]);
+
+	useEffect(() => {
+		if (selectedRegion) {
+			setValue("state", selectedRegion.value, { shouldValidate: true });
+		}
+	}, [selectedRegion, setValue]);
 
 	const onSubmit = async (values: AddressData) => {
 		setIsSubmitting(true);
@@ -295,12 +359,35 @@ export default function AddressStep({
 						<div className="space-y-2">
 							<FormField
 								control={form.control}
-								name="state"
-								render={({ field }) => (
+								name="country"
+								render={() => (
 									<FormItem>
-										<FormLabel>State/Province</FormLabel>
+										<FormLabel>Country</FormLabel>
 										<FormControl>
-											<Input placeholder="Ontario" {...field} />
+											<Select
+												options={countryOptions}
+												value={
+													selectedCountry
+														? {
+																value: selectedCountry.countryShortCode,
+																label: selectedCountry.countryName,
+														  }
+														: null
+												}
+												onChange={(option) => {
+													setSelectedCountry(
+														(
+															countryRegionData as unknown as CountryType[]
+														).find(
+															(c: CountryType) =>
+																c.countryShortCode === option?.value
+														) || null
+													);
+													setSelectedRegion(null);
+												}}
+												isClearable
+												placeholder="Select country"
+											/>
 										</FormControl>
 										<FormMessage />
 									</FormItem>
@@ -310,12 +397,26 @@ export default function AddressStep({
 						<div className="space-y-2">
 							<FormField
 								control={form.control}
-								name="country"
+								name="state"
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel>Country</FormLabel>
+										<FormLabel>State/Province</FormLabel>
 										<FormControl>
-											<Input placeholder="Canada" {...field} />
+											{regionOptions.length > 0 ? (
+												<Select
+													options={regionOptions}
+													value={
+														regionOptions.find(
+															(r) => r.value === field.value
+														) || null
+													}
+													onChange={(option) => setSelectedRegion(option)}
+													isClearable
+													placeholder="Select state/province"
+												/>
+											) : (
+												<Input placeholder="State/Province/Region" {...field} />
+											)}
 										</FormControl>
 										<FormMessage />
 									</FormItem>
