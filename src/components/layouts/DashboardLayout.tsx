@@ -41,7 +41,8 @@ export function DashboardLayout() {
 	const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
 	const [isLoadingWill, setIsLoadingWill] = useState(false);
 	const { activeWill, setActiveWill } = useWill();
-	const { isInWillWizard, currentStep, getStepInfo } = useWillWizard();
+	const { isInWillWizard, currentStep, getStepInfo, getTotalSteps } =
+		useWillWizard();
 
 	useEffect(() => {
 		// Only check auth once loading is complete
@@ -482,13 +483,14 @@ export function DashboardLayout() {
 				>
 					{(() => {
 						const stepInfo = getStepInfo(currentStep);
+						const totalSteps = getTotalSteps();
 						return (
 							<>
 								<span className="hidden sm:inline">
-									Section {stepInfo.number} of 13: {stepInfo.name}
+									Section {stepInfo.number} of {totalSteps}: {stepInfo.name}
 								</span>
 								<span className="sm:hidden">
-									{stepInfo.number}/13: {stepInfo.name}
+									{stepInfo.number}/{totalSteps}: {stepInfo.name}
 								</span>
 							</>
 						);

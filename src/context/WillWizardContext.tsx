@@ -17,6 +17,7 @@ interface WillWizardContextType {
 	currentStep: QuestionType | null;
 	setWillWizardState: (isActive: boolean, step?: QuestionType) => void;
 	getStepInfo: (step: QuestionType) => { number: number; name: string };
+	getTotalSteps: () => number;
 	// Progress tracking
 	completedSteps: StepCompletion;
 	markStepComplete: (step: QuestionType) => void;
@@ -271,6 +272,10 @@ export function WillWizardProvider({ children }: { children: ReactNode }) {
 		return stepMap[step];
 	};
 
+	const getTotalSteps = (): number => {
+		return STEP_ORDER.length;
+	};
+
 	return (
 		<WillWizardContext.Provider
 			value={{
@@ -278,6 +283,7 @@ export function WillWizardProvider({ children }: { children: ReactNode }) {
 				currentStep,
 				setWillWizardState,
 				getStepInfo,
+				getTotalSteps,
 				// Progress tracking
 				completedSteps,
 				markStepComplete,
