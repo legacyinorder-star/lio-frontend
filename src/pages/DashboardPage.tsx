@@ -189,13 +189,13 @@ export default function DashboardPage() {
 			href: "/app/create-will",
 			action: activeWill ? "Continue Will" : "Start your Will",
 		},
-		{
-			title: "Power of Attorney",
-			description:
-				"Share personal guidance for your loved ones that complements your formal will.",
-			href: "/app/power-of-attorney",
-			action: "Create a Power of Attorney",
-		},
+		// {
+		// 	title: "Power of Attorney",
+		// 	description:
+		// 		"Share personal guidance for your loved ones that complements your formal will.",
+		// 	href: "/app/power-of-attorney",
+		// 	action: "Create a Power of Attorney",
+		// },
 		// Only include Letter of Wishes if there's at least one completed will
 		...(hasCompletedWill
 			? [

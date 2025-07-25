@@ -106,12 +106,12 @@ export function DashboardLayout() {
 			icon: Scroll,
 			description: activeWill ? "Continue your will" : "Create a will",
 		},
-		{
-			title: "Power of Attorney",
-			href: "/app/policies",
-			icon: Shield,
-			description: "Create a power of attorney",
-		},
+		// {
+		// 	title: "Power of Attorney",
+		// 	href: "/app/policies",
+		// 	icon: Shield,
+		// 	description: "Create a power of attorney",
+		// },
 		{
 			title: "Letters of Wishes",
 			href: "/app/transaction-history",
