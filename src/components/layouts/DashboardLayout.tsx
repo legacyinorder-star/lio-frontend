@@ -151,7 +151,7 @@ export function DashboardLayout() {
 	return (
 		<div className="min-h-screen flex flex-col px-0 sm:px-4">
 			{/* Header */}
-			<header className="sticky top-0 z-40 border-b bg-background">
+			<header className="sticky top-0 z-40 border-b bg-white">
 				<div className="flex h-16 items-center justify-between px-4 sm:px-7">
 					<div className="flex items-center space-x-4 sm:space-x-8 lg:space-x-20">
 						{/* Logo */}

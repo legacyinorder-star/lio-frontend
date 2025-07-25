@@ -319,7 +319,7 @@ export default function FuneralInstructionsStep({
 												type="button"
 												variant="outline"
 												disabled={isDeleting}
-												className="cursor-pointer text-red-600 hover:bg-red-50"
+												className="cursor-pointer text-red-600 hover:bg-white/50 hover:text-red-600/70"
 											>
 												{isDeleting ? (
 													<div className="h-4 w-4 animate-spin rounded-full border-t-2 border-b-2 border-red-600 mr-2" />

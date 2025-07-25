@@ -327,7 +327,7 @@ const DigitalAssetsStep: React.FC<DigitalAssetsStepProps> = ({
 						onClick={handleSkip}
 						className={`cursor-pointer flex items-center gap-2 ${
 							selectedBeneficiary
-								? "bg-red-500 hover:bg-red-600 hover:text-white text-white"
+								? "cursor-pointer text-red-600 hover:bg-white/50 hover:text-red-600/70"
 								: ""
 						}`}
 						disabled={isLoading || isFetching}
