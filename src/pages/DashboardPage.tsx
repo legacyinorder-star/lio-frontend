@@ -513,10 +513,7 @@ export default function DashboardPage() {
 
 			<div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-28">
 				{/* Left Card - Black Background */}
-				<div
-					className="rounded-[0.5rem] p-8 text-white"
-					style={{ backgroundColor: "#000000" }}
-				>
+				<div className="rounded-[0.5rem] p-8 text-white bg-primary">
 					<h3 className="text-[1.5rem] text-white font-semibold mb-2">
 						Try out the Legacy Vault
 					</h3>
