@@ -240,110 +240,115 @@ export function DashboardLayout() {
 								<span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500"></span>
 							</Button>
 						</div>
-						<DropdownMenu
-							onOpenChange={(open) => {
-								if (!open) {
-									const triggerButton = document.querySelector(
-										"[data-create-button]"
-									);
-									if (triggerButton instanceof HTMLElement) {
-										triggerButton.focus();
-									}
-								}
-							}}
-						>
-							<Button
-								variant="default"
-								className="bg-primary hover:bg-primary/90 text-white cursor-pointer text-sm px-3 sm:px-4"
-								onClick={(e) => {
-									e.preventDefault();
-									e.stopPropagation();
-									if (!e.currentTarget.getAttribute("data-state")) {
-										handleWillAction();
+						{/* Hide continue/create will button in wizard mode */}
+						{!isInWillWizard && (
+							<DropdownMenu
+								onOpenChange={(open) => {
+									if (!open) {
+										const triggerButton = document.querySelector(
+											"[data-create-button]"
+										);
+										if (triggerButton instanceof HTMLElement) {
+											triggerButton.focus();
+										}
 									}
 								}}
-								disabled={isLoadingWill}
-								data-create-button
-								aria-expanded={false}
-								aria-haspopup="menu"
-								aria-controls="create-document-menu"
 							>
-								{isLoadingWill ? (
-									<>
-										<div className="h-4 w-4 animate-spin rounded-full border-t-2 border-b-2 border-black mr-2" />
-										<span className="hidden sm:inline">Loading...</span>
-									</>
-								) : (
-									<>
-										{activeWill ? (
-											<>
-												<Edit className="mr-1 sm:mr-2 h-4 w-4" />
-												<span className="hidden sm:inline">Continue Will</span>
-												<span className="sm:hidden">Continue</span>
-											</>
-										) : (
-											<>
-												<Plus className="mr-1 sm:mr-2 h-4 w-4" />
-												<span className="hidden sm:inline">Create Will</span>
-												<span className="sm:hidden">Create</span>
-											</>
-										)}
-									</>
-								)}
-							</Button>
-							<DropdownMenuContent
-								id="create-document-menu"
-								className="w-48 sm:w-56 bg-white border border-[#ECECEC] shadow-md max-w-[calc(100vw-2rem)]"
-								align="end"
-							>
-								<DropdownMenuLabel className="font-medium">
-									Create New Document
-								</DropdownMenuLabel>
-								<DropdownMenuSeparator />
-								{documentTypes.map((doc, index) => (
-									<DropdownMenuItem
-										key={doc.href}
-										asChild
-										className="cursor-pointer hover:bg-[#F5F5F5]"
-										onSelect={(e) => {
-											e.preventDefault();
-											e.stopPropagation();
-											if (doc.title === "Will") {
-												// Close the dropdown first
-												const trigger = document.querySelector(
-													"[data-create-button]"
-												);
-												if (trigger instanceof HTMLElement) {
-													trigger.click();
+								<Button
+									variant="default"
+									className="bg-primary hover:bg-primary/90 text-white cursor-pointer text-sm px-3 sm:px-4"
+									onClick={(e) => {
+										e.preventDefault();
+										e.stopPropagation();
+										if (!e.currentTarget.getAttribute("data-state")) {
+											handleWillAction();
+										}
+									}}
+									disabled={isLoadingWill}
+									data-create-button
+									aria-expanded={false}
+									aria-haspopup="menu"
+									aria-controls="create-document-menu"
+								>
+									{isLoadingWill ? (
+										<>
+											<div className="h-4 w-4 animate-spin rounded-full border-t-2 border-b-2 border-black mr-2" />
+											<span className="hidden sm:inline">Loading...</span>
+										</>
+									) : (
+										<>
+											{activeWill ? (
+												<>
+													<Edit className="mr-1 sm:mr-2 h-4 w-4" />
+													<span className="hidden sm:inline">
+														Continue Will
+													</span>
+													<span className="sm:hidden">Continue</span>
+												</>
+											) : (
+												<>
+													<Plus className="mr-1 sm:mr-2 h-4 w-4" />
+													<span className="hidden sm:inline">Create Will</span>
+													<span className="sm:hidden">Create</span>
+												</>
+											)}
+										</>
+									)}
+								</Button>
+								<DropdownMenuContent
+									id="create-document-menu"
+									className="w-48 sm:w-56 bg-white border border-[#ECECEC] shadow-md max-w-[calc(100vw-2rem)]"
+									align="end"
+								>
+									<DropdownMenuLabel className="font-medium">
+										Create New Document
+									</DropdownMenuLabel>
+									<DropdownMenuSeparator />
+									{documentTypes.map((doc, index) => (
+										<DropdownMenuItem
+											key={doc.href}
+											asChild
+											className="cursor-pointer hover:bg-[#F5F5F5]"
+											onSelect={(e) => {
+												e.preventDefault();
+												e.stopPropagation();
+												if (doc.title === "Will") {
+													// Close the dropdown first
+													const trigger = document.querySelector(
+														"[data-create-button]"
+													);
+													if (trigger instanceof HTMLElement) {
+														trigger.click();
+													}
+													// Then handle will action after a small delay
+													setTimeout(() => {
+														handleWillAction();
+													}, 0);
+												} else {
+													navigate(doc.href);
 												}
-												// Then handle will action after a small delay
-												setTimeout(() => {
-													handleWillAction();
-												}, 0);
-											} else {
-												navigate(doc.href);
-											}
-										}}
-									>
-										<Link
-											to={doc.href}
-											className="flex items-center cursor-pointer"
-											role="menuitem"
-											tabIndex={0}
-											id={`menu-item-${index}`}
+											}}
 										>
-											<doc.icon className="mr-2 h-4 w-4" />
-											<div className="flex flex-col">
-												<span>{doc.title}</span>
-												<span className="text-xs text-muted-foreground">
-													{doc.description}
-												</span>
-											</div>
-										</Link>
-									</DropdownMenuItem>
-								))}
-							</DropdownMenuContent>
-						</DropdownMenu>
+											<Link
+												to={doc.href}
+												className="flex items-center cursor-pointer"
+												role="menuitem"
+												tabIndex={0}
+												id={`menu-item-${index}`}
+											>
+												<doc.icon className="mr-2 h-4 w-4" />
+												<div className="flex flex-col">
+													<span>{doc.title}</span>
+													<span className="text-xs text-muted-foreground">
+														{doc.description}
+													</span>
+												</div>
+											</Link>
+										</DropdownMenuItem>
+									))}
+								</DropdownMenuContent>
+							</DropdownMenu>
+						)}
 
 						<DropdownMenu
 							onOpenChange={(open) => {
