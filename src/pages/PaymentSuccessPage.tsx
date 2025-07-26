@@ -106,8 +106,8 @@ export default function PaymentSuccessPage() {
 					<div className="text-center space-y-2">
 						<p className="text-lg font-medium">Thank you for your purchase!</p>
 						<p className="text-muted-foreground">
-							Your will creation service has been activated. You can now
-							continue creating your will.
+							Your will has been submitted for review. Our legal team will
+							review your will and contact you once it's ready for download.
 						</p>
 					</div>
 
@@ -133,7 +133,8 @@ export default function PaymentSuccessPage() {
 
 					<div className="text-center">
 						<p className="text-xs text-muted-foreground">
-							You will receive a confirmation email shortly.
+							You will receive a confirmation email shortly. We'll notify you
+							when your will is ready.
 						</p>
 					</div>
 				</CardContent>

@@ -415,6 +415,8 @@ export default function DashboardPage() {
 												? "bg-yellow-50 text-yellow-700 ring-yellow-600/20"
 												: will.status === "completed"
 												? "bg-green-50 text-green-700 ring-green-600/20"
+												: will.status === "under-review"
+												? "bg-blue-50 text-blue-700 ring-blue-600/20"
 												: "bg-gray-50 text-gray-700 ring-gray-600/20"
 										}`}
 									>
@@ -449,17 +451,18 @@ export default function DashboardPage() {
 								</div>
 
 								<div className="flex gap-2 mt-auto">
-									{will.status !== "completed" && (
-										<Button
-											variant="outline"
-											size="sm"
-											onClick={() => handleEditWill(will.id)}
-											className="flex-1 hover:bg-blue-50 text-blue-600"
-										>
-											<Edit className="h-4 w-4 mr-2" />
-											Continue
-										</Button>
-									)}
+									{will.status !== "completed" &&
+										will.status !== "under-review" && (
+											<Button
+												variant="outline"
+												size="sm"
+												onClick={() => handleEditWill(will.id)}
+												className="flex-1 hover:bg-blue-50 text-blue-600"
+											>
+												<Edit className="h-4 w-4 mr-2" />
+												Continue
+											</Button>
+										)}
 									{will.status === "draft" && (
 										<Button
 											variant="outline"
@@ -471,6 +474,16 @@ export default function DashboardPage() {
 											<CreditCard className="h-4 w-4 mr-2" />
 											Pay
 										</Button>
+									)}
+									{will.status === "under-review" && (
+										<div className="flex-1 text-center">
+											<p className="text-sm text-blue-600 font-medium">
+												Under Review
+											</p>
+											<p className="text-xs text-muted-foreground">
+												Our legal team is reviewing your will
+											</p>
+										</div>
 									)}
 									{will.status === "completed" && (
 										<>

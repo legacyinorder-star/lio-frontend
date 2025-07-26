@@ -258,6 +258,9 @@ export default function PaymentPage() {
 					amount,
 					currency: STRIPE_CONFIG.currency,
 				});
+				toast.success(
+					"Payment successful! Your will has been submitted for review."
+				);
 			}
 		} catch (error) {
 			console.error("Error handling payment success:", error);

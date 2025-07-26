@@ -269,6 +269,7 @@ export default function DocumentsPage() {
 						<SelectContent>
 							<SelectItem value="all">All Status</SelectItem>
 							<SelectItem value="draft">Draft</SelectItem>
+							<SelectItem value="under-review">Under Review</SelectItem>
 							<SelectItem value="completed">Completed</SelectItem>
 						</SelectContent>
 					</Select>
@@ -378,34 +379,47 @@ export default function DocumentsPage() {
 													? "bg-yellow-50 text-yellow-700 ring-yellow-600/20"
 													: document.status === "completed"
 													? "bg-green-50 text-green-700 ring-green-600/20"
+													: document.status === "under-review"
+													? "bg-blue-50 text-blue-700 ring-blue-600/20"
 													: "bg-gray-50 text-gray-700 ring-gray-600/20"
 											}`}
 										>
 											{toTitleCase(document.status)}
 										</span>
-										<div className="flex space-x-2">
-											{document.status !== "completed" && (
-												<Button
-													variant="outline"
-													size="sm"
-													onClick={() => handleEditDocument(document.id)}
-													className="hover:bg-blue-50 text-blue-600"
-												>
-													<Edit className="h-4 w-4 mr-1" />
-													Continue
-												</Button>
-											)}
+										<div className="flex gap-2 mt-auto">
+											{document.status !== "completed" &&
+												document.status !== "under-review" && (
+													<Button
+														variant="outline"
+														size="sm"
+														onClick={() => handleEditDocument(document.id)}
+														className="flex-1 hover:bg-blue-50 text-blue-600"
+													>
+														<Edit className="h-4 w-4 mr-2" />
+														Continue
+													</Button>
+												)}
 											{document.status === "draft" && (
 												<Button
 													variant="outline"
 													size="sm"
 													onClick={() => handlePaymentForDocument(document.id)}
-													className="hover:bg-green-50 text-green-600"
+													className="flex-1 hover:bg-green-50 text-green-600"
 													disabled={isProcessingPayment}
 												>
-													<CreditCard className="h-4 w-4 mr-1" />
+													<CreditCard className="h-4 w-4 mr-2" />
 													Pay
 												</Button>
+											)}
+											{document.status === "under-review" && (
+												<div className="flex-1 text-center">
+													<p className="text-sm text-blue-600 font-medium">
+														Under Review
+													</p>
+													<p className="text-xs text-muted-foreground">
+														Our legal team is reviewing your will
+													</p>
+												</div>
 											)}
 											{document.status === "completed" && (
 												<>
@@ -413,10 +427,10 @@ export default function DocumentsPage() {
 														variant="outline"
 														size="sm"
 														onClick={() => handleDownloadPDF(document.id)}
-														className="hover:bg-green-50 text-green-600"
+														className="flex-1 hover:bg-green-50 text-green-600"
 														disabled={!document.owner}
 													>
-														<Download className="h-4 w-4 mr-1" />
+														<Download className="h-4 w-4 mr-2" />
 														Download
 													</Button>
 													<Button
@@ -425,10 +439,10 @@ export default function DocumentsPage() {
 														onClick={() =>
 															handleCreateLetterOfWishes(document.id)
 														}
-														className="hover:bg-purple-50 text-purple-600"
+														className="flex-1 hover:bg-purple-50 text-purple-600"
 														title="Add Letter of Wishes"
 													>
-														<Heart className="h-4 w-4 mr-1" />
+														<Heart className="h-4 w-4 mr-2" />
 														Letter
 													</Button>
 												</>
@@ -437,7 +451,7 @@ export default function DocumentsPage() {
 												variant="outline"
 												size="sm"
 												onClick={() => handleDeleteDocument(document.id)}
-												className="hover:bg-red-50 text-red-600"
+												className="hover:bg-red-500 hover:text-white text-red-600"
 											>
 												<Trash2 className="h-4 w-4" />
 											</Button>

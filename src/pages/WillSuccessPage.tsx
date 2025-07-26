@@ -48,8 +48,8 @@ export default function WillSuccessPage() {
 					<div className="text-center space-y-2">
 						<p className="text-lg font-medium">Congratulations!</p>
 						<p className="text-muted-foreground">
-							Your will has been created and payment processed successfully. You
-							can now download your will document.
+							Your will has been submitted for review. Our legal team will
+							review your will and contact you once it's ready for download.
 						</p>
 					</div>
 
@@ -75,8 +75,8 @@ export default function WillSuccessPage() {
 
 					<div className="text-center">
 						<p className="text-xs text-muted-foreground">
-							Your will has been saved securely and you can access it anytime
-							from your dashboard.
+							Your will has been saved securely and you can track its review
+							status from your dashboard.
 						</p>
 					</div>
 				</CardContent>

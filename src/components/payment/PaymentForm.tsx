@@ -50,7 +50,9 @@ export default function PaymentForm({
 			toast.error(error.message || "Payment failed. Please try again.");
 		} else if (paymentIntent && paymentIntent.status === "succeeded") {
 			setMessage("Payment successful!");
-			toast.success("Payment completed successfully!");
+			toast.success(
+				"Payment successful! Your will has been submitted for review."
+			);
 			onSuccess(paymentIntent);
 		}
 
