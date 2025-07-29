@@ -15,6 +15,11 @@ export const API_CONFIG = {
 			users: "/users",
 			toggleUserStatus: "admin/users/{users_id}/status",
 			documents: "/admin/documents",
+			willsUnderReview: "/admin/wills/get-pending-review",
+			allWills: "/admin/wills",
+			approveWill: "/admin/wills/{will_id}/approve",
+			rejectWill: "/admin/wills/{will_id}/reject",
+			generateWillPDF: "/admin/wills/{will_id}/generate-pdf",
 		},
 	},
 } as const;

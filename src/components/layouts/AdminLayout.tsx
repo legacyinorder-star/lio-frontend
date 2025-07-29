@@ -11,6 +11,8 @@ import {
 	ChevronDown,
 	House,
 	BarChart3,
+	Scroll,
+	Clock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -34,6 +36,7 @@ export function AdminLayout() {
 	const { user, logout, isLoading } = useAuth();
 	const { setActiveWill } = useWill();
 	const [isAuthLoading, setIsAuthLoading] = useState(true);
+	const [willsMenuOpen, setWillsMenuOpen] = useState(false);
 
 	useEffect(() => {
 		// Only check auth once loading is complete
@@ -54,6 +57,9 @@ export function AdminLayout() {
 			setIsAuthLoading(false);
 		}
 	}, [user, isLoading, navigate]);
+
+	// Check if current location is in wills section
+	const isInWillsSection = location.pathname.startsWith("/admin/wills");
 
 	const getInitials = (name: string) => {
 		return name
@@ -141,7 +147,94 @@ export function AdminLayout() {
 
 				{/* Navigation */}
 				<nav className="flex flex-col gap-1 p-4 pt-[40px]">
-					{navItems.map((item) => (
+					{navItems.slice(0, 1).map((item) => (
+						<Link
+							key={item.href}
+							to={item.href}
+							className={cn(
+								"flex items-center gap-3 rounded-md px-3 py-2 text-[0.875rem] font-medium transition-colors hover:bg-white/10",
+								location.pathname === item.href
+									? "bg-white/10 text-white font-[500]"
+									: "text-white/70 hover:text-white font-[500]"
+							)}
+						>
+							{item.icon}
+							{item.title}
+						</Link>
+					))}
+
+					{/* Wills Dropdown Menu */}
+					<div className="relative">
+						<button
+							onClick={() => setWillsMenuOpen(!willsMenuOpen)}
+							className={cn(
+								"flex items-center justify-between w-full gap-3 rounded-md px-3 py-2 text-[0.875rem] font-medium transition-colors hover:bg-white/10",
+								isInWillsSection
+									? "bg-white/10 text-white font-[500]"
+									: "text-white/70 hover:text-white font-[500]"
+							)}
+						>
+							<div className="flex items-center gap-3">
+								<Scroll className="h-5 w-5" />
+								Wills
+							</div>
+							<ChevronDown
+								className={cn(
+									"h-4 w-4 transition-transform",
+									willsMenuOpen && "rotate-180"
+								)}
+							/>
+						</button>
+
+						{willsMenuOpen && (
+							<div className="ml-6 mt-1 space-y-1">
+								<Link
+									to="/admin/wills-under-review"
+									className={cn(
+										"flex items-center gap-3 rounded-md px-3 py-2 text-[0.875rem] font-medium transition-colors hover:bg-white/10",
+										location.pathname === "/admin/wills-under-review"
+											? "bg-white/10 text-white font-[500]"
+											: "text-white/70 hover:text-white font-[500]"
+									)}
+								>
+									<Clock className="h-4 w-4" />
+									Wills Under Review
+								</Link>
+								<Link
+									to="/admin/wills"
+									className={cn(
+										"flex items-center gap-3 rounded-md px-3 py-2 text-[0.875rem] font-medium transition-colors hover:bg-white/10",
+										location.pathname === "/admin/wills"
+											? "bg-white/10 text-white font-[500]"
+											: "text-white/70 hover:text-white font-[500]"
+									)}
+								>
+									<FileText className="h-4 w-4" />
+									All Wills
+								</Link>
+							</div>
+						)}
+					</div>
+
+					{/* Rest of navigation items */}
+					{navItems.slice(1, -1).map((item) => (
+						<Link
+							key={item.href}
+							to={item.href}
+							className={cn(
+								"flex items-center gap-3 rounded-md px-3 py-2 text-[0.875rem] font-medium transition-colors hover:bg-white/10",
+								location.pathname === item.href
+									? "bg-white/10 text-white font-[500]"
+									: "text-white/70 hover:text-white font-[500]"
+							)}
+						>
+							{item.icon}
+							{item.title}
+						</Link>
+					))}
+
+					{/* Back to User View */}
+					{navItems.slice(-1).map((item) => (
 						<Link
 							key={item.href}
 							to={item.href}

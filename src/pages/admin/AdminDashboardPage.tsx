@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { CardMetric } from "@/components/ui/card-metric";
 import { PieChart } from "@/components/charts/pie-chart";
@@ -13,6 +14,7 @@ import {
 	ShoppingCart,
 	Plus,
 	ChevronDown,
+	FileText,
 } from "lucide-react";
 import {
 	DropdownMenu,
@@ -249,6 +251,7 @@ const orderColumns: ColumnDef<Order>[] = [
 ];
 
 export default function AdminDashboardPage() {
+	const navigate = useNavigate();
 	const [isLoading, setIsLoading] = useState(true);
 	const [timeRange, setTimeRange] = useState("Last 7 Days");
 	const [stats, setStats] = useState({
@@ -317,6 +320,44 @@ export default function AdminDashboardPage() {
 						Generate Report
 					</Button>
 				</div>
+			</div>
+
+			{/* Quick Actions */}
+			<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+				<Card
+					className="shadow-md border-[#F2F2F2] cursor-pointer hover:shadow-lg transition-shadow"
+					onClick={() => navigate("/app/admin/users")}
+				>
+					<CardContent className="p-6">
+						<div className="flex items-center space-x-4">
+							<div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+								<Users className="w-6 h-6 text-green-600" />
+							</div>
+							<div>
+								<h3 className="font-semibold text-lg">Manage Users</h3>
+								<p className="text-sm text-muted-foreground">User management</p>
+							</div>
+						</div>
+					</CardContent>
+				</Card>
+				<Card
+					className="shadow-md border-[#F2F2F2] cursor-pointer hover:shadow-lg transition-shadow"
+					onClick={() => navigate("/app/admin/documents")}
+				>
+					<CardContent className="p-6">
+						<div className="flex items-center space-x-4">
+							<div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+								<FileText className="w-6 h-6 text-purple-600" />
+							</div>
+							<div>
+								<h3 className="font-semibold text-lg">Manage Documents</h3>
+								<p className="text-sm text-muted-foreground">
+									Document management
+								</p>
+							</div>
+						</div>
+					</CardContent>
+				</Card>
 			</div>
 
 			{/* Key metrics */}

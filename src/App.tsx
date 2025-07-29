@@ -18,6 +18,8 @@ import ManageUsersPage from "@/pages/admin/ManageUsersPage";
 import UserDetailPage from "@/pages/admin/UserDetailPage";
 import AdminDashboardPage from "@/pages/admin/AdminDashboardPage";
 import ManageDocumentsPage from "@/pages/admin/ManageDocumentsPage";
+import ManageWillsUnderReviewPage from "@/pages/admin/ManageWillsUnderReviewPage";
+import ManageAllWillsPage from "@/pages/admin/ManageAllWillsPage";
 import LogoutPage from "@/pages/LogoutPage";
 import HomePage from "@/pages/HomePage";
 import AboutUsPage from "@/pages/AboutUsPage";
@@ -163,6 +165,11 @@ function App() {
 												path="dashboard"
 												element={<AdminDashboardPage />}
 											/>
+											<Route
+												path="wills-under-review"
+												element={<ManageWillsUnderReviewPage />}
+											/>
+											<Route path="wills" element={<ManageAllWillsPage />} />
 										</Route>
 										<Route
 											path="/request-password-reset"
