@@ -310,12 +310,6 @@ export default function ManageWillsUnderReviewPage() {
 						Review and manage wills that are pending approval
 					</p>
 				</div>
-				<Button
-					onClick={() => navigate("/app/admin/dashboard")}
-					variant="outline"
-				>
-					Back to Admin Dashboard
-				</Button>
 			</div>
 
 			{/* Search */}

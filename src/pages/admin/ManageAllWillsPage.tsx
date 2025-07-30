@@ -39,7 +39,7 @@ import { formatDate } from "@/utils/format";
 
 interface Will {
 	id: string;
-	status: "draft" | "under-review" | "completed" | "rejected";
+	status: "in progress" | "draft" | "under-review" | "completed" | "rejected";
 	created_at: string;
 	updated_at: string;
 	payment_status: "pending" | "succeeded" | "failed";
@@ -360,15 +360,17 @@ export default function ManageAllWillsPage() {
 										</div>
 									</div>
 									<div className="flex items-center space-x-2">
-										<Button
-											variant="outline"
-											size="sm"
-											onClick={() => handleDownloadWill(will)}
-											className="hover:bg-green-50 text-green-600"
-										>
-											<Download className="h-4 w-4 mr-2" />
-											Download
-										</Button>
+										{will.status !== "in progress" && (
+											<Button
+												variant="outline"
+												size="sm"
+												onClick={() => handleDownloadWill(will)}
+												className="hover:bg-green-50 text-green-600"
+											>
+												<Download className="h-4 w-4 mr-2" />
+												Download
+											</Button>
+										)}
 										<DropdownMenu>
 											<DropdownMenuTrigger asChild>
 												<Button variant="outline" size="sm">
