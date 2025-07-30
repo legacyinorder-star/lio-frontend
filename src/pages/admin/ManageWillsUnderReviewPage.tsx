@@ -24,6 +24,8 @@ import {
 import { toast } from "sonner";
 import { apiClient } from "@/utils/apiClient";
 import { useAuth } from "@/hooks/useAuth";
+import { smartDownloadWill } from "@/utils/willSmartDownload";
+import { type WillData } from "@/context/WillContext";
 import {
 	Search,
 	FileText,
@@ -48,11 +50,18 @@ interface WillUnderReview {
 		id: string;
 		first_name: string;
 		last_name: string;
+		email: string;
 		address: string;
 		city: string;
 		state: string;
 		post_code: string;
 		country: string;
+	};
+	user: {
+		id: string;
+		first_name: string;
+		last_name: string;
+		email: string;
 	};
 	document?: {
 		willId: string;
@@ -63,12 +72,6 @@ interface WillUnderReview {
 			size: number;
 			type: string;
 		};
-	};
-	user: {
-		id: string;
-		first_name: string;
-		last_name: string;
-		email: string;
 	};
 }
 
@@ -114,8 +117,8 @@ export default function ManageWillsUnderReviewPage() {
 
 			setWills(Array.isArray(data) ? data : []);
 		} catch (error) {
-			console.error("Error fetching Wills under review:", error);
-			toast.error("Failed to load Wills under review");
+			console.error("Error fetching wills under review:", error);
+			toast.error("Failed to load wills under review");
 		} finally {
 			setIsLoading(false);
 		}
@@ -123,61 +126,74 @@ export default function ManageWillsUnderReviewPage() {
 
 	const handleDownloadWill = async (will: WillUnderReview) => {
 		try {
-			if (will.document?.document?.url) {
-				// Download from existing URL
-				const response = await fetch(will.document.document.url);
-				if (response.ok) {
-					const blob = await response.blob();
-					const url = window.URL.createObjectURL(blob);
-					const a = document.createElement("a");
-					a.href = url;
-					a.download =
-						will.document.document.name ||
-						`will-${will.owner.first_name}-${will.owner.last_name}.pdf`;
-					document.body.appendChild(a);
-					a.click();
-					window.URL.revokeObjectURL(url);
-					document.body.removeChild(a);
-					toast.success("Will downloaded successfully");
-				} else {
-					throw new Error("Failed to download will");
-				}
-			} else {
-				// Generate and download will
-				const { data, error } = await apiClient(
-					`/admin/wills/${will.id}/generate-pdf`,
-					{
-						method: "POST",
-					}
-				);
+			// Transform the admin will data to the format expected by smartDownloadWill
+			const willData: WillData = {
+				id: will.id,
+				status: will.status,
+				createdAt: will.created_at,
+				lastUpdatedAt: will.updated_at,
+				userId: will.user.id,
+				paymentStatus: will.payment_status,
+				paymentDate: will.payment_date,
+				owner: {
+					id: will.owner.id,
+					firstName: will.owner.first_name,
+					lastName: will.owner.last_name,
+					maritalStatus: "Not specified",
+					address: will.owner.address,
+					city: will.owner.city,
+					state: will.owner.state,
+					postCode: will.owner.post_code,
+					country: will.owner.country,
+				},
+				document: will.document
+					? {
+							willId: will.document.willId,
+							userId: will.document.userId,
+							document: {
+								url: will.document.document.url,
+								meta: {},
+								mime: will.document.document.type,
+								name: will.document.document.name,
+								path: "",
+								size: will.document.document.size,
+								type: will.document.document.type,
+								access: {},
+							},
+					  }
+					: undefined,
+				assets: [],
+				gifts: [],
+				beneficiaries: [],
+				executors: [],
+				witnesses: [],
+				progress: {
+					id: will.id,
+					createdAt: will.created_at,
+					willId: will.id,
+					userId: will.user.id,
+					completedSteps: {
+						name: true,
+						address: true,
+						hasSpouse: true,
+						hasChildren: true,
+						guardians: true,
+						pets: true,
+						hasAssets: true,
+						gifts: true,
+						digitalAssets: true,
+						residuary: true,
+						executors: true,
+						witnesses: true,
+						funeralInstructions: true,
+						review: true,
+					},
+					currentStep: "review",
+					updatedAt: will.updated_at,
+				},
+			};
 
-				if (error) {
-					throw new Error(error);
-				}
-
-				if (
-					data &&
-					typeof data === "object" &&
-					"url" in data &&
-					typeof data.url === "string"
-				) {
-					const response = await fetch(data.url);
-					if (response.ok) {
-						const blob = await response.blob();
-						const url = window.URL.createObjectURL(blob);
-						const a = document.createElement("a");
-						a.href = url;
-						a.download = `will-${will.owner.first_name}-${will.owner.last_name}.pdf`;
-						document.body.appendChild(a);
-						a.click();
-						window.URL.revokeObjectURL(url);
-						document.body.removeChild(a);
-						toast.success("Will generated and downloaded successfully");
-					} else {
-						throw new Error("Failed to download generated will");
-					}
-				}
-			}
+			await smartDownloadWill(willData);
 		} catch (error) {
 			console.error("Error downloading will:", error);
 			toast.error("Failed to download will");
@@ -323,7 +339,7 @@ export default function ManageWillsUnderReviewPage() {
 					<div className="flex items-center justify-center py-8">
 						<div className="h-8 w-8 animate-spin rounded-full border-t-2 border-b-2 border-primary"></div>
 						<p className="text-muted-foreground ml-2">
-							Loading Wills under review...
+							Loading wills under review...
 						</p>
 					</div>
 				</Card>
@@ -333,7 +349,7 @@ export default function ManageWillsUnderReviewPage() {
 						<FileText className="w-8 h-8 text-gray-400" />
 					</div>
 					<h3 className="text-lg font-semibold text-gray-900 mb-2">
-						{wills.length === 0 ? "No Wills under review" : "No Wills found"}
+						{wills.length === 0 ? "No wills under review" : "No wills found"}
 					</h3>
 					<p className="text-gray-600">
 						{wills.length === 0
@@ -344,7 +360,7 @@ export default function ManageWillsUnderReviewPage() {
 			) : (
 				<div className="space-y-4">
 					<div className="text-sm text-muted-foreground">
-						Showing {filteredAndSortedWills.length} of {wills.length} Wills
+						Showing {filteredAndSortedWills.length} of {wills.length} wills
 						under review
 					</div>
 					<div className="grid gap-4">

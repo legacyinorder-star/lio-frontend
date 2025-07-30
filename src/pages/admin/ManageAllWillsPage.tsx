@@ -21,6 +21,8 @@ import {
 import { toast } from "sonner";
 import { apiClient } from "@/utils/apiClient";
 import { useAuth } from "@/hooks/useAuth";
+import { smartDownloadWill } from "@/utils/willSmartDownload";
+import { type WillData } from "@/context/WillContext";
 import {
 	Search,
 	FileText,
@@ -52,6 +54,12 @@ interface Will {
 		post_code: string;
 		country: string;
 	};
+	user: {
+		id: string;
+		first_name: string;
+		last_name: string;
+		email: string;
+	};
 	document?: {
 		willId: string;
 		userId: string;
@@ -61,12 +69,6 @@ interface Will {
 			size: number;
 			type: string;
 		};
-	};
-	user: {
-		id: string;
-		first_name: string;
-		last_name: string;
-		email: string;
 	};
 }
 
@@ -106,61 +108,74 @@ export default function ManageAllWillsPage() {
 
 	const handleDownloadWill = async (will: Will) => {
 		try {
-			if (will.document?.document?.url) {
-				// Download from existing URL
-				const response = await fetch(will.document.document.url);
-				if (response.ok) {
-					const blob = await response.blob();
-					const url = window.URL.createObjectURL(blob);
-					const a = document.createElement("a");
-					a.href = url;
-					a.download =
-						will.document.document.name ||
-						`will-${will.owner.first_name}-${will.owner.last_name}.pdf`;
-					document.body.appendChild(a);
-					a.click();
-					window.URL.revokeObjectURL(url);
-					document.body.removeChild(a);
-					toast.success("Will downloaded successfully");
-				} else {
-					throw new Error("Failed to download will");
-				}
-			} else {
-				// Generate and download will
-				const { data, error } = await apiClient(
-					`/admin/wills/${will.id}/generate-pdf`,
-					{
-						method: "POST",
-					}
-				);
+			// Transform the admin will data to the format expected by smartDownloadWill
+			const willData: WillData = {
+				id: will.id,
+				status: will.status,
+				createdAt: will.created_at,
+				lastUpdatedAt: will.updated_at,
+				userId: will.user.id,
+				paymentStatus: will.payment_status,
+				paymentDate: will.payment_date,
+				owner: {
+					id: will.owner.id,
+					firstName: will.owner.first_name,
+					lastName: will.owner.last_name,
+					maritalStatus: "Not specified",
+					address: will.owner.address,
+					city: will.owner.city,
+					state: will.owner.state,
+					postCode: will.owner.post_code,
+					country: will.owner.country,
+				},
+				document: will.document
+					? {
+							willId: will.document.willId,
+							userId: will.document.userId,
+							document: {
+								url: will.document.document.url,
+								meta: {},
+								mime: will.document.document.type,
+								name: will.document.document.name,
+								path: "",
+								size: will.document.document.size,
+								type: will.document.document.type,
+								access: {},
+							},
+					  }
+					: undefined,
+				assets: [],
+				gifts: [],
+				beneficiaries: [],
+				executors: [],
+				witnesses: [],
+				progress: {
+					id: will.id,
+					createdAt: will.created_at,
+					willId: will.id,
+					userId: will.user.id,
+					completedSteps: {
+						name: true,
+						address: true,
+						hasSpouse: true,
+						hasChildren: true,
+						guardians: true,
+						pets: true,
+						hasAssets: true,
+						gifts: true,
+						digitalAssets: true,
+						residuary: true,
+						executors: true,
+						witnesses: true,
+						funeralInstructions: true,
+						review: true,
+					},
+					currentStep: "review",
+					updatedAt: will.updated_at,
+				},
+			};
 
-				if (error) {
-					throw new Error(error);
-				}
-
-				if (
-					data &&
-					typeof data === "object" &&
-					"url" in data &&
-					typeof data.url === "string"
-				) {
-					const response = await fetch(data.url);
-					if (response.ok) {
-						const blob = await response.blob();
-						const url = window.URL.createObjectURL(blob);
-						const a = document.createElement("a");
-						a.href = url;
-						a.download = `will-${will.owner.first_name}-${will.owner.last_name}.pdf`;
-						document.body.appendChild(a);
-						a.click();
-						window.URL.revokeObjectURL(url);
-						document.body.removeChild(a);
-						toast.success("Will generated and downloaded successfully");
-					} else {
-						throw new Error("Failed to download generated will");
-					}
-				}
-			}
+			await smartDownloadWill(willData);
 		} catch (error) {
 			console.error("Error downloading will:", error);
 			toast.error("Failed to download will");
@@ -234,12 +249,6 @@ export default function ManageAllWillsPage() {
 						Manage and view all wills in the system
 					</p>
 				</div>
-				<Button
-					onClick={() => navigate("/app/admin/dashboard")}
-					variant="outline"
-				>
-					Back to Admin Dashboard
-				</Button>
 			</div>
 
 			{/* Search and Filters */}
