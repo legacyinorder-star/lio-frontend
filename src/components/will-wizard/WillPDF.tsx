@@ -1,22 +1,6 @@
 import React from "react";
 import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 
-// Helper function to format date
-const formatDate = (date: Date): string => {
-	const day = date.getDate();
-	const month = date.toLocaleString("en-US", { month: "long" }).toUpperCase();
-	const year = date.getFullYear();
-
-	// Add ordinal suffix to day
-	const getOrdinalSuffix = (n: number): string => {
-		const s = ["th", "st", "nd", "rd"];
-		const v = n % 100;
-		return n + (s[(v - 20) % 10] || s[v] || s[0]);
-	};
-
-	return `${getOrdinalSuffix(day)} ${month} ${year}`;
-};
-
 // Create styles
 const styles = StyleSheet.create({
 	page: {
@@ -574,8 +558,6 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 						<Text style={styles.testatorName}>
 							{data.personal.fullName.toUpperCase()}
 						</Text>
-						<Text style={styles.datedText}>DATED</Text>
-						<Text style={styles.datedText}>{formatDate(new Date())}</Text>
 					</View>
 				</View>
 

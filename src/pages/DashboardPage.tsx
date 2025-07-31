@@ -415,7 +415,7 @@ export default function DashboardPage() {
 												? "bg-yellow-50 text-yellow-700 ring-yellow-600/20"
 												: will.status === "completed"
 												? "bg-green-50 text-green-700 ring-green-600/20"
-												: will.status === "under-review"
+												: will.status === "under review"
 												? "bg-blue-50 text-blue-700 ring-blue-600/20"
 												: "bg-gray-50 text-gray-700 ring-gray-600/20"
 										}`}
@@ -452,7 +452,7 @@ export default function DashboardPage() {
 
 								<div className="flex gap-2 mt-auto">
 									{will.status !== "completed" &&
-										will.status !== "under-review" && (
+										will.status !== "under review" && (
 											<Button
 												variant="outline"
 												size="sm"
@@ -475,7 +475,7 @@ export default function DashboardPage() {
 											Pay
 										</Button>
 									)}
-									{will.status === "under-review" && (
+									{will.status === "under review" && (
 										<div className="flex-1 text-center">
 											<p className="text-sm text-blue-600 font-medium">
 												Under Review

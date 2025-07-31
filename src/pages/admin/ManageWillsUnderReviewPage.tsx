@@ -41,7 +41,7 @@ import { formatDate } from "@/utils/format";
 
 interface WillUnderReview {
 	id: string;
-	status: "under-review";
+	status: "under review";
 	created_at: string;
 	updated_at: string;
 	payment_status: "succeeded";
@@ -82,6 +82,12 @@ interface RejectDialogData {
 	reason: string;
 }
 
+interface ApproveDialogData {
+	isOpen: boolean;
+	willId: string | null;
+	willOwnerName: string | null;
+}
+
 export default function ManageWillsUnderReviewPage() {
 	const navigate = useNavigate();
 	const { user } = useAuth();
@@ -93,6 +99,11 @@ export default function ManageWillsUnderReviewPage() {
 		willId: null,
 		willOwnerName: null,
 		reason: "",
+	});
+	const [approveDialog, setApproveDialog] = useState<ApproveDialogData>({
+		isOpen: false,
+		willId: null,
+		willOwnerName: null,
 	});
 	const [isProcessing, setIsProcessing] = useState(false);
 
@@ -200,18 +211,27 @@ export default function ManageWillsUnderReviewPage() {
 		}
 	};
 
-	const handleApproveWill = async (willId: string) => {
+	const handleApproveWill = async () => {
+		if (!approveDialog.willId) {
+			toast.error("No will selected for approval");
+			return;
+		}
+
 		try {
 			setIsProcessing(true);
-			const { error } = await apiClient(`/admin/wills/${willId}/approve`, {
-				method: "POST",
-			});
+			const { error } = await apiClient(
+				`/admin/wills/${approveDialog.willId}/approve`,
+				{
+					method: "POST",
+				}
+			);
 
 			if (error) {
 				throw new Error(error);
 			}
 
 			toast.success("Will approved successfully");
+			closeApproveDialog();
 			fetchWillsUnderReview(); // Refresh the list
 		} catch (error) {
 			console.error("Error approving will:", error);
@@ -219,6 +239,22 @@ export default function ManageWillsUnderReviewPage() {
 		} finally {
 			setIsProcessing(false);
 		}
+	};
+
+	const openApproveDialog = (will: WillUnderReview) => {
+		setApproveDialog({
+			isOpen: true,
+			willId: will.id,
+			willOwnerName: `${will.owner.first_name} ${will.owner.last_name}`,
+		});
+	};
+
+	const closeApproveDialog = () => {
+		setApproveDialog({
+			isOpen: false,
+			willId: null,
+			willOwnerName: null,
+		});
 	};
 
 	const handleRejectWill = async () => {
@@ -417,9 +453,9 @@ export default function ManageWillsUnderReviewPage() {
 											</DropdownMenuTrigger>
 											<DropdownMenuContent align="end">
 												<DropdownMenuItem
-													onClick={() => handleApproveWill(will.id)}
+													onClick={() => openApproveDialog(will)}
 													disabled={isProcessing}
-													className="text-green-600"
+													className="text-green-600 cursor-pointer"
 												>
 													<CheckCircle className="h-4 w-4 mr-2" />
 													Approve Will
@@ -428,7 +464,7 @@ export default function ManageWillsUnderReviewPage() {
 												<DropdownMenuItem
 													onClick={() => openRejectDialog(will)}
 													disabled={isProcessing}
-													className="text-red-600"
+													className="text-red-600 cursor-pointer"
 												>
 													<XCircle className="h-4 w-4 mr-2" />
 													Reject Will
@@ -445,7 +481,16 @@ export default function ManageWillsUnderReviewPage() {
 
 			{/* Reject Dialog */}
 			<Dialog open={rejectDialog.isOpen} onOpenChange={closeRejectDialog}>
-				<DialogContent>
+				<DialogContent
+					onOpenAutoFocus={(e) => {
+						// Prevent default focus behavior to avoid conflicts
+						e.preventDefault();
+					}}
+					onCloseAutoFocus={(e) => {
+						// Prevent default focus behavior to avoid conflicts
+						e.preventDefault();
+					}}
+				>
 					<DialogHeader>
 						<DialogTitle>Reject Will</DialogTitle>
 						<DialogDescription>
@@ -478,6 +523,44 @@ export default function ManageWillsUnderReviewPage() {
 							className="bg-red-600 hover:bg-red-700"
 						>
 							{isProcessing ? "Rejecting..." : "Reject Will"}
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
+
+			{/* Approve Dialog */}
+			<Dialog open={approveDialog.isOpen} onOpenChange={closeApproveDialog}>
+				<DialogContent
+					onOpenAutoFocus={(e) => {
+						// Prevent default focus behavior to avoid conflicts
+						e.preventDefault();
+					}}
+					onCloseAutoFocus={(e) => {
+						// Prevent default focus behavior to avoid conflicts
+						e.preventDefault();
+					}}
+				>
+					<DialogHeader>
+						<DialogTitle>Approve Will</DialogTitle>
+						<DialogDescription>
+							Are you sure you want to approve the will for{" "}
+							<span className="font-medium">{approveDialog.willOwnerName}</span>
+							? <br />
+							This action will mark the will as completed and make it available
+							for download by the user.
+						</DialogDescription>
+					</DialogHeader>
+					<DialogFooter>
+						<Button variant="outline" onClick={closeApproveDialog}>
+							Cancel
+						</Button>
+						<Button
+							onClick={handleApproveWill}
+							disabled={isProcessing}
+							className="bg-green-600 hover:bg-green-700 text-white"
+						>
+							<CheckCircle className="h-4 w-4 mr-2" />
+							{isProcessing ? "Approving..." : "Approve Will"}
 						</Button>
 					</DialogFooter>
 				</DialogContent>

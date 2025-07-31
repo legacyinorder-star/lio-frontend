@@ -8,7 +8,6 @@ import {
 	Bell,
 	Plus,
 	Scroll,
-	Shield,
 	BookText,
 	ChevronDown,
 	User,

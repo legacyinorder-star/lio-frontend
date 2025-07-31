@@ -39,7 +39,7 @@ import { formatDate } from "@/utils/format";
 
 interface Will {
 	id: string;
-	status: "in progress" | "draft" | "under-review" | "completed" | "rejected";
+	status: "in progress" | "draft" | "under review" | "completed" | "rejected";
 	created_at: string;
 	updated_at: string;
 	payment_status: "pending" | "succeeded" | "failed";
@@ -186,7 +186,7 @@ export default function ManageAllWillsPage() {
 		switch (status) {
 			case "draft":
 				return "bg-yellow-50 text-yellow-700 ring-yellow-600/20";
-			case "under-review":
+			case "under review":
 				return "bg-blue-50 text-blue-700 ring-blue-600/20";
 			case "completed":
 				return "bg-green-50 text-green-700 ring-green-600/20";
@@ -201,7 +201,7 @@ export default function ManageAllWillsPage() {
 		switch (status) {
 			case "draft":
 				return <FileText className="h-4 w-4" />;
-			case "under-review":
+			case "under review":
 				return <Clock className="h-4 w-4" />;
 			case "completed":
 				return <CheckCircle className="h-4 w-4" />;
@@ -273,7 +273,7 @@ export default function ManageAllWillsPage() {
 						<SelectContent className="bg-white">
 							<SelectItem value="all">All Status</SelectItem>
 							<SelectItem value="draft">Draft</SelectItem>
-							<SelectItem value="under-review">Under Review</SelectItem>
+							<SelectItem value="under review">Under Review</SelectItem>
 							<SelectItem value="completed">Completed</SelectItem>
 							<SelectItem value="rejected">Rejected</SelectItem>
 						</SelectContent>
@@ -385,7 +385,7 @@ export default function ManageAllWillsPage() {
 													<FileText className="h-4 w-4 mr-2" />
 													View Details
 												</DropdownMenuItem>
-												{will.status === "under-review" && (
+												{will.status === "under review" && (
 													<>
 														<DropdownMenuSeparator />
 														<DropdownMenuItem
