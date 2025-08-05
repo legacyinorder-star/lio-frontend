@@ -5,6 +5,7 @@ import {
 	useEffect,
 	ReactNode,
 	useCallback,
+	useRef,
 } from "react";
 import {
 	getUserDetails,
@@ -63,6 +64,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 	// const inactivityWarningRef = useRef<number | null>(null);
 	// const inactivityTimeoutRef = useRef<number | null>(null);
 
+	// Cross-tab logout synchronization
+	const logoutChannelRef = useRef<BroadcastChannel | null>(null);
+	const storageEventListenerRef = useRef<((e: StorageEvent) => void) | null>(
+		null
+	);
+
 	// Centralized logout function
 	const logout = useCallback(() => {
 		setUser(null);
@@ -73,8 +80,70 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		localStorage.removeItem("returnUrl");
 		localStorage.removeItem("authMetrics");
 		sessionStorage.clear();
+
+		// Broadcast logout to other tabs using BroadcastChannel API
+		if (logoutChannelRef.current) {
+			logoutChannelRef.current.postMessage({
+				type: "LOGOUT",
+				timestamp: Date.now(),
+			});
+		}
+
+		// Fallback: Use localStorage event for older browsers
+		localStorage.setItem("logout-event", Date.now().toString());
+		localStorage.removeItem("logout-event");
+
 		// Other context states will be cleared by their own hooks when user becomes null
 	}, []);
+
+	// Handle logout events from other tabs
+	const handleLogoutEvent = useCallback(() => {
+		console.log("Logout event received from another tab");
+		setUser(null);
+		removeAuthData();
+		localStorage.removeItem("returnUrl");
+		localStorage.removeItem("authMetrics");
+		sessionStorage.clear();
+
+		// Show notification to user
+		toast.info("You have been logged out in another tab");
+	}, []);
+
+	// Test function for cross-tab logout (for development/testing)
+	const testCrossTabLogout = useCallback(() => {
+		console.log("Testing cross-tab logout...");
+
+		// Broadcast logout to other tabs using BroadcastChannel API
+		if (logoutChannelRef.current) {
+			logoutChannelRef.current.postMessage({
+				type: "LOGOUT",
+				timestamp: Date.now(),
+			});
+			console.log("BroadcastChannel logout message sent");
+		}
+
+		// Fallback: Use localStorage event for older browsers
+		localStorage.setItem("logout-event", Date.now().toString());
+		localStorage.removeItem("logout-event");
+		console.log("localStorage logout event triggered");
+
+		toast.success("Cross-tab logout test completed");
+	}, []);
+
+	// Expose test function to window for console testing
+	useEffect(() => {
+		if (typeof window !== "undefined") {
+			// Extend window object for testing purposes
+			Object.defineProperty(window, "testCrossTabLogout", {
+				value: testCrossTabLogout,
+				writable: false,
+				configurable: true,
+			});
+			console.log(
+				"Cross-tab logout test function available: window.testCrossTabLogout()"
+			);
+		}
+	}, [testCrossTabLogout]);
 
 	// Function to check token expiration
 	const checkTokenExpiration = useCallback(() => {
@@ -210,6 +279,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 	// Initialize auth state on mount
 	useEffect(() => {
 		const initializeAuth = () => {
+			// Check for recent logout events from other tabs
+			const lastLogoutEvent = localStorage.getItem("logout-event");
+			const logoutThreshold = 5000; // 5 seconds
+
+			if (lastLogoutEvent) {
+				const logoutTime = parseInt(lastLogoutEvent, 10);
+				const timeSinceLogout = Date.now() - logoutTime;
+
+				if (timeSinceLogout < logoutThreshold) {
+					console.log("Recent logout event detected, clearing auth state");
+					removeAuthData();
+					localStorage.removeItem("returnUrl");
+					localStorage.removeItem("authMetrics");
+					sessionStorage.clear();
+					setIsLoading(false);
+					return;
+				}
+			}
+
 			const userDetails = getUserDetails();
 			const token = getAuthToken();
 
@@ -285,6 +373,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 			};
 		}
 	}, [user, checkTokenExpiration, refreshSession]);
+
+	// Set up cross-tab logout synchronization
+	useEffect(() => {
+		// Initialize BroadcastChannel for modern browsers
+		if (typeof BroadcastChannel !== "undefined") {
+			logoutChannelRef.current = new BroadcastChannel("auth-logout");
+			logoutChannelRef.current.onmessage = (event) => {
+				if (event.data.type === "LOGOUT") {
+					handleLogoutEvent();
+				}
+			};
+		}
+
+		// Fallback: Listen for localStorage changes (older browsers)
+		const handleStorageChange = (e: StorageEvent) => {
+			if (e.key === "logout-event" && e.newValue) {
+				handleLogoutEvent();
+			}
+		};
+
+		storageEventListenerRef.current = handleStorageChange;
+		window.addEventListener("storage", handleStorageChange);
+
+		// Cleanup function
+		return () => {
+			if (logoutChannelRef.current) {
+				logoutChannelRef.current.close();
+				logoutChannelRef.current = null;
+			}
+			if (storageEventListenerRef.current) {
+				window.removeEventListener("storage", storageEventListenerRef.current);
+				storageEventListenerRef.current = null;
+			}
+		};
+	}, [handleLogoutEvent]);
 
 	// Save user to localStorage whenever it changes (but only if user exists)
 	useEffect(() => {
