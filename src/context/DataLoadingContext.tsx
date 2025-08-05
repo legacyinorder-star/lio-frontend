@@ -8,6 +8,7 @@ import React, {
 } from "react";
 import { useWill } from "@/context/WillContext";
 import { useRelationships } from "@/hooks/useRelationships";
+import { useAuth } from "@/hooks/useAuth";
 
 interface LoadingStates {
 	relationships: boolean;
@@ -59,6 +60,7 @@ export const DataLoadingProvider: React.FC<{ children: React.ReactNode }> = ({
 	const { activeWill } = useWill();
 	const { isLoading: isLoadingRelationships, relationships } =
 		useRelationships();
+	const { user } = useAuth();
 
 	// Update relationships loading state based on the relationships hook
 	useEffect(() => {
@@ -110,6 +112,13 @@ export const DataLoadingProvider: React.FC<{ children: React.ReactNode }> = ({
 			resetLoadingStates();
 		}
 	}, [activeWill?.id, resetLoadingStates]);
+
+	// Reset all loading states when user logs out
+	useEffect(() => {
+		if (!user) {
+			resetLoadingStates();
+		}
+	}, [user]);
 
 	// Debug logging (memoized to prevent excessive logging)
 	const debugInfo = useMemo(

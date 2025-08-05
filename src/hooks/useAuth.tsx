@@ -69,19 +69,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		// setLastActivity(null);
 		removeAuthData();
 
-		// Clear all timers
-		// if (sessionCheckIntervalRef.current) {
-		// 	clearInterval(sessionCheckIntervalRef.current);
-		// 	sessionCheckIntervalRef.current = null;
-		// }
-		// if (inactivityWarningRef.current) {
-		// 	clearTimeout(inactivityWarningRef.current);
-		// 	inactivityWarningRef.current = null;
-		// }
-		// if (inactivityTimeoutRef.current) {
-		// 	clearTimeout(inactivityTimeoutRef.current);
-		// 	inactivityTimeoutRef.current = null;
-		// }
+		// Clear all localStorage/sessionStorage items that might persist
+		localStorage.removeItem("returnUrl");
+		localStorage.removeItem("authMetrics");
+		sessionStorage.clear();
+		// Other context states will be cleared by their own hooks when user becomes null
 	}, []);
 
 	// Function to check token expiration

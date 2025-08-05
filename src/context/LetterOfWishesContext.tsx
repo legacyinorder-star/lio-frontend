@@ -1,5 +1,12 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+import {
+	createContext,
+	useContext,
+	useState,
+	ReactNode,
+	useEffect,
+} from "react";
 import { WillData } from "./WillContext";
+import { useAuth } from "@/hooks/useAuth";
 
 export interface LetterOfWishesData {
 	id?: string;
@@ -48,11 +55,19 @@ export function LetterOfWishesProvider({ children }: { children: ReactNode }) {
 	const [letterData, setLetterData] = useState<LetterOfWishesData | null>(null);
 	const [currentStep, setCurrentStep] = useState<string>("introduction");
 	const [isLoading, setIsLoading] = useState<boolean>(false);
+	const { user } = useAuth();
 
 	const clearLetterData = () => {
 		setLetterData(null);
 		setCurrentStep("introduction");
 	};
+
+	useEffect(() => {
+		if (!user) {
+			clearLetterData();
+			setWillData(null);
+		}
+	}, [user]);
 
 	const initializeLetterForWill = (willId: string) => {
 		setLetterData({

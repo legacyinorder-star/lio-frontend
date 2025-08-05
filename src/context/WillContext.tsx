@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 
 // Add import for QuestionType
 import { QuestionType } from "@/components/will-wizard/types/will.types";
+import { useAuth } from "@/hooks/useAuth";
 
 // Use the Will interface from DashboardPage for type safety
 export interface Address {
@@ -193,6 +194,14 @@ export const WillProvider: React.FC<{ children: React.ReactNode }> = ({
 	children,
 }) => {
 	const [activeWill, setActiveWill] = useState<WillData | null>(null);
+	const { user } = useAuth();
+
+	useEffect(() => {
+		if (!user) {
+			setActiveWill(null);
+		}
+	}, [user]);
+
 	return (
 		<WillContext.Provider value={{ activeWill, setActiveWill }}>
 			{children}
