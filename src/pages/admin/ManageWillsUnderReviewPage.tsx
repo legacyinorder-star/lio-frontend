@@ -520,8 +520,9 @@ export default function ManageWillsUnderReviewPage() {
 						<Button
 							onClick={handleRejectWill}
 							disabled={!rejectDialog.reason.trim() || isProcessing}
-							className="bg-red-600 hover:bg-red-700"
+							className="bg-red-600 hover:bg-red-700 text-white"
 						>
+							<XCircle className="h-4 w-4 mr-2" />
 							{isProcessing ? "Rejecting..." : "Reject Will"}
 						</Button>
 					</DialogFooter>

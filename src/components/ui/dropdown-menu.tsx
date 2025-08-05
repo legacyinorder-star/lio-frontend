@@ -65,6 +65,7 @@ interface DropdownMenuShortcutProps
 }
 
 const DropdownMenu = DropdownMenuPrimitive.Root;
+DropdownMenu.displayName = DropdownMenuPrimitive.Root.displayName;
 const DropdownMenuTrigger = DropdownMenuPrimitive.Trigger;
 const DropdownMenuGroup = DropdownMenuPrimitive.Group;
 const DropdownMenuPortal = DropdownMenuPrimitive.Portal;
