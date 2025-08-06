@@ -463,7 +463,7 @@ export default function DashboardPage() {
 												Continue
 											</Button>
 										)}
-									{will.status === "draft" && (
+									{will.status === "draft" && will.paymentStatus !== "paid" && (
 										<Button
 											variant="outline"
 											size="sm"

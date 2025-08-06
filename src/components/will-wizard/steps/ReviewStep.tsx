@@ -7,6 +7,7 @@ import { apiClient } from "@/utils/apiClient";
 import { getFormattedRelationshipNameById } from "@/utils/relationships";
 import { useNavigate } from "react-router-dom";
 import { useWill } from "@/context/WillContext";
+import { Loader2, CheckCircle } from "lucide-react";
 
 // Create a type for the review data
 type ReviewData = {
@@ -752,9 +753,11 @@ const transformWillDataToReviewFormat = (
 
 const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 	({ onBack }, ref) => {
-		const [isLoading, setIsLoading] = useState(true);
 		const [reviewData, setReviewData] = useState<ReviewData | null>(null);
 		const [willId, setWillId] = useState<string | null>(null);
+		const [isLoading, setIsLoading] = useState(true);
+		const [paymentStatus, setPaymentStatus] = useState<string>("pending");
+		const [isSubmitting, setIsSubmitting] = useState(false);
 		const navigate = useNavigate();
 		const { activeWill } = useWill();
 
@@ -790,6 +793,7 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 				if (willData) {
 					// Store the will ID for payment flow
 					setWillId(willData.id);
+					setPaymentStatus(willData.payment_status);
 
 					console.log("Will data structure check:");
 					console.log("- owner:", willData.owner);
@@ -804,6 +808,7 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 					console.log("- witnesses:", willData.witnesses);
 					console.log("- residuary:", willData.residuary);
 					console.log("- funeral_instructions:", willData.funeral_instructions);
+					console.log("- payment_status:", willData.payment_status);
 
 					// Debug executors specifically
 					console.log("=== EXECUTORS DEBUG ===");
@@ -886,6 +891,37 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 			// Navigate directly to Stripe Checkout with the will ID (same as Dashboard)
 			const paymentUrl = `/app/payment/checkout?willId=${willId}&description=Will Creation Service`;
 			navigate(paymentUrl);
+		};
+
+		// Handle will submission
+		const handleSubmitWill = async () => {
+			if (!willId) {
+				toast.error("No will ID found. Cannot submit.");
+				return;
+			}
+
+			setIsSubmitting(true);
+			try {
+				const { error } = await apiClient(`/wills/${willId}/submit`, {
+					method: "POST",
+				});
+
+				if (error) {
+					console.error("Error submitting will:", error);
+					toast.error("Failed to submit will.");
+					return;
+				}
+
+				toast.success("Will submitted successfully!");
+				// Optionally, navigate to a confirmation page or update UI
+				// For now, we'll just reload the page to show the updated status
+				window.location.reload();
+			} catch (error) {
+				console.error("Error submitting will:", error);
+				toast.error("Failed to submit will.");
+			} finally {
+				setIsSubmitting(false);
+			}
 		};
 
 		useEffect(() => {
@@ -1613,11 +1649,14 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 				{/* Header Section */}
 				<div className="text-left space-y-4">
 					<div className="text-3xl font-bold text-gray-900">
-						Review Your Will
+						{paymentStatus === "paid"
+							? "Review & Submit Your Will"
+							: "Review Your Will"}
 					</div>
 					<div className="text-lg text-gray-600 mx-auto">
-						Please carefully review all the information below before proceeding
-						to payment.
+						{paymentStatus === "paid"
+							? "Please carefully review all the information below before submitting your will for review."
+							: "Please carefully review all the information below before proceeding to payment."}
 					</div>
 					<div className="text-lg text-gray-600 mx-auto">
 						This document will be legally binding once completed.
@@ -1639,13 +1678,34 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 					>
 						<ArrowLeft className="mr-2 h-4 w-4" /> Back
 					</Button>
-					<Button
-						type="button"
-						className="cursor-pointer bg-primary hover:bg-primary/90 text-white px-8 py-3 font-medium"
-						onClick={handleProceedToPayment}
-					>
-						<CreditCard className="mr-2 h-4 w-4" /> Proceed to Payment
-					</Button>
+					{paymentStatus === "paid" ? (
+						<Button
+							type="button"
+							className="cursor-pointer bg-primary hover:bg-primary/90 text-white px-8 py-3 font-medium"
+							onClick={handleSubmitWill}
+							disabled={isSubmitting}
+						>
+							{isSubmitting ? (
+								<>
+									<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+									Submitting...
+								</>
+							) : (
+								<>
+									<CheckCircle className="mr-2 h-4 w-4" />
+									Submit Will
+								</>
+							)}
+						</Button>
+					) : (
+						<Button
+							type="button"
+							className="cursor-pointer bg-primary hover:bg-primary/90 text-white px-8 py-3 font-medium"
+							onClick={handleProceedToPayment}
+						>
+							<CreditCard className="mr-2 h-4 w-4" /> Proceed to Payment
+						</Button>
+					)}
 				</div>
 			</div>
 		);

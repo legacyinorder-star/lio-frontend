@@ -399,18 +399,21 @@ export default function DocumentsPage() {
 														Continue
 													</Button>
 												)}
-											{document.status === "draft" && (
-												<Button
-													variant="outline"
-													size="sm"
-													onClick={() => handlePaymentForDocument(document.id)}
-													className="flex-1 hover:bg-green-50 text-green-600"
-													disabled={isProcessingPayment}
-												>
-													<CreditCard className="h-4 w-4 mr-2" />
-													Pay
-												</Button>
-											)}
+											{document.status === "draft" &&
+												document.paymentStatus !== "paid" && (
+													<Button
+														variant="outline"
+														size="sm"
+														onClick={() =>
+															handlePaymentForDocument(document.id)
+														}
+														className="flex-1 hover:bg-green-50 text-green-600"
+														disabled={isProcessingPayment}
+													>
+														<CreditCard className="h-4 w-4 mr-2" />
+														Pay
+													</Button>
+												)}
 											{document.status === "under review" && (
 												<div className="flex-1 text-center">
 													<p className="text-sm text-blue-600 font-medium">
