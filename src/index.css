@@ -189,6 +189,40 @@
     font-size: 2rem;
     color: #333333;
   }
+  
+  /* DM Sans font for dashboard and admin layouts */
+  [style*="fontFamily: 'DM Sans, sans-serif'"] *,
+  [style*="fontFamily: 'DM Sans, sans-serif'"],
+  [style*="fontFamily: \"DM Sans, sans-serif\""] *,
+  [style*="fontFamily: \"DM Sans, sans-serif\""] {
+    font-family: 'DM Sans', sans-serif !important;
+  }
+  
+  /* Additional selector for any element with DM Sans font family */
+  [style*="fontFamily: DM Sans"] *,
+  [style*="fontFamily: DM Sans"] {
+    font-family: 'DM Sans', sans-serif !important;
+  }
+  
+  /* Class-based approach for DM Sans layouts */
+  .dm-sans-layout,
+  .dm-sans-layout *,
+  .dm-sans-layout h1,
+  .dm-sans-layout h2,
+  .dm-sans-layout h3,
+  .dm-sans-layout h4,
+  .dm-sans-layout h5,
+  .dm-sans-layout h6,
+  .dm-sans-layout p,
+  .dm-sans-layout span,
+  .dm-sans-layout div,
+  .dm-sans-layout button,
+  .dm-sans-layout input,
+  .dm-sans-layout label,
+  .dm-sans-layout a {
+    font-family: 'DM Sans', sans-serif !important;
+  }
+  
   /* Global placeholder color */
   ::placeholder {
     color: #808080 !important;

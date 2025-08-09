@@ -129,7 +129,10 @@ export function AdminLayout() {
 	const fullName = `${userFirstName} ${userLastName}`.trim();
 
 	return (
-		<div className="flex h-screen bg-background">
+		<div
+			className="flex h-screen bg-background dm-sans-layout"
+			style={{ fontFamily: "DM Sans, sans-serif" }}
+		>
 			{/* Sidebar */}
 			<aside className="w-64 border-r bg-[#083402] pt-8">
 				<div className="flex h-16 items-center justify-center px-6">

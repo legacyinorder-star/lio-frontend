@@ -15,6 +15,7 @@ module.exports = {
 				sans: ["TMT Limkin", "sans-serif"],
 				serif: ["TMT Limkin", "serif"],
 				mono: ["TMT Limkin", "monospace"],
+				"dm-sans": ["DM Sans", "sans-serif"],
 			},
 			colors: {
 				border: "hsl(var(--border))",
