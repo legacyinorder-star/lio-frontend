@@ -191,10 +191,18 @@ export function mapWillDataFromAPI(apiData: unknown): WillData {
 				(guardian: Record<string, unknown>) => ({
 					id: guardian.id as string,
 					firstName:
+						((guardian.person as Record<string, unknown>)
+							?.firstName as string) ||
+						((guardian.person as Record<string, unknown>)
+							?.first_name as string) ||
 						(guardian.firstName as string) ||
 						(guardian.first_name as string) ||
 						"",
 					lastName:
+						((guardian.person as Record<string, unknown>)
+							?.lastName as string) ||
+						((guardian.person as Record<string, unknown>)
+							?.last_name as string) ||
 						(guardian.lastName as string) ||
 						(guardian.last_name as string) ||
 						"",
