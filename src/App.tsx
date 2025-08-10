@@ -137,6 +137,14 @@ function App() {
 												path="letter-of-wishes"
 												element={<LetterOfWishesPage />}
 											/>
+											<Route
+												path="letter-of-wishes/introduction"
+												element={<LetterOfWishesPage />}
+											/>
+											<Route
+												path="letter-of-wishes/:step"
+												element={<LetterOfWishesPage />}
+											/>
 											<Route path="manage-profile" element={<ProfilePage />} />
 											<Route path="vault" element={<VaultPage />} />
 											<Route
