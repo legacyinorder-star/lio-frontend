@@ -20,6 +20,43 @@ export interface LetterOfWishesData {
 	}[];
 	guidanceNotes?: string;
 	specialInstructions?: string;
+	funeralPreferences?: {
+		burialLocation?: string;
+		serviceType?: "religious" | "non-religious" | "private" | "public";
+		additionalPreferences?: string;
+	};
+	guardianshipPreferences?: {
+		reasonForChoice?: string;
+		valuesAndHopes?: string;
+	};
+	digitalAssetsPreferences?: {
+		digitalAssets?: Array<{
+			platform: string;
+			usernameOrEmail: string;
+			action: "delete" | "memorialize" | "transfer" | "archive";
+			beneficiaryId?: string;
+			beneficiaryName?: string;
+			notes?: string;
+		}>;
+	};
+	personalPossessions?: Array<{
+		item: string;
+		recipient: string;
+		reason?: string;
+	}>;
+	businessLegacy?: {
+		notificationContacts?: Array<{
+			name: string;
+			email: string;
+		}>;
+		professionalInstructions?: string;
+	};
+	charitableDonations?: Array<{
+		charityName: string;
+		description?: string;
+	}>;
+	trusteeInstructions?: string;
+	notesToLovedOnes?: string;
 	createdAt?: string;
 	updatedAt?: string;
 }
@@ -77,6 +114,26 @@ export function LetterOfWishesProvider({ children }: { children: ReactNode }) {
 			personalMessages: [],
 			guidanceNotes: "",
 			specialInstructions: "",
+			funeralPreferences: {
+				burialLocation: "",
+				serviceType: undefined,
+				additionalPreferences: "",
+			},
+			guardianshipPreferences: {
+				reasonForChoice: "",
+				valuesAndHopes: "",
+			},
+			digitalAssetsPreferences: {
+				digitalAssets: [],
+			},
+			personalPossessions: [],
+			businessLegacy: {
+				notificationContacts: [],
+				professionalInstructions: "",
+			},
+			charitableDonations: [],
+			trusteeInstructions: "",
+			notesToLovedOnes: "",
 		});
 		setCurrentStep("introduction");
 	};
