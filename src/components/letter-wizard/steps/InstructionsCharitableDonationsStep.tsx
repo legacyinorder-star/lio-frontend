@@ -229,7 +229,7 @@ const InstructionsCharitableDonationsStep =
 							{charitableDonations.map((donation, index) => (
 								<div
 									key={index}
-									className="flex items-center justify-between bg-gray-50 p-4 rounded-lg border"
+									className="bg-[#F8F8F8] border border-gray-300 rounded-[0.5rem] p-[1.5rem] relative"
 								>
 									<div className="flex-1">
 										<div className="font-medium text-[0.875rem]">
@@ -254,7 +254,7 @@ const InstructionsCharitableDonationsStep =
 												setEditingDonationIndex(index);
 												setIsCharitableDonationsModalOpen(true);
 											}}
-											className="text-blue-600 hover:text-blue-700"
+											className="absolute top-4 right-22 border-[#CCCCCC] bg-[#E5E5E4] rounded-[0.25rem] font-medium"
 										>
 											Edit
 										</Button>
@@ -262,7 +262,7 @@ const InstructionsCharitableDonationsStep =
 											variant="outline"
 											size="sm"
 											onClick={() => removeCharitableDonation(index)}
-											className="text-red-600 hover:text-red-700"
+											className="absolute top-4 right-4 border-[#CCCCCC] bg-[#E5E5E4] rounded-[0.25rem] font-medium"
 										>
 											Delete
 										</Button>
