@@ -146,6 +146,7 @@ const InstructionsCharitableDonationsStep =
 
 					const pdfResult = await downloadLetterOfWishesPDF(
 						updatedLetterData,
+						willData,
 						willOwnerName
 					);
 					console.log("📄 PDF generation result:", pdfResult);

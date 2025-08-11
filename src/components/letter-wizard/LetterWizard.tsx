@@ -2,8 +2,77 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useLetterOfWishes } from "@/context/LetterOfWishesContext";
 import { apiClient } from "@/utils/apiClient";
-import { mapWillDataFromAPI } from "@/utils/dataTransform";
+import { WillData } from "@/context/WillContext";
 import { toast } from "sonner";
+
+// CompleteWillData interface for the get-full-will API response
+interface CompleteWillData {
+	id: string;
+	created_at: string;
+	user_id: string;
+	status: string;
+	last_updated_at: string;
+	payment_status: string;
+	owner: {
+		id: string;
+		will_id: string;
+		created_at: string;
+		first_name: string;
+		last_name: string;
+		marital_status: string;
+		address: string;
+		city: string;
+		state: string;
+		post_code: string;
+		country: string;
+	};
+	spouse?: {
+		id: string;
+		user_id: string;
+		will_id: string;
+		relationship_id: string;
+		first_name: string;
+		last_name: string;
+		is_minor: boolean;
+		created_at: string;
+		is_witness: boolean;
+	};
+	children: Array<{
+		id: string;
+		user_id: string;
+		will_id: string;
+		relationship_id: string;
+		first_name: string;
+		last_name: string;
+		is_minor: boolean;
+		created_at: string;
+		is_witness: boolean;
+	}>;
+	guardians: Array<{
+		will_id: string;
+		created_at: string;
+		is_primary: boolean;
+		guardian_id: string;
+		person: {
+			id: string;
+			user_id: string;
+			will_id: string;
+			relationship_id: string;
+			first_name: string;
+			last_name: string;
+			is_minor: boolean;
+			created_at: string;
+			is_witness: boolean;
+		};
+	}>;
+	funeral_instructions?: {
+		id: string;
+		created_at: string;
+		wishes: string;
+		will_id: string;
+		user_id: string;
+	};
+}
 import { Button } from "@/components/ui/button";
 import KnowledgeBaseSidebar from "./components/KnowledgeBaseSidebar";
 import { BookOpen, X, CreditCard } from "lucide-react";
@@ -61,7 +130,15 @@ export default function LetterWizard() {
 
 	const willId = searchParams.get("willId");
 
-	// Load will data if not already loaded
+	// Clear will data when willId changes to prevent stale data
+	useEffect(() => {
+		if (willId && willData && willData.id !== willId) {
+			console.log("Will ID changed, clearing stale will data");
+			setWillData(null);
+		}
+	}, [willId, willData, setWillData]);
+
+	// Always load will data when Letter of Wishes is invoked
 	useEffect(() => {
 		const loadWillData = async () => {
 			if (!willId) {
@@ -70,45 +147,98 @@ export default function LetterWizard() {
 				return;
 			}
 
-			// Always show loading when starting to load will data
-			if (!willData) {
-				console.log("Starting to load will data for willId:", willId);
-				setContextLoading(true);
-				try {
-					const { data, error } = await apiClient(
-						`/wills/${willId}/get-full-will`
-					);
+			// Always load will data fresh to ensure we have the latest information
+			console.log("Loading will data for willId:", willId);
+			setContextLoading(true);
+			try {
+				const { data, error } = await apiClient<CompleteWillData>(
+					`/wills/${willId}/get-full-will`
+				);
 
-					if (error) {
-						console.error("Error loading will data:", error);
-						toast.error("Failed to load will data");
-						navigate("/app/dashboard");
-						return;
-					}
-
-					const will = Array.isArray(data) ? data[0] : data;
-					console.log("Will data loaded:", will);
-
-					if (will) {
-						console.log("Transforming will data using mapWillDataFromAPI...");
-						// Use the standard data transformation utility
-						const transformedWill = mapWillDataFromAPI(will);
-
-						setWillData(transformedWill);
-						console.log("Will data successfully loaded and transformed!");
-					}
-				} catch (error) {
+				if (error) {
 					console.error("Error loading will data:", error);
 					toast.error("Failed to load will data");
 					navigate("/app/dashboard");
-				} finally {
-					setContextLoading(false);
+					return;
 				}
+
+				const will = Array.isArray(data) ? data[0] : data;
+				console.log("Will data loaded:", will);
+
+				if (will) {
+					console.log("Transforming will data from CompleteWillData format...");
+					// Transform CompleteWillData to WillData format
+					const transformedWill: WillData = {
+						id: will.id,
+						lastUpdatedAt: will.last_updated_at,
+						createdAt: will.created_at,
+						status: will.status,
+						userId: will.user_id,
+						paymentStatus: will.payment_status,
+						owner: {
+							firstName: will.owner.first_name,
+							lastName: will.owner.last_name,
+							address: will.owner.address,
+							city: will.owner.city,
+							state: will.owner.state,
+							postCode: will.owner.post_code,
+							country: will.owner.country,
+							maritalStatus: will.owner.marital_status,
+						},
+						spouse: will.spouse
+							? {
+									firstName: will.spouse.first_name,
+									lastName: will.spouse.last_name,
+							  }
+							: undefined,
+						children: will.children?.map(
+							(child: CompleteWillData["children"][0]) => ({
+								id: child.id,
+								firstName: child.first_name,
+								lastName: child.last_name,
+								isMinor: child.is_minor,
+							})
+						),
+						guardians: will.guardians?.map(
+							(guardian: CompleteWillData["guardians"][0]) => ({
+								id: guardian.guardian_id,
+								firstName: guardian.person.first_name,
+								lastName: guardian.person.last_name,
+								relationship: guardian.person.relationship_id, // This might need relationship name mapping
+								isPrimary: guardian.is_primary,
+							})
+						),
+						funeralInstructions: will.funeral_instructions
+							? {
+									wishes: will.funeral_instructions.wishes,
+							  }
+							: undefined,
+						assets: [],
+						gifts: [],
+						beneficiaries: [],
+						executors: [],
+						witnesses: [],
+					};
+
+					setWillData(transformedWill);
+					console.log("Will data successfully loaded and transformed!");
+					console.log(
+						"Funeral instructions:",
+						transformedWill.funeralInstructions
+					);
+					console.log("Guardians:", transformedWill.guardians);
+				}
+			} catch (error) {
+				console.error("Error loading will data:", error);
+				toast.error("Failed to load will data");
+				navigate("/app/dashboard");
+			} finally {
+				setContextLoading(false);
 			}
 		};
 
 		loadWillData();
-	}, [willId, willData, setWillData, setContextLoading, navigate]);
+	}, [willId, setWillData, setContextLoading, navigate]);
 
 	// Separate effect to initialize letter data after will data is loaded
 	useEffect(() => {

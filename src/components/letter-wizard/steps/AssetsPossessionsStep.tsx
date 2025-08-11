@@ -508,10 +508,10 @@ export default function AssetsPossessionsStep() {
 										<SelectValue placeholder="Select action" />
 									</SelectTrigger>
 									<SelectContent>
-										<SelectItem value="delete">Delete</SelectItem>
 										<SelectItem value="memorialize">Memorialize</SelectItem>
 										<SelectItem value="transfer">Transfer</SelectItem>
 										<SelectItem value="archive">Archive</SelectItem>
+										<SelectItem value="delete">Delete</SelectItem>
 									</SelectContent>
 								</Select>
 								<Label htmlFor="modal-digitalAssetNotes">

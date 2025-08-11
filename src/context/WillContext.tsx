@@ -176,6 +176,10 @@ export interface WillData {
 	};
 	// Residuary estate
 	residuary?: WillResiduary;
+	// Funeral instructions
+	funeralInstructions?: {
+		wishes: string;
+	};
 	// Progress data
 	progress?: WillProgress;
 }

@@ -460,6 +460,21 @@ export function mapWillDataFromAPI(apiData: unknown): WillData {
 				})
 			) || [],
 
+		// Funeral instructions
+		funeralInstructions: converted.funeralInstructions
+			? {
+					wishes:
+						((converted.funeralInstructions as Record<string, unknown>)
+							.wishes as string) || "",
+			  }
+			: converted.funeral_instructions
+			? {
+					wishes:
+						((converted.funeral_instructions as Record<string, unknown>)
+							.wishes as string) || "",
+			  }
+			: undefined,
+
 		// Progress data
 		progress: converted.progress
 			? {

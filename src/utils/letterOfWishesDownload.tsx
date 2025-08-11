@@ -2,12 +2,14 @@ import { toast } from "sonner";
 import { pdf } from "@react-pdf/renderer";
 import LetterOfWishesPDF from "@/components/letter-wizard/LetterOfWishesPDF";
 import { LetterOfWishesData } from "@/context/LetterOfWishesContext";
+import { WillData } from "@/context/WillContext";
 
 /**
  * Generate and download a Letter of Wishes PDF
  */
 export const downloadLetterOfWishesPDF = async (
 	letterData: LetterOfWishesData,
+	willData: WillData,
 	willOwnerName?: string
 ): Promise<boolean> => {
 	try {
@@ -18,7 +20,11 @@ export const downloadLetterOfWishesPDF = async (
 		// Generate PDF using JSX
 		console.log("🔄 Creating PDF document...");
 		const pdfDoc = pdf(
-			<LetterOfWishesPDF data={letterData} willOwnerName={willOwnerName} />
+			<LetterOfWishesPDF
+				data={letterData}
+				willData={willData}
+				willOwnerName={willOwnerName}
+			/>
 		);
 		console.log("✅ PDF document created successfully");
 

@@ -1,6 +1,7 @@
 import React from "react";
 import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 import { LetterOfWishesData } from "@/context/LetterOfWishesContext";
+import { WillData } from "@/context/WillContext";
 
 // Create styles
 const styles = StyleSheet.create({
@@ -13,15 +14,13 @@ const styles = StyleSheet.create({
 	},
 	header: {
 		marginBottom: 30,
-		textAlign: "center",
-		borderBottom: "2px solid #333",
-		paddingBottom: 20,
+		textAlign: "left",
 	},
 	title: {
 		fontSize: 24,
 		fontWeight: "bold",
 		marginBottom: 10,
-		textAlign: "center",
+		textAlign: "left",
 		borderBottom: "1px solid #333",
 		paddingBottom: 10,
 	},
@@ -88,9 +87,7 @@ const styles = StyleSheet.create({
 	},
 	possessionItem: {
 		marginBottom: 8,
-		padding: 6,
-		border: "1px solid #e5e5e5",
-		borderRadius: 3,
+		paddingLeft: 0,
 	},
 	charityItem: {
 		marginBottom: 8,
@@ -109,32 +106,88 @@ const styles = StyleSheet.create({
 		textAlign: "justify",
 		color: "#333333",
 	},
+	table: {
+		marginTop: 10,
+		marginBottom: 15,
+	},
+	tableHeader: {
+		flexDirection: "row",
+		backgroundColor: "#f5f5f5",
+		padding: 8,
+		borderBottom: "1px solid #ddd",
+		fontWeight: "bold",
+	},
+	tableRow: {
+		flexDirection: "row",
+		padding: 8,
+		borderBottom: "1px solid #eee",
+	},
+	tableCell: {
+		flex: 1,
+		fontSize: 10,
+		paddingRight: 5,
+	},
+	tableCellHeader: {
+		flex: 1,
+		fontSize: 10,
+		fontWeight: "bold",
+		paddingRight: 5,
+	},
+	signatureSection: {
+		marginTop: 40,
+		marginBottom: 20,
+	},
+	signatureRow: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		marginBottom: 30,
+	},
+	signatureField: {
+		flex: 1,
+		marginRight: 20,
+	},
+	signatureLine: {
+		borderBottom: "1px solid #333",
+		height: 20,
+		marginBottom: 5,
+	},
+	signatureLabel: {
+		fontSize: 10,
+		color: "#666",
+		textAlign: "center",
+	},
 });
 
 interface LetterOfWishesPDFProps {
 	data: LetterOfWishesData;
+	willData: WillData;
 	willOwnerName?: string;
 }
 
 const LetterOfWishesPDF: React.FC<LetterOfWishesPDFProps> = ({
 	data,
+	willData,
 	willOwnerName: _willOwnerName,
 }) => {
 	// Helper function to calculate section numbers
 	const getSectionNumber = () => {
 		let sectionNum = 1;
 		const sections = {
+			personalDetails: sectionNum++, // Always show Personal Details as section 1
+			purposeOfLetter: sectionNum++, // Always show Purpose of This Letter as section 2
 			funeralPreferences:
-				data.funeralPreferences &&
-				(data.funeralPreferences.burialLocation ||
-					data.funeralPreferences.serviceType ||
-					data.funeralPreferences.additionalPreferences)
+				(data.funeralPreferences &&
+					(data.funeralPreferences.burialLocation ||
+						data.funeralPreferences.serviceType ||
+						data.funeralPreferences.additionalPreferences)) ||
+				willData.funeralInstructions?.wishes
 					? sectionNum++
 					: null,
 			guardianshipPreferences:
-				data.guardianshipPreferences &&
-				(data.guardianshipPreferences.reasonForChoice ||
-					data.guardianshipPreferences.valuesAndHopes)
+				(data.guardianshipPreferences &&
+					(data.guardianshipPreferences.reasonForChoice ||
+						data.guardianshipPreferences.valuesAndHopes)) ||
+				(willData.guardians && willData.guardians.length > 0)
 					? sectionNum++
 					: null,
 			personalPossessions: data.personalPossessions?.length
@@ -162,68 +215,214 @@ const LetterOfWishesPDF: React.FC<LetterOfWishesPDFProps> = ({
 
 	const sections = getSectionNumber();
 
-	const renderFuneralPreferences = () => {
-		if (!data.funeralPreferences) return null;
+	const renderPersonalDetails = () => {
+		const owner = willData.owner;
+		if (!owner) return null;
 
-		const { burialLocation, serviceType, additionalPreferences } =
-			data.funeralPreferences;
-		const hasContent = burialLocation || serviceType || additionalPreferences;
+		// Format owner's full name
+		const fullName = `${owner.firstName} ${owner.lastName}`;
 
-		if (!hasContent) return null;
+		// Format owner's address
+		const addressParts = [
+			owner.address,
+			owner.city,
+			owner.state,
+			owner.postCode,
+			owner.country,
+		].filter(Boolean);
+		const address =
+			addressParts.length > 0
+				? addressParts.join(", ")
+				: "Address not available";
+
+		// Format current date for letter date
+		const letterDate = new Date().toLocaleDateString("en-GB", {
+			day: "numeric",
+			month: "long",
+			year: "numeric",
+		});
+
+		// Format will execution date (using createdAt as placeholder - this should be the actual will execution date)
+		const willExecutionDate = willData.createdAt
+			? new Date(willData.createdAt).toLocaleDateString("en-GB", {
+					day: "numeric",
+					month: "long",
+					year: "numeric",
+			  })
+			: null;
 
 		return (
 			<View style={styles.section}>
 				<Text style={styles.sectionTitle}>
-					{sections.funeralPreferences}. Funeral and Burial Preferences
+					{sections.personalDetails}. Personal Details
 				</Text>
-				{burialLocation && (
+
+				<View style={styles.content}>
+					<Text style={styles.label}>Full Name:</Text>
+					<Text style={styles.value}>{fullName}</Text>
+				</View>
+
+				<View style={styles.content}>
+					<Text style={styles.label}>Address:</Text>
+					<Text style={styles.value}>{address}</Text>
+				</View>
+
+				<View style={styles.content}>
+					<Text style={styles.label}>Date of Letter:</Text>
+					<Text style={styles.value}>{letterDate}</Text>
+				</View>
+
+				{willExecutionDate && (
 					<View style={styles.content}>
-						<Text style={styles.label}>Burial/Cremation Location:</Text>
-						<Text style={styles.value}>{burialLocation}</Text>
-					</View>
-				)}
-				{serviceType && (
-					<View style={styles.content}>
-						<Text style={styles.label}>Service Type:</Text>
 						<Text style={styles.value}>
-							{serviceType.replace("-", " ")} Service
+							This letter relates to the Will I executed on {willExecutionDate}.
 						</Text>
-					</View>
-				)}
-				{additionalPreferences && (
-					<View style={styles.content}>
-						<Text style={styles.label}>Additional Preferences:</Text>
-						<Text style={styles.value}>{additionalPreferences}</Text>
 					</View>
 				)}
 			</View>
 		);
 	};
 
-	const renderGuardianshipPreferences = () => {
-		if (!data.guardianshipPreferences) return null;
+	const renderPurposeOfLetter = () => {
+		return (
+			<View style={styles.section}>
+				<Text style={styles.sectionTitle}>
+					{sections.purposeOfLetter}. Purpose of This Letter
+				</Text>
+				<Text style={styles.content}>
+					This letter is intended to provide guidance on how I would like
+					certain personal, emotional, and practical matters to be handled after
+					my death. I understand it is not legally binding, but I respectfully
+					ask that my wishes be honoured to the extent possible.
+				</Text>
+			</View>
+		);
+	};
 
-		const { reasonForChoice, valuesAndHopes } = data.guardianshipPreferences;
-		const hasContent = reasonForChoice || valuesAndHopes;
+	const renderFuneralPreferences = () => {
+		// Check if we have any funeral preferences data or funeral instructions from will
+		const hasLetterPreferences =
+			data.funeralPreferences &&
+			(data.funeralPreferences.burialLocation ||
+				data.funeralPreferences.serviceType ||
+				data.funeralPreferences.additionalPreferences);
 
-		if (!hasContent) return null;
+		const hasFuneralInstructions = willData.funeralInstructions?.wishes;
+
+		// Debug logging
+		console.log("Funeral preferences debug:", {
+			hasLetterPreferences,
+			hasFuneralInstructions,
+			funeralInstructions: willData.funeralInstructions,
+			letterPreferences: data.funeralPreferences,
+		});
+
+		// Only show section if we have some content
+		if (!hasLetterPreferences && !hasFuneralInstructions) return null;
+
+		const { burialLocation, serviceType, additionalPreferences } =
+			data.funeralPreferences || {};
+
+		// Format burial type from will data
+		const formatBurialType = (wishes?: string) => {
+			if (wishes === "cremated") return "Cremated";
+			if (wishes === "buried") return "Buried";
+			return "";
+		};
+
+		// Format service type
+		const formatServiceType = (type?: string) => {
+			if (!type) return "[Religious / Non-religious / Private / Public]";
+			switch (type) {
+				case "religious":
+					return "Religious";
+				case "non-religious":
+					return "Non-religious";
+				case "private":
+					return "Private";
+				case "public":
+					return "Public";
+				default:
+					return type.charAt(0).toUpperCase() + type.slice(1);
+			}
+		};
 
 		return (
 			<View style={styles.section}>
 				<Text style={styles.sectionTitle}>
-					{sections.guardianshipPreferences}. Guardianship Preferences
+					{sections.funeralPreferences}. Funeral and Burial Preferences
 				</Text>
-				{reasonForChoice && (
-					<View style={styles.content}>
-						<Text style={styles.label}>Reason for Choosing Guardians:</Text>
-						<Text style={styles.value}>{reasonForChoice}</Text>
-					</View>
+
+				{willData.funeralInstructions?.wishes && (
+					<Text style={styles.content}>
+						I would prefer to be:{" "}
+						{formatBurialType(willData.funeralInstructions?.wishes)}
+					</Text>
 				)}
+
+				{burialLocation && (
+					<Text style={styles.content}>
+						Preferred location: {burialLocation}
+					</Text>
+				)}
+
+				{serviceType && (
+					<Text style={styles.content}>
+						I would like the following type of service:{" "}
+						{formatServiceType(serviceType)}
+					</Text>
+				)}
+
+				{additionalPreferences && (
+					<Text style={styles.content}>
+						Additional preferences: {additionalPreferences}
+					</Text>
+				)}
+			</View>
+		);
+	};
+
+	const renderGuardianshipPreferences = () => {
+		const { reasonForChoice, valuesAndHopes } =
+			data.guardianshipPreferences || {};
+		const hasGuardians = willData.guardians && willData.guardians.length > 0;
+		const hasContent = reasonForChoice || valuesAndHopes || hasGuardians;
+
+		if (!hasContent) return null;
+
+		// Format guardian names from will data
+		const formatGuardianNames = () => {
+			if (!willData.guardians || willData.guardians.length === 0) {
+				return "";
+			}
+
+			return willData.guardians
+				.map((guardian) => `${guardian.firstName} ${guardian.lastName}`)
+				.join(", ");
+		};
+
+		return (
+			<View style={styles.section}>
+				<Text style={styles.sectionTitle}>
+					{sections.guardianshipPreferences}. Guardianship of Children
+				</Text>
+
+				{willData.guardians && willData.guardians.length > 0 && (
+					<Text style={styles.content}>
+						Preferred Guardian(s): {formatGuardianNames()}
+					</Text>
+				)}
+
+				{reasonForChoice && (
+					<Text style={styles.content}>
+						Reason for choice: {reasonForChoice}
+					</Text>
+				)}
+
 				{valuesAndHopes && (
-					<View style={styles.content}>
-						<Text style={styles.label}>Values and Hopes for Upbringing:</Text>
-						<Text style={styles.value}>{valuesAndHopes}</Text>
-					</View>
+					<Text style={styles.content}>
+						Values and hopes for upbringing: {valuesAndHopes}
+					</Text>
 				)}
 			</View>
 		);
@@ -237,24 +436,35 @@ const LetterOfWishesPDF: React.FC<LetterOfWishesPDFProps> = ({
 				<Text style={styles.sectionTitle}>
 					{sections.digitalAssets}. Digital Assets Preferences
 				</Text>
-				{data.digitalAssetsPreferences.digitalAssets.map((asset, index) => (
-					<View key={index} style={styles.digitalAssetItem}>
-						<Text style={styles.itemTitle}>
-							{asset.platform} - {asset.usernameOrEmail}
-						</Text>
-						<Text style={styles.itemContent}>Action: {asset.action}</Text>
-						{asset.beneficiaryName && (
-							<Text style={styles.itemContent}>
-								Beneficiary: {asset.beneficiaryName}
-							</Text>
-						)}
-						{asset.notes && (
-							<Text style={styles.itemContent}>
-								Access and Instructions: {asset.notes}
-							</Text>
-						)}
+
+				<Text style={styles.content}>
+					This section is intended to guide you in the use, management, or
+					disposal of my digital assets, as referenced in my Will.
+				</Text>
+
+				<View style={styles.table}>
+					{/* Table Header */}
+					<View style={styles.tableHeader}>
+						<Text style={styles.tableCellHeader}>Platform</Text>
+						<Text style={styles.tableCellHeader}>Username/Email</Text>
+						<Text style={styles.tableCellHeader}>Action</Text>
+						<Text style={styles.tableCellHeader}>Beneficiary</Text>
+						<Text style={styles.tableCellHeader}>Instructions</Text>
 					</View>
-				))}
+
+					{/* Table Rows */}
+					{data.digitalAssetsPreferences.digitalAssets.map((asset, index) => (
+						<View key={index} style={styles.tableRow}>
+							<Text style={styles.tableCell}>{asset.platform}</Text>
+							<Text style={styles.tableCell}>{asset.usernameOrEmail}</Text>
+							<Text style={styles.tableCell}>{asset.action}</Text>
+							<Text style={styles.tableCell}>
+								{asset.beneficiaryName || "-"}
+							</Text>
+							<Text style={styles.tableCell}>{asset.notes || "-"}</Text>
+						</View>
+					))}
+				</View>
 			</View>
 		);
 	};
@@ -267,15 +477,18 @@ const LetterOfWishesPDF: React.FC<LetterOfWishesPDFProps> = ({
 				<Text style={styles.sectionTitle}>
 					{sections.personalPossessions}. Distribution of Personal Possessions
 				</Text>
+
+				<Text style={styles.content}>
+					I wish for the following personal items to be given to the named
+					individuals:
+				</Text>
+
 				{data.personalPossessions.map((possession, index) => (
 					<View key={index} style={styles.possessionItem}>
-						<Text style={styles.itemTitle}>{possession.item}</Text>
-						<Text style={styles.itemContent}>To: {possession.recipient}</Text>
-						{possession.reason && (
-							<Text style={styles.itemContent}>
-								Reason: {possession.reason}
-							</Text>
-						)}
+						<Text style={styles.content}>
+							{index + 1}. {possession.item} - To: {possession.recipient}
+							{possession.reason && ` (Reason: ${possession.reason})`}
+						</Text>
 					</View>
 				))}
 			</View>
@@ -301,21 +514,22 @@ const LetterOfWishesPDF: React.FC<LetterOfWishesPDFProps> = ({
 
 				{notificationContacts && notificationContacts.length > 0 && (
 					<View style={styles.subsection}>
-						<Text style={styles.subsectionTitle}>Notification Contacts</Text>
+						<Text style={styles.content}>
+							If applicable, please notify the following contacts:
+						</Text>
 						{notificationContacts.map((contact, index) => (
-							<View key={index} style={styles.contactItem}>
-								<Text style={styles.itemContent}>
-									{contact.name} - {contact.email}
-								</Text>
-							</View>
+							<Text key={index} style={styles.content}>
+								• {contact.name} - {contact.email}
+							</Text>
 						))}
 					</View>
 				)}
 
 				{professionalInstructions && (
 					<View style={styles.subsection}>
-						<Text style={styles.subsectionTitle}>
-							Professional Instructions
+						<Text style={styles.content}>
+							I would like the following guidance followed regarding my business
+							or professional matters:
 						</Text>
 						<Text style={styles.content}>{professionalInstructions}</Text>
 					</View>
@@ -332,12 +546,18 @@ const LetterOfWishesPDF: React.FC<LetterOfWishesPDFProps> = ({
 				<Text style={styles.sectionTitle}>
 					{sections.charitableDonations}. Charitable Donations
 				</Text>
+
+				<Text style={styles.content}>
+					I would appreciate any support directed to the following charities or
+					causes:
+				</Text>
+
 				{data.charitableDonations.map((donation, index) => (
-					<View key={index} style={styles.charityItem}>
-						<Text style={styles.itemTitle}>{donation.charityName}</Text>
-						{donation.description && (
-							<Text style={styles.itemContent}>{donation.description}</Text>
-						)}
+					<View key={index} style={styles.possessionItem}>
+						<Text style={styles.content}>
+							• {donation.charityName}
+							{donation.description && ` - ${donation.description}`}
+						</Text>
 					</View>
 				))}
 			</View>
@@ -350,7 +570,7 @@ const LetterOfWishesPDF: React.FC<LetterOfWishesPDFProps> = ({
 		return (
 			<View style={styles.section}>
 				<Text style={styles.sectionTitle}>
-					{sections.trusteeInstructions}. Trustee Instructions
+					{sections.trusteeInstructions}. Trustee and Executor Guidance
 				</Text>
 				<Text style={styles.content}>{data.trusteeInstructions}</Text>
 			</View>
@@ -366,6 +586,27 @@ const LetterOfWishesPDF: React.FC<LetterOfWishesPDFProps> = ({
 					{sections.notesToLovedOnes}. Notes to Loved Ones
 				</Text>
 				<Text style={styles.content}>{data.notesToLovedOnes}</Text>
+			</View>
+		);
+	};
+
+	const renderSignatureSection = () => {
+		return (
+			<View style={styles.signatureSection}>
+				<View style={styles.signatureRow}>
+					<View style={styles.signatureField}>
+						<View style={styles.signatureLine}></View>
+						<Text style={styles.signatureLabel}>Signature</Text>
+					</View>
+					<View style={styles.signatureField}>
+						<View style={styles.signatureLine}></View>
+						<Text style={styles.signatureLabel}>Print Name</Text>
+					</View>
+					<View style={styles.signatureField}>
+						<View style={styles.signatureLine}></View>
+						<Text style={styles.signatureLabel}>Date</Text>
+					</View>
+				</View>
 			</View>
 		);
 	};
@@ -387,6 +628,12 @@ const LetterOfWishesPDF: React.FC<LetterOfWishesPDFProps> = ({
 						matters outlined below.
 					</Text>
 				</View>
+
+				{/* Personal Details */}
+				{renderPersonalDetails()}
+
+				{/* Purpose of This Letter */}
+				{renderPurposeOfLetter()}
 
 				{/* Funeral Preferences */}
 				{renderFuneralPreferences()}
@@ -411,6 +658,9 @@ const LetterOfWishesPDF: React.FC<LetterOfWishesPDFProps> = ({
 
 				{/* Notes to Loved Ones */}
 				{renderNotesToLovedOnes()}
+
+				{/* Signature Section */}
+				{renderSignatureSection()}
 
 				{/* Footer */}
 				<View style={styles.section}>
