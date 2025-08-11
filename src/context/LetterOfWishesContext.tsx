@@ -90,13 +90,13 @@ const LetterOfWishesContext = createContext<
 export function LetterOfWishesProvider({ children }: { children: ReactNode }) {
 	const [willData, setWillData] = useState<WillData | null>(null);
 	const [letterData, setLetterData] = useState<LetterOfWishesData | null>(null);
-	const [currentStep, setCurrentStep] = useState<string>("introduction");
+	const [currentStep, setCurrentStep] = useState<string>("personalFamily");
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const { user } = useAuth();
 
 	const clearLetterData = () => {
 		setLetterData(null);
-		setCurrentStep("introduction");
+		setCurrentStep("personalFamily");
 	};
 
 	useEffect(() => {
@@ -107,6 +107,7 @@ export function LetterOfWishesProvider({ children }: { children: ReactNode }) {
 	}, [user]);
 
 	const initializeLetterForWill = (willId: string) => {
+		console.log("initializeLetterForWill called with willId:", willId);
 		setLetterData({
 			willId,
 			title: "",
@@ -135,7 +136,8 @@ export function LetterOfWishesProvider({ children }: { children: ReactNode }) {
 			trusteeInstructions: "",
 			notesToLovedOnes: "",
 		});
-		setCurrentStep("introduction");
+		console.log("Letter data initialized successfully");
+		setCurrentStep("personalFamily");
 	};
 
 	return (

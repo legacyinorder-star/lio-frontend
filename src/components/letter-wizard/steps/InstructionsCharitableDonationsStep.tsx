@@ -22,7 +22,7 @@ export interface InstructionsCharitableDonationsStepHandle {
 }
 
 const InstructionsCharitableDonationsStep =
-	forwardRef<InstructionsCharitableDonationsStepHandle>((props, ref) => {
+	forwardRef<InstructionsCharitableDonationsStepHandle>((_props, ref) => {
 		const { letterData, setLetterData, willData } = useLetterOfWishes();
 		const navigate = useNavigate();
 

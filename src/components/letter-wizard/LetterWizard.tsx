@@ -94,21 +94,8 @@ export default function LetterWizard() {
 						// Use the standard data transformation utility
 						const transformedWill = mapWillDataFromAPI(will);
 
-						console.log("Will data transformed:", {
-							guardiansCount: transformedWill.guardians?.length || 0,
-							childrenCount: transformedWill.children?.length || 0,
-							hasOwner: !!transformedWill.owner,
-						});
-
 						setWillData(transformedWill);
-						console.log("Transformed will data:", transformedWill);
 						console.log("Will data successfully loaded and transformed!");
-
-						// Initialize letter data if not already initialized
-						if (!letterData) {
-							console.log("Initializing letter data for will:", willId);
-							initializeLetterForWill(willId);
-						}
 					}
 				} catch (error) {
 					console.error("Error loading will data:", error);
@@ -121,15 +108,15 @@ export default function LetterWizard() {
 		};
 
 		loadWillData();
-	}, [
-		willId,
-		willData,
-		letterData,
-		setWillData,
-		setContextLoading,
-		navigate,
-		initializeLetterForWill,
-	]);
+	}, [willId, willData, setWillData, setContextLoading, navigate]);
+
+	// Separate effect to initialize letter data after will data is loaded
+	useEffect(() => {
+		if (willId && willData && !letterData) {
+			console.log("Initializing letter data for will:", willId);
+			initializeLetterForWill(willId);
+		}
+	}, [willId, willData, letterData, initializeLetterForWill]);
 
 	// Navigation functions
 	const goToNextStep = useCallback(() => {
