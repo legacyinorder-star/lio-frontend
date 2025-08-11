@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useLetterOfWishes } from "@/context/LetterOfWishesContext";
 import { apiClient } from "@/utils/apiClient";
@@ -6,18 +6,18 @@ import { mapWillDataFromAPI } from "@/utils/dataTransform";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import KnowledgeBaseSidebar from "./components/KnowledgeBaseSidebar";
-import { BookOpen, X } from "lucide-react";
+import { BookOpen, X, CreditCard } from "lucide-react";
 
 // Import step components
 import PersonalFamilyStep from "./steps/PersonalFamilyStep";
 import AssetsPossessionsStep from "./steps/AssetsPossessionsStep";
 import FuneralEndOfLifeStep from "./steps/FuneralEndOfLifeStep";
-import InstructionsLegacyStep from "./steps/InstructionsLegacyStep";
-import IntroductionStep from "./steps/IntroductionStep";
+import InstructionsLegacyStep, {
+	InstructionsCharitableDonationsStepHandle,
+} from "./steps/InstructionsCharitableDonationsStep";
 
 // Step order and configuration
 const STEP_ORDER = [
-	"introduction",
 	"personalFamily",
 	"assetsPossessions",
 	"funeralEndOfLife",
@@ -38,6 +38,10 @@ export default function LetterWizard() {
 		}
 		return 0;
 	});
+
+	// Add ref for the instructions step
+	const instructionsStepRef =
+		useRef<InstructionsCharitableDonationsStepHandle>(null);
 
 	const {
 		willData,
@@ -148,22 +152,6 @@ export default function LetterWizard() {
 		const isLastStep = currentStepIndex === STEP_ORDER.length - 1;
 
 		switch (currentStepType) {
-			case "introduction":
-				return (
-					<div>
-						<IntroductionStep />
-						{!isLastStep && (
-							<div className="flex justify-end pt-6">
-								<Button
-									onClick={goToNextStep}
-									className="bg-primary hover:bg-primary/90 text-white px-8 py-3 font-medium"
-								>
-									Next: Personal & Family
-								</Button>
-							</div>
-						)}
-					</div>
-				);
 			case "personalFamily":
 				return (
 					<div>
@@ -190,13 +178,13 @@ export default function LetterWizard() {
 								variant="outline"
 								className="px-6 py-2"
 							>
-								Previous: Introduction
+								Previous: Personal & Family
 							</Button>
 							<Button
 								onClick={goToNextStep}
 								className="bg-primary hover:bg-primary/90 text-white px-6 py-2"
 							>
-								Next: Funeral & End-of-Life
+								Next: Funeral & Legacy
 							</Button>
 						</div>
 					</div>
@@ -217,7 +205,7 @@ export default function LetterWizard() {
 								onClick={goToNextStep}
 								className="bg-primary hover:bg-primary/90 text-white px-6 py-2"
 							>
-								Next: Instructions & Legacy
+								Next: Instructions & Charitable Donations
 							</Button>
 						</div>
 					</div>
@@ -225,14 +213,33 @@ export default function LetterWizard() {
 			case "instructionsLegacy":
 				return (
 					<div>
-						<InstructionsLegacyStep />
+						<InstructionsLegacyStep ref={instructionsStepRef} />
 						<div className="flex justify-between pt-6">
 							<Button
 								onClick={goToPreviousStep}
 								variant="outline"
 								className="px-6 py-2"
 							>
-								Previous: Funeral & End-of-Life
+								Previous: Funeral & Legacy
+							</Button>
+							<Button
+								onClick={() =>
+									instructionsStepRef.current?.handlePayAndSubmit()
+								}
+								disabled={instructionsStepRef.current?.isProcessingPayment}
+								className="bg-primary hover:bg-primary/90 text-white px-8 py-3 font-medium"
+							>
+								{instructionsStepRef.current?.isProcessingPayment ? (
+									<>
+										<div className="h-4 w-4 animate-spin rounded-full border-t-2 border-b-2 border-white mr-2"></div>
+										Processing...
+									</>
+								) : (
+									<>
+										<CreditCard className="mr-2 h-4 w-4" />
+										Pay and Submit
+									</>
+								)}
 							</Button>
 						</div>
 					</div>
