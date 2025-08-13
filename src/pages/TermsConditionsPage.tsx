@@ -11,38 +11,70 @@ export default function TermsConditionsPage() {
 				<div className="max-w-4xl ms-22 me-auto px-4 sm:px-6 lg:px-8 py-16">
 					<div className="prose prose-lg max-w-none">
 						<h1 className="text-[3.5rem] font-semibold text-black mb-8">
-							Terms & Conditions
+							Terms of Service
 						</h1>
+						<p className="text-black mb-4">UK Version</p>
+						<p className="text-black">Version Number: 1.0</p>
+						<p className="text-black mb-4">Version Date: 13/08/2025</p>
+
+						<p className="text-black mb-4">
+							These Terms of Service ("Terms") govern your access to and use of
+							the Legacy in Order platform, including our website, mobile
+							applications, and any associated services (collectively, the
+							"Services"). By accessing or using our Services, you agree to be
+							bound by these Terms. If you do not agree, you must not use our
+							Services.
+						</p>
 
 						<div className="space-y-8">
 							<section>
 								<h2 className="text-[2rem] font-medium text-black mb-4">
-									1. Acceptance of Terms
+									1. Definitions
 								</h2>
 								<p className="text-black mb-4">
-									By accessing and using Legacy In Order's services, you accept
-									and agree to be bound by the terms and provision of this
-									agreement. If you do not agree to abide by the above, please
-									do not use this service.
+									"We", "Us", "Our" means Legacy In Order Ltd, a company
+									registered in England and Wales with company number 16597440
+									and registered office at 128 City Road, London, United
+									Kingdom, EC1V 2NX. "You" means any individual or entity
+									accessing or using our Services. "Content" means all text,
+									graphics, images, audio, video, software, data compilations,
+									page layout, underlying code and software and any other form
+									of information capable of being stored in a computer that
+									appears on or forms part of this website. "User Content" means
+									any content submitted, uploaded, posted, or transmitted by a
+									user.
 								</p>
 							</section>
 
 							<section>
 								<h2 className="text-[2rem] font-medium text-black mb-4">
-									2. Description of Service
+									2. User Obligations
 								</h2>
 								<p className="text-black mb-4">
-									Legacy In Order provides online will creation and estate
-									planning services. Our platform allows users to:
+									You agree to use the Services only for lawful purposes and in
+									accordance with these Terms. You must not use the Services:
 								</p>
 								<ul className="list-disc pl-6 text-black space-y-2">
 									<li>
-										Create legally valid wills and estate planning documents
+										In any way that breaches any applicable local, national, or
+										international law or regulation.
 									</li>
-									<li>Store and manage important documents securely</li>
-									<li>Access and update their documents at any time</li>
-									<li>Receive guidance and support throughout the process</li>
+									<li>For any unlawful or fraudulent purpose.</li>
+									<li>
+										To transmit or procure the sending of unsolicited or
+										unauthorised advertising or promotional material.
+									</li>
+									<li>
+										To knowingly transmit any data, send or upload any material
+										that contains viruses, trojans, worms, time-bombs, keystroke
+										loggers, spyware, adware, or any other harmful programs.
+									</li>
 								</ul>
+								<p className="text-black mb-4">
+									You are responsible for ensuring that all persons who access
+									the Services through your internet connection are aware of
+									these Terms and comply with them.
+								</p>
 							</section>
 
 							<section>
@@ -70,18 +102,20 @@ export default function TermsConditionsPage() {
 								<p className="text-black mb-4">
 									Payment is required to access our premium services. All fees
 									are non-refundable unless otherwise stated. We reserve the
-									right to change our pricing with 30 days notice.
+									right to change our pricing without prior notice.
 								</p>
 							</section>
 
 							<section>
 								<h2 className="text-[2rem] font-medium text-black mb-4">
-									5. Intellectual Property
+									5. Intellectual Property Rights
 								</h2>
 								<p className="text-black mb-4">
-									The content, features, and functionality of our service are
-									owned by Legacy In Order and are protected by international
-									copyright, trademark, and other intellectual property laws.
+									All intellectual property rights in the Services and the
+									material published on it are owned by us or our licensors. You
+									may not copy, reproduce, republish, download, post, broadcast,
+									transmit, make available to the public, or otherwise use any
+									content from our Services without prior written permission.
 								</p>
 							</section>
 
@@ -111,6 +145,19 @@ export default function TermsConditionsPage() {
 									incidental, special, consequential, or punitive damages,
 									including without limitation, loss of profits, data, use,
 									goodwill, or other intangible losses.
+								</p>
+								<p className="text-black mb-4">
+									If you are a business user, we exclude all implied conditions,
+									warranties, representations, or other terms that may apply to
+									our Services. We will not be liable for any loss of profits,
+									sales, business, or revenue; business interruption; loss of
+									anticipated savings; loss of business opportunity, goodwill,
+									or reputation; or any indirect or consequential loss or
+									damage.
+								</p>
+								<p className="text-black mb-4">
+									If you are a consumer, please note that we only provide our
+									Services for domestic and private use.
 								</p>
 							</section>
 
@@ -153,9 +200,15 @@ export default function TermsConditionsPage() {
 									11. Governing Law
 								</h2>
 								<p className="text-black mb-4">
-									These Terms shall be governed by and construed in accordance
-									with the laws of the United Kingdom, without regard to its
-									conflict of law provisions.
+									These Terms are governed by and construed in accordance with
+									the laws of England and Wales. If you are a consumer, you and
+									we both agree that the courts of England and Wales will have
+									exclusive jurisdiction except that if you are a resident of
+									Northern Ireland, you may also bring proceedings in Northern
+									Ireland, and if you are resident of Scotland, you may also
+									bring proceedings in Scotland. If you are a business, you and
+									we agree to the exclusive jurisdiction of the courts of
+									England and Wales.
 								</p>
 							</section>
 
@@ -182,18 +235,10 @@ export default function TermsConditionsPage() {
 									<p className="text-black">
 										Email: legal@legacyinorder.com
 										<br />
-										Address: [Your Business Address]
-										<br />
-										Phone: [Your Phone Number]
+										Address: 128, City Road, London, EC1V 2NX, United Kingdom
 									</p>
 								</div>
 							</section>
-
-							<div className="border-t pt-8 mt-12">
-								<p className="text-[1rem] text-black">
-									Last Updated: {new Date().toLocaleDateString()}
-								</p>
-							</div>
 						</div>
 					</div>
 				</div>
