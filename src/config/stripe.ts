@@ -7,6 +7,10 @@ export const STRIPE_CONFIG = {
 	willPriceId:
 		import.meta.env.VITE_STRIPE_WILL_PRICE_ID ||
 		"price_your_test_price_id_here",
+	letterOfWishesPrice: 29.99, // Price for Letter of Wishes in USD
+	letterOfWishesPriceId:
+		import.meta.env.VITE_STRIPE_LETTER_PRICE_ID ||
+		"price_your_letter_test_price_id_here",
 };
 
 export const PAYMENT_CONFIG = {

@@ -3,14 +3,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { XCircle, ArrowLeft, RefreshCw } from "lucide-react";
 
-export default function PaymentCancelPage() {
+export default function LetterOfWishesPaymentCancelPage() {
 	const navigate = useNavigate();
 	const [searchParams] = useSearchParams();
-	const source = searchParams.get("source");
-	const isLetterOfWishes = source === "letter-of-wishes";
+	const willId = searchParams.get("willId");
 
 	const handleRetryPayment = () => {
-		navigate("/app/dashboard");
+		if (willId) {
+			// Navigate back to the Letter of Wishes wizard to retry payment
+			navigate(`/app/letter-of-wishes/${willId}`);
+		} else {
+			navigate("/app/dashboard");
+		}
 	};
 
 	const handleGoToDashboard = () => {
@@ -31,12 +35,11 @@ export default function PaymentCancelPage() {
 				<CardContent className="space-y-6">
 					<div className="text-center space-y-2">
 						<p className="text-lg font-medium">
-							Your payment was not completed
+							Your Letter of Wishes payment was not completed
 						</p>
 						<p className="text-muted-foreground">
-							{isLetterOfWishes
-								? "No worries! You can try again anytime. Your Letter of Wishes has been saved and you can continue from where you left off."
-								: "No worries! You can try again anytime. Your will creation process has been saved and you can continue from where you left off."}
+							No worries! You can try again anytime. Your Letter of Wishes has
+							been saved and you can continue from where you left off.
 						</p>
 					</div>
 
@@ -61,8 +64,8 @@ export default function PaymentCancelPage() {
 
 					<div className="text-center">
 						<p className="text-xs text-muted-foreground">
-							If you're experiencing issues, please contact our support team for
-							assistance.
+							If you're experiencing issues with payment, please contact our
+							support team for assistance.
 						</p>
 					</div>
 				</CardContent>

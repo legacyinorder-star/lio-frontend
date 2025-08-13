@@ -14,11 +14,15 @@ export default function StripeCheckoutPage() {
 	const [isRedirecting, setIsRedirecting] = useState(false);
 
 	const willId = searchParams.get("willId");
-	// const amount = parseFloat(
-	// 	searchParams.get("amount") || STRIPE_CONFIG.willPrice.toString()
-	// );
+	const source = searchParams.get("source");
 	const description =
 		searchParams.get("description") || "Will Creation Service";
+
+	// Determine price ID based on source
+	const isLetterOfWishes = source === "letter-of-wishes";
+	const priceId = isLetterOfWishes
+		? STRIPE_CONFIG.letterOfWishesPriceId
+		: STRIPE_CONFIG.willPriceId;
 
 	useEffect(() => {
 		if (!willId) {
@@ -36,13 +40,22 @@ export default function StripeCheckoutPage() {
 			setIsLoading(true);
 			setIsRedirecting(true);
 
+			// Determine success and cancel URLs based on source
+			const successUrl = isLetterOfWishes
+				? `${window.location.origin}/app/payment/letter-success?willId=${willId}`
+				: `${window.location.origin}/app/payment/success?willId=${willId}`;
+
+			const cancelUrl = isLetterOfWishes
+				? `${window.location.origin}/app/payment/letter-cancel?willId=${willId}`
+				: `${window.location.origin}/app/payment/cancel?willId=${willId}`;
+
 			await PaymentService.createCheckoutSessionAndRedirect({
 				willId: willId!,
-				priceId: STRIPE_CONFIG.willPriceId,
+				priceId: priceId,
 				currency: STRIPE_CONFIG.currency,
 				description,
-				successUrl: `${window.location.origin}/app/payment/success?willId=${willId}`,
-				cancelUrl: `${window.location.origin}/app/payment/cancel?willId=${willId}`,
+				successUrl,
+				cancelUrl,
 			});
 		} catch (error) {
 			console.error("Error redirecting to Stripe Checkout:", error);

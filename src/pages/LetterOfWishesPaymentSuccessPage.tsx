@@ -2,20 +2,24 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, ArrowRight, Loader2 } from "lucide-react";
+import { CheckCircle, ArrowRight, Loader2, Download } from "lucide-react";
 import { toast } from "sonner";
 import { apiClient } from "@/utils/apiClient";
-import { uploadWillPDF } from "@/utils/willUpload";
+import { downloadLetterOfWishesPDF } from "@/utils/letterOfWishesDownload";
+import { useLetterOfWishes } from "@/context/LetterOfWishesContext";
+import { useWill } from "@/context/WillContext";
 
-export default function PaymentSuccessPage() {
+export default function LetterOfWishesPaymentSuccessPage() {
 	const navigate = useNavigate();
 	const [searchParams] = useSearchParams();
 	const [isLoading, setIsLoading] = useState(true);
 	const [isValid, setIsValid] = useState(false);
+	const [isDownloading, setIsDownloading] = useState(false);
+
+	const { letterData } = useLetterOfWishes();
+	const { activeWill } = useWill();
 
 	const willId = searchParams.get("willId");
-	const source = searchParams.get("source");
-	const isLetterOfWishes = source === "letter-of-wishes";
 
 	useEffect(() => {
 		if (!willId) {
@@ -44,31 +48,47 @@ export default function PaymentSuccessPage() {
 
 			// Success - 200 response
 			setIsValid(true);
-			toast.success("Payment completed successfully!");
-
-			// Generate and upload the appropriate PDF to the server
-			if (willId && !isLetterOfWishes) {
-				console.log(
-					"🔄 Starting will PDF generation after successful payment..."
-				);
-				const uploadResult = await uploadWillPDF(willId);
-				if (uploadResult) {
-					console.log("✅ Will PDF saved successfully after payment");
-				} else {
-					console.error("❌ Failed to save will PDF after payment");
-					// Don't show error toast as this is not critical for payment success
-				}
-			} else if (willId && isLetterOfWishes) {
-				console.log(
-					"✅ Letter of Wishes payment completed - PDF was already generated during the wizard"
-				);
-			}
+			toast.success("Letter of Wishes payment completed successfully!");
 		} catch (error) {
 			console.error("Error validating payment success:", error);
 			toast.error("Failed to validate payment. Please contact support.");
 			navigate("/app/dashboard");
 		} finally {
 			setIsLoading(false);
+		}
+	};
+
+	const handleDownloadPDF = async () => {
+		if (!letterData || !activeWill) {
+			toast.error("Letter of Wishes data not available. Please try again.");
+			return;
+		}
+
+		setIsDownloading(true);
+		try {
+			const willOwnerName = activeWill.owner
+				? `${activeWill.owner.firstName} ${activeWill.owner.lastName}`
+				: undefined;
+
+			console.log("🔄 Generating Letter of Wishes PDF...");
+			const pdfResult = await downloadLetterOfWishesPDF(
+				letterData,
+				activeWill,
+				willOwnerName
+			);
+
+			if (pdfResult) {
+				console.log("✅ Letter of Wishes PDF downloaded successfully");
+				toast.success("Letter of Wishes PDF downloaded successfully!");
+			} else {
+				console.error("❌ Failed to generate Letter of Wishes PDF");
+				toast.error("Failed to generate PDF. Please try again.");
+			}
+		} catch (error) {
+			console.error("❌ Error generating Letter of Wishes PDF:", error);
+			toast.error("Failed to generate PDF. Please try again.");
+		} finally {
+			setIsDownloading(false);
 		}
 	};
 
@@ -112,26 +132,34 @@ export default function PaymentSuccessPage() {
 					<div className="text-center space-y-2">
 						<p className="text-lg font-medium">Thank you for your purchase!</p>
 						<p className="text-muted-foreground">
-							{isLetterOfWishes
-								? "Your Letter of Wishes has been completed and is ready for download. The PDF has been generated and saved to your account."
-								: "Your will has been submitted for review. Our legal team will review your will and contact you once it's ready for download."}
+							Your Letter of Wishes has been completed successfully. You can now
+							download your personalized PDF document.
 						</p>
 					</div>
 
-					{/* {paymentIntentId && (
-						<div className="bg-gray-50 p-4 rounded-lg">
-							<p className="text-sm text-gray-600">
-								<span className="font-medium">Payment ID:</span>{" "}
-								{paymentIntentId}
-							</p>
-						</div>
-					)} */}
-
 					<div className="space-y-3">
 						<Button
-							variant="default"
-							onClick={handleGoToDashboard}
+							onClick={handleDownloadPDF}
+							disabled={isDownloading}
 							className="w-full bg-primary hover:bg-primary/90 text-white"
+						>
+							{isDownloading ? (
+								<>
+									<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+									Generating PDF...
+								</>
+							) : (
+								<>
+									<Download className="mr-2 h-4 w-4" />
+									Download Letter of Wishes PDF
+								</>
+							)}
+						</Button>
+
+						<Button
+							variant="outline"
+							onClick={handleGoToDashboard}
+							className="w-full"
 						>
 							<ArrowRight className="mr-2 h-4 w-4" />
 							Continue to Dashboard
@@ -140,9 +168,8 @@ export default function PaymentSuccessPage() {
 
 					<div className="text-center">
 						<p className="text-xs text-muted-foreground">
-							{isLetterOfWishes
-								? "You will receive a confirmation email shortly. Your Letter of Wishes is now available in your dashboard."
-								: "You will receive a confirmation email shortly. We'll notify you when your will is ready."}
+							You will receive a confirmation email shortly. Your Letter of
+							Wishes is now available in your dashboard.
 						</p>
 					</div>
 				</CardContent>
