@@ -80,7 +80,8 @@ interface LetterOfWishesContextType {
 
 	// Utility functions
 	clearLetterData: () => void;
-	initializeLetterForWill: (willId: string) => void;
+	initializeLetterForWill: (willId: string, letterId?: string) => void;
+	setLetterIdForExisting: (letterId: string) => void;
 }
 
 const LetterOfWishesContext = createContext<
@@ -106,9 +107,15 @@ export function LetterOfWishesProvider({ children }: { children: ReactNode }) {
 		}
 	}, [user]);
 
-	const initializeLetterForWill = (willId: string) => {
-		console.log("initializeLetterForWill called with willId:", willId);
+	const initializeLetterForWill = (willId: string, letterId?: string) => {
+		console.log(
+			"initializeLetterForWill called with willId:",
+			willId,
+			"letterId:",
+			letterId
+		);
 		setLetterData({
+			id: letterId,
 			willId,
 			title: "",
 			content: "",
@@ -136,8 +143,20 @@ export function LetterOfWishesProvider({ children }: { children: ReactNode }) {
 			trusteeInstructions: "",
 			notesToLovedOnes: "",
 		});
-		console.log("Letter data initialized successfully");
+		console.log("Letter data initialized successfully with ID:", letterId);
 		setCurrentStep("personalFamily");
+	};
+
+	const setLetterIdForExisting = (letterId: string) => {
+		console.log("Setting letter ID for existing letter data:", letterId);
+		if (letterData) {
+			setLetterData({
+				...letterData,
+				id: letterId,
+			});
+		} else {
+			console.warn("No letter data exists to set ID for");
+		}
 	};
 
 	return (
@@ -153,6 +172,7 @@ export function LetterOfWishesProvider({ children }: { children: ReactNode }) {
 				setIsLoading,
 				clearLetterData,
 				initializeLetterForWill,
+				setLetterIdForExisting,
 			}}
 		>
 			{children}

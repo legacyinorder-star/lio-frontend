@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useWill } from "@/context/WillContext";
 import { type WillData } from "@/context/WillContext";
 import { useLetterOfWishes } from "@/context/LetterOfWishesContext";
+import { LetterOfWishesService } from "@/services/letterOfWishesService";
 import { toast } from "sonner";
 import { apiClient } from "@/utils/apiClient";
 import { mapWillDataFromAPI } from "@/utils/dataTransform";
@@ -26,7 +27,7 @@ import {
 export default function DashboardPage() {
 	const navigate = useNavigate();
 	const { activeWill, setActiveWill } = useWill();
-	const { setWillData } = useLetterOfWishes();
+	const { setWillData, initializeLetterForWill } = useLetterOfWishes();
 	const [userName, setUserName] = useState<string>("");
 	const [wills, setWills] = useState<WillData[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
@@ -78,15 +79,36 @@ export default function DashboardPage() {
 		}
 	};
 
-	const handleCreateLetterOfWishes = (willId: string) => {
+	const handleCreateLetterOfWishes = async (willId: string) => {
 		const will = wills.find((w) => w.id === willId);
-		if (will) {
+		if (!will) {
+			toast.error("Will not found");
+			return;
+		}
+
+		try {
+			console.log(
+				"🔄 Checking for existing Letter of Wishes or creating new one..."
+			);
+
+			// Check if Letter of Wishes already exists, or create a new one
+			const letterOfWishes = await LetterOfWishesService.getOrCreate(willId);
+
+			console.log("✅ Letter of Wishes ready:", letterOfWishes);
+
 			// Store the will data in the Letter of Wishes context
 			setWillData(will);
+
+			// Initialize the letter context with the letter ID
+			initializeLetterForWill(willId, letterOfWishes.id);
+
 			// Navigate to letter of wishes with will ID
 			navigate(`/app/letter-of-wishes?willId=${willId}`);
-		} else {
-			toast.error("Will not found");
+
+			toast.success("Letter of Wishes ready for editing!");
+		} catch (error) {
+			console.error("❌ Error creating/accessing Letter of Wishes:", error);
+			toast.error("Failed to create Letter of Wishes. Please try again.");
 		}
 	};
 

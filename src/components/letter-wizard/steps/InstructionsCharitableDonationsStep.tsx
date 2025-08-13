@@ -13,7 +13,6 @@ import { Plus } from "lucide-react";
 import { useLetterOfWishes } from "@/context/LetterOfWishesContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { downloadLetterOfWishesPDF } from "@/utils/letterOfWishesDownload";
 
 // Add interface for the ref handle
 export interface InstructionsCharitableDonationsStepHandle {
@@ -123,9 +122,9 @@ const InstructionsCharitableDonationsStep =
 
 			setIsProcessingPayment(true);
 			try {
-				// First, save the current letter data
+				// Save the current letter data before proceeding to payment
 				if (setLetterData && letterData) {
-					console.log("📝 Preparing letter data for PDF generation...");
+					console.log("📝 Saving letter data before payment...");
 
 					const updatedLetterData = {
 						...letterData,
@@ -134,39 +133,18 @@ const InstructionsCharitableDonationsStep =
 					};
 
 					console.log("📋 Updated letter data:", updatedLetterData);
-
 					setLetterData(updatedLetterData);
-
-					// Generate and download the PDF
-					const willOwnerName = willData.owner
-						? `${willData.owner.firstName} ${willData.owner.lastName}`
-						: undefined;
-
-					console.log("🔄 Starting PDF generation for:", willOwnerName);
-
-					const pdfResult = await downloadLetterOfWishesPDF(
-						updatedLetterData,
-						willData,
-						willOwnerName
-					);
-					console.log("📄 PDF generation result:", pdfResult);
-
-					if (!pdfResult) {
-						console.error("❌ PDF generation failed");
-						toast.error("Failed to generate PDF. Please try again.");
-						return;
-					}
 				} else {
 					console.error(
 						"❌ No letter data or setLetterData function available"
 					);
-					toast.error("No letter data available for PDF generation");
+					toast.error("No letter data available. Please try again.");
 					return;
 				}
 
-				// Navigate to payment page for letter of wishes
-				const paymentUrl = `/app/payment?willId=${willData.id}&description=Letter of Wishes&source=letter-of-wishes`;
-				console.log("🔄 Navigating to payment page:", paymentUrl);
+				// Navigate to Stripe Checkout page for Letter of Wishes
+				const paymentUrl = `/app/payment/checkout?willId=${willData.id}&description=Letter of Wishes&source=letter-of-wishes`;
+				console.log("🔄 Navigating to Stripe Checkout page:", paymentUrl);
 				navigate(paymentUrl);
 			} catch (error) {
 				console.error("❌ Error in handlePayAndSubmit:", error);

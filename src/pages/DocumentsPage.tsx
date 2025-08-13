@@ -33,6 +33,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useWill, type WillData } from "@/context/WillContext";
 import { useLetterOfWishes } from "@/context/LetterOfWishesContext";
+import { LetterOfWishesService } from "@/services/letterOfWishesService";
 import { getUserDetails } from "@/utils/auth";
 import { toast } from "sonner";
 import { apiClient } from "@/utils/apiClient";
@@ -42,7 +43,7 @@ import { smartDownloadWill } from "@/utils/willSmartDownload";
 export default function DocumentsPage() {
 	const navigate = useNavigate();
 	const { setActiveWill } = useWill();
-	const { setWillData } = useLetterOfWishes();
+	const { setWillData, initializeLetterForWill } = useLetterOfWishes();
 	const [documents, setDocuments] = useState<WillData[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
 	const [isProcessingPayment, setIsProcessingPayment] = useState(false);
@@ -95,15 +96,38 @@ export default function DocumentsPage() {
 		}
 	};
 
-	const handleCreateLetterOfWishes = (documentId: string) => {
+	const handleCreateLetterOfWishes = async (documentId: string) => {
 		const document = documents.find((d) => d.id === documentId);
-		if (document) {
+		if (!document) {
+			toast.error("Document not found");
+			return;
+		}
+
+		try {
+			console.log(
+				"🔄 Checking for existing Letter of Wishes or creating new one..."
+			);
+
+			// Check if Letter of Wishes already exists, or create a new one
+			const letterOfWishes = await LetterOfWishesService.getOrCreate(
+				documentId
+			);
+
+			console.log("✅ Letter of Wishes ready:", letterOfWishes);
+
 			// Store the will data in the Letter of Wishes context
 			setWillData(document);
+
+			// Initialize the letter context with the letter ID
+			initializeLetterForWill(documentId, letterOfWishes.id);
+
 			// Navigate to letter of wishes with will ID
 			navigate(`/app/letter-of-wishes?willId=${documentId}`);
-		} else {
-			toast.error("Document not found");
+
+			toast.success("Letter of Wishes ready for editing!");
+		} catch (error) {
+			console.error("❌ Error creating/accessing Letter of Wishes:", error);
+			toast.error("Failed to create Letter of Wishes. Please try again.");
 		}
 	};
 
