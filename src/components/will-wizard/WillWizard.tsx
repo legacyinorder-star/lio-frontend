@@ -27,7 +27,7 @@ import GiftsStep from "./steps/GiftsStep";
 import DigitalAssetsStep from "./steps/DigitalAssetsStep";
 
 import ResiduaryStep from "./steps/ResiduaryStep";
-import WitnessesStep from "./steps/WitnessesStep";
+
 import FuneralInstructionsStep from "./steps/FuneralInstructionsStep";
 import ReviewStep from "./steps/ReviewStep";
 import ExecutorStep from "./steps/ExecutorStep";
@@ -429,9 +429,6 @@ export default function WillWizard() {
 				navigateToStep("executors");
 				break;
 			case "executors":
-				navigateToStep("witnesses");
-				break;
-			case "witnesses":
 				navigateToStep("funeralInstructions");
 				break;
 			case "funeralInstructions":
@@ -486,11 +483,9 @@ export default function WillWizard() {
 			case "executors":
 				navigateToStep("residuary");
 				break;
-			case "witnesses":
-				navigateToStep("executors");
-				break;
+
 			case "funeralInstructions":
-				navigateToStep("witnesses");
+				navigateToStep("review");
 				break;
 			case "review":
 				navigateToStep("funeralInstructions");
@@ -649,9 +644,6 @@ export default function WillWizard() {
 						onBack={commonProps.onBack}
 					/>
 				);
-
-			case "witnesses":
-				return <WitnessesStep {...commonProps} />;
 
 			case "funeralInstructions":
 				return <FuneralInstructionsStep {...commonProps} />;

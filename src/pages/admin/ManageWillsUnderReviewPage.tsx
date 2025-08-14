@@ -195,7 +195,7 @@ export default function ManageWillsUnderReviewPage() {
 						digitalAssets: true,
 						residuary: true,
 						executors: true,
-						witnesses: true,
+
 						funeralInstructions: true,
 						review: true,
 					},

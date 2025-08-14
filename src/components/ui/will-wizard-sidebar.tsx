@@ -20,7 +20,6 @@ export function WillWizardSidebar() {
 		"digitalAssets",
 		"residuary",
 		"executors",
-		"witnesses",
 		"funeralInstructions",
 		"review",
 	];

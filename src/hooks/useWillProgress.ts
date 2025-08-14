@@ -21,7 +21,7 @@ const DEFAULT_COMPLETION: StepCompletion = {
 	digitalAssets: false,
 	residuary: false,
 	executors: false,
-	witnesses: false,
+
 	funeralInstructions: false,
 	review: false,
 };
@@ -38,7 +38,6 @@ const STEP_ORDER: QuestionType[] = [
 	"digitalAssets",
 	"residuary",
 	"executors",
-	"witnesses",
 	"funeralInstructions",
 	"review",
 ];
@@ -195,7 +194,7 @@ function canAccessStep(step: QuestionType, completed: StepCompletion): boolean {
 			"hasAssets",
 			"residuary",
 			"executors",
-			"witnesses",
+
 			"review",
 		];
 		if (requiredSteps.includes(prevStep) && !completed[prevStep]) {

@@ -11,7 +11,6 @@ export type QuestionType =
 	| "digitalAssets"
 	| "residuary"
 	| "executors"
-	| "witnesses"
 	| "funeralInstructions"
 	| "review";
 

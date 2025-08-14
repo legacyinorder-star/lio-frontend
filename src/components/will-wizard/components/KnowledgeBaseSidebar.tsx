@@ -166,20 +166,7 @@ const stepArticles: Record<QuestionType, KnowledgeArticle[]> = {
 			url: "#",
 		},
 	],
-	witnesses: [
-		{
-			title: "Will Signing Requirements",
-			description:
-				"Legal requirements for witnesses and proper will execution.",
-			url: "#",
-		},
-		{
-			title: "Who Can and Cannot Witness a Will",
-			description:
-				"Important restrictions on who can serve as a witness to your will.",
-			url: "#",
-		},
-	],
+
 	funeralInstructions: [
 		{
 			title: "Funeral Instructions in Wills",

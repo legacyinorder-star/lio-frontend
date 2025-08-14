@@ -44,7 +44,7 @@ const DEFAULT_COMPLETION: StepCompletion = {
 	digitalAssets: false,
 	residuary: false,
 	executors: false,
-	witnesses: false,
+
 	funeralInstructions: false,
 	review: false,
 };
@@ -61,7 +61,6 @@ const STEP_ORDER: QuestionType[] = [
 	"digitalAssets",
 	"residuary",
 	"executors",
-	"witnesses",
 	"funeralInstructions",
 	"review",
 ];
@@ -74,7 +73,6 @@ const REQUIRED_STEPS = [
 	"hasAssets",
 	"residuary",
 	"executors",
-	"witnesses",
 	"review",
 ];
 
@@ -265,9 +263,8 @@ export function WillWizardProvider({ children }: { children: ReactNode }) {
 			digitalAssets: { number: 9, name: "Digital Assets" },
 			residuary: { number: 10, name: "Residuary Estate" },
 			executors: { number: 11, name: "Executors" },
-			witnesses: { number: 12, name: "Witnesses" },
-			funeralInstructions: { number: 13, name: "Funeral Instructions" },
-			review: { number: 14, name: "Review" },
+			funeralInstructions: { number: 12, name: "Funeral Instructions" },
+			review: { number: 13, name: "Review" },
 		};
 		return stepMap[step];
 	};

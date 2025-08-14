@@ -15,7 +15,7 @@ const STEP_ORDER: QuestionType[] = [
 	"digitalAssets",
 	"residuary",
 	"executors",
-	"witnesses",
+
 	"funeralInstructions",
 	"review",
 ];

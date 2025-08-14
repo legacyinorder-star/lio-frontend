@@ -166,7 +166,7 @@ export default function ManageAllWillsPage() {
 						digitalAssets: true,
 						residuary: true,
 						executors: true,
-						witnesses: true,
+
 						funeralInstructions: true,
 						review: true,
 					},
