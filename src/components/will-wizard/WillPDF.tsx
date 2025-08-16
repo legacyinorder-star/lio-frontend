@@ -307,6 +307,73 @@ const styles = StyleSheet.create({
 		textAlign: "left",
 		flex: 1,
 	},
+	// Checklist styles
+	checklistPage: {
+		padding: 40,
+		backgroundColor: "#fff",
+	},
+	checklistTitle: {
+		fontSize: 28,
+		fontWeight: "bold",
+		marginBottom: 30,
+		textAlign: "center",
+		color: "#1f2937",
+	},
+	checklistSubtitle: {
+		fontSize: 16,
+		color: "#6b7280",
+		marginBottom: 40,
+		textAlign: "center",
+	},
+	checklistSection: {
+		marginBottom: 30,
+	},
+	checklistSectionTitle: {
+		fontSize: 20,
+		fontWeight: "bold",
+		marginBottom: 15,
+		color: "#374151",
+		borderBottom: "2px solid #e5e7eb",
+		paddingBottom: 8,
+	},
+	checklistItem: {
+		flexDirection: "row",
+		alignItems: "flex-start",
+		marginBottom: 12,
+		paddingLeft: 20,
+	},
+	checklistCheckbox: {
+		width: 20,
+		height: 20,
+		border: "2px solid #d1d5db",
+		borderRadius: 4,
+		marginRight: 15,
+		marginTop: 2,
+	},
+	checklistText: {
+		fontSize: 14,
+		color: "#374151",
+		flex: 1,
+		lineHeight: 1.5,
+	},
+	checklistImportant: {
+		fontSize: 14,
+		color: "#dc2626",
+		fontWeight: "bold",
+		marginTop: 20,
+		padding: 15,
+		backgroundColor: "#fef2f2",
+		border: "1px solid #fecaca",
+		borderRadius: 6,
+		textAlign: "center",
+	},
+	checklistNote: {
+		fontSize: 12,
+		color: "#6b7280",
+		fontStyle: "italic",
+		marginTop: 15,
+		textAlign: "center",
+	},
 	giftSection: {
 		marginTop: 30,
 		marginBottom: 20,
@@ -549,6 +616,174 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 
 	return (
 		<Document>
+			{/* Checklist Page - First Page */}
+			<Page size="A4" style={styles.checklistPage}>
+				<Text style={styles.checklistTitle}>
+					Legacy in Order – Final Checklist for Making Your Will Legally Valid
+				</Text>
+
+				<Text style={styles.checklistSubtitle}>
+					Congratulations!!! You've taken a huge step toward protecting your
+					assets and getting your Legacy In Order. Now let's get it signed and
+					store it safely.
+				</Text>
+
+				{/* Step 1 - Review Your Will */}
+				<View style={styles.checklistSection}>
+					<View style={styles.checklistItem}>
+						<View style={styles.checklistCheckbox} />
+						<Text style={styles.checklistSectionTitle}>
+							Step 1 - Review Your Will Carefully
+						</Text>
+					</View>
+
+					<Text style={styles.checklistText}>Before you sign:</Text>
+
+					<View style={styles.checklistItem}>
+						<View style={styles.checklistCheckbox} />
+						<Text style={styles.checklistText}>
+							Read your Will from start to finish. Check that every name, date,
+							and instruction is accurate. If anything is unclear or you want to
+							make changes update before printing and signing.
+						</Text>
+					</View>
+
+					<View style={styles.checklistItem}>
+						<View style={styles.checklistCheckbox} />
+						<Text style={styles.checklistText}>
+							Print your Will on plain paper. Keep the pages together and staple
+							them securely in the top left corner.
+						</Text>
+					</View>
+				</View>
+
+				{/* Step 2 - Choose Witnesses */}
+				<View style={styles.checklistSection}>
+					<View style={styles.checklistItem}>
+						<View style={styles.checklistCheckbox} />
+						<Text style={styles.checklistSectionTitle}>
+							Step 2 - Choose the Right Witnesses
+						</Text>
+					</View>
+
+					<Text style={styles.checklistText}>
+						You must sign your Will in front of two independent witnesses.
+					</Text>
+
+					<View style={styles.checklistItem}>
+						<View style={styles.checklistCheckbox} />
+						<Text style={styles.checklistText}>
+							They must be aged 18 or over and mentally competent.
+						</Text>
+					</View>
+
+					<View style={styles.checklistItem}>
+						<View style={styles.checklistCheckbox} />
+						<Text style={styles.checklistText}>
+							They cannot be a beneficiary named in your Will or be married to,
+							or in a partnership with, any beneficiary.
+						</Text>
+					</View>
+				</View>
+
+				{/* Step 3 - Signing Your Will */}
+				<View style={styles.checklistSection}>
+					<View style={styles.checklistItem}>
+						<View style={styles.checklistCheckbox} />
+						<Text style={styles.checklistSectionTitle}>
+							Step 3 - Signing Your Will
+						</Text>
+					</View>
+
+					<View style={styles.checklistItem}>
+						<View style={styles.checklistCheckbox} />
+						<Text style={styles.checklistText}>
+							Arrange for both witnesses to be present at the same time.
+						</Text>
+					</View>
+
+					<View style={styles.checklistItem}>
+						<View style={styles.checklistCheckbox} />
+						<Text style={styles.checklistText}>
+							Using a pen, you sign first, with both witnesses watching. You
+							cannot sign a will electronically.
+						</Text>
+					</View>
+
+					<View style={styles.checklistItem}>
+						<View style={styles.checklistCheckbox} />
+						<Text style={styles.checklistText}>
+							Each witness must then, write their full name in capital letters,
+							Write their address. Sign in the space provided.
+						</Text>
+					</View>
+
+					<View style={styles.checklistItem}>
+						<View style={styles.checklistCheckbox} />
+						<Text style={styles.checklistText}>
+							If there's a mistake, start again if possible. If not, all parties
+							should initial the correction.
+						</Text>
+					</View>
+				</View>
+
+				{/* Step 4 - Store and Register */}
+				<View style={styles.checklistSection}>
+					<View style={styles.checklistItem}>
+						<View style={styles.checklistCheckbox} />
+						<Text style={styles.checklistSectionTitle}>
+							Step 4 - Store and Register Your Will
+						</Text>
+					</View>
+
+					<Text style={styles.checklistText}>
+						Once signed and witnessed, your Will is legally valid.
+					</Text>
+
+					<View style={styles.checklistItem}>
+						<View style={styles.checklistCheckbox} />
+						<Text style={styles.checklistText}>
+							Store the original in a safe but accessible place.
+						</Text>
+					</View>
+
+					<View style={styles.checklistItem}>
+						<View style={styles.checklistCheckbox} />
+						<Text style={styles.checklistText}>
+							Tell your Executor and at least one trusted person where it's
+							stored and how to access it.
+						</Text>
+					</View>
+
+					<View style={styles.checklistItem}>
+						<View style={styles.checklistCheckbox} />
+						<Text style={styles.checklistText}>
+							Consider registering your Will with a recognised will registry. If
+							you make a new Will, destroy the old one and update the registry
+							immediately.
+						</Text>
+					</View>
+				</View>
+
+				{/* Step 5 - Inspire Others */}
+				<View style={styles.checklistSection}>
+					<View style={styles.checklistItem}>
+						<View style={styles.checklistCheckbox} />
+						<Text style={styles.checklistSectionTitle}>
+							Step 5 - Inspire Others
+						</Text>
+					</View>
+
+					<Text style={styles.checklistText}>
+						Completing your will is one of the most loving legacies you can
+						leave. It spares your loved ones stress, uncertainty, and potential
+						disagreements. Inspire your friends and family to do the same by
+						sharing Legacy in Order with them.
+					</Text>
+				</View>
+			</Page>
+
+			{/* Main Will Content - Second Page */}
 			<Page size="A4" style={styles.page}>
 				<View style={styles.centeredTitle}>
 					<View style={styles.titleContainer}>

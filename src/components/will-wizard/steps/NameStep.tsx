@@ -17,6 +17,8 @@ import { useWill } from "@/context/WillContext";
 import { apiClient } from "@/utils/apiClient";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
+import WillDisclaimerDialog from "../WillDisclaimerDialog";
+import { useNavigate } from "react-router-dom";
 
 const nameSchema = z.object({
 	firstName: z.string().min(2, "First name must be at least 2 characters"),
@@ -50,6 +52,16 @@ export default function NameStep({
 }: NameStepProps) {
 	const { activeWill, setActiveWill } = useWill();
 	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [showDisclaimer, setShowDisclaimer] = useState(false);
+	const navigate = useNavigate();
+
+	// Auto-show disclaimer for new wills when component mounts
+	useEffect(() => {
+		const isNewWill = !activeWill?.id;
+		if (isNewWill && !showDisclaimer) {
+			setShowDisclaimer(true);
+		}
+	}, [activeWill?.id]);
 
 	// Determine the initial values for the form
 	const getInitialValues = () => {
@@ -147,7 +159,17 @@ export default function NameStep({
 		trigger,
 	]);
 
-	const onSubmit = async (values: NameData) => {
+	const handleFormSubmit = async (values: NameData) => {
+		// Check if disclaimer is still showing
+		if (showDisclaimer) {
+			return;
+		}
+
+		// Proceed with existing submission logic
+		await handleSubmit(values);
+	};
+
+	const handleSubmit = async (values: NameData) => {
 		setIsSubmitting(true);
 
 		try {
@@ -243,74 +265,114 @@ export default function NameStep({
 		}
 	};
 
+	const handleDisclaimerAccept = async () => {
+		console.log(
+			"Disclaimer accepted - closing dialog and proceeding with form"
+		);
+		setShowDisclaimer(false);
+
+		// Get current form data and proceed with submission
+		// const currentFormData = form.getValues();
+		//await handleSubmit(currentFormData);
+	};
+
+	const handleDisclaimerDecline = () => {
+		setShowDisclaimer(false);
+		// Optionally redirect to dashboard or show a message
+		toast.info("Will creation cancelled. You can start again anytime.");
+		navigate("/app/dashboard");
+	};
+
 	return (
-		<div className="space-y-6 w-full max-w-4xl mx-auto">
-			<div className="text-xl sm:text-2xl lg:text-[2rem] font-medium text-black">
-				What is your full name?
-			</div>
-			<div className="text-muted-foreground">
-				We'll use this as the legal name in your will.
-			</div>
-			<Form
-				{...form}
-				key={`name-form-${initialValues.firstName}-${initialValues.lastName}`}
-			>
-				<form
-					onSubmit={form.handleSubmit(onSubmit)}
-					className="space-y-6 w-full"
+		<>
+			<div className="space-y-6 w-full max-w-4xl mx-auto">
+				<div className="text-xl sm:text-2xl lg:text-[2rem] font-medium text-black">
+					What is your full name?
+				</div>
+				<div className="text-muted-foreground">
+					We'll use this as the legal name in your will.
+				</div>
+				<Form
+					{...form}
+					key={`name-form-${initialValues.firstName}-${initialValues.lastName}`}
 				>
-					<div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-md">
-						<div className="space-y-2">
-							<FormField
-								control={form.control}
-								name="firstName"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>First Name</FormLabel>
-										<FormControl>
-											<Input placeholder="John" {...field} className="w-full" />
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
+					<form
+						onSubmit={form.handleSubmit(handleFormSubmit)}
+						className="space-y-6 w-full"
+					>
+						<div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-md">
+							<div className="space-y-2">
+								<FormField
+									control={form.control}
+									name="firstName"
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>First Name</FormLabel>
+											<FormControl>
+												<Input
+													placeholder="John"
+													{...field}
+													className="w-full"
+												/>
+											</FormControl>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+							</div>
+							<div className="space-y-2">
+								<FormField
+									control={form.control}
+									name="lastName"
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>Last Name</FormLabel>
+											<FormControl>
+												<Input
+													placeholder="Doe"
+													{...field}
+													className="w-full"
+												/>
+											</FormControl>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+							</div>
 						</div>
-						<div className="space-y-2">
-							<FormField
-								control={form.control}
-								name="lastName"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Last Name</FormLabel>
-										<FormControl>
-											<Input placeholder="Doe" {...field} className="w-full" />
-										</FormControl>
-										<FormMessage />
-									</FormItem>
+						<div className="flex justify-end pt-4 max-w-md">
+							<Button
+								type="submit"
+								className="cursor-pointer bg-primary hover:bg-primary/90 text-white"
+								disabled={!isValid || isSubmitting || showDisclaimer}
+							>
+								{isSubmitting ? (
+									<>
+										<div className="h-4 w-4 animate-spin rounded-full border-t-2 border-b-2 border-black mr-2" />
+										Saving...
+									</>
+								) : showDisclaimer ? (
+									<>
+										Please Accept Disclaimer{" "}
+										<ArrowRight className="ml-2 h-4 w-4" />
+									</>
+								) : (
+									<>
+										Next <ArrowRight className="ml-2 h-4 w-4" />
+									</>
 								)}
-							/>
+							</Button>
 						</div>
-					</div>
-					<div className="flex justify-end pt-4 max-w-md">
-						<Button
-							type="submit"
-							className="cursor-pointer bg-primary hover:bg-primary/90 text-white"
-							disabled={!isValid || isSubmitting}
-						>
-							{isSubmitting ? (
-								<>
-									<div className="h-4 w-4 animate-spin rounded-full border-t-2 border-b-2 border-black mr-2" />
-									Saving...
-								</>
-							) : (
-								<>
-									Next <ArrowRight className="ml-2 h-4 w-4" />
-								</>
-							)}
-						</Button>
-					</div>
-				</form>
-			</Form>
-		</div>
+					</form>
+				</Form>
+			</div>
+
+			{/* Disclaimer Dialog - Rendered outside Form context */}
+			<WillDisclaimerDialog
+				open={showDisclaimer}
+				onAccept={handleDisclaimerAccept}
+				onDecline={handleDisclaimerDecline}
+			/>
+		</>
 	);
 }

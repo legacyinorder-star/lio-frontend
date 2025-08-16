@@ -43,7 +43,11 @@ import { smartDownloadWill } from "@/utils/willSmartDownload";
 export default function DocumentsPage() {
 	const navigate = useNavigate();
 	const { setActiveWill } = useWill();
-	const { setWillData, initializeLetterForWill } = useLetterOfWishes();
+	const {
+		setWillData,
+		initializeLetterForWill,
+		populateLetterWithPersonalNotes,
+	} = useLetterOfWishes();
 	const [documents, setDocuments] = useState<WillData[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
 	const [isProcessingPayment, setIsProcessingPayment] = useState(false);
@@ -120,6 +124,12 @@ export default function DocumentsPage() {
 
 			// Initialize the letter context with the letter ID
 			initializeLetterForWill(documentId, letterOfWishes.id);
+
+			// If personal_notes exist, populate the letter data with them
+			if (letterOfWishes.personal_notes) {
+				console.log("📝 Found personal notes, populating letter data...");
+				populateLetterWithPersonalNotes(letterOfWishes.personal_notes);
+			}
 
 			// Navigate to letter of wishes with will ID
 			navigate(`/app/letter-of-wishes?willId=${documentId}`);

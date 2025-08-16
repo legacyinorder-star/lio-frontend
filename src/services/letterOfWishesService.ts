@@ -5,11 +5,27 @@ export interface LetterOfWishesResponse {
 	will_id: string;
 	created_at: string;
 	updated_at: string;
+	personal_notes?: {
+		id: string;
+		created_at: string;
+		low_id: string;
+		notes: string;
+		user_id: string;
+		guardian_reason: string;
+		guardian_values: string;
+	};
 	// Add other fields as needed based on the actual API response
 }
 
 export interface CreateLetterOfWishesRequest {
 	will_id: string;
+}
+
+export interface SubmitPersonalNotesRequest {
+	id?: string;
+	guardian_reason: string;
+	notes: string;
+	guardian_values: string;
 }
 
 export class LetterOfWishesService {
@@ -105,6 +121,38 @@ export class LetterOfWishesService {
 			return await this.create(willId);
 		} catch (error) {
 			console.error("❌ Error in getOrCreate Letter of Wishes:", error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Submit personal notes for a Letter of Wishes
+	 */
+	static async submitPersonalNotes(
+		lowId: string,
+		personalNotes: SubmitPersonalNotesRequest
+	): Promise<LetterOfWishesResponse> {
+		try {
+			console.log(
+				`📝 Submitting personal notes for Letter of Wishes ID: ${lowId}`
+			);
+
+			const { data, error } = await apiClient<LetterOfWishesResponse>(
+				`/letter-of-wishes/${lowId}/personal-notes`,
+				{
+					method: "POST",
+					body: JSON.stringify(personalNotes),
+				}
+			);
+
+			if (error || !data) {
+				throw new Error(error || "Failed to submit personal notes");
+			}
+
+			console.log("✅ Personal notes submitted successfully:", data);
+			return data;
+		} catch (error) {
+			console.error("❌ Error submitting personal notes:", error);
 			throw error;
 		}
 	}

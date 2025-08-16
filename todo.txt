@@ -87,13 +87,6 @@ Here are several suggestions to refactor the WillWizard component to make it mor
     - Document component props, hooks, and utilities
     - Make the codebase more maintainable for other developers
 
-These refactoring suggestions would make the code:
-- More maintainable
-- Easier to test
-- More reusable
-- Better organized
-- More scalable
-- Easier to debug
-- More performant (through better state management)
 
-Would you like me to elaborate on any of these suggestions?
+More todos:
+   Handle usecase where user navigates to the low via url

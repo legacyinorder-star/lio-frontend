@@ -27,7 +27,11 @@ import {
 export default function DashboardPage() {
 	const navigate = useNavigate();
 	const { activeWill, setActiveWill } = useWill();
-	const { setWillData, initializeLetterForWill } = useLetterOfWishes();
+	const {
+		setWillData,
+		initializeLetterForWill,
+		populateLetterWithPersonalNotes,
+	} = useLetterOfWishes();
 	const [userName, setUserName] = useState<string>("");
 	const [wills, setWills] = useState<WillData[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
@@ -101,6 +105,12 @@ export default function DashboardPage() {
 
 			// Initialize the letter context with the letter ID
 			initializeLetterForWill(willId, letterOfWishes.id);
+
+			// If personal_notes exist, populate the letter data with them
+			if (letterOfWishes.personal_notes) {
+				console.log("📝 Found personal notes, populating letter data...");
+				populateLetterWithPersonalNotes(letterOfWishes.personal_notes);
+			}
 
 			// Navigate to letter of wishes with will ID
 			navigate(`/app/letter-of-wishes?willId=${willId}`);

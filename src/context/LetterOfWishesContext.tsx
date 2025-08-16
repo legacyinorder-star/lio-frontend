@@ -57,6 +57,11 @@ export interface LetterOfWishesData {
 	}>;
 	trusteeInstructions?: string;
 	notesToLovedOnes?: string;
+	// Personal notes fields from backend API
+	personalNotesId?: string;
+	personalNotesCreatedAt?: string;
+	personalNotesLowId?: string;
+	personalNotesUserId?: string;
 	createdAt?: string;
 	updatedAt?: string;
 }
@@ -82,6 +87,7 @@ interface LetterOfWishesContextType {
 	clearLetterData: () => void;
 	initializeLetterForWill: (willId: string, letterId?: string) => void;
 	setLetterIdForExisting: (letterId: string) => void;
+	populateLetterWithPersonalNotes: (personalNotes: any) => void;
 }
 
 const LetterOfWishesContext = createContext<
@@ -159,6 +165,25 @@ export function LetterOfWishesProvider({ children }: { children: ReactNode }) {
 		}
 	};
 
+	const populateLetterWithPersonalNotes = (personalNotes: any) => {
+		console.log("Populating letter with personal notes:", personalNotes);
+		if (letterData && personalNotes) {
+			setLetterData({
+				...letterData,
+				notesToLovedOnes: personalNotes.notes || "",
+				guardianshipPreferences: {
+					reasonForChoice: personalNotes.guardian_reason || "",
+					valuesAndHopes: personalNotes.guardian_values || "",
+				},
+				personalNotesId: personalNotes.id,
+				personalNotesCreatedAt: personalNotes.created_at,
+				personalNotesLowId: personalNotes.low_id,
+				personalNotesUserId: personalNotes.user_id,
+			});
+			console.log("Letter data populated with personal notes successfully");
+		}
+	};
+
 	return (
 		<LetterOfWishesContext.Provider
 			value={{
@@ -173,6 +198,7 @@ export function LetterOfWishesProvider({ children }: { children: ReactNode }) {
 				clearLetterData,
 				initializeLetterForWill,
 				setLetterIdForExisting,
+				populateLetterWithPersonalNotes,
 			}}
 		>
 			{children}

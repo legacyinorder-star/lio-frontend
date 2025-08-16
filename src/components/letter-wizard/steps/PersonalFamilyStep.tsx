@@ -12,6 +12,8 @@ import {
 } from "@/components/ui/dialog";
 import { Plus } from "lucide-react";
 import { useLetterOfWishes } from "@/context/LetterOfWishesContext";
+import { LetterOfWishesService } from "@/services/letterOfWishesService";
+import { toast } from "sonner";
 
 export default function PersonalFamilyStep() {
 	const { letterData, setLetterData, willData } = useLetterOfWishes();
@@ -29,6 +31,7 @@ export default function PersonalFamilyStep() {
 		letterData?.guardianshipPreferences?.valuesAndHopes || ""
 	);
 	const [isGuardianshipModalOpen, setIsGuardianshipModalOpen] = useState(false);
+	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	// Get guardians from will data
 	const guardians = willData?.guardians || [];
@@ -68,6 +71,35 @@ export default function PersonalFamilyStep() {
 			});
 		}
 		setIsGuardianshipModalOpen(false);
+	};
+
+	const handleSubmit = async () => {
+		if (!letterData?.id) {
+			toast.error("Letter of Wishes ID not found");
+			return;
+		}
+
+		setIsSubmitting(true);
+		try {
+			const personalNotesData = {
+				id: letterData.personalNotesId,
+				guardian_reason: reasonForChoice.trim(),
+				notes: notesToLovedOnes.trim(),
+				guardian_values: valuesAndHopes.trim(),
+			};
+
+			await LetterOfWishesService.submitPersonalNotes(
+				letterData.id,
+				personalNotesData
+			);
+
+			toast.success("Personal notes submitted successfully");
+		} catch (error) {
+			console.error("Error submitting personal notes:", error);
+			toast.error("Failed to submit personal notes");
+		} finally {
+			setIsSubmitting(false);
+		}
 	};
 
 	return (
@@ -232,6 +264,17 @@ export default function PersonalFamilyStep() {
 					</DialogFooter>
 				</DialogContent>
 			</Dialog>
+
+			{/* Submit Button */}
+			<div className="pt-6">
+				<Button
+					onClick={handleSubmit}
+					disabled={isSubmitting}
+					className="w-full h-12 bg-[#050505] text-white rounded-[0.25rem] font-medium hover:bg-[#333333] disabled:opacity-50"
+				>
+					{isSubmitting ? "Submitting..." : "Submit Personal Notes"}
+				</Button>
+			</div>
 		</div>
 	);
 }
