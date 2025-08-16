@@ -4,6 +4,7 @@ import { useLetterOfWishes } from "@/context/LetterOfWishesContext";
 import { apiClient } from "@/utils/apiClient";
 import { WillData } from "@/context/WillContext";
 import { toast } from "sonner";
+import { LetterOfWishesService } from "@/services/letterOfWishesService";
 
 // CompleteWillData interface for the get-full-will API response
 interface CompleteWillData {
@@ -108,7 +109,7 @@ export default function LetterWizard() {
 		return 0;
 	});
 
-	// Add ref for the instructions step
+	// Add refs for the steps
 	const instructionsStepRef =
 		useRef<InstructionsCharitableDonationsStepHandle>(null);
 
@@ -116,17 +117,18 @@ export default function LetterWizard() {
 		willData,
 		setWillData,
 		letterData,
-		currentStep,
-		setCurrentStep,
+		currentStep: contextCurrentStep,
+		setCurrentStep: setContextCurrentStep,
 		isLoading: contextLoading,
 		setIsLoading: setContextLoading,
 		initializeLetterForWill,
+		setLetterData,
 	} = useLetterOfWishes();
 
 	// Update currentStep when currentStepIndex changes
 	useEffect(() => {
-		setCurrentStep(STEP_ORDER[currentStepIndex]);
-	}, [currentStepIndex, setCurrentStep]);
+		setContextCurrentStep(STEP_ORDER[currentStepIndex]);
+	}, [currentStepIndex, setContextCurrentStep]);
 
 	const willId = searchParams.get("willId");
 
@@ -242,26 +244,126 @@ export default function LetterWizard() {
 
 	// Separate effect to initialize letter data after will data is loaded
 	useEffect(() => {
-		if (willId && willData && !letterData) {
-			console.log("Initializing letter data for will:", willId);
-			initializeLetterForWill(willId);
-		}
+		const initializeLetterData = async () => {
+			if (willId && willData && !letterData) {
+				console.log("Initializing letter data for will:", willId);
+
+				try {
+					// Get or create a Letter of Wishes to ensure we have an ID
+					const letterResponse = await LetterOfWishesService.getOrCreate(
+						willId
+					);
+
+					// Initialize letter data with the actual ID
+					initializeLetterForWill(willId, letterResponse.id);
+
+					console.log("Letter data initialized with ID:", letterResponse.id);
+				} catch (error) {
+					console.error("Error initializing Letter of Wishes:", error);
+					toast.error("Failed to initialize Letter of Wishes");
+				}
+			}
+		};
+
+		initializeLetterData();
 	}, [willId, willData, letterData, initializeLetterForWill]);
 
 	// Navigation functions
-	const goToNextStep = useCallback(() => {
+	const goToNextStep = useCallback(async () => {
+		// If we're on the personalFamily step, submit the data first
+		if (currentStepIndex === 0 && letterData && willId) {
+			try {
+				// Ensure we have a valid Letter of Wishes ID
+				let letterId = letterData.id;
+
+				if (!letterId) {
+					console.log(
+						"No Letter of Wishes ID found, creating or getting existing one..."
+					);
+					try {
+						const letterResponse = await LetterOfWishesService.getOrCreate(
+							willId
+						);
+						letterId = letterResponse.id;
+
+						// Update the letter data with the ID
+						if (setLetterData) {
+							setLetterData({
+								...letterData,
+								id: letterId,
+							});
+						}
+					} catch (error) {
+						console.error("Error creating/getting Letter of Wishes:", error);
+						toast.error("Failed to initialize Letter of Wishes");
+						return;
+					}
+				}
+
+				if (!letterId) {
+					console.error(
+						"Still no Letter of Wishes ID available after creation attempt"
+					);
+					toast.error("Failed to get Letter of Wishes ID");
+					return;
+				}
+
+				// Helper function to convert empty strings to null
+				const toNullIfEmpty = (
+					value: string | undefined | null
+				): string | null => {
+					return value?.trim() || null;
+				};
+
+				// Submit personal notes data when moving to next step
+				const personalNotesData = {
+					id: letterData.personalNotesId || undefined,
+					guardian_reason: toNullIfEmpty(
+						letterData.guardianshipPreferences?.reasonForChoice
+					),
+					notes: toNullIfEmpty(letterData.notesToLovedOnes),
+					guardian_values: toNullIfEmpty(
+						letterData.guardianshipPreferences?.valuesAndHopes
+					),
+				};
+
+				console.log("Submitting personal notes data:", personalNotesData);
+
+				await LetterOfWishesService.submitPersonalNotes(
+					letterId,
+					personalNotesData
+				);
+
+				toast.success("Personal notes submitted successfully");
+			} catch (error) {
+				console.error("Error submitting personal notes:", error);
+				toast.error("Failed to submit personal notes");
+				return; // Don't proceed if submission failed
+			}
+		} else if (currentStepIndex === 0 && !willId) {
+			console.error("No willId available for Letter of Wishes");
+			toast.error("Will ID not found");
+			return;
+		}
+
 		if (currentStepIndex < STEP_ORDER.length - 1) {
 			setCurrentStepIndex(currentStepIndex + 1);
-			setCurrentStep(STEP_ORDER[currentStepIndex + 1]);
+			setContextCurrentStep(STEP_ORDER[currentStepIndex + 1]);
 		}
-	}, [currentStepIndex, setCurrentStep]);
+	}, [
+		currentStepIndex,
+		setContextCurrentStep,
+		letterData,
+		willId,
+		setLetterData,
+	]);
 
 	const goToPreviousStep = useCallback(() => {
 		if (currentStepIndex > 0) {
 			setCurrentStepIndex(currentStepIndex - 1);
-			setCurrentStep(STEP_ORDER[currentStepIndex - 1]);
+			setContextCurrentStep(STEP_ORDER[currentStepIndex - 1]);
 		}
-	}, [currentStepIndex, setCurrentStep]);
+	}, [currentStepIndex, setContextCurrentStep]);
 
 	// Render current step
 	const renderCurrentStep = () => {
@@ -435,7 +537,7 @@ export default function LetterWizard() {
 					{/* Mobile Knowledge Base */}
 					{showKnowledgeBase && (
 						<div className="lg:hidden mb-6">
-							<KnowledgeBaseSidebar currentStep={currentStep} />
+							<KnowledgeBaseSidebar currentStep={contextCurrentStep} />
 						</div>
 					)}
 
@@ -445,7 +547,7 @@ export default function LetterWizard() {
 
 			{/* Knowledge Base Sidebar - Hidden on mobile, visible on large screens */}
 			<div className="hidden lg:block">
-				<KnowledgeBaseSidebar currentStep={currentStep} />
+				<KnowledgeBaseSidebar currentStep={contextCurrentStep} />
 			</div>
 		</div>
 	);

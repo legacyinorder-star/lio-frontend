@@ -23,9 +23,9 @@ export interface CreateLetterOfWishesRequest {
 
 export interface SubmitPersonalNotesRequest {
 	id?: string;
-	guardian_reason: string;
-	notes: string;
-	guardian_values: string;
+	guardian_reason: string | null;
+	notes: string | null;
+	guardian_values: string | null;
 }
 
 export class LetterOfWishesService {
@@ -129,19 +129,17 @@ export class LetterOfWishesService {
 	 * Submit personal notes for a Letter of Wishes
 	 */
 	static async submitPersonalNotes(
-		lowId: string,
-		personalNotes: SubmitPersonalNotesRequest
+		letterId: string,
+		personalNotesData: SubmitPersonalNotesRequest
 	): Promise<LetterOfWishesResponse> {
 		try {
-			console.log(
-				`📝 Submitting personal notes for Letter of Wishes ID: ${lowId}`
-			);
+			console.log(`📝 Submitting personal notes for letter ID: ${letterId}`);
 
 			const { data, error } = await apiClient<LetterOfWishesResponse>(
-				`/letter-of-wishes/${lowId}/personal-notes`,
+				`/letter-of-wishes/${letterId}/personal-notes`,
 				{
 					method: "POST",
-					body: JSON.stringify(personalNotes),
+					body: JSON.stringify(personalNotesData),
 				}
 			);
 
@@ -153,6 +151,34 @@ export class LetterOfWishesService {
 			return data;
 		} catch (error) {
 			console.error("❌ Error submitting personal notes:", error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Submit personal notes using will ID (alternative method)
+	 * This method will get or create a Letter of Wishes and then submit the notes
+	 */
+	static async submitPersonalNotesByWillId(
+		willId: string,
+		personalNotesData: SubmitPersonalNotesRequest
+	): Promise<LetterOfWishesResponse> {
+		try {
+			console.log(`📝 Submitting personal notes for will ID: ${willId}`);
+
+			// First, get or create a Letter of Wishes
+			const letterResponse = await this.getOrCreate(willId);
+
+			// Then submit the personal notes
+			const result = await this.submitPersonalNotes(
+				letterResponse.id,
+				personalNotesData
+			);
+
+			console.log("✅ Personal notes submitted successfully via will ID");
+			return result;
+		} catch (error) {
+			console.error("❌ Error submitting personal notes via will ID:", error);
 			throw error;
 		}
 	}
