@@ -21,6 +21,7 @@ import { useLetterOfWishes } from "@/context/LetterOfWishesContext";
 import {
 	LetterOfWishesService,
 	PersonalPossession,
+	DigitalAsset,
 } from "@/services/letterOfWishesService";
 import { toast } from "sonner";
 
@@ -28,15 +29,14 @@ export default function AssetsPossessionsStep() {
 	const { letterData, setLetterData } = useLetterOfWishes();
 
 	// Digital Assets states
-	const [digitalAssets, setDigitalAssets] = useState(
-		letterData?.digitalAssetsPreferences?.digitalAssets || []
-	);
+	const [digitalAssets, setDigitalAssets] = useState<DigitalAsset[]>([]);
 	const [isDigitalAssetsModalOpen, setIsDigitalAssetsModalOpen] =
 		useState(false);
 	const [isEditingDigitalAsset, setIsEditingDigitalAsset] = useState(false);
 	const [editingAssetIndex, setEditingAssetIndex] = useState<number | null>(
 		null
 	);
+	const [isLoadingDigitalAssets, setIsLoadingDigitalAssets] = useState(false);
 
 	// Personal Possessions states
 	const [personalPossessions, setPersonalPossessions] = useState<
@@ -64,13 +64,7 @@ export default function AssetsPossessionsStep() {
 	] = useState(false);
 	const [digitalAssetToDelete, setDigitalAssetToDelete] = useState<{
 		index: number;
-		asset: {
-			platform: string;
-			usernameOrEmail: string;
-			action: "delete" | "memorialize" | "transfer" | "archive";
-			beneficiaryName?: string;
-			notes?: string;
-		};
+		asset: DigitalAsset;
 	} | null>(null);
 
 	// Temporary state for form inputs for adding new digital asset
@@ -79,7 +73,7 @@ export default function AssetsPossessionsStep() {
 		useState("");
 	const [newDigitalAssetAction, setNewDigitalAssetAction] = useState<
 		"delete" | "memorialize" | "transfer" | "archive"
-	>("delete");
+	>("memorialize");
 	const [newDigitalAssetBeneficiaryName, setNewDigitalAssetBeneficiaryName] =
 		useState("");
 	const [newDigitalAssetNotes, setNewDigitalAssetNotes] = useState("");
@@ -89,51 +83,85 @@ export default function AssetsPossessionsStep() {
 	const [newPossessionRecipient, setNewPossessionRecipient] = useState("");
 	const [newPossessionReason, setNewPossessionReason] = useState("");
 
-	const addDigitalAsset = () => {
+	const addDigitalAsset = async () => {
 		if (
 			newDigitalAssetPlatform.trim() &&
-			newDigitalAssetUsernameOrEmail.trim()
+			newDigitalAssetUsernameOrEmail.trim() &&
+			letterData?.id
 		) {
-			const newDigitalAsset = {
-				platform: newDigitalAssetPlatform.trim(),
-				usernameOrEmail: newDigitalAssetUsernameOrEmail.trim(),
-				action: newDigitalAssetAction,
-				beneficiaryName: newDigitalAssetBeneficiaryName.trim() || undefined,
-				notes: newDigitalAssetNotes.trim(),
-			};
+			try {
+				let updatedDigitalAssets;
+				if (isEditingDigitalAsset && editingAssetIndex !== null) {
+					// Update existing asset via API
+					const existingAsset = digitalAssets[editingAssetIndex];
+					const updateData = {
+						platform: newDigitalAssetPlatform.trim(),
+						username: newDigitalAssetUsernameOrEmail.trim(),
+						action: newDigitalAssetAction,
+						beneficiary: newDigitalAssetBeneficiaryName.trim() || null,
+						instructions: newDigitalAssetNotes.trim() || null,
+					};
 
-			let updatedDigitalAssets;
-			if (isEditingDigitalAsset && editingAssetIndex !== null) {
-				// Update existing asset
-				updatedDigitalAssets = [...digitalAssets];
-				updatedDigitalAssets[editingAssetIndex] = newDigitalAsset;
-			} else {
-				// Add new asset
-				updatedDigitalAssets = [...digitalAssets, newDigitalAsset];
+					const updatedAsset = await LetterOfWishesService.updateDigitalAsset(
+						existingAsset.id,
+						updateData
+					);
+
+					// Update local state with the response from API
+					updatedDigitalAssets = [...digitalAssets];
+					updatedDigitalAssets[editingAssetIndex] = updatedAsset;
+					toast.success("Digital asset updated successfully");
+				} else {
+					// Create new asset via API
+					const assetData = {
+						low_id: letterData.id,
+						platform: newDigitalAssetPlatform.trim(),
+						username: newDigitalAssetUsernameOrEmail.trim(),
+						action: newDigitalAssetAction,
+						beneficiary: newDigitalAssetBeneficiaryName.trim() || null,
+						instructions: newDigitalAssetNotes.trim() || null,
+					};
+
+					const newAsset = await LetterOfWishesService.createDigitalAsset(
+						assetData
+					);
+					updatedDigitalAssets = [...digitalAssets, newAsset];
+					toast.success("Digital asset added successfully");
+				}
+
+				setDigitalAssets(updatedDigitalAssets);
+
+				// Update letter data in context with the new structure
+				if (setLetterData && letterData) {
+					setLetterData({
+						...letterData,
+						digitalAssetsPreferences: {
+							...letterData.digitalAssetsPreferences,
+							digitalAssets: updatedDigitalAssets.map((digitalAsset) => ({
+								platform: digitalAsset.platform,
+								usernameOrEmail: digitalAsset.username,
+								action: digitalAsset.action,
+								beneficiaryId: undefined,
+								beneficiaryName: digitalAsset.beneficiary || undefined,
+								notes: digitalAsset.instructions || undefined,
+							})),
+						},
+					});
+				}
+
+				// Reset form and editing state
+				setNewDigitalAssetPlatform("");
+				setNewDigitalAssetUsernameOrEmail("");
+				setNewDigitalAssetAction("memorialize");
+				setNewDigitalAssetBeneficiaryName("");
+				setNewDigitalAssetNotes("");
+				setIsEditingDigitalAsset(false);
+				setEditingAssetIndex(null);
+				setIsDigitalAssetsModalOpen(false);
+			} catch (error) {
+				console.error("Error adding/updating digital asset:", error);
+				toast.error("Failed to save digital asset");
 			}
-
-			setDigitalAssets(updatedDigitalAssets);
-
-			// Update letter data in context
-			if (setLetterData && letterData) {
-				setLetterData({
-					...letterData,
-					digitalAssetsPreferences: {
-						...letterData.digitalAssetsPreferences,
-						digitalAssets: updatedDigitalAssets,
-					},
-				});
-			}
-
-			// Reset form and editing state
-			setNewDigitalAssetPlatform("");
-			setNewDigitalAssetUsernameOrEmail("");
-			setNewDigitalAssetAction("delete");
-			setNewDigitalAssetBeneficiaryName("");
-			setNewDigitalAssetNotes("");
-			setIsEditingDigitalAsset(false);
-			setEditingAssetIndex(null);
-			setIsDigitalAssetsModalOpen(false); // Close modal after adding/editing
 		}
 	};
 
@@ -145,27 +173,46 @@ export default function AssetsPossessionsStep() {
 		setIsDigitalAssetDeleteConfirmationOpen(true);
 	};
 
-	const confirmDeleteDigitalAsset = () => {
+	const confirmDeleteDigitalAsset = async () => {
 		if (!digitalAssetToDelete) return;
 
-		const { index } = digitalAssetToDelete;
-		const updatedDigitalAssets = digitalAssets.filter((_, i) => i !== index);
-		setDigitalAssets(updatedDigitalAssets);
+		try {
+			const { index, asset } = digitalAssetToDelete;
 
-		// Update letter data in context
-		if (setLetterData && letterData) {
-			setLetterData({
-				...letterData,
-				digitalAssetsPreferences: {
-					...letterData.digitalAssetsPreferences,
-					digitalAssets: updatedDigitalAssets,
-				},
-			});
+			// Delete via API
+			await LetterOfWishesService.deleteDigitalAsset(asset.id);
+
+			// Update local state
+			const updatedDigitalAssets = digitalAssets.filter((_, i) => i !== index);
+			setDigitalAssets(updatedDigitalAssets);
+
+			// Update letter data in context with the new structure
+			if (setLetterData && letterData) {
+				setLetterData({
+					...letterData,
+					digitalAssetsPreferences: {
+						...letterData.digitalAssetsPreferences,
+						digitalAssets: updatedDigitalAssets.map((digitalAsset) => ({
+							platform: digitalAsset.platform,
+							usernameOrEmail: digitalAsset.username,
+							action: digitalAsset.action,
+							beneficiaryId: undefined,
+							beneficiaryName: digitalAsset.beneficiary || undefined,
+							notes: digitalAsset.instructions || undefined,
+						})),
+					},
+				});
+			}
+
+			toast.success("Digital asset deleted successfully");
+		} catch (error) {
+			console.error("Error deleting digital asset:", error);
+			toast.error("Failed to delete digital asset");
+		} finally {
+			// Close confirmation dialog and reset state
+			setIsDigitalAssetDeleteConfirmationOpen(false);
+			setDigitalAssetToDelete(null);
 		}
-
-		// Close confirmation dialog and reset state
-		setIsDigitalAssetDeleteConfirmationOpen(false);
-		setDigitalAssetToDelete(null);
 	};
 
 	const addPersonalPossession = async () => {
@@ -288,6 +335,33 @@ export default function AssetsPossessionsStep() {
 		}
 	};
 
+	// Add useEffect to load digital assets
+	useEffect(() => {
+		const loadDigitalAssets = async () => {
+			if (!letterData?.id) {
+				console.log(
+					"No Letter of Wishes ID available, skipping digital assets load"
+				);
+				return;
+			}
+
+			setIsLoadingDigitalAssets(true);
+			try {
+				const response = await LetterOfWishesService.getDigitalAssets(
+					letterData.id
+				);
+				setDigitalAssets(response);
+			} catch (error) {
+				toast.error("Failed to load digital assets.");
+				console.error(error);
+			} finally {
+				setIsLoadingDigitalAssets(false);
+			}
+		};
+
+		loadDigitalAssets();
+	}, [letterData?.id]);
+
 	useEffect(() => {
 		const loadPersonalPossessions = async () => {
 			if (!letterData?.id) {
@@ -359,7 +433,7 @@ export default function AssetsPossessionsStep() {
 									</div>
 									{possession.reason && (
 										<div className="text-sm text-gray-600">
-											Reason: {possession.reason}
+											Reason/ Instructions: {possession.reason}
 										</div>
 									)}
 								</div>
@@ -385,7 +459,7 @@ export default function AssetsPossessionsStep() {
 										variant="outline"
 										size="sm"
 										onClick={() => removePersonalPossession(index)}
-										className="absolute top-4 right-4 border-[#CCCCCC] bg-[#E5E5E4] rounded-[0.25rem] font-medium"
+										className="absolute top-4 right-4 border-[#CCCCCC] bg-red-600 text-white hover:bg-red-700 hover:text-white rounded-[0.25rem] font-medium"
 									>
 										Delete
 									</Button>
@@ -427,7 +501,12 @@ export default function AssetsPossessionsStep() {
 				</div>
 
 				{/* Digital Assets List */}
-				{digitalAssets.length > 0 && (
+				{isLoadingDigitalAssets ? (
+					<div className="text-center py-8">
+						<div className="h-6 w-6 animate-spin rounded-full border-b-2 border-primary mx-auto mb-2"></div>
+						<p className="text-muted-foreground">Loading digital assets...</p>
+					</div>
+				) : digitalAssets.length > 0 ? (
 					<div className="space-y-3">
 						{digitalAssets.map((asset, index) => (
 							<div
@@ -436,15 +515,15 @@ export default function AssetsPossessionsStep() {
 							>
 								<div className="flex-1">
 									<div className="font-medium text-[0.875rem]">
-										{asset.platform} - {asset.usernameOrEmail}
+										{asset.platform} - {asset.username}
 									</div>
 									<div className="text-sm text-gray-600">
 										Action: {asset.action}
-										{asset.beneficiaryName && ` → ${asset.beneficiaryName}`}
+										{asset.beneficiary && ` → ${asset.beneficiary}`}
 									</div>
-									{asset.notes && (
+									{asset.instructions && (
 										<div className="text-sm text-gray-600">
-											Access and Instructions: {asset.notes}
+											Access and Instructions: {asset.instructions}
 										</div>
 									)}
 								</div>
@@ -455,12 +534,12 @@ export default function AssetsPossessionsStep() {
 										onClick={() => {
 											// Set the form values for editing
 											setNewDigitalAssetPlatform(asset.platform);
-											setNewDigitalAssetUsernameOrEmail(asset.usernameOrEmail);
+											setNewDigitalAssetUsernameOrEmail(asset.username);
 											setNewDigitalAssetAction(asset.action);
 											setNewDigitalAssetBeneficiaryName(
-												asset.beneficiaryName || ""
+												asset.beneficiary || ""
 											);
-											setNewDigitalAssetNotes(asset.notes || "");
+											setNewDigitalAssetNotes(asset.instructions || "");
 											// Set editing state
 											setIsEditingDigitalAsset(true);
 											setEditingAssetIndex(index);
@@ -474,7 +553,7 @@ export default function AssetsPossessionsStep() {
 										variant="outline"
 										size="sm"
 										onClick={() => removeDigitalAsset(index)}
-										className="absolute top-4 right-4 border-[#CCCCCC] bg-[#E5E5E4] rounded-[0.25rem] font-medium"
+										className="absolute top-4 right-4 bg-red-600 border-[#CCCCCC] text-white hover:bg-red-700 hover:text-white rounded-[0.25rem] font-medium"
 									>
 										Delete
 									</Button>
@@ -482,7 +561,7 @@ export default function AssetsPossessionsStep() {
 							</div>
 						))}
 					</div>
-				)}
+				) : null}
 
 				{/* Add Digital Asset Button - Always Visible */}
 				<Button
@@ -490,7 +569,7 @@ export default function AssetsPossessionsStep() {
 						// Reset form when adding new asset
 						setNewDigitalAssetPlatform("");
 						setNewDigitalAssetUsernameOrEmail("");
-						setNewDigitalAssetAction("delete");
+						setNewDigitalAssetAction("memorialize");
 						setNewDigitalAssetBeneficiaryName("");
 						setNewDigitalAssetNotes("");
 						setIsEditingDigitalAsset(false); // Ensure editing state is false
@@ -548,7 +627,9 @@ export default function AssetsPossessionsStep() {
 								onChange={(e) => setNewPossessionRecipient(e.target.value)}
 								className="w-full"
 							/>
-							<Label htmlFor="modal-possessionReason">Reason (Optional)</Label>
+							<Label htmlFor="modal-possessionReason">
+								Reason/ Instructions (Optional)
+							</Label>
 							<Textarea
 								id="modal-possessionReason"
 								placeholder="e.g., For John's education, as a keepsake for Jane, etc."
@@ -584,7 +665,7 @@ export default function AssetsPossessionsStep() {
 						// Reset form and editing state when modal is closed
 						setNewDigitalAssetPlatform("");
 						setNewDigitalAssetUsernameOrEmail("");
-						setNewDigitalAssetAction("delete");
+						setNewDigitalAssetAction("memorialize");
 						setNewDigitalAssetBeneficiaryName("");
 						setNewDigitalAssetNotes("");
 						setIsEditingDigitalAsset(false);
@@ -713,7 +794,7 @@ export default function AssetsPossessionsStep() {
 						</p>
 						{possessionToDelete?.reason && (
 							<p className="text-black font-semibold">
-								Reason: {possessionToDelete.reason}
+								Reason/ Instructions: {possessionToDelete.reason}
 							</p>
 						)}
 					</div>
@@ -728,7 +809,7 @@ export default function AssetsPossessionsStep() {
 						<Button
 							variant="destructive"
 							onClick={confirmDelete}
-							className="w-full"
+							className="w-full bg-red-600 text-white hover:bg-red-700 hover:text-white"
 						>
 							Delete
 						</Button>
@@ -759,11 +840,11 @@ export default function AssetsPossessionsStep() {
 							Platform: {digitalAssetToDelete?.asset.platform}
 						</p>
 						<p className="text-black font-semibold">
-							Username/Email: {digitalAssetToDelete?.asset.usernameOrEmail}
+							Username: {digitalAssetToDelete?.asset.username}
 						</p>
-						{digitalAssetToDelete?.asset.notes && (
+						{digitalAssetToDelete?.asset.instructions && (
 							<p className="text-black font-semibold">
-								Notes: {digitalAssetToDelete.asset.notes}
+								Instructions: {digitalAssetToDelete.asset.instructions}
 							</p>
 						)}
 					</div>
@@ -778,7 +859,7 @@ export default function AssetsPossessionsStep() {
 						<Button
 							variant="destructive"
 							onClick={confirmDeleteDigitalAsset}
-							className="w-full"
+							className="w-full bg-red-600 text-white hover:bg-red-700 hover:text-white"
 						>
 							Delete
 						</Button>

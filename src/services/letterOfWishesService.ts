@@ -50,6 +50,34 @@ export interface UpdatePersonalPossessionRequest {
 	item?: string;
 }
 
+export interface DigitalAsset {
+	id: string;
+	created_at: string;
+	low_id: string;
+	platform: string;
+	username: string;
+	beneficiary: string | null;
+	action: "delete" | "memorialize" | "transfer" | "archive";
+	instructions: string | null;
+}
+
+export interface CreateDigitalAssetRequest {
+	low_id: string;
+	platform: string;
+	username: string;
+	beneficiary: string | null;
+	action: "delete" | "memorialize" | "transfer" | "archive";
+	instructions: string | null;
+}
+
+export interface UpdateDigitalAssetRequest {
+	platform?: string;
+	username?: string;
+	beneficiary?: string | null;
+	action?: "delete" | "memorialize" | "transfer" | "archive";
+	instructions?: string | null;
+}
+
 export class LetterOfWishesService {
 	/**
 	 * Check if a Letter of Wishes already exists for a given will ID
@@ -341,6 +369,144 @@ export class LetterOfWishesService {
 			console.log("✅ Personal possession deleted successfully");
 		} catch (error) {
 			console.error("❌ Error deleting personal possession:", error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Get digital assets for a Letter of Wishes
+	 */
+	static async getDigitalAssets(lowId: string): Promise<DigitalAsset[]> {
+		try {
+			if (!lowId) {
+				throw new Error("Letter of Wishes ID is required");
+			}
+
+			console.log(
+				`📋 Fetching digital assets for Letter of Wishes ID: ${lowId}`
+			);
+
+			const { data, error } = await apiClient<DigitalAsset[]>(
+				`/low-digital-assets/get-by-low/${lowId}`,
+				{
+					method: "GET",
+				}
+			);
+
+			if (error || !data) {
+				throw new Error(error || "Failed to fetch digital assets");
+			}
+
+			console.log("✅ Digital assets fetched successfully:", data);
+			return data;
+		} catch (error) {
+			console.error("❌ Error fetching digital assets:", error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Create a new digital asset
+	 */
+	static async createDigitalAsset(
+		assetData: CreateDigitalAssetRequest
+	): Promise<DigitalAsset> {
+		try {
+			if (
+				!assetData.low_id ||
+				!assetData.platform ||
+				!assetData.username ||
+				!assetData.action
+			) {
+				throw new Error(
+					"low_id, platform, username, and action are required fields"
+				);
+			}
+
+			console.log(
+				`📝 Creating new digital asset for Letter of Wishes ID: ${assetData.low_id}`
+			);
+
+			const { data, error } = await apiClient<DigitalAsset>(
+				`/low-digital-assets`,
+				{
+					method: "POST",
+					body: JSON.stringify(assetData),
+				}
+			);
+
+			if (error || !data) {
+				throw new Error(error || "Failed to create digital asset");
+			}
+
+			console.log("✅ Digital asset created successfully:", data);
+			return data;
+		} catch (error) {
+			console.error("❌ Error creating digital asset:", error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Update a digital asset
+	 */
+	static async updateDigitalAsset(
+		assetId: string,
+		updateData: UpdateDigitalAssetRequest
+	): Promise<DigitalAsset> {
+		try {
+			if (!assetId) {
+				throw new Error("Digital asset ID is required");
+			}
+
+			if (Object.keys(updateData).length === 0) {
+				throw new Error("At least one field must be provided for update");
+			}
+
+			console.log(`📝 Updating digital asset with ID: ${assetId}`);
+
+			const { data, error } = await apiClient<DigitalAsset>(
+				`/low-digital-assets/${assetId}`,
+				{
+					method: "PATCH",
+					body: JSON.stringify(updateData),
+				}
+			);
+
+			if (error || !data) {
+				throw new Error(error || "Failed to update digital asset");
+			}
+
+			console.log("✅ Digital asset updated successfully:", data);
+			return data;
+		} catch (error) {
+			console.error("❌ Error updating digital asset:", error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Delete a digital asset
+	 */
+	static async deleteDigitalAsset(assetId: string): Promise<void> {
+		try {
+			if (!assetId) {
+				throw new Error("Digital asset ID is required");
+			}
+
+			console.log(`🗑️ Deleting digital asset with ID: ${assetId}`);
+
+			const { error } = await apiClient(`/low-digital-assets/${assetId}`, {
+				method: "DELETE",
+			});
+
+			if (error) {
+				throw new Error(error);
+			}
+
+			console.log("✅ Digital asset deleted successfully");
+		} catch (error) {
+			console.error("❌ Error deleting digital asset:", error);
 			throw error;
 		}
 	}
