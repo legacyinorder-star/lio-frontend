@@ -28,6 +28,28 @@ export interface SubmitPersonalNotesRequest {
 	guardian_values: string | null;
 }
 
+export interface PersonalPossession {
+	id: string;
+	created_at: string;
+	low_id: string;
+	beneficiary: string;
+	reason: string | null;
+	item: string;
+}
+
+export interface CreatePersonalPossessionRequest {
+	low_id: string;
+	beneficiary: string;
+	reason: string | null;
+	item: string;
+}
+
+export interface UpdatePersonalPossessionRequest {
+	beneficiary?: string;
+	reason?: string | null;
+	item?: string;
+}
+
 export class LetterOfWishesService {
 	/**
 	 * Check if a Letter of Wishes already exists for a given will ID
@@ -179,6 +201,146 @@ export class LetterOfWishesService {
 			return result;
 		} catch (error) {
 			console.error("❌ Error submitting personal notes via will ID:", error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Get personal possessions for a Letter of Wishes
+	 */
+	static async getPersonalPossessions(
+		lowId: string
+	): Promise<PersonalPossession[]> {
+		try {
+			if (!lowId) {
+				throw new Error("Letter of Wishes ID is required");
+			}
+
+			console.log(
+				`📋 Fetching personal possessions for Letter of Wishes ID: ${lowId}`
+			);
+
+			const { data, error } = await apiClient<PersonalPossession[]>(
+				`/personal-possessions/get-by-low/${lowId}`,
+				{
+					method: "GET",
+				}
+			);
+
+			if (error || !data) {
+				throw new Error(error || "Failed to fetch personal possessions");
+			}
+
+			console.log("✅ Personal possessions fetched successfully:", data);
+			return data;
+		} catch (error) {
+			console.error("❌ Error fetching personal possessions:", error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Create a new personal possession
+	 */
+	static async createPersonalPossession(
+		possessionData: CreatePersonalPossessionRequest
+	): Promise<PersonalPossession> {
+		try {
+			if (
+				!possessionData.low_id ||
+				!possessionData.beneficiary ||
+				!possessionData.item
+			) {
+				throw new Error("low_id, beneficiary, and item are required fields");
+			}
+
+			console.log(
+				`📝 Creating new personal possession for Letter of Wishes ID: ${possessionData.low_id}`
+			);
+
+			const { data, error } = await apiClient<PersonalPossession>(
+				`/personal-possessions`,
+				{
+					method: "POST",
+					body: JSON.stringify(possessionData),
+				}
+			);
+
+			if (error || !data) {
+				throw new Error(error || "Failed to create personal possession");
+			}
+
+			console.log("✅ Personal possession created successfully:", data);
+			return data;
+		} catch (error) {
+			console.error("❌ Error creating personal possession:", error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Update a personal possession
+	 */
+	static async updatePersonalPossession(
+		possessionId: string,
+		updateData: UpdatePersonalPossessionRequest
+	): Promise<PersonalPossession> {
+		try {
+			if (!possessionId) {
+				throw new Error("Personal possession ID is required");
+			}
+
+			if (Object.keys(updateData).length === 0) {
+				throw new Error("At least one field must be provided for update");
+			}
+
+			console.log(`📝 Updating personal possession with ID: ${possessionId}`);
+
+			const { data, error } = await apiClient<PersonalPossession>(
+				`/personal-possessions/${possessionId}`,
+				{
+					method: "PATCH",
+					body: JSON.stringify(updateData),
+				}
+			);
+
+			if (error || !data) {
+				throw new Error(error || "Failed to update personal possession");
+			}
+
+			console.log("✅ Personal possession updated successfully:", data);
+			return data;
+		} catch (error) {
+			console.error("❌ Error updating personal possession:", error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Delete a personal possession
+	 */
+	static async deletePersonalPossession(possessionId: string): Promise<void> {
+		try {
+			if (!possessionId) {
+				throw new Error("Personal possession ID is required");
+			}
+
+			console.log(`🗑️ Deleting personal possession with ID: ${possessionId}`);
+
+			const { error } = await apiClient(
+				`/personal-possessions/${possessionId}`,
+				{
+					method: "DELETE",
+				}
+			);
+
+			if (error) {
+				throw new Error(error);
+			}
+
+			console.log("✅ Personal possession deleted successfully");
+		} catch (error) {
+			console.error("❌ Error deleting personal possession:", error);
 			throw error;
 		}
 	}

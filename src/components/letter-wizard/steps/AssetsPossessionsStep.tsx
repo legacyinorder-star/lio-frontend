@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,6 +18,11 @@ import {
 } from "@/components/ui/dialog";
 import { Plus } from "lucide-react";
 import { useLetterOfWishes } from "@/context/LetterOfWishesContext";
+import {
+	LetterOfWishesService,
+	PersonalPossession,
+} from "@/services/letterOfWishesService";
+import { toast } from "sonner";
 
 export default function AssetsPossessionsStep() {
 	const { letterData, setLetterData } = useLetterOfWishes();
@@ -34,9 +39,9 @@ export default function AssetsPossessionsStep() {
 	);
 
 	// Personal Possessions states
-	const [personalPossessions, setPersonalPossessions] = useState(
-		letterData?.personalPossessions || []
-	);
+	const [personalPossessions, setPersonalPossessions] = useState<
+		PersonalPossession[]
+	>([]);
 	const [isPersonalPossessionsModalOpen, setIsPersonalPossessionsModalOpen] =
 		useState(false);
 	const [isEditingPersonalPossession, setIsEditingPersonalPossession] =
@@ -44,6 +49,29 @@ export default function AssetsPossessionsStep() {
 	const [editingPossessionIndex, setEditingPossessionIndex] = useState<
 		number | null
 	>(null);
+	const [isLoadingPossessions, setIsLoadingPossessions] = useState(false);
+
+	// Delete confirmation states
+	const [isDeleteConfirmationOpen, setIsDeleteConfirmationOpen] =
+		useState(false);
+	const [possessionToDelete, setPossessionToDelete] =
+		useState<PersonalPossession | null>(null);
+
+	// Digital asset delete confirmation states
+	const [
+		isDigitalAssetDeleteConfirmationOpen,
+		setIsDigitalAssetDeleteConfirmationOpen,
+	] = useState(false);
+	const [digitalAssetToDelete, setDigitalAssetToDelete] = useState<{
+		index: number;
+		asset: {
+			platform: string;
+			usernameOrEmail: string;
+			action: "delete" | "memorialize" | "transfer" | "archive";
+			beneficiaryName?: string;
+			notes?: string;
+		};
+	} | null>(null);
 
 	// Temporary state for form inputs for adding new digital asset
 	const [newDigitalAssetPlatform, setNewDigitalAssetPlatform] = useState("");
@@ -110,6 +138,17 @@ export default function AssetsPossessionsStep() {
 	};
 
 	const removeDigitalAsset = (index: number) => {
+		const asset = digitalAssets[index];
+
+		// Show confirmation dialog
+		setDigitalAssetToDelete({ index, asset });
+		setIsDigitalAssetDeleteConfirmationOpen(true);
+	};
+
+	const confirmDeleteDigitalAsset = () => {
+		if (!digitalAssetToDelete) return;
+
+		const { index } = digitalAssetToDelete;
 		const updatedDigitalAssets = digitalAssets.filter((_, i) => i !== index);
 		setDigitalAssets(updatedDigitalAssets);
 
@@ -123,60 +162,157 @@ export default function AssetsPossessionsStep() {
 				},
 			});
 		}
+
+		// Close confirmation dialog and reset state
+		setIsDigitalAssetDeleteConfirmationOpen(false);
+		setDigitalAssetToDelete(null);
 	};
 
-	const addPersonalPossession = () => {
-		if (newPossessionItem.trim() && newPossessionRecipient.trim()) {
-			const newPossession = {
-				item: newPossessionItem.trim(),
-				recipient: newPossessionRecipient.trim(),
-				reason: newPossessionReason.trim() || undefined,
-			};
+	const addPersonalPossession = async () => {
+		if (
+			newPossessionItem.trim() &&
+			newPossessionRecipient.trim() &&
+			letterData?.id
+		) {
+			try {
+				let updatedPossessions;
+				if (isEditingPersonalPossession && editingPossessionIndex !== null) {
+					// Update existing possession via API
+					const existingPossession =
+						personalPossessions[editingPossessionIndex];
+					const updateData = {
+						beneficiary: newPossessionRecipient.trim(),
+						reason: newPossessionReason.trim() || null,
+						item: newPossessionItem.trim(),
+					};
 
-			let updatedPossessions;
-			if (isEditingPersonalPossession && editingPossessionIndex !== null) {
-				// Update existing possession
-				updatedPossessions = [...personalPossessions];
-				updatedPossessions[editingPossessionIndex] = newPossession;
-			} else {
-				// Add new possession
-				updatedPossessions = [...personalPossessions, newPossession];
+					const updatedPossession =
+						await LetterOfWishesService.updatePersonalPossession(
+							existingPossession.id,
+							updateData
+						);
+
+					// Update local state with the response from API
+					updatedPossessions = [...personalPossessions];
+					updatedPossessions[editingPossessionIndex] = updatedPossession;
+					toast.success("Personal possession updated successfully");
+				} else {
+					// Create new possession via API
+					const possessionData = {
+						low_id: letterData.id,
+						beneficiary: newPossessionRecipient.trim(),
+						reason: newPossessionReason.trim() || null,
+						item: newPossessionItem.trim(),
+					};
+
+					const newPossession =
+						await LetterOfWishesService.createPersonalPossession(
+							possessionData
+						);
+					updatedPossessions = [...personalPossessions, newPossession];
+					toast.success("Personal possession added successfully");
+				}
+
+				// Update local state
+				setPersonalPossessions(updatedPossessions);
+
+				// Update letter data in context with the new structure
+				if (setLetterData && letterData) {
+					setLetterData({
+						...letterData,
+						personalPossessions: updatedPossessions.map((possession) => ({
+							item: possession.item,
+							recipient: possession.beneficiary,
+							reason: possession.reason || undefined,
+						})),
+					});
+				}
+
+				// Reset form and editing state
+				setNewPossessionItem("");
+				setNewPossessionRecipient("");
+				setNewPossessionReason("");
+				setIsEditingPersonalPossession(false);
+				setEditingPossessionIndex(null);
+				setIsPersonalPossessionsModalOpen(false);
+			} catch (error) {
+				console.error("Error adding/updating personal possession:", error);
+				toast.error("Failed to save personal possession");
 			}
+		}
+	};
 
+	const removePersonalPossession = async (index: number) => {
+		const possession = personalPossessions[index];
+
+		// Show confirmation dialog
+		setPossessionToDelete(possession);
+		setIsDeleteConfirmationOpen(true);
+	};
+
+	const confirmDelete = async () => {
+		if (!possessionToDelete) return;
+
+		try {
+			// Delete via API
+			await LetterOfWishesService.deletePersonalPossession(
+				possessionToDelete.id
+			);
+
+			// Update local state
+			const updatedPossessions = personalPossessions.filter(
+				(possession) => possession.id !== possessionToDelete.id
+			);
 			setPersonalPossessions(updatedPossessions);
 
-			// Update letter data in context
+			// Update letter data in context with the new structure
 			if (setLetterData && letterData) {
 				setLetterData({
 					...letterData,
-					personalPossessions: updatedPossessions,
+					personalPossessions: updatedPossessions.map((possession) => ({
+						item: possession.item,
+						recipient: possession.beneficiary,
+						reason: possession.reason || undefined,
+					})),
 				});
 			}
 
-			// Reset form and editing state
-			setNewPossessionItem("");
-			setNewPossessionRecipient("");
-			setNewPossessionReason("");
-			setIsEditingPersonalPossession(false);
-			setEditingPossessionIndex(null);
-			setIsPersonalPossessionsModalOpen(false);
+			toast.success("Personal possession deleted successfully");
+		} catch (error) {
+			console.error("Error deleting personal possession:", error);
+			toast.error("Failed to delete personal possession");
+		} finally {
+			// Close confirmation dialog and reset state
+			setIsDeleteConfirmationOpen(false);
+			setPossessionToDelete(null);
 		}
 	};
 
-	const removePersonalPossession = (index: number) => {
-		const updatedPossessions = personalPossessions.filter(
-			(_, i) => i !== index
-		);
-		setPersonalPossessions(updatedPossessions);
+	useEffect(() => {
+		const loadPersonalPossessions = async () => {
+			if (!letterData?.id) {
+				console.log(
+					"No Letter of Wishes ID available, skipping personal possessions load"
+				);
+				return;
+			}
 
-		// Update letter data in context
-		if (setLetterData && letterData) {
-			setLetterData({
-				...letterData,
-				personalPossessions: updatedPossessions,
-			});
-		}
-	};
+			setIsLoadingPossessions(true);
+			try {
+				const response = await LetterOfWishesService.getPersonalPossessions(
+					letterData.id
+				);
+				setPersonalPossessions(response);
+			} catch (error) {
+				toast.error("Failed to load personal possessions.");
+				console.error(error);
+			} finally {
+				setIsLoadingPossessions(false);
+			}
+		};
+
+		loadPersonalPossessions();
+	}, [letterData?.id]);
 
 	return (
 		<div className="space-y-6 w-full max-w-4xl">
@@ -200,11 +336,18 @@ export default function AssetsPossessionsStep() {
 				</div>
 
 				{/* Personal Possessions List */}
-				{personalPossessions.length > 0 && (
+				{isLoadingPossessions ? (
+					<div className="text-center py-8">
+						<div className="h-6 w-6 animate-spin rounded-full border-b-2 border-primary mx-auto mb-2"></div>
+						<p className="text-muted-foreground">
+							Loading personal possessions...
+						</p>
+					</div>
+				) : personalPossessions.length > 0 ? (
 					<div className="space-y-3">
 						{personalPossessions.map((possession, index) => (
 							<div
-								key={index}
+								key={possession.id}
 								className="bg-[#F8F8F8] border border-gray-300 rounded-[0.5rem] p-[1.5rem] relative"
 							>
 								<div className="flex-1">
@@ -212,7 +355,7 @@ export default function AssetsPossessionsStep() {
 										{possession.item}
 									</div>
 									<div className="text-sm text-gray-600">
-										To: {possession.recipient}
+										To: {possession.beneficiary}
 									</div>
 									{possession.reason && (
 										<div className="text-sm text-gray-600">
@@ -227,7 +370,7 @@ export default function AssetsPossessionsStep() {
 										onClick={() => {
 											// Set the form values for editing
 											setNewPossessionItem(possession.item);
-											setNewPossessionRecipient(possession.recipient);
+											setNewPossessionRecipient(possession.beneficiary);
 											setNewPossessionReason(possession.reason || "");
 											// Set editing state
 											setIsEditingPersonalPossession(true);
@@ -250,7 +393,7 @@ export default function AssetsPossessionsStep() {
 							</div>
 						))}
 					</div>
-				)}
+				) : null}
 
 				{/* Add Personal Possession Button - Always Visible */}
 				<Button
@@ -539,6 +682,106 @@ export default function AssetsPossessionsStep() {
 								</Button>
 							</div>
 						</div>
+					</div>
+				</DialogContent>
+			</Dialog>
+
+			{/* Delete Confirmation Dialog */}
+			<Dialog
+				open={isDeleteConfirmationOpen}
+				onOpenChange={(open) => {
+					setIsDeleteConfirmationOpen(open);
+					if (!open) {
+						setPossessionToDelete(null);
+					}
+				}}
+			>
+				<DialogContent className="max-w-sm max-h-[80vh] overflow-y-auto">
+					<DialogHeader>
+						<DialogTitle>Confirm Deletion</DialogTitle>
+					</DialogHeader>
+					<div className="py-4 text-center">
+						<p className="text-black">
+							Are you sure you want to delete this personal possession? This
+							action cannot be undone.
+						</p>
+						<p className="text-black font-semibold">
+							Item: {possessionToDelete?.item}
+						</p>
+						<p className="text-black font-semibold">
+							Recipient: {possessionToDelete?.beneficiary}
+						</p>
+						{possessionToDelete?.reason && (
+							<p className="text-black font-semibold">
+								Reason: {possessionToDelete.reason}
+							</p>
+						)}
+					</div>
+					<div className="flex justify-end gap-2">
+						<Button
+							variant="outline"
+							onClick={() => setIsDeleteConfirmationOpen(false)}
+							className="w-full"
+						>
+							Cancel
+						</Button>
+						<Button
+							variant="destructive"
+							onClick={confirmDelete}
+							className="w-full"
+						>
+							Delete
+						</Button>
+					</div>
+				</DialogContent>
+			</Dialog>
+
+			{/* Digital Asset Delete Confirmation Dialog */}
+			<Dialog
+				open={isDigitalAssetDeleteConfirmationOpen}
+				onOpenChange={(open) => {
+					setIsDigitalAssetDeleteConfirmationOpen(open);
+					if (!open) {
+						setDigitalAssetToDelete(null);
+					}
+				}}
+			>
+				<DialogContent className="max-w-sm max-h-[80vh] overflow-y-auto">
+					<DialogHeader>
+						<DialogTitle>Confirm Deletion</DialogTitle>
+					</DialogHeader>
+					<div className="py-4 text-center">
+						<p className="text-black">
+							Are you sure you want to delete this digital asset? This action
+							cannot be undone.
+						</p>
+						<p className="text-black font-semibold">
+							Platform: {digitalAssetToDelete?.asset.platform}
+						</p>
+						<p className="text-black font-semibold">
+							Username/Email: {digitalAssetToDelete?.asset.usernameOrEmail}
+						</p>
+						{digitalAssetToDelete?.asset.notes && (
+							<p className="text-black font-semibold">
+								Notes: {digitalAssetToDelete.asset.notes}
+							</p>
+						)}
+					</div>
+					<div className="flex justify-end gap-2">
+						<Button
+							variant="outline"
+							onClick={() => setIsDigitalAssetDeleteConfirmationOpen(false)}
+							className="w-full"
+						>
+							Cancel
+						</Button>
+						<Button
+							variant="destructive"
+							onClick={confirmDeleteDigitalAsset}
+							className="w-full"
+						>
+							Delete
+						</Button>
 					</div>
 				</DialogContent>
 			</Dialog>

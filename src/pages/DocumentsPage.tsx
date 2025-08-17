@@ -117,8 +117,6 @@ export default function DocumentsPage() {
 				documentId
 			);
 
-			console.log("✅ Letter of Wishes ready:", letterOfWishes);
-
 			// Store the will data in the Letter of Wishes context
 			setWillData(document);
 
@@ -133,8 +131,6 @@ export default function DocumentsPage() {
 
 			// Navigate to letter of wishes with will ID
 			navigate(`/app/letter-of-wishes?willId=${documentId}`);
-
-			toast.success("Letter of Wishes ready for editing!");
 		} catch (error) {
 			console.error("❌ Error creating/accessing Letter of Wishes:", error);
 			toast.error("Failed to create Letter of Wishes. Please try again.");

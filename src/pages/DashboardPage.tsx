@@ -98,8 +98,6 @@ export default function DashboardPage() {
 			// Check if Letter of Wishes already exists, or create a new one
 			const letterOfWishes = await LetterOfWishesService.getOrCreate(willId);
 
-			console.log("✅ Letter of Wishes ready:", letterOfWishes);
-
 			// Store the will data in the Letter of Wishes context
 			setWillData(will);
 
@@ -114,8 +112,6 @@ export default function DashboardPage() {
 
 			// Navigate to letter of wishes with will ID
 			navigate(`/app/letter-of-wishes?willId=${willId}`);
-
-			toast.success("Letter of Wishes ready for editing!");
 		} catch (error) {
 			console.error("❌ Error creating/accessing Letter of Wishes:", error);
 			toast.error("Failed to create Letter of Wishes. Please try again.");
