@@ -128,11 +128,32 @@ export interface UpdateContactRequest {
 	email?: string;
 }
 
+export interface CharitableDonation {
+	id: string;
+	created_at: string;
+	low_id: string;
+	user_id: string;
+	charity: string;
+	description: string | null;
+}
+
+export interface CreateCharitableDonationRequest {
+	low_id: string;
+	charity: string;
+	description?: string | null;
+}
+
+export interface UpdateCharitableDonationRequest {
+	charity?: string;
+	description?: string | null;
+}
+
 export interface ProfessionalInstructions {
 	id: string;
 	low_id: string;
 	professional_tattoos: string | null;
 	professional_notes: string | null;
+	trustee_notes: string | null;
 }
 
 export interface CreateProfessionalInstructionsRequest {
@@ -964,12 +985,13 @@ export class LetterOfWishesService {
 	}
 
 	/**
-	 * Create or update professional instructions for a Letter of Wishes
-	 * The API endpoint /low-instructions handles both operations
+	 * Save instructions for a Letter of Wishes
+	 * The API endpoint /low-instructions handles both professional_notes and trustee_notes
 	 */
-	static async saveProfessionalInstructions(instructionsData: {
+	static async saveInstructions(instructionsData: {
 		low_id: string;
-		professional_notes: string | null;
+		professional_notes?: string | null;
+		trustee_notes?: string | null;
 	}): Promise<ProfessionalInstructions> {
 		try {
 			if (!instructionsData.low_id) {
@@ -977,7 +999,7 @@ export class LetterOfWishesService {
 			}
 
 			console.log(
-				`📝 Saving professional instructions for Letter of Wishes ID: ${instructionsData.low_id}`
+				`📝 Saving instructions for Letter of Wishes ID: ${instructionsData.low_id}`
 			);
 
 			const { data, error } = await apiClient<ProfessionalInstructions>(
@@ -989,13 +1011,167 @@ export class LetterOfWishesService {
 			);
 
 			if (error || !data) {
-				throw new Error(error || "Failed to save professional instructions");
+				throw new Error(error || "Failed to save instructions");
 			}
 
-			console.log("✅ Professional instructions saved successfully:", data);
+			console.log("✅ Instructions saved successfully:", data);
 			return data;
 		} catch (error) {
-			console.error("❌ Error saving professional instructions:", error);
+			console.error("❌ Error saving instructions:", error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Get charitable donations for a Letter of Wishes
+	 */
+	static async getCharitableDonations(
+		lowId: string
+	): Promise<CharitableDonation[]> {
+		try {
+			if (!lowId) {
+				throw new Error("Letter of Wishes ID is required");
+			}
+
+			console.log(
+				`📋 Fetching charitable donations for Letter of Wishes ID: ${lowId}`
+			);
+
+			const { data, error } = await apiClient<CharitableDonation[]>(
+				`/low-charitable-donations/get-by-low/${lowId}`,
+				{
+					method: "GET",
+				}
+			);
+
+			if (error) {
+				// If the error indicates no charitable donations exist, return empty array
+				if (error.includes("not found") || error.includes("404")) {
+					console.log(
+						"📭 No existing charitable donations found for this Letter of Wishes"
+					);
+					return [];
+				}
+				throw new Error(error);
+			}
+
+			console.log("✅ Charitable donations fetched successfully:", data);
+			return data || [];
+		} catch (error) {
+			console.error("❌ Error fetching charitable donations:", error);
+			// If it's a 404 or "not found" error, return empty array instead of throwing
+			if (
+				error instanceof Error &&
+				(error.message.includes("404") || error.message.includes("not found"))
+			) {
+				return [];
+			}
+			throw error;
+		}
+	}
+
+	/**
+	 * Create charitable donation for a Letter of Wishes
+	 */
+	static async createCharitableDonation(
+		donationData: CreateCharitableDonationRequest
+	): Promise<CharitableDonation> {
+		try {
+			if (!donationData.low_id) {
+				throw new Error("low_id is required");
+			}
+
+			if (!donationData.charity) {
+				throw new Error("charity is required");
+			}
+
+			console.log(
+				`📝 Creating charitable donation for Letter of Wishes ID: ${donationData.low_id}`
+			);
+
+			const { data, error } = await apiClient<CharitableDonation>(
+				`/low-charitable-donations`,
+				{
+					method: "POST",
+					body: JSON.stringify(donationData),
+				}
+			);
+
+			if (error || !data) {
+				throw new Error(error || "Failed to create charitable donation");
+			}
+
+			console.log("✅ Charitable donation created successfully:", data);
+			return data;
+		} catch (error) {
+			console.error("❌ Error creating charitable donation:", error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Update charitable donation for a Letter of Wishes
+	 */
+	static async updateCharitableDonation(
+		donationId: string,
+		updateData: UpdateCharitableDonationRequest
+	): Promise<CharitableDonation> {
+		try {
+			if (!donationId) {
+				throw new Error("Charitable donation ID is required");
+			}
+
+			if (Object.keys(updateData).length === 0) {
+				throw new Error("At least one field must be provided for update");
+			}
+
+			console.log(`📝 Updating charitable donation with ID: ${donationId}`);
+
+			const { data, error } = await apiClient<CharitableDonation>(
+				`/low-charitable-donations/${donationId}`,
+				{
+					method: "PATCH",
+					body: JSON.stringify(updateData),
+				}
+			);
+
+			if (error || !data) {
+				throw new Error(error || "Failed to update charitable donation");
+			}
+
+			console.log("✅ Charitable donation updated successfully:", data);
+			return data;
+		} catch (error) {
+			console.error("❌ Error updating charitable donation:", error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Delete charitable donation for a Letter of Wishes
+	 */
+	static async deleteCharitableDonation(donationId: string): Promise<void> {
+		try {
+			if (!donationId) {
+				throw new Error("Charitable donation ID is required");
+			}
+
+			console.log(`🗑️ Deleting charitable donation with ID: ${donationId}`);
+
+			const { error } = await apiClient(
+				`/low-charitable-donations/${donationId}`,
+				{
+					method: "DELETE",
+				}
+			);
+
+			if (error) {
+				throw new Error(error);
+			}
+
+			console.log("✅ Charitable donation deleted successfully");
+		} catch (error) {
+			console.error("❌ Error deleting charitable donation:", error);
 			throw error;
 		}
 	}

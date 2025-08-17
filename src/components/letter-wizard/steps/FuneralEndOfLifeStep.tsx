@@ -29,6 +29,7 @@ import {
 	Contact,
 	CreateContactRequest,
 	UpdateContactRequest,
+	ProfessionalInstructions,
 } from "@/services/letterOfWishesService";
 import { toast } from "sonner";
 
@@ -80,6 +81,8 @@ const FuneralEndOfLifeStep = forwardRef<FuneralEndOfLifeStepHandle>(
 		);
 
 		// Professional Instructions from API
+		const [professionalInstructions, setProfessionalInstructions] =
+			useState<ProfessionalInstructions | null>(null);
 		const [
 			isLoadingProfessionalInstructions,
 			setIsLoadingProfessionalInstructions,
@@ -114,6 +117,7 @@ const FuneralEndOfLifeStep = forwardRef<FuneralEndOfLifeStepHandle>(
 					);
 
 					if (!error && data) {
+						console.log("🔍 Funeral wishes API response:", data);
 						setFuneralWishes(data.wishes);
 					}
 				} catch (error) {
@@ -213,6 +217,7 @@ const FuneralEndOfLifeStep = forwardRef<FuneralEndOfLifeStepHandle>(
 							letterData.id
 						);
 					if (response) {
+						setProfessionalInstructions(response);
 						setProfessionalInstructionsText(response.professional_notes || "");
 					}
 				} catch (error) {
@@ -239,12 +244,14 @@ const FuneralEndOfLifeStep = forwardRef<FuneralEndOfLifeStepHandle>(
 					const instructionsData = {
 						low_id: letterData.id,
 						professional_notes: professionalInstructionsText.trim() || null,
+						// Preserve existing trustee_notes if they exist
+						...(professionalInstructions && {
+							trustee_notes: professionalInstructions.trustee_notes,
+						}),
 					};
 
 					const updatedInstructions =
-						await LetterOfWishesService.saveProfessionalInstructions(
-							instructionsData
-						);
+						await LetterOfWishesService.saveInstructions(instructionsData);
 
 					// Update letter data in context
 					if (setLetterData && letterData) {
