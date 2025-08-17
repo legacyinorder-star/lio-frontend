@@ -262,13 +262,7 @@ export default function LetterWizard() {
 					// Initialize letter data with the actual ID
 					initializeLetterForWill(willId, letterResponse.id);
 
-					// 🆕 Load existing data after initialization
-					await loadExistingLetterData(letterResponse.id);
-
-					console.log(
-						"✅ Letter data initialized and loaded with ID:",
-						letterResponse.id
-					);
+					console.log("✅ Letter data initialized with ID:", letterResponse.id);
 				} catch (error) {
 					console.error("❌ Error initializing Letter of Wishes:", error);
 					toast.error("Failed to initialize Letter of Wishes");
@@ -278,106 +272,6 @@ export default function LetterWizard() {
 
 		initializeLetterData();
 	}, [willId, willData, letterData, initializeLetterForWill]);
-
-	// 🆕 New function to load existing data
-	const loadExistingLetterData = async (letterId: string) => {
-		try {
-			console.log("🔄 Loading existing letter data for ID:", letterId);
-
-			// Load personal notes (includes guardianship preferences)
-			const personalNotes = await LetterOfWishesService.getPersonalNotes(
-				letterId
-			);
-			if (personalNotes) {
-				console.log("📝 Personal notes loaded:", personalNotes);
-				// Update context with loaded data
-				if (setLetterData && letterData) {
-					const updatedLetterData = {
-						...letterData,
-						notesToLovedOnes: personalNotes.notes || "",
-						guardianshipPreferences: {
-							reasonForChoice: personalNotes.guardian_reason || "",
-							valuesAndHopes: personalNotes.guardian_values || "",
-						},
-						personalNotesId: personalNotes.id,
-						personalNotesCreatedAt: personalNotes.created_at,
-						personalNotesLowId: personalNotes.low_id,
-					};
-					setLetterData(updatedLetterData);
-					console.log(
-						"✅ Context updated with personal notes:",
-						updatedLetterData
-					);
-				}
-			}
-
-			// Load funeral instructions
-			try {
-				const funeralInstructions =
-					await LetterOfWishesService.getFuneralInstructions(letterId);
-				if (funeralInstructions && setLetterData && letterData) {
-					console.log("🏛️ Funeral instructions loaded:", funeralInstructions);
-					const updatedLetterData = {
-						...letterData,
-						funeralPreferences: {
-							burialLocation: funeralInstructions.location || "",
-							serviceType: funeralInstructions.service || undefined,
-							additionalPreferences:
-								funeralInstructions.additional_preferences || "",
-						},
-					};
-					setLetterData(updatedLetterData);
-					console.log(
-						"✅ Context updated with funeral instructions:",
-						updatedLetterData
-					);
-				}
-			} catch (error) {
-				console.log("📭 No funeral instructions found or error loading them");
-			}
-
-			// Load contacts
-			try {
-				const contacts = await LetterOfWishesService.getContacts(letterId);
-				if (contacts && setLetterData && letterData) {
-					console.log("👥 Contacts loaded:", contacts);
-					setLetterData({
-						...letterData,
-						businessLegacy: {
-							...letterData.businessLegacy,
-							notificationContacts: contacts.map((contact) => ({
-								name: contact.full_name,
-								email: contact.email,
-							})),
-						},
-					});
-				}
-			} catch (error) {
-				console.log("📭 No contacts found or error loading them");
-			}
-
-			// Load charitable donations
-			try {
-				const charitableDonations =
-					await LetterOfWishesService.getCharitableDonations(letterId);
-				if (charitableDonations && setLetterData && letterData) {
-					console.log("💝 Charitable donations loaded:", charitableDonations);
-					setLetterData({
-						...letterData,
-						charitableDonations: charitableDonations.map((donation) => ({
-							charityName: donation.charity,
-							description: donation.description || undefined,
-						})),
-					});
-				}
-			} catch (error) {
-				console.log("📭 No charitable donations found or error loading them");
-			}
-		} catch (error) {
-			console.error("❌ Error loading existing letter data:", error);
-			// Don't show error to user as this is background loading
-		}
-	};
 
 	// Navigation functions
 	const goToNextStep = useCallback(async () => {

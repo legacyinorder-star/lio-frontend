@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -12,23 +12,63 @@ import {
 } from "@/components/ui/dialog";
 import { Plus } from "lucide-react";
 import { useLetterOfWishes } from "@/context/LetterOfWishesContext";
+import { LetterOfWishesService } from "@/services/letterOfWishesService";
 
 const PersonalFamilyStep = () => {
 	const { letterData, setLetterData, willData } = useLetterOfWishes();
 
 	// Notes to Loved Ones states
-	const [notesToLovedOnes, setNotesToLovedOnes] = useState(
-		letterData?.notesToLovedOnes || ""
-	);
+	const [notesToLovedOnes, setNotesToLovedOnes] = useState("");
+	const [isLoadingNotes, setIsLoadingNotes] = useState(false);
 
 	// Guardianship states
-	const [reasonForChoice, setReasonForChoice] = useState(
-		letterData?.guardianshipPreferences?.reasonForChoice || ""
-	);
-	const [valuesAndHopes, setValuesAndHopes] = useState(
-		letterData?.guardianshipPreferences?.valuesAndHopes || ""
-	);
+	const [reasonForChoice, setReasonForChoice] = useState("");
+	const [valuesAndHopes, setValuesAndHopes] = useState("");
 	const [isGuardianshipModalOpen, setIsGuardianshipModalOpen] = useState(false);
+
+	// Load personal notes from API when component mounts
+	useEffect(() => {
+		const loadPersonalNotes = async () => {
+			if (!letterData?.id) return;
+
+			setIsLoadingNotes(true);
+			try {
+				const personalNotes = await LetterOfWishesService.getPersonalNotes(
+					letterData.id
+				);
+				if (personalNotes) {
+					console.log("📝 Personal notes loaded from API:", personalNotes);
+
+					// Update local state
+					setNotesToLovedOnes(personalNotes.notes || "");
+					setReasonForChoice(personalNotes.guardian_reason || "");
+					setValuesAndHopes(personalNotes.guardian_values || "");
+
+					// Update context with loaded data
+					if (setLetterData && letterData) {
+						setLetterData({
+							...letterData,
+							notesToLovedOnes: personalNotes.notes || "",
+							guardianshipPreferences: {
+								reasonForChoice: personalNotes.guardian_reason || "",
+								valuesAndHopes: personalNotes.guardian_values || "",
+							},
+							personalNotesId: personalNotes.id,
+							personalNotesCreatedAt: personalNotes.created_at,
+							personalNotesLowId: personalNotes.low_id,
+						});
+					}
+				}
+			} catch (error) {
+				console.error("❌ Error loading personal notes:", error);
+				// Don't show error to user as this is background loading
+			} finally {
+				setIsLoadingNotes(false);
+			}
+		};
+
+		loadPersonalNotes();
+	}, [letterData?.id, setLetterData]);
 
 	// Get guardians from will data
 	const guardians = willData?.guardians || [];
@@ -98,7 +138,7 @@ const PersonalFamilyStep = () => {
 				</div>
 
 				{/* Loading State for Personal Notes */}
-				{!letterData ? (
+				{isLoadingNotes ? (
 					<div className="text-center py-8">
 						<div className="h-6 w-6 animate-spin rounded-full border-b-2 border-primary mx-auto mb-2"></div>
 						<p className="text-muted-foreground">Loading personal notes...</p>
@@ -127,7 +167,7 @@ const PersonalFamilyStep = () => {
 					</div>
 
 					{/* Add Guardianship Details Button */}
-					{!hasGuardianshipPreferences && letterData && (
+					{!hasGuardianshipPreferences && !isLoadingNotes && (
 						<Button
 							onClick={() => setIsGuardianshipModalOpen(true)}
 							variant="outline"
@@ -139,7 +179,7 @@ const PersonalFamilyStep = () => {
 					)}
 
 					{/* Loading State for Guardianship */}
-					{!letterData && (
+					{isLoadingNotes && (
 						<div className="text-center py-8">
 							<div className="h-6 w-6 animate-spin rounded-full border-b-2 border-primary mx-auto mb-2"></div>
 							<p className="text-muted-foreground">
@@ -149,7 +189,7 @@ const PersonalFamilyStep = () => {
 					)}
 
 					{/* Guardianship Details Summary */}
-					{hasGuardianshipPreferences && letterData && (
+					{hasGuardianshipPreferences && !isLoadingNotes && (
 						<div className="bg-[#F8F8F8] border border-gray-300 rounded-[0.5rem] p-[1.5rem] relative">
 							{/* Edit Button - Top Right Corner */}
 							<Button
