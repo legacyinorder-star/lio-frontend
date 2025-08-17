@@ -1175,4 +1175,33 @@ export class LetterOfWishesService {
 			throw error;
 		}
 	}
+
+	/**
+	 * Mark Letter of Wishes as done (available for download)
+	 */
+	static async markLetterAsDone(lowId: string): Promise<void> {
+		try {
+			if (!lowId) {
+				throw new Error("Letter of Wishes ID is required");
+			}
+
+			console.log(`✅ Marking Letter of Wishes as done: ${lowId}`);
+
+			const { error } = await apiClient(
+				`/letter-of-wishes/${lowId}/mark-as-done`,
+				{
+					method: "POST",
+				}
+			);
+
+			if (error) {
+				throw new Error(error);
+			}
+
+			console.log("✅ Letter of Wishes marked as done successfully");
+		} catch (error) {
+			console.error("❌ Error marking Letter of Wishes as done:", error);
+			throw error;
+		}
+	}
 }

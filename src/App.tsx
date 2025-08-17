@@ -38,6 +38,7 @@ import PaymentSuccessPage from "@/pages/PaymentSuccessPage";
 import PaymentCancelPage from "@/pages/PaymentCancelPage";
 import LetterOfWishesPaymentSuccessPage from "@/pages/LetterOfWishesPaymentSuccessPage";
 import LetterOfWishesPaymentCancelPage from "@/pages/LetterOfWishesPaymentCancelPage";
+import LetterOfWishesSuccessPage from "@/pages/LetterOfWishesSuccessPage";
 import StripeCheckoutPage from "@/pages/StripeCheckoutPage";
 import WillSuccessPage from "@/pages/WillSuccessPage";
 import { VaultPage } from "@/pages/VaultPage";
@@ -257,6 +258,14 @@ function App() {
 											element={
 												<ProtectedRoute>
 													<WillSuccessPage />
+												</ProtectedRoute>
+											}
+										/>
+										<Route
+											path="/app/letter-of-wishes/success"
+											element={
+												<ProtectedRoute>
+													<LetterOfWishesSuccessPage />
 												</ProtectedRoute>
 											}
 										/>

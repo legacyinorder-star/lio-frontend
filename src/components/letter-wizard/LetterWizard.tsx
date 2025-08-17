@@ -515,7 +515,7 @@ export default function LetterWizard() {
 								) : (
 									<>
 										<Save className="mr-2 h-4 w-4" />
-										Save & Submit
+										Complete Letter of Wishes
 									</>
 								)}
 							</Button>

@@ -8,6 +8,8 @@ import {
 	DialogContent,
 	DialogHeader,
 	DialogTitle,
+	DialogDescription,
+	DialogFooter,
 } from "@/components/ui/dialog";
 import { Plus } from "lucide-react";
 import { useLetterOfWishes } from "@/context/LetterOfWishesContext";
@@ -29,7 +31,7 @@ export interface InstructionsCharitableDonationsStepHandle {
 
 const InstructionsCharitableDonationsStep =
 	forwardRef<InstructionsCharitableDonationsStepHandle>((_props, ref) => {
-		const { letterData, setLetterData, willData } = useLetterOfWishes();
+		const { letterData, setLetterData } = useLetterOfWishes();
 		const navigate = useNavigate();
 
 		// Charitable Donations states
@@ -61,6 +63,14 @@ const InstructionsCharitableDonationsStep =
 		// Temporary state for form inputs for adding new charitable donation
 		const [newCharityName, setNewCharityName] = useState("");
 		const [newCharityDescription, setNewCharityDescription] = useState("");
+
+		// Delete confirmation dialog state
+		const [isDeleteConfirmationOpen, setIsDeleteConfirmationOpen] =
+			useState(false);
+		const [donationToDelete, setDonationToDelete] = useState<{
+			index: number;
+			donation: CharitableDonation;
+		} | null>(null);
 
 		// Load existing instructions from the API
 		useEffect(() => {
@@ -194,40 +204,52 @@ const InstructionsCharitableDonationsStep =
 			}
 		};
 
-		// Handle payment and submit
-		const handlePayAndSubmit = async () => {
-			console.log("🔄 handlePayAndSubmit called");
+		const handleDeleteClick = (index: number) => {
+			const donation = charitableDonations[index];
+			setDonationToDelete({ index, donation });
+			setIsDeleteConfirmationOpen(true);
+		};
 
-			if (!willData?.id) {
-				toast.error("No will found for payment");
+		const confirmDelete = async () => {
+			if (donationToDelete) {
+				await removeCharitableDonation(donationToDelete.index);
+				setIsDeleteConfirmationOpen(false);
+				setDonationToDelete(null);
+			}
+		};
+
+		// Handle submit
+		const handleSubmit = async () => {
+			console.log("🔄 handleSubmit called");
+
+			if (!letterData?.id) {
+				toast.error("No letter of wishes found");
 				return;
 			}
 
 			setIsProcessingPayment(true);
 			try {
-				// Save the current letter data before proceeding to payment
+				// Save the current letter data before proceeding
 				if (setLetterData && letterData) {
-					console.log("📝 Saving letter data before payment...");
+					console.log("📝 Saving letter data...");
 
 					// Save instructions to API (both professional_notes and trustee_notes)
-					if (letterData.id) {
-						try {
-							const instructionsData = {
-								low_id: letterData.id,
-								trustee_notes: trusteeInstructions.trim() || null,
-								// Preserve existing professional_notes if they exist
-								...(instructions && {
-									professional_notes: instructions.professional_notes,
-								}),
-							};
+					try {
+						const instructionsData = {
+							low_id: letterData.id,
+							trustee_notes: trusteeInstructions.trim() || null,
+							// Preserve existing professional_notes if they exist
+							...(instructions && {
+								professional_notes: instructions.professional_notes,
+							}),
+						};
 
-							await LetterOfWishesService.saveInstructions(instructionsData);
-							console.log("✅ Instructions saved successfully");
-						} catch (error) {
-							console.error("❌ Error saving instructions:", error);
-							toast.error("Failed to save instructions. Please try again.");
-							return;
-						}
+						await LetterOfWishesService.saveInstructions(instructionsData);
+						console.log("✅ Instructions saved successfully");
+					} catch (error) {
+						console.error("❌ Error saving instructions:", error);
+						toast.error("Failed to save instructions. Please try again.");
+						return;
 					}
 
 					const updatedLetterData = {
@@ -237,6 +259,26 @@ const InstructionsCharitableDonationsStep =
 
 					console.log("📋 Updated letter data:", updatedLetterData);
 					setLetterData(updatedLetterData);
+
+					// Mark letter as done if it's not already available for download
+					if (!letterData.available_to_download) {
+						try {
+							await LetterOfWishesService.markLetterAsDone(letterData.id);
+							console.log("✅ Letter marked as done successfully");
+
+							// Update context to reflect the change
+							setLetterData({
+								...updatedLetterData,
+								available_to_download: true,
+							});
+						} catch (error) {
+							console.error("❌ Error marking letter as done:", error);
+							toast.error(
+								"Failed to mark letter as complete. Please try again."
+							);
+							return;
+						}
+					}
 				} else {
 					console.error(
 						"❌ No letter data or setLetterData function available"
@@ -245,13 +287,13 @@ const InstructionsCharitableDonationsStep =
 					return;
 				}
 
-				// Navigate to Stripe Checkout page for Letter of Wishes
-				const paymentUrl = `/app/payment/checkout?willId=${willData.id}&description=Letter of Wishes&source=letter-of-wishes`;
-				console.log("🔄 Navigating to Stripe Checkout page:", paymentUrl);
-				navigate(paymentUrl);
+				// Navigate to success page since it's now free
+				const successUrl = `/app/letter-of-wishes/success`;
+				console.log("🔄 Navigating to success page:", successUrl);
+				navigate(successUrl);
 			} catch (error) {
-				console.error("❌ Error in handlePayAndSubmit:", error);
-				toast.error("Failed to process payment. Please try again.");
+				console.error("❌ Error in handleSubmit:", error);
+				toast.error("Failed to complete letter of wishes. Please try again.");
 			} finally {
 				setIsProcessingPayment(false);
 			}
@@ -259,7 +301,7 @@ const InstructionsCharitableDonationsStep =
 
 		// Expose the handler and state through ref
 		useImperativeHandle(ref, () => ({
-			handlePayAndSubmit,
+			handlePayAndSubmit: handleSubmit,
 			isProcessingPayment,
 		}));
 
@@ -350,8 +392,8 @@ const InstructionsCharitableDonationsStep =
 										<Button
 											variant="outline"
 											size="sm"
-											onClick={() => removeCharitableDonation(index)}
-											className="absolute top-4 right-4 border-[#CCCCCC] bg-[#E5E5E4] rounded-[0.25rem] font-medium"
+											onClick={() => handleDeleteClick(index)}
+											className="absolute top-4 right-4 bg-red-600 border-[#CCCCCC] text-white hover:bg-red-700 hover:text-white rounded-[0.25rem] font-medium"
 										>
 											Delete
 										</Button>
@@ -439,6 +481,41 @@ const InstructionsCharitableDonationsStep =
 								</Button>
 							</div>
 						</div>
+					</DialogContent>
+				</Dialog>
+
+				{/* Delete Confirmation Dialog */}
+				<Dialog
+					open={isDeleteConfirmationOpen}
+					onOpenChange={setIsDeleteConfirmationOpen}
+				>
+					<DialogContent className="max-w-md">
+						<DialogHeader>
+							<DialogTitle>Delete Charitable Donation</DialogTitle>
+							<DialogDescription>
+								Are you sure you want to delete the charitable donation to{" "}
+								<strong>{donationToDelete?.donation.charity}</strong>? This
+								action cannot be undone.
+							</DialogDescription>
+						</DialogHeader>
+						<DialogFooter className="flex gap-2">
+							<Button
+								variant="outline"
+								onClick={() => {
+									setIsDeleteConfirmationOpen(false);
+									setDonationToDelete(null);
+								}}
+							>
+								Cancel
+							</Button>
+							<Button
+								variant="destructive"
+								onClick={confirmDelete}
+								className="bg-red-600 hover:bg-red-700"
+							>
+								Delete
+							</Button>
+						</DialogFooter>
 					</DialogContent>
 				</Dialog>
 			</div>

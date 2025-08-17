@@ -62,6 +62,8 @@ export interface LetterOfWishesData {
 	personalNotesCreatedAt?: string;
 	personalNotesLowId?: string;
 	personalNotesUserId?: string;
+	// New field for download availability
+	available_to_download?: boolean;
 	createdAt?: string;
 	updatedAt?: string;
 }
@@ -148,6 +150,7 @@ export function LetterOfWishesProvider({ children }: { children: ReactNode }) {
 			charitableDonations: [],
 			trusteeInstructions: "",
 			notesToLovedOnes: "",
+			available_to_download: false,
 		});
 		console.log("Letter data initialized successfully with ID:", letterId);
 		setCurrentStep("personalFamily");
