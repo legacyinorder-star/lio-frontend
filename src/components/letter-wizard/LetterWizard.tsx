@@ -81,7 +81,9 @@ import { BookOpen, X, CreditCard } from "lucide-react";
 // Import step components
 import PersonalFamilyStep from "./steps/PersonalFamilyStep";
 import AssetsPossessionsStep from "./steps/AssetsPossessionsStep";
-import FuneralEndOfLifeStep from "./steps/FuneralEndOfLifeStep";
+import FuneralEndOfLifeStep, {
+	FuneralEndOfLifeStepHandle,
+} from "./steps/FuneralEndOfLifeStep";
 import InstructionsLegacyStep, {
 	InstructionsCharitableDonationsStepHandle,
 } from "./steps/InstructionsCharitableDonationsStep";
@@ -112,6 +114,7 @@ export default function LetterWizard() {
 	// Add refs for the steps
 	const instructionsStepRef =
 		useRef<InstructionsCharitableDonationsStepHandle>(null);
+	const funeralEndOfLifeStepRef = useRef<FuneralEndOfLifeStepHandle>(null);
 
 	const {
 		willData,
@@ -340,6 +343,59 @@ export default function LetterWizard() {
 				toast.error("Failed to submit personal notes");
 				return; // Don't proceed if submission failed
 			}
+		} else if (currentStepIndex === 2 && letterData && willId) {
+			// If we're on the funeralEndOfLife step, submit professional instructions
+			try {
+				// Ensure we have a valid Letter of Wishes ID
+				let letterId = letterData.id;
+
+				if (!letterId) {
+					console.log(
+						"No Letter of Wishes ID found, creating or getting existing one..."
+					);
+					try {
+						const letterResponse = await LetterOfWishesService.getOrCreate(
+							willId
+						);
+						letterId = letterResponse.id;
+
+						// Update the letter data with the ID
+						if (setLetterData) {
+							setLetterData({
+								...letterData,
+								id: letterId,
+							});
+						}
+					} catch (error) {
+						console.error("Error creating/getting Letter of Wishes:", error);
+						toast.error("Failed to initialize Letter of Wishes");
+						return;
+					}
+				}
+
+				if (!letterId) {
+					console.error(
+						"Still no Letter of Wishes ID available after creation attempt"
+					);
+					toast.error("Failed to get Letter of Wishes ID");
+					return;
+				}
+
+				// Submit professional instructions when moving to next step
+				if (funeralEndOfLifeStepRef.current) {
+					const success =
+						await funeralEndOfLifeStepRef.current.submitProfessionalInstructions();
+					if (!success) {
+						toast.error("Failed to submit professional instructions");
+						return; // Don't proceed if submission failed
+					}
+					toast.success("Professional instructions submitted successfully");
+				}
+			} catch (error) {
+				console.error("Error submitting professional instructions:", error);
+				toast.error("Failed to submit professional instructions");
+				return; // Don't proceed if submission failed
+			}
 		} else if (currentStepIndex === 0 && !willId) {
 			console.error("No willId available for Letter of Wishes");
 			toast.error("Will ID not found");
@@ -356,6 +412,7 @@ export default function LetterWizard() {
 		letterData,
 		willId,
 		setLetterData,
+		funeralEndOfLifeStepRef,
 	]);
 
 	const goToPreviousStep = useCallback(() => {
@@ -411,7 +468,7 @@ export default function LetterWizard() {
 			case "funeralEndOfLife":
 				return (
 					<div>
-						<FuneralEndOfLifeStep />
+						<FuneralEndOfLifeStep ref={funeralEndOfLifeStepRef} />
 						<div className="flex justify-between pt-6">
 							<Button
 								onClick={goToPreviousStep}

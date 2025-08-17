@@ -44,7 +44,12 @@ const PersonalFamilyStep = () => {
 	const guardianNames = formatGuardianNames();
 
 	const hasGuardianshipPreferences =
-		reasonForChoice.trim() || valuesAndHopes.trim();
+		reasonForChoice.trim() ||
+		valuesAndHopes.trim() ||
+		(letterData?.guardianshipPreferences?.reasonForChoice &&
+			letterData.guardianshipPreferences.reasonForChoice.trim()) ||
+		(letterData?.guardianshipPreferences?.valuesAndHopes &&
+			letterData.guardianshipPreferences.valuesAndHopes.trim());
 
 	const updateNotesToLovedOnes = (notes: string) => {
 		setNotesToLovedOnes(notes);
@@ -92,12 +97,20 @@ const PersonalFamilyStep = () => {
 					</p>
 				</div>
 
-				<Textarea
-					placeholder="e.g., I love you, thank you for being my family, I'm proud of you, etc."
-					value={notesToLovedOnes}
-					onChange={(e) => updateNotesToLovedOnes(e.target.value)}
-					className="w-full min-h-[120px]"
-				/>
+				{/* Loading State for Personal Notes */}
+				{!letterData ? (
+					<div className="text-center py-8">
+						<div className="h-6 w-6 animate-spin rounded-full border-b-2 border-primary mx-auto mb-2"></div>
+						<p className="text-muted-foreground">Loading personal notes...</p>
+					</div>
+				) : (
+					<Textarea
+						placeholder="e.g., I love you, thank you for being my family, I'm proud of you, etc."
+						value={notesToLovedOnes}
+						onChange={(e) => updateNotesToLovedOnes(e.target.value)}
+						className="w-full min-h-[120px]"
+					/>
+				)}
 			</div>
 
 			{/* Guardianship Section - Only show if guardians exist */}
@@ -114,7 +127,7 @@ const PersonalFamilyStep = () => {
 					</div>
 
 					{/* Add Guardianship Details Button */}
-					{!hasGuardianshipPreferences && (
+					{!hasGuardianshipPreferences && letterData && (
 						<Button
 							onClick={() => setIsGuardianshipModalOpen(true)}
 							variant="outline"
@@ -125,8 +138,18 @@ const PersonalFamilyStep = () => {
 						</Button>
 					)}
 
+					{/* Loading State for Guardianship */}
+					{!letterData && (
+						<div className="text-center py-8">
+							<div className="h-6 w-6 animate-spin rounded-full border-b-2 border-primary mx-auto mb-2"></div>
+							<p className="text-muted-foreground">
+								Loading guardian instructions...
+							</p>
+						</div>
+					)}
+
 					{/* Guardianship Details Summary */}
-					{hasGuardianshipPreferences && (
+					{hasGuardianshipPreferences && letterData && (
 						<div className="bg-[#F8F8F8] border border-gray-300 rounded-[0.5rem] p-[1.5rem] relative">
 							{/* Edit Button - Top Right Corner */}
 							<Button

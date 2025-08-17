@@ -78,6 +78,74 @@ export interface UpdateDigitalAssetRequest {
 	instructions?: string | null;
 }
 
+export interface FuneralInstructions {
+	id: string;
+	created_at: string;
+	low_id: string;
+	location: string | null;
+	service: "religious" | "non-religious" | "private" | "public" | null;
+	additional_preferences: string | null;
+}
+
+export interface CreateFuneralInstructionsRequest {
+	low_id: string;
+	location?: string | null;
+	service?: "religious" | "non-religious" | "private" | "public" | null;
+	additional_preferences?: string | null;
+}
+
+export interface UpdateFuneralInstructionsRequest {
+	location?: string | null;
+	service?: "religious" | "non-religious" | "private" | "public" | null;
+	additional_preferences?: string | null;
+}
+
+export interface PersonalNotes {
+	id: string;
+	created_at: string;
+	low_id: string;
+	notes: string | null;
+	guardian_reason: string | null;
+	guardian_values: string | null;
+}
+
+export interface Contact {
+	id: string;
+	created_at: string;
+	low_id: string;
+	full_name: string;
+	email: string;
+}
+
+export interface CreateContactRequest {
+	low_id: string;
+	full_name: string;
+	email: string;
+}
+
+export interface UpdateContactRequest {
+	full_name?: string;
+	email?: string;
+}
+
+export interface ProfessionalInstructions {
+	id: string;
+	low_id: string;
+	professional_tattoos: string | null;
+	professional_notes: string | null;
+}
+
+export interface CreateProfessionalInstructionsRequest {
+	low_id: string;
+	professional_tattoos?: string | null;
+	professional_notes?: string | null;
+}
+
+export interface UpdateProfessionalInstructionsRequest {
+	professional_tattoos?: string | null;
+	professional_notes?: string | null;
+}
+
 export class LetterOfWishesService {
 	/**
 	 * Check if a Letter of Wishes already exists for a given will ID
@@ -507,6 +575,427 @@ export class LetterOfWishesService {
 			console.log("✅ Digital asset deleted successfully");
 		} catch (error) {
 			console.error("❌ Error deleting digital asset:", error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Get funeral instructions for a Letter of Wishes
+	 */
+	static async getFuneralInstructions(
+		lowId: string
+	): Promise<FuneralInstructions | null> {
+		try {
+			if (!lowId) {
+				throw new Error("Letter of Wishes ID is required");
+			}
+
+			console.log(
+				`📋 Fetching funeral instructions for Letter of Wishes ID: ${lowId}`
+			);
+
+			const { data, error } = await apiClient<FuneralInstructions>(
+				`/low-funeral-instructions/get-by-low/${lowId}`,
+				{
+					method: "GET",
+				}
+			);
+
+			if (error) {
+				// If the error indicates no funeral instructions exist, return null
+				if (error.includes("not found") || error.includes("404")) {
+					console.log(
+						"📭 No existing funeral instructions found for this Letter of Wishes"
+					);
+					return null;
+				}
+				throw new Error(error);
+			}
+
+			console.log("✅ Funeral instructions fetched successfully:", data);
+			return data;
+		} catch (error) {
+			console.error("❌ Error fetching funeral instructions:", error);
+			// If it's a 404 or "not found" error, return null instead of throwing
+			if (
+				error instanceof Error &&
+				(error.message.includes("404") || error.message.includes("not found"))
+			) {
+				return null;
+			}
+			throw error;
+		}
+	}
+
+	/**
+	 * Create funeral instructions for a Letter of Wishes
+	 */
+	static async createFuneralInstructions(
+		instructionsData: CreateFuneralInstructionsRequest
+	): Promise<FuneralInstructions> {
+		try {
+			if (!instructionsData.low_id) {
+				throw new Error("low_id is required");
+			}
+
+			console.log(
+				`📝 Creating funeral instructions for Letter of Wishes ID: ${instructionsData.low_id}`
+			);
+
+			const { data, error } = await apiClient<FuneralInstructions>(
+				`/low-funeral-instructions`,
+				{
+					method: "POST",
+					body: JSON.stringify(instructionsData),
+				}
+			);
+
+			if (error || !data) {
+				throw new Error(error || "Failed to create funeral instructions");
+			}
+
+			console.log("✅ Funeral instructions created successfully:", data);
+			return data;
+		} catch (error) {
+			console.error("❌ Error creating funeral instructions:", error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Update funeral instructions for a Letter of Wishes
+	 */
+	static async updateFuneralInstructions(
+		instructionsId: string,
+		updateData: UpdateFuneralInstructionsRequest
+	): Promise<FuneralInstructions> {
+		try {
+			if (!instructionsId) {
+				throw new Error("Funeral instructions ID is required");
+			}
+
+			if (Object.keys(updateData).length === 0) {
+				throw new Error("At least one field must be provided for update");
+			}
+
+			console.log(
+				`📝 Updating funeral instructions with ID: ${instructionsId}`
+			);
+			console.log("🔍 Update data being sent:", updateData);
+			console.log(
+				"🔍 API endpoint:",
+				`/low-funeral-instructions/${instructionsId}`
+			);
+
+			const { data, error } = await apiClient<FuneralInstructions>(
+				`/low-funeral-instructions/${instructionsId}`,
+				{
+					method: "PATCH",
+					body: JSON.stringify(updateData),
+				}
+			);
+
+			console.log("🔍 API response data:", data);
+			console.log("🔍 API response error:", error);
+
+			if (error || !data) {
+				throw new Error(error || "Failed to update funeral instructions");
+			}
+
+			console.log("✅ Funeral instructions updated successfully:", data);
+			return data;
+		} catch (error) {
+			console.error("❌ Error updating funeral instructions:", error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Delete funeral instructions for a Letter of Wishes
+	 */
+	static async deleteFuneralInstructions(
+		instructionsId: string
+	): Promise<void> {
+		try {
+			if (!instructionsId) {
+				throw new Error("Funeral instructions ID is required");
+			}
+
+			console.log(
+				`🗑️ Deleting funeral instructions with ID: ${instructionsId}`
+			);
+
+			const { error } = await apiClient(
+				`/low-funeral-instructions/${instructionsId}`,
+				{
+					method: "DELETE",
+				}
+			);
+
+			if (error) {
+				throw new Error(error);
+			}
+
+			console.log("✅ Funeral instructions deleted successfully");
+		} catch (error) {
+			console.error("❌ Error deleting funeral instructions:", error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Get personal notes for a Letter of Wishes
+	 */
+	static async getPersonalNotes(lowId: string): Promise<PersonalNotes | null> {
+		try {
+			if (!lowId) {
+				throw new Error("Letter of Wishes ID is required");
+			}
+
+			console.log(
+				`📋 Fetching personal notes for Letter of Wishes ID: ${lowId}`
+			);
+
+			const { data, error } = await apiClient<PersonalNotes>(
+				`/low-personal-notes/get-by-low/${lowId}`,
+				{
+					method: "GET",
+				}
+			);
+
+			if (error) {
+				// If the error indicates no personal notes exist, return null
+				if (error.includes("not found") || error.includes("404")) {
+					console.log(
+						"📭 No existing personal notes found for this Letter of Wishes"
+					);
+					return null;
+				}
+				throw new Error(error);
+			}
+
+			console.log("✅ Personal notes fetched successfully:", data);
+			return data;
+		} catch (error) {
+			console.error("❌ Error fetching personal notes:", error);
+			// If it's a 404 or "not found" error, return null instead of throwing
+			if (
+				error instanceof Error &&
+				(error.message.includes("404") || error.message.includes("not found"))
+			) {
+				return null;
+			}
+			throw error;
+		}
+	}
+
+	/**
+	 * Get contacts for a Letter of Wishes
+	 */
+	static async getContacts(lowId: string): Promise<Contact[]> {
+		try {
+			if (!lowId) {
+				throw new Error("Letter of Wishes ID is required");
+			}
+
+			console.log(`📋 Fetching contacts for Letter of Wishes ID: ${lowId}`);
+
+			const { data, error } = await apiClient<Contact[]>(
+				`/low-contacts/get-by-low/${lowId}`,
+				{
+					method: "GET",
+				}
+			);
+
+			if (error || !data) {
+				throw new Error(error || "Failed to fetch contacts");
+			}
+
+			console.log("✅ Contacts fetched successfully:", data);
+			return data;
+		} catch (error) {
+			console.error("❌ Error fetching contacts:", error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Create a new contact
+	 */
+	static async createContact(
+		contactData: CreateContactRequest
+	): Promise<Contact> {
+		try {
+			if (!contactData.low_id || !contactData.full_name || !contactData.email) {
+				throw new Error("low_id, full_name, and email are required fields");
+			}
+
+			console.log(
+				`📝 Creating new contact for Letter of Wishes ID: ${contactData.low_id}`
+			);
+
+			const { data, error } = await apiClient<Contact>(`/low-contacts`, {
+				method: "POST",
+				body: JSON.stringify(contactData),
+			});
+
+			if (error || !data) {
+				throw new Error(error || "Failed to create contact");
+			}
+
+			console.log("✅ Contact created successfully:", data);
+			return data;
+		} catch (error) {
+			console.error("❌ Error creating contact:", error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Update a contact
+	 */
+	static async updateContact(
+		contactId: string,
+		updateData: UpdateContactRequest
+	): Promise<Contact> {
+		try {
+			if (!contactId) {
+				throw new Error("Contact ID is required");
+			}
+
+			if (Object.keys(updateData).length === 0) {
+				throw new Error("At least one field must be provided for update");
+			}
+
+			console.log(`📝 Updating contact with ID: ${contactId}`);
+
+			const { data, error } = await apiClient<Contact>(
+				`/low-contacts/${contactId}`,
+				{
+					method: "PATCH",
+					body: JSON.stringify(updateData),
+				}
+			);
+
+			if (error || !data) {
+				throw new Error(error || "Failed to update contact");
+			}
+
+			console.log("✅ Contact updated successfully:", data);
+			return data;
+		} catch (error) {
+			console.error("❌ Error updating contact:", error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Delete a contact
+	 */
+	static async deleteContact(contactId: string): Promise<void> {
+		try {
+			if (!contactId) {
+				throw new Error("Contact ID is required");
+			}
+
+			console.log(`🗑️ Deleting contact with ID: ${contactId}`);
+
+			const { error } = await apiClient(`/low-contacts/${contactId}`, {
+				method: "DELETE",
+			});
+
+			if (error) {
+				throw new Error(error);
+			}
+
+			console.log("✅ Contact deleted successfully");
+		} catch (error) {
+			console.error("❌ Error deleting contact:", error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Get professional instructions for a Letter of Wishes
+	 */
+	static async getProfessionalInstructions(
+		lowId: string
+	): Promise<ProfessionalInstructions | null> {
+		try {
+			if (!lowId) {
+				throw new Error("Letter of Wishes ID is required");
+			}
+
+			console.log(
+				`📋 Fetching professional instructions for Letter of Wishes ID: ${lowId}`
+			);
+
+			const { data, error } = await apiClient<ProfessionalInstructions>(
+				`/low-instructions/${lowId}`,
+				{
+					method: "GET",
+				}
+			);
+
+			if (error) {
+				// If the error indicates no professional instructions exist, return null
+				if (error.includes("not found") || error.includes("404")) {
+					console.log(
+						"📭 No existing professional instructions found for this Letter of Wishes"
+					);
+					return null;
+				}
+				throw new Error(error);
+			}
+
+			console.log("✅ Professional instructions fetched successfully:", data);
+			return data;
+		} catch (error) {
+			console.error("❌ Error fetching professional instructions:", error);
+			// If it's a 404 or "not found" error, return null instead of throwing
+			if (
+				error instanceof Error &&
+				(error.message.includes("404") || error.message.includes("not found"))
+			) {
+				return null;
+			}
+			throw error;
+		}
+	}
+
+	/**
+	 * Create or update professional instructions for a Letter of Wishes
+	 * The API endpoint /low-instructions handles both operations
+	 */
+	static async saveProfessionalInstructions(instructionsData: {
+		low_id: string;
+		professional_notes: string | null;
+	}): Promise<ProfessionalInstructions> {
+		try {
+			if (!instructionsData.low_id) {
+				throw new Error("low_id is required");
+			}
+
+			console.log(
+				`📝 Saving professional instructions for Letter of Wishes ID: ${instructionsData.low_id}`
+			);
+
+			const { data, error } = await apiClient<ProfessionalInstructions>(
+				`/low-instructions`,
+				{
+					method: "POST",
+					body: JSON.stringify(instructionsData),
+				}
+			);
+
+			if (error || !data) {
+				throw new Error(error || "Failed to save professional instructions");
+			}
+
+			console.log("✅ Professional instructions saved successfully:", data);
+			return data;
+		} catch (error) {
+			console.error("❌ Error saving professional instructions:", error);
 			throw error;
 		}
 	}
