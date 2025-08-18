@@ -242,18 +242,23 @@ export default function DashboardPage() {
 		<div className="space-y-8">
 			<div
 				id="dashboard-header"
-				className="flex flex-col items-start justify-between p-8 ps-14 rounded-lg"
-				style={{ backgroundColor: "#173C37" }}
+				className="flex flex-col items-start justify-between p-8 ps-14 rounded-lg bg-primary relative"
+				style={{
+					backgroundImage: `url('/svgs/dashboard_icons/dashboard_card_top_left.svg')`,
+					backgroundRepeat: "no-repeat",
+					backgroundPosition: "left center",
+					backgroundSize: "auto 100%",
+				}}
 			>
-				<h1 className="text-[2rem] font-semibold text-white">
-					Welcome {userName}
+				<h1 className="text-[2.625rem] font-semibold text-white">
+					Welcome, {userName}
 				</h1>
 				<p className="text-white text-sm font-normal mt-2">
 					Let's get your legacy in order
 				</p>
 
 				<div
-					className="bg-white rounded-lg p-6 mt-6 w-full max-w-md"
+					className="bg-white rounded-lg p-6 mt-6 w-2/3"
 					style={{ boxShadow: "0px 2px 12px 0px rgba(0, 0, 0, 0.15)" }}
 				>
 					<h3 className="text-[1.25rem] font-semibold text-black mb-2">
@@ -296,6 +301,13 @@ export default function DashboardPage() {
 						)}
 					</Button>
 				</div>
+
+				{/* Bottom right corner SVG */}
+				<img
+					src="/svgs/dashboard_icons/dashboard_card_right_corner.svg"
+					alt=""
+					className="absolute bottom-0 right-0 w-48 h-48 opacity-90"
+				/>
 			</div>
 
 			<div>
