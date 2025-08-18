@@ -189,12 +189,12 @@ export default function HomePage() {
 							>
 								Write my Will
 							</Button>
-							<Button
+							{/* <Button
 								variant="outline"
 								className="text-[#173C37] border border-[#173C37] font-semibold rounded hover:bg-[#173C37] hover:text-white px-8 py-6"
 							>
 								Explore the Vault
-							</Button>
+							</Button> */}
 						</div>
 					</div>
 				</section>

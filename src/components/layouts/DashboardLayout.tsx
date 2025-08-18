@@ -199,7 +199,7 @@ export function DashboardLayout() {
 								/>
 								<span className="pt-1">Documents</span>
 							</Link>
-							<Link
+							{/* <Link
 								to="/app/vault"
 								className={cn(
 									"flex items-center space-x-2 text-sm font-[500] transition-colors",
@@ -214,7 +214,7 @@ export function DashboardLayout() {
 									className="h-4 w-4"
 								/>
 								<span className="pt-1">My Vault</span>
-							</Link>
+							</Link> */}
 						</nav>
 					</div>
 
@@ -417,7 +417,7 @@ export function DashboardLayout() {
 											<span>Documents</span>
 										</Link>
 									</DropdownMenuItem>
-									<DropdownMenuItem
+									{/* <DropdownMenuItem
 										asChild
 										className="cursor-pointer hover:bg-[#F5F5F5]"
 									>
@@ -429,7 +429,7 @@ export function DashboardLayout() {
 											/>
 											<span>My Vault</span>
 										</Link>
-									</DropdownMenuItem>
+									</DropdownMenuItem> */}
 									<DropdownMenuSeparator />
 								</div>
 

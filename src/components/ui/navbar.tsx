@@ -19,7 +19,7 @@ const NAV_LINKS = [
 	{ label: "About Us", to: "/about-us", exists: true },
 	{ label: "Guides & Checklist", to: "#", exists: false },
 	{ label: "Pricing", to: "#", exists: false },
-	{ label: "Vault", to: "#", exists: false },
+	// { label: "Vault", to: "#", exists: false },
 ];
 
 const SERVICES_LINKS = [
