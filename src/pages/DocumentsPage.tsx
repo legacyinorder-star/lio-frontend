@@ -92,8 +92,8 @@ export default function DocumentsPage() {
 								}}
 							></div>
 						</div>
-						<div className="flex justify-between items-center">
-							<div>
+						<div className="space-y-4">
+							<div className="mb-4">
 								<h5 className="text-sm text-[#909090] font-[400]">
 									Next section
 								</h5>
@@ -104,7 +104,7 @@ export default function DocumentsPage() {
 							<div>
 								<Button
 									onClick={handleContinueWill}
-									className="text-sm font-medium text-[#173C37]"
+									className="w-full text-sm font-medium text-[#173C37] bg-[#EDEDED] rounded-[0.25rem]"
 								>
 									Continue
 								</Button>
@@ -124,7 +124,7 @@ export default function DocumentsPage() {
 				>
 					{/* Document Type Badge */}
 					<div
-						className="flex items-center space-x-2 text-white text-sm font-medium mb-4 w-fit"
+						className="flex items-center space-x-2 text-white text-sm font-medium mb-6 w-fit"
 						style={{
 							padding: "0.25rem 0.5rem",
 							borderRadius: "0.25rem",
@@ -138,7 +138,7 @@ export default function DocumentsPage() {
 
 					<div className="flex flex-col h-full">
 						{/* Header */}
-						<div className="flex items-center space-x-4 mb-4">
+						<div className="flex items-center space-x-4 mb-14">
 							<div>
 								<h3 className="text-2xl font-semibold text-[#173C37]">
 									Letter of Wishes
@@ -150,9 +150,9 @@ export default function DocumentsPage() {
 						</div>
 
 						{/* Progress Section */}
-						<div className="mb-4">
+						<div className="mb-14">
 							<div className="flex justify-between items-center mb-2">
-								<span className="text-sm font-medium text-[#173C37]">
+								<span className="text-[0.875rem] font-medium text-[#173C37]">
 									2/4 sections complete
 								</span>
 							</div>
@@ -165,16 +165,23 @@ export default function DocumentsPage() {
 								}}
 							></div>
 						</div>
-						<div className="flex justify-between items-center mt-4">
-							<span className="text-[0.875rem] font-medium text-[#6D6C6C]">
-								Next section:
-							</span>
-							<Button
-								onClick={handleContinueLetter}
-								className="text-sm font-medium text-[#173C37]"
-							>
-								Continue
-							</Button>
+						<div className="space-y-4">
+							<div className="mb-4">
+								<h5 className="text-sm text-[#909090] font-[400]">
+									Next section
+								</h5>
+								<p className="text-sm text-[#173C37] font-[500]">
+									Personal Details
+								</p>
+							</div>
+							<div>
+								<Button
+									onClick={handleContinueLetter}
+									className="w-full text-sm font-medium text-[#173C37] bg-[#EDEDED] rounded-[0.25rem]"
+								>
+									Continue
+								</Button>
+							</div>
 						</div>
 					</div>
 				</Card>
