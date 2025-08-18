@@ -21,7 +21,6 @@ import { apiClient } from "@/utils/apiClient";
 
 interface SignupResponse {
 	otp_id: string;
-	otp?: string;
 }
 
 const formSchema = z
@@ -86,11 +85,7 @@ export default function SignupPage() {
 
 			if (data.otp_id) {
 				// Navigate to OTP verification with the OTP ID and OTP code if available
-				if (data.otp) {
-					navigate(`/verify-otp?t=${data.otp_id}&otp=${data.otp}`);
-				} else {
-					navigate(`/verify-otp?t=${data.otp_id}`);
-				}
+				navigate(`/verify-otp?t=${data.otp_id}`);
 			} else {
 				throw new Error("OTP ID not received from server");
 			}

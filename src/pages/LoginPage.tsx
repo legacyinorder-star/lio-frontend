@@ -27,7 +27,6 @@ const formSchema = z.object({
 });
 
 interface LoginResponse {
-	otp: string;
 	otp_id: string;
 }
 
@@ -126,7 +125,7 @@ export default function LoginPage() {
 				throw new Error("Invalid response from server");
 			}
 
-			const { otp_id, otp } = data as LoginResponse;
+			const { otp_id } = data as LoginResponse;
 			toast.success("Welcome back! Please enter your OTP.");
 
 			// Store return URL if it exists in location state
@@ -140,11 +139,7 @@ export default function LoginPage() {
 			}
 
 			// Pass both OTP ID and OTP code to verification page
-			if (otp) {
-				navigate(`/verify-otp?t=${otp_id}&otp=${otp}`);
-			} else {
-				navigate(`/verify-otp?t=${otp_id}`);
-			}
+			navigate(`/verify-otp?t=${otp_id}`);
 		} catch (error) {
 			console.error("Login failed:", error);
 

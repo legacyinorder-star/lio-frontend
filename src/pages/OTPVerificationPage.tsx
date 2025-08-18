@@ -31,7 +31,6 @@ export default function OTPVerificationPage() {
 	const [isResending, setIsResending] = useState(false);
 	const { setUser } = useAuth();
 	const otpId = searchParams.get("t");
-	const preloadedOtp = searchParams.get("otp");
 
 	useEffect(() => {
 		if (!otpId) {
@@ -43,7 +42,7 @@ export default function OTPVerificationPage() {
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
-			otp: preloadedOtp || "",
+			otp: "",
 		},
 	});
 
