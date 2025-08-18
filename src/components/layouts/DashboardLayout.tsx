@@ -531,12 +531,12 @@ export function DashboardLayout() {
 					<div className="hidden lg:block">
 						<WillWizardSidebar />
 					</div>
-					<main className="flex-1 p-4 sm:p-6 overflow-auto">
+					<main className="flex-1 p-4 sm:p-6 pt-8 sm:pt-12 overflow-auto">
 						<Outlet />
 					</main>
 				</div>
 			) : (
-				<main className="flex-1 p-4 sm:p-6 overflow-auto">
+				<main className="flex-1 p-4 sm:p-6 pt-8 sm:pt-12 overflow-auto">
 					<Outlet />
 				</main>
 			)}
