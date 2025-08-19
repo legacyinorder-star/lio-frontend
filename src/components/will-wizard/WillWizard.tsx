@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useWillWizard } from "@/context/WillWizardContext";
 import { useWill } from "@/context/WillContext";
 import { useRelationships } from "@/context/RelationshipsContext";
@@ -141,18 +141,21 @@ export default function WillWizard() {
 	}, [relationships, relationshipsLoading, relationshipsError]);
 
 	// Handle form updates
-	const handleFormUpdate = (data: Partial<WillFormData>) => {
+	const handleFormUpdate = useCallback((data: Partial<WillFormData>) => {
 		setFormData((prev) => ({ ...prev, ...data }));
-	};
+	}, []);
 
 	// Handle will owner data saving
-	const handleWillOwnerDataSave = async (_data: unknown): Promise<boolean> => {
-		// This function will handle saving will owner data
-		// For now, return true to allow navigation
-		return true;
-	};
+	const handleWillOwnerDataSave = useCallback(
+		async (_data: unknown): Promise<boolean> => {
+			// This function will handle saving will owner data
+			// For now, return true to allow navigation
+			return true;
+		},
+		[]
+	);
 
-	const handleNext = async () => {
+	const handleNext = useCallback(async () => {
 		// Mark current step as complete before moving to next step
 		console.log("🚀 handleNext called for step:", currentQuestion);
 		await markStepComplete(currentQuestion);
@@ -192,9 +195,9 @@ export default function WillWizard() {
 			default:
 				console.warn("Unknown step:", currentQuestion);
 		}
-	};
+	}, [currentQuestion, markStepComplete, setWillWizardState, formData]);
 
-	const handleBack = () => {
+	const handleBack = useCallback(() => {
 		switch (currentQuestion) {
 			case "familyInfo":
 				setWillWizardState(true, "personalInfo");
@@ -226,17 +229,21 @@ export default function WillWizard() {
 			default:
 				console.warn("Unknown step for back navigation:", currentQuestion);
 		}
-	};
+	}, [currentQuestion, setWillWizardState]);
 
-	// Render different content based on current question
-	const renderQuestion = () => {
-		const commonProps = {
+	// Memoize common props to prevent infinite re-renders
+	const commonProps = useMemo(
+		() => ({
 			data: formData,
 			onUpdate: handleFormUpdate,
 			onNext: handleNext,
 			onBack: handleBack,
-		};
+		}),
+		[formData, handleFormUpdate, handleNext, handleBack]
+	);
 
+	// Render different content based on current question
+	const renderQuestion = () => {
 		switch (currentQuestion) {
 			case "personalInfo":
 				return (
