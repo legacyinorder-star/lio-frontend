@@ -50,11 +50,6 @@ interface OptionType {
 	label: string;
 }
 
-interface WillOwnerResponse {
-	will_id: string;
-	id: string;
-}
-
 interface PersonalInfoStepProps extends StepProps {
 	willOwnerData?: {
 		firstName: string;
@@ -80,8 +75,6 @@ export default function PersonalInfoStep({
 	data,
 	onUpdate,
 	onNext,
-	willOwnerData,
-	onWillOwnerDataSave,
 }: PersonalInfoStepProps) {
 	const { activeWill, setActiveWill } = useWill();
 	const [isSubmitting, setIsSubmitting] = useState(false);
@@ -98,19 +91,7 @@ export default function PersonalInfoStep({
 
 	// Determine the initial values for the form
 	const getInitialValues = () => {
-		// Priority: willOwnerData prop > activeWill > data prop > empty strings
-		if (willOwnerData) {
-			return {
-				firstName: willOwnerData.firstName || "",
-				lastName: willOwnerData.lastName || "",
-				address: willOwnerData.address || "",
-				city: willOwnerData.city || "",
-				state: willOwnerData.state || "",
-				postCode: willOwnerData.postCode || "",
-				country: willOwnerData.country || "",
-			};
-		}
-
+		// Priority: activeWill > data prop > empty strings
 		if (activeWill?.owner) {
 			return {
 				firstName: activeWill.owner.firstName || "",
@@ -161,66 +142,35 @@ export default function PersonalInfoStep({
 
 			onUpdate(updatedData);
 
-			// If we have willOwnerData and onWillOwnerDataSave, save to backend
-			if (willOwnerData && onWillOwnerDataSave) {
-				const saveSuccess = await onWillOwnerDataSave({
-					firstName: formData.firstName,
-					lastName: formData.lastName,
+			// Always submit to /will_owner endpoint
+			const { data: ownerResponse, error: ownerError } = await apiClient<{
+				will_id?: string;
+			}>("/will_owner", {
+				method: "POST",
+				body: JSON.stringify({
+					will_id: activeWill?.id || null, // Include will_id if it exists, otherwise null
+					first_name: formData.firstName,
+					last_name: formData.lastName,
 					address: formData.address,
 					city: formData.city,
 					state: formData.state,
-					postCode: formData.postCode,
+					post_code: formData.postCode,
 					country: formData.country,
-				});
+				}),
+			});
 
-				if (!saveSuccess) {
-					toast.error("Failed to save personal information");
-					return;
-				}
+			if (ownerError) {
+				console.error("Error creating/updating will owner:", ownerError);
+				toast.error("Failed to save personal information");
+				return;
 			}
 
-			// If this is a new will, create the will owner record
-			if (!activeWill?.id) {
-				const { data: willResponse, error: willError } =
-					await apiClient<WillOwnerResponse>("/wills", {
-						method: "POST",
-						body: JSON.stringify({
-							status: "draft",
-						}),
-					});
-
-				if (willError || !willResponse) {
-					console.error("Error creating will:", willError);
-					toast.error("Failed to create will");
-					return;
-				}
-
-				// Create will owner record
-				const { error: ownerError } = await apiClient("/will_owner", {
-					method: "POST",
-					body: JSON.stringify({
-						will_id: willResponse.id,
-						first_name: formData.firstName,
-						last_name: formData.lastName,
-						address: formData.address,
-						city: formData.city,
-						state: formData.state,
-						post_code: formData.postCode,
-						country: formData.country,
-					}),
-				});
-
-				if (ownerError) {
-					console.error("Error creating will owner:", ownerError);
-					toast.error("Failed to create will owner");
-					return;
-				}
-
-				// Update the active will in context
+			// If this was a new will and we got a response with will_id, update the active will
+			if (!activeWill?.id && ownerResponse?.will_id) {
 				if (setActiveWill && activeWill) {
 					setActiveWill({
 						...activeWill,
-						id: willResponse.id,
+						id: ownerResponse.will_id,
 						owner: {
 							...activeWill.owner,
 							firstName: formData.firstName,
@@ -233,8 +183,9 @@ export default function PersonalInfoStep({
 						},
 					});
 				}
-
 				toast.success("Will created successfully!");
+			} else {
+				toast.success("Personal information saved successfully!");
 			}
 
 			// Proceed to next step
