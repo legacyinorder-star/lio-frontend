@@ -11,10 +11,8 @@ import { toast } from "sonner";
 // Default completion state
 const DEFAULT_COMPLETION: StepCompletion = {
 	personalInfo: false,
-	hasSpouse: false,
-	hasChildren: false,
+	familyInfo: false,
 	guardians: false,
-	pets: false,
 	hasAssets: false,
 	gifts: false,
 	digitalAssets: false,
@@ -26,10 +24,8 @@ const DEFAULT_COMPLETION: StepCompletion = {
 
 const STEP_ORDER: QuestionType[] = [
 	"personalInfo",
-	"hasSpouse",
-	"hasChildren",
+	"familyInfo",
 	"guardians",
-	"pets",
 	"hasAssets",
 	"gifts",
 	"digitalAssets",
@@ -185,8 +181,8 @@ function canAccessStep(step: QuestionType, completed: StepCompletion): boolean {
 		// Required steps must be completed
 		const requiredSteps = [
 			"personalInfo",
-			"hasSpouse",
-			"hasChildren",
+			"familyInfo",
+			"guardians",
 			"hasAssets",
 			"residuary",
 			"executors",

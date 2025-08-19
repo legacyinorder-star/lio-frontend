@@ -11,179 +11,80 @@ interface KnowledgeBaseSidebarProps {
 	currentStep: QuestionType;
 }
 
-const stepArticles: Record<QuestionType, KnowledgeArticle[]> = {
+const KNOWLEDGE_BASE: Record<QuestionType, KnowledgeArticle[]> = {
 	personalInfo: [
 		{
-			title: "Legal Name Requirements in Wills",
+			title: "Personal Information",
 			description:
-				"Understand the importance of using your full legal name in estate planning documents.",
-			url: "/knowledge/legal-name-requirements",
-		},
-		{
-			title: "Residence and Estate Planning",
-			description:
-				"How your primary residence affects your will and estate planning strategy.",
-			url: "#",
-		},
-		{
-			title: "Multi-State Estate Planning",
-			description:
-				"Important considerations if you own property in multiple states or countries.",
-			url: "#",
+				"Learn about collecting basic personal and address information for your will.",
+			url: "/help/personal-information",
 		},
 	],
-	hasSpouse: [
+	familyInfo: [
 		{
-			title: "Spousal Rights in Estate Planning",
+			title: "Family Information",
 			description:
-				"Understanding how marriage affects your will and inheritance rights.",
-			url: "#",
-		},
-		{
-			title: "Common Law vs. Legal Marriage",
-			description:
-				"How different relationship types affect your estate planning options.",
-			url: "#",
-		},
-	],
-	hasChildren: [
-		{
-			title: "Including Children in Your Will",
-			description:
-				"Best practices for providing for your children in your estate plan.",
-			url: "#",
-		},
-		{
-			title: "Disinheritance and Legal Requirements",
-			description: "What happens if you don't include a child in your will.",
-			url: "#",
+				"Learn about documenting your spouse, children, and pets in your will.",
+			url: "/help/family-information",
 		},
 	],
 	guardians: [
 		{
-			title: "Choosing Guardians for Minor Children",
-			description:
-				"Key factors to consider when selecting guardians for your children.",
-			url: "#",
-		},
-		{
-			title: "Guardian Responsibilities and Rights",
-			description:
-				"Understanding what guardianship entails and how to prepare guardians.",
-			url: "#",
-		},
-	],
-	pets: [
-		{
-			title: "Pet Guardianship in Estate Planning",
-			description:
-				"How to ensure your beloved pets are cared for after you're gone.",
-			url: "#",
-		},
-		{
-			title: "Legal Considerations for Pet Guardians",
-			description:
-				"Understanding the legal aspects of designating pet guardians in your will.",
-			url: "#",
+			title: "Guardians",
+			description: "Learn about appointing guardians for minor children.",
+			url: "/help/guardians",
 		},
 	],
 	hasAssets: [
 		{
-			title: "Asset Inventory for Estate Planning",
+			title: "Assets",
 			description:
-				"How to properly catalog and value your assets for your will.",
-			url: "#",
-		},
-		{
-			title: "Digital Assets in Estate Planning",
-			description:
-				"Don't forget about your digital property and online accounts.",
-			url: "#",
+				"Learn about documenting your assets and how to distribute them.",
+			url: "/help/assets",
 		},
 	],
 	gifts: [
 		{
-			title: "Specific Gifts and Bequests",
+			title: "Gifts",
 			description:
-				"Learn how to make specific gifts to individuals in your will.",
-			url: "#",
-		},
-		{
-			title: "Cash vs Item Gifts",
-			description:
-				"Understanding the difference between monetary and physical gifts.",
-			url: "#",
+				"Learn about making specific gifts to individuals or organizations.",
+			url: "/help/gifts",
 		},
 	],
 	digitalAssets: [
 		{
-			title: "Digital Assets in Your Will",
+			title: "Digital Assets",
 			description:
-				"Learn about digital assets and how to include them in your will.",
-			url: "#",
-		},
-		{
-			title: "Managing Digital Legacy",
-			description:
-				"Understanding how to handle online accounts and digital property.",
-			url: "#",
+				"Learn about managing your digital assets and online accounts.",
+			url: "/help/digital-assets",
 		},
 	],
-
 	residuary: [
 		{
-			title: "Understanding Residuary Beneficiaries",
-			description:
-				"Why the residuary estate is often the most important part of your will.",
-			url: "#",
-		},
-		{
-			title: "Contingent Beneficiaries Explained",
-			description:
-				"Planning for what happens if your primary beneficiaries predecease you.",
-			url: "#",
+			title: "Residuary Estate",
+			description: "Learn about distributing the remainder of your estate.",
+			url: "/help/residuary-estate",
 		},
 	],
 	executors: [
 		{
-			title: "Choosing the Right Executor",
-			description:
-				"Key qualities to look for in an executor and common mistakes to avoid.",
-			url: "#",
-		},
-		{
-			title: "Executor Duties and Timeline",
-			description:
-				"What your executor will need to do and how long the process typically takes.",
-			url: "#",
+			title: "Executors",
+			description: "Learn about appointing executors to carry out your will.",
+			url: "/help/executors",
 		},
 	],
-
 	funeralInstructions: [
 		{
-			title: "Funeral Instructions in Wills",
-			description:
-				"How to properly include funeral wishes and their legal standing.",
-			url: "#",
-		},
-		{
-			title: "Separate Funeral Planning Documents",
-			description:
-				"When to use separate documents for funeral and burial instructions.",
-			url: "#",
+			title: "Funeral Instructions",
+			description: "Learn about documenting your funeral and burial wishes.",
+			url: "/help/funeral-instructions",
 		},
 	],
 	review: [
 		{
-			title: "Final Will Review Checklist",
-			description:
-				"Important items to double-check before finalizing your will.",
-			url: "#",
-		},
-		{
-			title: "When to Update Your Will",
-			description: "Life events that should trigger a will review and update.",
-			url: "#",
+			title: "Review",
+			description: "Learn about reviewing and finalizing your will.",
+			url: "/help/review",
 		},
 	],
 };
@@ -191,7 +92,7 @@ const stepArticles: Record<QuestionType, KnowledgeArticle[]> = {
 export default function KnowledgeBaseSidebar({
 	currentStep,
 }: KnowledgeBaseSidebarProps) {
-	const articles = stepArticles[currentStep] || [];
+	const articles = KNOWLEDGE_BASE[currentStep] || [];
 
 	return (
 		<div

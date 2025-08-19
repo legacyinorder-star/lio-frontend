@@ -1,10 +1,8 @@
 // Question Types
 export type QuestionType =
 	| "personalInfo" // Merged name + address
-	| "hasSpouse"
-	| "hasChildren"
+	| "familyInfo" // Merged spouse + children + pets
 	| "guardians"
-	| "pets"
 	| "hasAssets"
 	| "gifts"
 	| "digitalAssets"
@@ -14,9 +12,18 @@ export type QuestionType =
 	| "review";
 
 // Add step completion tracking
-export type StepCompletion = {
-	[key in QuestionType]: boolean;
-};
+export interface StepCompletion {
+	personalInfo: boolean;
+	familyInfo: boolean;
+	guardians: boolean;
+	hasAssets: boolean;
+	gifts: boolean;
+	digitalAssets: boolean;
+	residuary: boolean;
+	executors: boolean;
+	funeralInstructions: boolean;
+	review: boolean;
+}
 
 export interface WillProgress {
 	completedSteps: StepCompletion;

@@ -5,10 +5,8 @@ import { useWillWizard } from "@/context/WillWizardContext";
 
 const STEP_ORDER: QuestionType[] = [
 	"personalInfo",
-	"hasSpouse",
-	"hasChildren",
+	"familyInfo",
 	"guardians",
-	"pets",
 	"hasAssets",
 	"gifts",
 	"digitalAssets",

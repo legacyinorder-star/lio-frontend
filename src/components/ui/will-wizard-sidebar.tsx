@@ -10,10 +10,8 @@ export function WillWizardSidebar() {
 	// Define the step order
 	const STEPS: QuestionType[] = [
 		"personalInfo",
-		"hasSpouse",
-		"hasChildren",
+		"familyInfo",
 		"guardians",
-		"pets",
 		"hasAssets",
 		"gifts",
 		"digitalAssets",

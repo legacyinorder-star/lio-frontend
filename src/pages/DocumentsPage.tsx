@@ -80,7 +80,7 @@ export default function DocumentsPage() {
 						<div className="mb-14">
 							<div className="flex justify-between items-center mb-2">
 								<span className="text-[0.875rem] font-medium text-[#6D6C6C]">
-									2/4 sections complete
+									2/10 sections complete
 								</span>
 							</div>
 							<div

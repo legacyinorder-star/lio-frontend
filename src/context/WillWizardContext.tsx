@@ -34,10 +34,8 @@ const WillWizardContext = createContext<WillWizardContextType | undefined>(
 // Default completion state
 const DEFAULT_COMPLETION: StepCompletion = {
 	personalInfo: false,
-	hasSpouse: false,
-	hasChildren: false,
+	familyInfo: false,
 	guardians: false,
-	pets: false,
 	hasAssets: false,
 	gifts: false,
 	digitalAssets: false,
@@ -50,10 +48,8 @@ const DEFAULT_COMPLETION: StepCompletion = {
 // Step order for navigation
 const STEP_ORDER: QuestionType[] = [
 	"personalInfo",
-	"hasSpouse",
-	"hasChildren",
+	"familyInfo",
 	"guardians",
-	"pets",
 	"hasAssets",
 	"gifts",
 	"digitalAssets",
@@ -65,8 +61,7 @@ const STEP_ORDER: QuestionType[] = [
 
 const REQUIRED_STEPS = [
 	"personalInfo",
-	"hasSpouse",
-	"hasChildren",
+	"familyInfo",
 	"hasAssets",
 	"residuary",
 	"executors",
@@ -78,10 +73,8 @@ export function WillWizardProvider({ children }: { children: ReactNode }) {
 	const [currentStep, setCurrentStep] = useState<QuestionType | null>(null);
 	const [completedSteps, setCompletedSteps] = useState<StepCompletion>({
 		personalInfo: false,
-		hasSpouse: false,
-		hasChildren: false,
+		familyInfo: false,
 		guardians: false,
-		pets: false,
 		hasAssets: false,
 		gifts: false,
 		digitalAssets: false,
@@ -267,17 +260,15 @@ export function WillWizardProvider({ children }: { children: ReactNode }) {
 	): { number: number; name: string } => {
 		const stepMap: Record<QuestionType, { number: number; name: string }> = {
 			personalInfo: { number: 1, name: "Personal Information" },
-			hasSpouse: { number: 2, name: "Spouse Information" },
-			hasChildren: { number: 3, name: "Children Information" },
-			guardians: { number: 4, name: "Guardians" },
-			pets: { number: 5, name: "Pet Care" },
-			hasAssets: { number: 6, name: "Assets" },
-			gifts: { number: 7, name: "Gifts" },
-			digitalAssets: { number: 8, name: "Digital Assets" },
-			residuary: { number: 9, name: "Residuary Estate" },
-			executors: { number: 10, name: "Executors" },
-			funeralInstructions: { number: 11, name: "Funeral Instructions" },
-			review: { number: 12, name: "Review" },
+			familyInfo: { number: 2, name: "Family Information" },
+			guardians: { number: 3, name: "Guardians" },
+			hasAssets: { number: 4, name: "Assets" },
+			gifts: { number: 5, name: "Gifts" },
+			digitalAssets: { number: 6, name: "Digital Assets" },
+			residuary: { number: 7, name: "Residuary Estate" },
+			executors: { number: 8, name: "Executors" },
+			funeralInstructions: { number: 9, name: "Funeral Instructions" },
+			review: { number: 10, name: "Review" },
 		};
 		return stepMap[step];
 	};
