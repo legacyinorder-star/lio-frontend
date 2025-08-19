@@ -159,31 +159,31 @@ export default function WillWizard() {
 
 		switch (currentQuestion) {
 			case "personalInfo":
-				// navigateToStep("familyInfo"); // This line was removed from the new_code
+				setWillWizardState(true, "familyInfo");
 				break;
 			case "familyInfo":
-				// navigateToStep("guardians"); // This line was removed from the new_code
+				setWillWizardState(true, "guardians");
 				break;
 			case "guardians":
-				// navigateToStep("hasAssets"); // This line was removed from the new_code
+				setWillWizardState(true, "hasAssets");
 				break;
 			case "hasAssets":
-				// navigateToStep("gifts"); // This line was removed from the new_code
+				setWillWizardState(true, "gifts");
 				break;
 			case "gifts":
-				// navigateToStep("digitalAssets"); // This line was removed from the new_code
+				setWillWizardState(true, "digitalAssets");
 				break;
 			case "digitalAssets":
-				// navigateToStep("residuary"); // This line was removed from the new_code
+				setWillWizardState(true, "residuary");
 				break;
 			case "residuary":
-				// navigateToStep("executors"); // This line was removed from the new_code
+				setWillWizardState(true, "executors");
 				break;
 			case "executors":
-				// navigateToStep("funeralInstructions"); // This line was removed from the new_code
+				setWillWizardState(true, "funeralInstructions");
 				break;
 			case "funeralInstructions":
-				// navigateToStep("review"); // This line was removed from the new_code
+				setWillWizardState(true, "review");
 				break;
 			case "review":
 				// Handle final submission
@@ -197,31 +197,31 @@ export default function WillWizard() {
 	const handleBack = () => {
 		switch (currentQuestion) {
 			case "familyInfo":
-				// navigateToStep("personalInfo"); // This line was removed from the new_code
+				setWillWizardState(true, "personalInfo");
 				break;
 			case "guardians":
-				// navigateToStep("familyInfo"); // This line was removed from the new_code
+				setWillWizardState(true, "familyInfo");
 				break;
 			case "hasAssets":
-				// navigateToStep("guardians"); // This line was removed from the new_code
+				setWillWizardState(true, "guardians");
 				break;
 			case "gifts":
-				// navigateToStep("hasAssets"); // This line was removed from the new_code
+				setWillWizardState(true, "hasAssets");
 				break;
 			case "digitalAssets":
-				// navigateToStep("gifts"); // This line was removed from the new_code
+				setWillWizardState(true, "gifts");
 				break;
 			case "residuary":
-				// navigateToStep("digitalAssets"); // This line was removed from the new_code
+				setWillWizardState(true, "digitalAssets");
 				break;
 			case "executors":
-				// navigateToStep("residuary"); // This line was removed from the new_code
+				setWillWizardState(true, "residuary");
 				break;
 			case "funeralInstructions":
-				// navigateToStep("executors"); // This line was removed from the new_code
+				setWillWizardState(true, "executors");
 				break;
 			case "review":
-				// navigateToStep("funeralInstructions"); // This line was removed from the new_code
+				setWillWizardState(true, "funeralInstructions");
 				break;
 			default:
 				console.warn("Unknown step for back navigation:", currentQuestion);
