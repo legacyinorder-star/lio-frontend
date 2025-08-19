@@ -233,5 +233,4 @@ export interface ReviewStepHandle {
 export interface SpouseData {
 	firstName: string;
 	lastName: string;
-	relationship: string;
 }
