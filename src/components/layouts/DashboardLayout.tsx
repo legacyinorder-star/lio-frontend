@@ -125,7 +125,7 @@ export function DashboardLayout() {
 
 		if (activeWill?.id) {
 			// Continue existing will - navigate to the current step from progress
-			const currentStep = activeWill.progress?.currentStep || "name";
+			const currentStep = activeWill.progress?.currentStep || "personalInfo";
 			console.log(" Navigating to step:", currentStep);
 			navigate(`/app/create-will/${currentStep}`);
 		} else {
@@ -486,7 +486,7 @@ export function DashboardLayout() {
 			<hr className="border-gray-200" />
 
 			{/* Will Wizard Step Indicator */}
-			{isInWillWizard && currentStep && (
+			{isInWillWizard && currentStep && getStepInfo && (
 				<div
 					className="w-full max-w-[2000px] mt-[0.15rem] py-4 sm:py-6 px-4 text-left text-xs sm:text-sm font-medium text-[#173C37]"
 					style={{ backgroundColor: "#DFF2EB" }}
@@ -494,6 +494,12 @@ export function DashboardLayout() {
 					{(() => {
 						const stepInfo = getStepInfo(currentStep);
 						const totalSteps = getTotalSteps();
+
+						// Safety check - only render if stepInfo exists
+						if (!stepInfo || !totalSteps) {
+							return null;
+						}
+
 						return (
 							<>
 								<span className="hidden sm:inline">

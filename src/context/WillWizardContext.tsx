@@ -198,7 +198,7 @@ export function WillWizardProvider({ children }: { children: ReactNode }) {
 				// Create new progress record with default values
 				const newProgress = {
 					completed_steps: DEFAULT_COMPLETION,
-					current_step: "name" as QuestionType,
+					current_step: "personalInfo" as QuestionType,
 				};
 
 				try {
@@ -220,25 +220,25 @@ export function WillWizardProvider({ children }: { children: ReactNode }) {
 						console.log("❌ Failed to create progress record:", createError);
 						// Fall back to default values
 						setCompletedSteps(DEFAULT_COMPLETION);
-						setCurrentStep("name");
+						setCurrentStep("personalInfo");
 					}
 				} catch (createError) {
 					console.error("💥 Error creating progress record:", createError);
 					// Fall back to default values
 					setCompletedSteps(DEFAULT_COMPLETION);
-					setCurrentStep("name");
+					setCurrentStep("personalInfo");
 				}
 			} else {
 				console.log("❌ Progress load failed:", error);
 				// Fall back to default values on other errors
 				setCompletedSteps(DEFAULT_COMPLETION);
-				setCurrentStep("name");
+				setCurrentStep("personalInfo");
 			}
 		} catch (error) {
 			console.error("💥 Error loading will progress:", error);
 			// Fall back to default values on network errors
 			setCompletedSteps(DEFAULT_COMPLETION);
-			setCurrentStep("name");
+			setCurrentStep("personalInfo");
 		} finally {
 			setIsProgressLoading(false);
 		}
@@ -260,27 +260,6 @@ export function WillWizardProvider({ children }: { children: ReactNode }) {
 	const setActiveWillId = useCallback((id: string | null) => {
 		console.log("🎯 setActiveWillId called with:", id);
 		setWillId(id);
-	}, []);
-
-	// Reset wizard to initial state
-	const resetWizard = useCallback(() => {
-		setIsInWillWizard(false);
-		setCurrentStep("personalInfo");
-		setCompletedSteps({
-			personalInfo: false,
-			hasSpouse: false,
-			hasChildren: false,
-			guardians: false,
-			pets: false,
-			hasAssets: false,
-			gifts: false,
-			digitalAssets: false,
-			residuary: false,
-			executors: false,
-			funeralInstructions: false,
-			review: false,
-		});
-		setWillId(null);
 	}, []);
 
 	const getStepInfo = (

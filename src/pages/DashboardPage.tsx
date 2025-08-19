@@ -15,7 +15,7 @@ export default function DashboardPage() {
 	const handleEditWill = () => {
 		if (activeWill) {
 			// Navigate to the current step from progress
-			const currentStep = activeWill.progress?.currentStep || "name";
+			const currentStep = activeWill.progress?.currentStep || "personalInfo";
 			navigate(`/app/create-will/${currentStep}`);
 		}
 	};
