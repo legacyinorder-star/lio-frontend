@@ -18,8 +18,7 @@ import KnowledgeBaseSidebar from "./components/KnowledgeBaseSidebar";
 import { BookOpen, X } from "lucide-react";
 
 // Import step components
-import NameStep from "./steps/NameStep";
-import AddressStep from "./steps/AddressStep";
+import PersonalInfoStep from "./steps/PersonalInfoStep";
 import SpouseStep from "./steps/SpouseStep";
 import ChildrenStep from "./steps/ChildrenStep";
 import AssetsStep from "./steps/AssetsStep";
@@ -52,8 +51,8 @@ export default function WillWizard() {
 		useWillWizard();
 	const { currentUrlStep, navigateToStep } = useWillWizardNavigation();
 
-	// Use URL-based current step, fallback to "name" if not available
-	const currentQuestion = currentUrlStep || "name";
+	// Use URL-based current step, fallback to "personalInfo" if not available
+	const currentQuestion = currentUrlStep || "personalInfo";
 
 	const {
 		relationships,
@@ -384,10 +383,7 @@ export default function WillWizard() {
 		await markStepComplete(currentQuestion);
 
 		switch (currentQuestion) {
-			case "name":
-				navigateToStep("address");
-				break;
-			case "address":
+			case "personalInfo":
 				navigateToStep("hasSpouse");
 				break;
 			case "hasSpouse":
@@ -439,11 +435,8 @@ export default function WillWizard() {
 
 	const handleBack = () => {
 		switch (currentQuestion) {
-			case "address":
-				navigateToStep("name");
-				break;
 			case "hasSpouse":
-				navigateToStep("address");
+				navigateToStep("personalInfo");
 				break;
 			case "hasChildren":
 				navigateToStep("hasSpouse");
@@ -483,9 +476,8 @@ export default function WillWizard() {
 			case "executors":
 				navigateToStep("residuary");
 				break;
-
 			case "funeralInstructions":
-				navigateToStep("review");
+				navigateToStep("executors");
 				break;
 			case "review":
 				navigateToStep("funeralInstructions");
@@ -551,18 +543,9 @@ export default function WillWizard() {
 		};
 
 		switch (currentQuestion) {
-			case "name":
+			case "personalInfo":
 				return (
-					<NameStep
-						{...commonProps}
-						willOwnerData={willOwnerData}
-						onWillOwnerDataSave={saveWillOwnerData}
-					/>
-				);
-
-			case "address":
-				return (
-					<AddressStep
+					<PersonalInfoStep
 						{...commonProps}
 						willOwnerData={willOwnerData}
 						onWillOwnerDataSave={saveWillOwnerData}

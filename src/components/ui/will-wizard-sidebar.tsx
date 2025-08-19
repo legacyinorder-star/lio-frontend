@@ -8,9 +8,8 @@ export function WillWizardSidebar() {
 	const { navigateToStep } = useWillWizardNavigation();
 
 	// Define the step order
-	const stepOrder: QuestionType[] = [
-		"name",
-		"address",
+	const STEPS: QuestionType[] = [
+		"personalInfo",
 		"hasSpouse",
 		"hasChildren",
 		"guardians",
@@ -49,7 +48,7 @@ export function WillWizardSidebar() {
 							borderRadius: "1.5rem",
 						}}
 					>
-						{stepOrder.map((step, _index) => {
+						{STEPS.map((step, _index) => {
 							const status = getStepStatus(step);
 
 							return (
@@ -83,7 +82,7 @@ export function WillWizardSidebar() {
 					{/* Section Names */}
 					<div className="flex-1">
 						<ul className="space-y-4 mt-3">
-							{stepOrder.map((step, _index) => {
+							{STEPS.map((step, _index) => {
 								const stepInfo = getStepInfo(step);
 								const status = getStepStatus(step);
 								const isClickable = canAccessStep(step);

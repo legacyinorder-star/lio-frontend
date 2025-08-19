@@ -4,8 +4,7 @@ import { QuestionType } from "@/components/will-wizard/types/will.types";
 import { useWillWizard } from "@/context/WillWizardContext";
 
 const STEP_ORDER: QuestionType[] = [
-	"name",
-	"address",
+	"personalInfo",
 	"hasSpouse",
 	"hasChildren",
 	"guardians",
@@ -15,7 +14,6 @@ const STEP_ORDER: QuestionType[] = [
 	"digitalAssets",
 	"residuary",
 	"executors",
-
 	"funeralInstructions",
 	"review",
 ];
@@ -91,7 +89,7 @@ export function useWillWizardNavigation() {
 				return step;
 			}
 		}
-		return "name";
+		return "personalInfo";
 	}, [canAccessStep]);
 
 	// Initialize from URL parameter

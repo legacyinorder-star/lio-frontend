@@ -155,8 +155,7 @@ export default function ManageAllWillsPage() {
 					willId: will.id,
 					userId: will.user.id,
 					completedSteps: {
-						name: true,
-						address: true,
+						personalInfo: true,
 						hasSpouse: true,
 						hasChildren: true,
 						guardians: true,
@@ -166,7 +165,6 @@ export default function ManageAllWillsPage() {
 						digitalAssets: true,
 						residuary: true,
 						executors: true,
-
 						funeralInstructions: true,
 						review: true,
 					},

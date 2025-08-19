@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useWill } from "@/context/WillContext";
-import { toast } from "sonner";
 import { QuestionType } from "./types/will.types";
 
 interface WillGuardProps {
@@ -14,15 +13,15 @@ export default function WillGuard({ children, currentStep }: WillGuardProps) {
 	const { activeWill } = useWill();
 
 	useEffect(() => {
-		// Only check for active will on steps other than the name step
-		if (currentStep !== "name" && !activeWill?.id) {
-			toast.error("No active will found. Please start by entering your name.");
-			navigate("/app/dashboard");
+		// Only check for active will on steps other than the personalInfo step
+		if (currentStep !== "personalInfo" && !activeWill?.id) {
+			console.log("❌ WillGuard: No active will found for step:", currentStep);
+			navigate("/app/create-will/personalInfo");
 		}
 	}, [activeWill, navigate, currentStep]);
 
-	// Don't render children if there's no active will (except for name step)
-	if (currentStep !== "name" && !activeWill?.id) {
+	// Don't render children if there's no active will (except for personalInfo step)
+	if (currentStep !== "personalInfo" && !activeWill?.id) {
 		return null;
 	}
 

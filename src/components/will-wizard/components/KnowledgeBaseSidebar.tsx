@@ -12,21 +12,13 @@ interface KnowledgeBaseSidebarProps {
 }
 
 const stepArticles: Record<QuestionType, KnowledgeArticle[]> = {
-	name: [
+	personalInfo: [
 		{
 			title: "Legal Name Requirements in Wills",
 			description:
 				"Understand the importance of using your full legal name in estate planning documents.",
 			url: "/knowledge/legal-name-requirements",
 		},
-		{
-			title: "Common Name Issues in Estate Planning",
-			description:
-				"Learn about potential problems with name variations and how to avoid them.",
-			url: "/knowledge/name-issues-estate-planning",
-		},
-	],
-	address: [
 		{
 			title: "Residence and Estate Planning",
 			description:

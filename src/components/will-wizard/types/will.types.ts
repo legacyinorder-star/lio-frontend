@@ -1,7 +1,6 @@
 // Question Types
 export type QuestionType =
-	| "name"
-	| "address"
+	| "personalInfo" // Merged name + address
 	| "hasSpouse"
 	| "hasChildren"
 	| "guardians"

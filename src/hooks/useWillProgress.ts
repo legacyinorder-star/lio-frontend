@@ -10,8 +10,7 @@ import { toast } from "sonner";
 
 // Default completion state
 const DEFAULT_COMPLETION: StepCompletion = {
-	name: false,
-	address: false,
+	personalInfo: false,
 	hasSpouse: false,
 	hasChildren: false,
 	guardians: false,
@@ -21,14 +20,12 @@ const DEFAULT_COMPLETION: StepCompletion = {
 	digitalAssets: false,
 	residuary: false,
 	executors: false,
-
 	funeralInstructions: false,
 	review: false,
 };
 
 const STEP_ORDER: QuestionType[] = [
-	"name",
-	"address",
+	"personalInfo",
 	"hasSpouse",
 	"hasChildren",
 	"guardians",
@@ -47,7 +44,7 @@ export function useWillProgress(willId?: string) {
 	const { step: urlStep } = useParams<{ step: string }>();
 	const [completedSteps, setCompletedSteps] =
 		useState<StepCompletion>(DEFAULT_COMPLETION);
-	const [currentStep, setCurrentStep] = useState<QuestionType>("name");
+	const [currentStep, setCurrentStep] = useState<QuestionType>("personalInfo");
 	const [isLoading, setIsLoading] = useState(true);
 
 	// Load progress from backend
@@ -187,8 +184,7 @@ function canAccessStep(step: QuestionType, completed: StepCompletion): boolean {
 		const prevStep = STEP_ORDER[i];
 		// Required steps must be completed
 		const requiredSteps = [
-			"name",
-			"address",
+			"personalInfo",
 			"hasSpouse",
 			"hasChildren",
 			"hasAssets",
@@ -210,7 +206,7 @@ function getFirstAccessibleStep(completed: StepCompletion): QuestionType {
 			return step;
 		}
 	}
-	return "name";
+	return "personalInfo";
 }
 
 function getNextIncompleteStep(completed: StepCompletion): QuestionType {

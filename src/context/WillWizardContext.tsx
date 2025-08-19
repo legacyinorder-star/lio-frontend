@@ -33,8 +33,7 @@ const WillWizardContext = createContext<WillWizardContextType | undefined>(
 
 // Default completion state
 const DEFAULT_COMPLETION: StepCompletion = {
-	name: false,
-	address: false,
+	personalInfo: false,
 	hasSpouse: false,
 	hasChildren: false,
 	guardians: false,
@@ -44,14 +43,13 @@ const DEFAULT_COMPLETION: StepCompletion = {
 	digitalAssets: false,
 	residuary: false,
 	executors: false,
-
 	funeralInstructions: false,
 	review: false,
 };
 
+// Step order for navigation
 const STEP_ORDER: QuestionType[] = [
-	"name",
-	"address",
+	"personalInfo",
 	"hasSpouse",
 	"hasChildren",
 	"guardians",
@@ -66,8 +64,7 @@ const STEP_ORDER: QuestionType[] = [
 ];
 
 const REQUIRED_STEPS = [
-	"name",
-	"address",
+	"personalInfo",
 	"hasSpouse",
 	"hasChildren",
 	"hasAssets",
@@ -79,14 +76,31 @@ const REQUIRED_STEPS = [
 export function WillWizardProvider({ children }: { children: ReactNode }) {
 	const [isInWillWizard, setIsInWillWizard] = useState(false);
 	const [currentStep, setCurrentStep] = useState<QuestionType | null>(null);
-	const [completedSteps, setCompletedSteps] =
-		useState<StepCompletion>(DEFAULT_COMPLETION);
+	const [completedSteps, setCompletedSteps] = useState<StepCompletion>({
+		personalInfo: false,
+		hasSpouse: false,
+		hasChildren: false,
+		guardians: false,
+		pets: false,
+		hasAssets: false,
+		gifts: false,
+		digitalAssets: false,
+		residuary: false,
+		executors: false,
+		funeralInstructions: false,
+		review: false,
+	});
 	const [isProgressLoading, setIsProgressLoading] = useState(false);
 	const [willId, setWillId] = useState<string | null>(null);
 
 	const setWillWizardState = (isActive: boolean, step?: QuestionType) => {
 		setIsInWillWizard(isActive);
-		setCurrentStep(step || null);
+		if (step) {
+			setCurrentStep(step);
+		} else if (!isActive) {
+			// Reset current step when setting wizard to inactive
+			setCurrentStep("personalInfo");
+		}
 	};
 
 	// Progress tracking functions
@@ -248,23 +262,43 @@ export function WillWizardProvider({ children }: { children: ReactNode }) {
 		setWillId(id);
 	}, []);
 
+	// Reset wizard to initial state
+	const resetWizard = useCallback(() => {
+		setIsInWillWizard(false);
+		setCurrentStep("personalInfo");
+		setCompletedSteps({
+			personalInfo: false,
+			hasSpouse: false,
+			hasChildren: false,
+			guardians: false,
+			pets: false,
+			hasAssets: false,
+			gifts: false,
+			digitalAssets: false,
+			residuary: false,
+			executors: false,
+			funeralInstructions: false,
+			review: false,
+		});
+		setWillId(null);
+	}, []);
+
 	const getStepInfo = (
 		step: QuestionType
 	): { number: number; name: string } => {
 		const stepMap: Record<QuestionType, { number: number; name: string }> = {
-			name: { number: 1, name: "Personal Information" },
-			address: { number: 2, name: "Address Information" },
-			hasSpouse: { number: 3, name: "Spouse Information" },
-			hasChildren: { number: 4, name: "Children Information" },
-			guardians: { number: 5, name: "Guardians" },
-			pets: { number: 6, name: "Pet Care" },
-			hasAssets: { number: 7, name: "Assets" },
-			gifts: { number: 8, name: "Gifts" },
-			digitalAssets: { number: 9, name: "Digital Assets" },
-			residuary: { number: 10, name: "Residuary Estate" },
-			executors: { number: 11, name: "Executors" },
-			funeralInstructions: { number: 12, name: "Funeral Instructions" },
-			review: { number: 13, name: "Review" },
+			personalInfo: { number: 1, name: "Personal Information" },
+			hasSpouse: { number: 2, name: "Spouse Information" },
+			hasChildren: { number: 3, name: "Children Information" },
+			guardians: { number: 4, name: "Guardians" },
+			pets: { number: 5, name: "Pet Care" },
+			hasAssets: { number: 6, name: "Assets" },
+			gifts: { number: 7, name: "Gifts" },
+			digitalAssets: { number: 8, name: "Digital Assets" },
+			residuary: { number: 9, name: "Residuary Estate" },
+			executors: { number: 10, name: "Executors" },
+			funeralInstructions: { number: 11, name: "Funeral Instructions" },
+			review: { number: 12, name: "Review" },
 		};
 		return stepMap[step];
 	};
