@@ -704,7 +704,7 @@ export default function FamilyInfoStep({
 									htmlFor="spouseNo"
 									className="text-sm font-normal cursor-pointer"
 								>
-									No, I don't
+									No, I am not
 								</Label>
 							</div>
 							<div className="flex items-center space-x-2">

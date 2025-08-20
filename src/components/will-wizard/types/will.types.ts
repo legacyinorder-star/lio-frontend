@@ -65,6 +65,12 @@ export interface Guardian extends BasePerson {
 	isPrimary: boolean;
 }
 
+export interface PetGuardian extends BasePerson {
+	id: string;
+	relationship: string;
+	guardianshipId?: string; // Store the guardianship record ID for API operations
+}
+
 // Pet Types (removed individual pet tracking)
 
 // Asset Types
@@ -157,6 +163,7 @@ export interface WillFormData {
 	guardians: Guardian[];
 	hasPets: boolean;
 	petGuardianId?: string;
+	petGuardians?: PetGuardian[];
 	hasAssets: boolean;
 	assets: Asset[];
 	digitalAssets?: {
