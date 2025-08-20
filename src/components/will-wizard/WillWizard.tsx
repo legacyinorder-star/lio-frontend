@@ -330,18 +330,18 @@ export default function WillWizard() {
 				setWillWizardState(true, "guardians");
 				break;
 			case "guardians":
-				setWillWizardState(true, "hasAssets");
-				break;
-			case "hasAssets":
-				setWillWizardState(true, "gifts");
-				break;
-			case "gifts":
-				setWillWizardState(true, "digitalAssets");
-				break;
-			case "digitalAssets":
 				setWillWizardState(true, "residuary");
 				break;
 			case "residuary":
+				setWillWizardState(true, "hasAssets");
+				break;
+			case "hasAssets":
+				setWillWizardState(true, "digitalAssets");
+				break;
+			case "digitalAssets":
+				setWillWizardState(true, "gifts");
+				break;
+			case "gifts":
 				setWillWizardState(true, "executors");
 				break;
 			case "executors":
@@ -367,20 +367,20 @@ export default function WillWizard() {
 			case "guardians":
 				setWillWizardState(true, "familyInfo");
 				break;
-			case "hasAssets":
+			case "residuary":
 				setWillWizardState(true, "guardians");
 				break;
-			case "gifts":
-				setWillWizardState(true, "hasAssets");
+			case "hasAssets":
+				setWillWizardState(true, "residuary");
 				break;
 			case "digitalAssets":
-				setWillWizardState(true, "gifts");
+				setWillWizardState(true, "hasAssets");
 				break;
-			case "residuary":
+			case "gifts":
 				setWillWizardState(true, "digitalAssets");
 				break;
 			case "executors":
-				setWillWizardState(true, "residuary");
+				setWillWizardState(true, "gifts");
 				break;
 			case "funeralInstructions":
 				setWillWizardState(true, "executors");
