@@ -46,6 +46,7 @@ interface FamilyInfoStepProps {
 		spouse?: SpouseData;
 		hasChildren: boolean;
 		children?: Child[];
+		hasPets: boolean;
 	}) => void;
 	onBack: () => void;
 	initialData?: {
@@ -53,6 +54,7 @@ interface FamilyInfoStepProps {
 		spouse?: SpouseData;
 		hasChildren: boolean;
 		children?: Child[];
+		hasPets?: boolean;
 	};
 	willOwnerData?: {
 		maritalStatus: string;
@@ -128,6 +130,13 @@ export default function FamilyInfoStep({
 	);
 	const [children, setChildren] = useState<Child[]>(
 		initialData?.children ?? []
+	);
+
+	// ✅ ADDED: Pets state (simple yes/no)
+	const [hasPets, setHasPets] = useState(initialData?.hasPets ?? false);
+	const [petId, setPetId] = useState<string | null>(null);
+	const [initialHasPets, setInitialHasPets] = useState(
+		initialData?.hasPets ?? false
 	);
 	const [childDialogOpen, setChildDialogOpen] = useState(false);
 	const [editingChild, setEditingChild] = useState<Child | null>(null);
@@ -232,10 +241,20 @@ export default function FamilyInfoStep({
 	useEffect(() => {
 		if (activeWill?.id) {
 			loadChildren(activeWill.id);
+			// Check for existing pets to get the pet ID
+			if (initialData?.hasPets) {
+				loadExistingPetId(activeWill.id);
+			}
 		} else if (initialData?.children && initialData.children.length > 0) {
 			setChildren(initialData.children);
 			setHasChildren(initialData.hasChildren);
 			form.setValue("hasChildren", initialData.hasChildren);
+		}
+
+		// Handle initial pets data
+		if (initialData?.hasPets !== undefined) {
+			setHasPets(initialData.hasPets);
+			setInitialHasPets(initialData.hasPets);
 		}
 	}, [activeWill?.id, initialData]);
 
@@ -249,7 +268,87 @@ export default function FamilyInfoStep({
 		}
 	};
 
+	// ✅ ADDED: Load existing pet ID if user has pets
+	const loadExistingPetId = async (willId: string) => {
+		try {
+			const { data, error } = await apiClient<{ id: string }[]>(
+				`/pets/get-by-will/${willId}`
+			);
+
+			if (error) {
+				console.error("Error loading existing pet ID:", error);
+				return;
+			}
+
+			if (data && data.length > 0) {
+				setPetId(data[0].id);
+			}
+		} catch (error) {
+			console.error("Error loading existing pet ID:", error);
+		}
+	};
+
+	// ✅ ADDED: Pet management function
+	const handlePetsChange = async () => {
+		if (!activeWill?.id) {
+			toast.error(
+				"Will information not found. Please start from the beginning."
+			);
+			return;
+		}
+
+		try {
+			// If user had pets initially and now doesn't want pets
+			if (initialHasPets && !hasPets && petId) {
+				// Send DELETE request to remove pets
+				const { error } = await apiClient(`/pets/${petId}`, {
+					method: "DELETE",
+				});
+
+				if (error) {
+					console.error("Error deleting pets:", error);
+					toast.error("Failed to remove pets. Please try again.");
+					return;
+				}
+
+				toast.success("Pets removed successfully");
+			}
+			// If user didn't have pets initially and now wants pets
+			else if (!initialHasPets && hasPets) {
+				// Send POST request to create pets record
+				const petData = {
+					will_id: activeWill.id,
+				};
+
+				const { data, error } = await apiClient<{ id: string }>("/pets", {
+					method: "POST",
+					body: JSON.stringify(petData),
+				});
+
+				if (error) {
+					console.error("Error creating pets record:", error);
+					toast.error("Failed to create pets record. Please try again.");
+					return;
+				}
+
+				// Save the pet ID for future reference
+				if (data && data.id) {
+					setPetId(data.id);
+				}
+
+				toast.success("Pets record created successfully");
+			}
+			// If status remains the same, no API calls needed
+		} catch (error) {
+			console.error("Error managing pets:", error);
+			toast.error("An error occurred while managing pets. Please try again.");
+		}
+	};
+
 	const handleSubmit = async (values: z.infer<typeof familyInfoSchema>) => {
+		// Handle pets changes before proceeding
+		await handlePetsChange();
+
 		await onNext({
 			hasSpouse: values.hasSpouse,
 			spouse: localSpouseData
@@ -260,6 +359,7 @@ export default function FamilyInfoStep({
 				: undefined,
 			hasChildren: values.hasChildren,
 			children: children,
+			hasPets: hasPets,
 		});
 	};
 
@@ -879,6 +979,58 @@ export default function FamilyInfoStep({
 								</Dialog>
 							</div>
 						)}
+
+						{/* Pets Section */}
+						<div className="space-y-4 my-[2.45rem]">
+							<div className="flex items-center gap-2">
+								<span
+									style={{
+										fontSize: "1rem",
+										color: "#000",
+										fontWeight: 400,
+										fontFamily: "TMT Limkin",
+									}}
+								>
+									Do you have pets?
+								</span>
+							</div>
+							<div className="text-[#696868] text-[0.875rem] -mt-4">
+								This information helps us include provisions for pet care in
+								your will, allowing you to specify who will take care of your
+								pets.
+							</div>
+
+							<div className="space-y-3 mt-[-0.5rem]">
+								<div className="flex items-center space-x-2">
+									<Checkbox
+										id="petsNo"
+										checked={!hasPets}
+										onCheckedChange={(checked) => {
+											if (checked) {
+												setHasPets(false);
+											}
+										}}
+									/>
+									<Label htmlFor="petsNo" className="text-sm">
+										No, I don't have pets
+									</Label>
+								</div>
+								<div className="flex items-center space-x-2">
+									<Checkbox
+										id="petsYes"
+										checked={hasPets}
+										onCheckedChange={(checked) => {
+											if (checked) {
+												setHasPets(true);
+											}
+										}}
+									/>
+									<Label htmlFor="petsYes" className="text-sm">
+										Yes, I have pets
+									</Label>
+								</div>
+							</div>
+						</div>
 					</div>
 
 					<div className="flex justify-between pt-4">
