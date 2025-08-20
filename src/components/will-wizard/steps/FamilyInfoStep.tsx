@@ -54,14 +54,18 @@ export default function FamilyInfoStep({
 	isLoadingOwnerData,
 }: FamilyInfoStepProps) {
 	const [spouseDialogOpen, setSpouseDialogOpen] = useState(false);
-	const [localSpouseData, setLocalSpouseData] = useState<
-		SpouseData | undefined
-	>(spouseData || initialData?.spouse);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const { isLoading: relationshipsLoading } = useRelationships();
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 	const [deleteLoading, setDeleteLoading] = useState(false);
 	const { refetch } = useWillData();
+
+	// ✅ ADDED: Local state to show spouse data immediately after save
+	const [localSpouseData, setLocalSpouseData] = useState<{
+		id?: string;
+		firstName: string;
+		lastName: string;
+	} | null>(spouseData);
 
 	// Determine if has spouse based on marital status or existing spouse data
 	const hasSpouseFromData =
@@ -74,57 +78,69 @@ export default function FamilyInfoStep({
 		},
 	});
 
-	// Update form and local state when props change
+	// ✅ UPDATED: Sync local state when parent's spouseData changes
 	useEffect(() => {
 		const hasSpouse = hasSpouseFromData || initialData?.hasSpouse || false;
 		form.setValue("hasSpouse", hasSpouse);
 
+		// Update local state when parent provides new spouse data
 		if (spouseData) {
-			setLocalSpouseData({
-				firstName: spouseData.firstName,
-				lastName: spouseData.lastName,
-			});
-		} else if (initialData?.spouse) {
-			setLocalSpouseData(initialData.spouse);
+			setLocalSpouseData(spouseData);
 		}
 	}, [willOwnerData, spouseData, initialData, hasSpouseFromData, form]);
 
 	const handleSubmit = async (values: z.infer<typeof spouseSchema>) => {
 		await onNext({
 			hasSpouse: values.hasSpouse,
-			spouse: localSpouseData,
+			spouse: localSpouseData
+				? {
+						firstName: localSpouseData.firstName,
+						lastName: localSpouseData.lastName,
+				  }
+				: undefined,
 		});
 	};
 
+	// ✅ UPDATED: Enhanced spouse data handling with immediate local state update
 	const handleSpouseData = async (data: SpouseData) => {
 		setIsSubmitting(true);
 
 		try {
-			// If we have the new save function, use it
+			// Check if we're editing an existing spouse or creating a new one
+			const isEditing = !!(localSpouseData && localSpouseData.id);
+
 			if (onSpouseDataSave) {
-				const success = await onSpouseDataSave(data);
+				// For editing, pass the ID along with the data
+				const dataToSave = isEditing
+					? { ...data, id: localSpouseData!.id }
+					: data;
+
+				const success = await onSpouseDataSave(dataToSave);
 
 				if (!success) {
 					toast.error("Failed to save spouse information. Please try again.");
 					return;
 				}
 			} else {
-				// Fall back to original approach - this would need additional imports and logic
-				// For now, just show an error
 				toast.error(
 					"Unable to save spouse information. Please refresh and try again."
 				);
 				return;
 			}
 
-			// Update local state
-			setLocalSpouseData(data);
+			// ✅ IMMEDIATE UPDATE: Update local state to show spouse details right away
+			setLocalSpouseData({
+				id: isEditing ? localSpouseData!.id : "temp-id", // Use temp ID for new spouses
+				firstName: data.firstName,
+				lastName: data.lastName,
+			});
+
+			// Close dialog and show success message
 			setSpouseDialogOpen(false);
+			const action = isEditing ? "updated" : "saved";
+			toast.success(`Spouse information ${action} successfully`);
 
-			// Show success message
-			toast.success("Spouse information saved successfully");
-
-			// Refresh beneficiary lists
+			// Refresh data from parent
 			refetch();
 		} catch (error) {
 			console.error("Error in spouse data submission:", error);
@@ -136,16 +152,24 @@ export default function FamilyInfoStep({
 		}
 	};
 
+	// ✅ UPDATED: Enhanced delete function with local state cleanup
 	const handleDeleteSpouse = async () => {
-		if (!spouseData?.id) return;
+		if (!localSpouseData?.id || localSpouseData.id === "temp-id") {
+			toast.error("No spouse to delete");
+			return;
+		}
+
 		setDeleteLoading(true);
 		try {
-			await apiClient(`/people/${spouseData.id}`, { method: "DELETE" });
-			setLocalSpouseData(undefined);
+			await apiClient(`/people/${localSpouseData.id}`, { method: "DELETE" });
+
+			// Clear local state and form
+			setLocalSpouseData(null);
+			form.setValue("hasSpouse", false);
 			setShowDeleteConfirm(false);
 			toast.success("Spousal details deleted successfully.");
 
-			// Refresh beneficiary lists
+			// Refresh data
 			refetch();
 		} catch (error) {
 			console.error("Error deleting spouse:", error);
@@ -159,12 +183,6 @@ export default function FamilyInfoStep({
 	if (relationshipsLoading || isLoadingOwnerData) {
 		return (
 			<div className="space-y-4">
-				<div className="text-xl sm:text-2xl lg:text-[2rem] font-medium text-black">
-					Are you married or in a legally recognized civil relationship?
-				</div>
-				<div className="text-muted-foreground">
-					Loading relationship types or spouse information...
-				</div>
 				<div className="flex justify-center py-8">
 					<LoadingSpinner message="Loading..." />
 				</div>
@@ -203,12 +221,16 @@ export default function FamilyInfoStep({
 								<Checkbox
 									id="spouseNo"
 									checked={!form.watch("hasSpouse")}
-									onCheckedChange={() => {
-										if (spouseData) {
-											setShowDeleteConfirm(true);
-										} else {
-											form.setValue("hasSpouse", false);
-											setLocalSpouseData(undefined);
+									onCheckedChange={(checked) => {
+										if (checked) {
+											// If "No" is being selected
+											if (localSpouseData) {
+												// If there's existing spouse data, show delete confirmation
+												setShowDeleteConfirm(true);
+											} else {
+												// If no existing data, just clear the form
+												form.setValue("hasSpouse", false);
+											}
 										}
 									}}
 									disabled={isSubmitting}
@@ -225,9 +247,12 @@ export default function FamilyInfoStep({
 								<Checkbox
 									id="spouseYes"
 									checked={form.watch("hasSpouse")}
-									onCheckedChange={() => {
-										form.setValue("hasSpouse", true);
-										if (!localSpouseData) setSpouseDialogOpen(true);
+									onCheckedChange={(checked) => {
+										if (checked) {
+											// If "Yes" is being selected
+											form.setValue("hasSpouse", true);
+											if (!localSpouseData) setSpouseDialogOpen(true);
+										}
 									}}
 									disabled={isSubmitting}
 									className="rounded-full"
@@ -241,6 +266,7 @@ export default function FamilyInfoStep({
 							</div>
 						</div>
 
+						{/* ✅ UPDATED: Show spouse details from local state */}
 						{form.watch("hasSpouse") && localSpouseData && (
 							<Card className="border-2 border-green-100 bg-green-50/50">
 								<CardHeader className="pb-3">
@@ -306,11 +332,19 @@ export default function FamilyInfoStep({
 				</form>
 			</Form>
 
+			{/* ✅ UPDATED: Pass local spouse data for editing */}
 			<SpouseDialog
 				open={spouseDialogOpen}
 				onOpenChange={setSpouseDialogOpen}
 				onSave={handleSpouseData}
-				initialData={localSpouseData}
+				initialData={
+					localSpouseData
+						? {
+								firstName: localSpouseData.firstName,
+								lastName: localSpouseData.lastName,
+						  }
+						: undefined
+				}
 				isSubmitting={isSubmitting}
 			/>
 

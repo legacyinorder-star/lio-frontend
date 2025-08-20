@@ -219,6 +219,8 @@ export default function WillWizard() {
 
 			// Check if we're editing an existing spouse or creating a new one
 			const isEditing = !!spouseData?.id;
+			console.log("isEditing", isEditing);
+			console.log("spouseData", spouseData);
 
 			if (isEditing && spouseData) {
 				// Update existing spouse record
