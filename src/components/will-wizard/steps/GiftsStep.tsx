@@ -1,10 +1,7 @@
 import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { Form } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
 	ArrowLeft,
 	ArrowRight,
@@ -104,20 +101,6 @@ interface ExtendedGift extends GiftType {
 		user_id: string;
 	};
 }
-
-const giftSchema = z
-	.object({
-		type: z.enum(["Cash", "Item", "Other"]),
-		description: z.string().min(1, "Description is required"),
-		value: z.number().optional(),
-		currency: z.string().optional(),
-		peopleId: z.string().optional(),
-		charitiesId: z.string().optional(),
-	})
-	.refine((data) => data.peopleId || data.charitiesId, {
-		message: "Either peopleId or charitiesId is required",
-		path: ["peopleId"],
-	});
 
 // Gift type options with icons
 const GIFT_TYPES = [
@@ -230,18 +213,6 @@ export default function GiftsStep({ onNext, onBack }: GiftsStepProps) {
 	const { updateLoadingState } = useDataLoading();
 	const { activeWill } = useWill();
 
-	const form = useForm<z.infer<typeof giftSchema>>({
-		resolver: zodResolver(giftSchema),
-		defaultValues: {
-			type: "Cash",
-			description: "",
-			value: undefined,
-			currency: "USD",
-			peopleId: "",
-			charitiesId: "",
-		},
-	});
-
 	// Load gifts from API
 	const loadGifts = async () => {
 		if (!activeWill?.id) return;
@@ -301,6 +272,7 @@ export default function GiftsStep({ onNext, onBack }: GiftsStepProps) {
 	// Initialize form when editing
 	useEffect(() => {
 		if (editingGift) {
+			console.log("Setting form data for editing:", editingGift);
 			setGiftForm({
 				type: editingGift.type,
 				description: editingGift.description,
@@ -320,6 +292,11 @@ export default function GiftsStep({ onNext, onBack }: GiftsStepProps) {
 			});
 		}
 	}, [editingGift]);
+
+	// Debug: Log form changes
+	useEffect(() => {
+		console.log("Gift form changed:", giftForm);
+	}, [giftForm]);
 
 	// Show loading spinner if data is not ready
 	if (isDataLoading || !isReady || isLoadingGifts) {
@@ -454,15 +431,52 @@ export default function GiftsStep({ onNext, onBack }: GiftsStepProps) {
 	};
 
 	const handleEditGift = (gift: ExtendedGift) => {
-		setEditingGift(gift);
-		setGiftForm({
-			type: gift.type,
-			description: gift.description,
-			value: gift.value,
-			currency: gift.currency,
-			peopleId: gift.peopleId || "",
-			charitiesId: gift.charitiesId || "",
+		console.log("Editing gift:", gift);
+		console.log("Gift beneficiary IDs:", {
+			peopleId: gift.peopleId,
+			charitiesId: gift.charitiesId,
 		});
+		console.log(
+			"Enhanced beneficiaries available:",
+			enhancedBeneficiaries.length
+		);
+
+		// Set editingGift FIRST so that getSelectedBeneficiaryFromForm can work properly
+		setEditingGift(gift);
+
+		// Check if the beneficiary still exists
+		const beneficiaryExists = gift.peopleId
+			? enhancedBeneficiaries.some((b) => b.id === gift.peopleId)
+			: gift.charitiesId
+			? enhancedBeneficiaries.some((b) => b.id === gift.charitiesId)
+			: false;
+
+		if (!beneficiaryExists && (gift.peopleId || gift.charitiesId)) {
+			console.log(
+				"Beneficiary no longer exists, clearing beneficiary selection"
+			);
+			// Clear beneficiary selection if it no longer exists
+			setGiftForm({
+				type: gift.type,
+				description: gift.description,
+				value: gift.value,
+				currency: gift.currency,
+				peopleId: "",
+				charitiesId: "",
+			});
+		} else {
+			setGiftForm({
+				type: gift.type,
+				description: gift.description,
+				value: gift.value,
+				currency: gift.currency,
+				peopleId: gift.peopleId || "",
+				charitiesId: gift.charitiesId || "",
+			});
+		}
+
+		// Clear search query when editing to show the correct beneficiary
+		setSearchQuery("");
 		setGiftDialogOpen(true);
 	};
 
@@ -542,7 +556,39 @@ export default function GiftsStep({ onNext, onBack }: GiftsStepProps) {
 	// Helper function to get selected beneficiary from form
 	const getSelectedBeneficiaryFromForm = () => {
 		const beneficiaryId = getBeneficiaryIdFromForm();
-		return enhancedBeneficiaries.find((b) => b.id === beneficiaryId);
+		console.log("Looking for beneficiary ID:", beneficiaryId);
+		console.log(
+			"Available enhancedBeneficiaries:",
+			enhancedBeneficiaries.map((b) => ({
+				id: b.id,
+				name: `${b.firstName} ${b.lastName}`,
+			}))
+		);
+
+		if (!beneficiaryId) return null;
+
+		// First try to find in enhancedBeneficiaries
+		let beneficiary = enhancedBeneficiaries.find((b) => b.id === beneficiaryId);
+		console.log("Found in enhancedBeneficiaries:", beneficiary);
+
+		// If not found in enhancedBeneficiaries, try to find in the current gifts
+		// Use the gifts array directly instead of relying on editingGift state
+		if (!beneficiary) {
+			// Find the gift that matches the current form data
+			const currentGift = gifts.find(
+				(g) => g.peopleId === beneficiaryId || g.charitiesId === beneficiaryId
+			);
+			if (currentGift) {
+				const giftBeneficiary = getBeneficiaryFromGift(currentGift);
+				console.log("Gift beneficiary from current gifts:", giftBeneficiary);
+				if (giftBeneficiary && giftBeneficiary.id === beneficiaryId) {
+					beneficiary = giftBeneficiary;
+				}
+			}
+		}
+
+		console.log("Final selected beneficiary:", beneficiary);
+		return beneficiary;
 	};
 
 	// Get selected beneficiary details
@@ -648,86 +694,51 @@ export default function GiftsStep({ onNext, onBack }: GiftsStepProps) {
 	);
 
 	return (
-		<div className="space-y-4">
+		<div className="space-y-6">
 			<div className="text-xl sm:text-2xl lg:text-[2rem] font-medium text-black">
 				Specify any one-off gifts
 			</div>
-			<div className="text-muted-foreground">
+			<div className="text-[#696868] text-[0.875rem] -mt-4">
 				Add any specific gifts you'd like to leave to particular individuals.
 				This could include cash gifts, personal items, or other specific
 				bequests.
 			</div>
 
-			<Form {...form}>
-				<form onSubmit={handleSubmit} className="space-y-6">
-					<div className="space-y-4">
-						<div className="flex justify-between items-center">
-							<h3 className="text-lg font-medium">Your Gifts</h3>
-							<Button
-								type="button"
-								variant="outline"
-								onClick={() => {
-									setGiftForm({
-										type: "Cash",
-										description: "",
-										value: undefined,
-										currency: "USD",
-										peopleId: "",
-										charitiesId: "",
-									});
-									setEditingGift(null);
-									setGiftDialogOpen(true);
-								}}
-								className="cursor-pointer"
-							>
-								<Plus className="mr-2 h-4 w-4" />
-								Add Gift
-							</Button>
-						</div>
+			{/* Gifts Management Section */}
+			<div className="space-y-4 mb-[2.45rem]">
+				{/* Gifts List - Only show when there are gifts */}
+				{gifts.length > 0 && (
+					<div className="mb-6 space-y-4">
+						{gifts.map((gift) => {
+							const beneficiary = getBeneficiaryFromGift(gift);
+							const relationship = beneficiary?.relationshipId
+								? getFormattedRelationshipNameById(
+										beneficiary.relationshipId
+								  ) || beneficiary.relationship
+								: beneficiary?.relationship || "Unknown";
 
-						{gifts.length === 0 ? (
-							<p className="text-muted-foreground text-center py-4">
-								No gifts added yet. Click "Add Gift" to specify gifts for your
-								beneficiaries.
-							</p>
-						) : (
-							<div className="space-y-4">
-								{gifts.map((gift) => {
-									const beneficiary = getBeneficiaryFromGift(gift);
-									const relationship = beneficiary?.relationshipId
-										? getFormattedRelationshipNameById(
-												beneficiary.relationshipId
-										  ) || beneficiary.relationship
-										: beneficiary?.relationship || "Unknown";
+							// Get currency symbol for display
+							const currencyInfo = gift.currency
+								? CURRENCIES.find((c) => c.code === gift.currency)
+								: null;
 
-									// Check if this specific gift has deleted beneficiaries
-									const hasDeletedBeneficiaries = isBeneficiaryDeleted(gift);
-
-									// Get currency symbol for display
-									const currencyInfo = gift.currency
-										? CURRENCIES.find((c) => c.code === gift.currency)
-										: null;
-
-									return (
-										<div
-											key={gift.id}
-											className={`flex justify-between items-start p-4 border rounded-lg ${
-												hasDeletedBeneficiaries
-													? "border-red-300 bg-red-50"
-													: ""
-											}`}
-										>
-											<div className="space-y-1">
-												<div className="flex items-center space-x-2">
-													<p className="font-medium">{gift.type}</p>
+							return (
+								<Card key={gift.id}>
+									<CardContent className="p-4">
+										<div className="flex justify-between items-center">
+											<div>
+												<p className="font-medium">
+													{gift.type}
 													{gift.type === "Cash" && gift.value && (
-														<span className="text-sm text-muted-foreground">
+														<span className="ml-2 text-sm text-muted-foreground">
 															{currencyInfo?.symbol || gift.currency || "$"}
 															{gift.value.toLocaleString()}
 														</span>
 													)}
-												</div>
-												<p className="text-sm">{gift.description}</p>
+												</p>
+												<p className="text-sm text-muted-foreground">
+													{gift.description}
+												</p>
 												<p className="text-sm text-muted-foreground">
 													To: {beneficiary?.firstName} {beneficiary?.lastName} (
 													{relationship})
@@ -739,82 +750,99 @@ export default function GiftsStep({ onNext, onBack }: GiftsStepProps) {
 											<div className="flex space-x-2">
 												<Button
 													type="button"
-													variant="outline"
-													size="sm"
+													variant="ghost"
+													size="icon"
 													onClick={() => handleEditGift(gift)}
+													className="cursor-pointer"
 												>
-													<Edit2 className="h-4 w-4 mr-2" />
-													Edit
+													<Edit2 className="h-4 w-4" />
 												</Button>
 												<Button
 													type="button"
-													variant="outline"
-													size="sm"
+													variant="ghost"
+													size="icon"
 													onClick={() => handleRemoveGift(gift)}
+													className="cursor-pointer"
 												>
-													<Trash2 className="h-4 w-4 mr-2" />
-													Remove
+													<Trash2 className="h-4 w-4" />
 												</Button>
 											</div>
 										</div>
-									);
-								})}
-							</div>
-						)}
-
-						{/* Validation message for deleted beneficiaries */}
-						{hasAnyDeletedBeneficiaries && (
-							<div className="bg-red-50 border border-red-200 rounded-lg p-4">
-								<div className="flex items-start">
-									<div className="flex-shrink-0">
-										<svg
-											className="h-5 w-5 text-red-400"
-											viewBox="0 0 20 20"
-											fill="currentColor"
-										>
-											<path
-												fillRule="evenodd"
-												d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-												clipRule="evenodd"
-											/>
-										</svg>
-									</div>
-									<div className="ml-3">
-										<h3 className="text-sm font-medium text-red-800">
-											Deleted Beneficiaries Detected
-										</h3>
-										<div className="mt-2 text-sm text-red-700">
-											<p>
-												Some gifts have beneficiaries that have been deleted.
-												Please edit those gifts to fix this issue before
-												proceeding.
-											</p>
-										</div>
-									</div>
-								</div>
-							</div>
-						)}
+									</CardContent>
+								</Card>
+							);
+						})}
 					</div>
+				)}
 
-					<div className="flex justify-between pt-4">
-						<Button
-							type="button"
-							variant="outline"
-							onClick={onBack}
-							className="cursor-pointer"
-						>
-							<ArrowLeft className="mr-2 h-4 w-4" /> Back
-						</Button>
-						<Button
-							type="submit"
-							disabled={hasAnyDeletedBeneficiaries}
-							className="cursor-pointer bg-primary hover:bg-primary/90 text-white disabled:bg-gray-300 disabled:cursor-not-allowed"
-						>
-							Next <ArrowRight className="ml-2 h-4 w-4" />
-						</Button>
+				{/* Add Gift Button - Full width like Add Guardian */}
+				<Button
+					variant="outline"
+					onClick={() => {
+						setGiftForm({
+							type: "Cash",
+							description: "",
+							value: undefined,
+							currency: "USD",
+							peopleId: "",
+							charitiesId: "",
+						});
+						setEditingGift(null);
+						setGiftDialogOpen(true);
+					}}
+					className="w-full h-16 bg-white text-[#050505] rounded-[0.25rem] font-medium"
+				>
+					<Plus className="mr-2 h-4 w-4" />
+					Add Gift
+				</Button>
+			</div>
+
+			{/* Validation message for deleted beneficiaries */}
+			{hasAnyDeletedBeneficiaries && (
+				<div className="bg-red-50 border border-red-200 rounded-lg p-4 mt-4">
+					<div className="flex items-start">
+						<div className="flex-shrink-0">
+							<svg
+								className="h-5 w-5 text-red-400"
+								viewBox="0 0 20 20"
+								fill="currentColor"
+							>
+								<path
+									fillRule="evenodd"
+									d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+									clipRule="evenodd"
+								/>
+							</svg>
+						</div>
+						<div className="ml-3">
+							<h3 className="text-sm font-medium text-red-800">
+								Deleted Beneficiaries Detected
+							</h3>
+							<div className="mt-2 text-sm text-red-700">
+								<p>
+									Some gifts have beneficiaries that have been deleted. Please
+									edit those gifts to fix this issue before proceeding.
+								</p>
+							</div>
+						</div>
 					</div>
-				</form>
-			</Form>
+				</div>
+			)}
+
+			{/* Navigation buttons */}
+			<div className="flex justify-between pt-4">
+				<Button variant="outline" onClick={onBack} className="cursor-pointer">
+					<ArrowLeft className="mr-2 h-4 w-4" />
+					Back
+				</Button>
+				<Button
+					onClick={handleSubmit}
+					disabled={hasAnyDeletedBeneficiaries}
+					className="cursor-pointer bg-primary hover:bg-primary/90 text-white"
+				>
+					Next <ArrowRight className="ml-2 h-4 w-4" />
+				</Button>
+			</div>
 
 			{/* Gift Dialog */}
 			<Dialog open={giftDialogOpen} onOpenChange={setGiftDialogOpen}>
