@@ -819,18 +819,18 @@ export default function ExecutorStep({
 	}
 
 	return (
-		<div className="space-y-4">
+		<div className="space-y-6">
 			<div className="text-xl sm:text-2xl lg:text-[2rem] font-medium text-black">
 				Appoint Executors for Your Estate
 			</div>
-			<div className="text-muted-foreground">
+			<div className="text-[#696868] text-[0.875rem] -mt-4">
 				Executors are responsible for carrying out the terms of your will. You
 				should appoint at least one executor, and it's recommended to have a
 				backup executor in case the primary executor is unable to serve.
 			</div>
 
 			{/* Legacy In Order Recommendation Section */}
-			<div className="bg-green-50 border border-green-200 rounded-lg p-4 mt-6">
+			<div className="bg-green-50 border border-green-200 rounded-lg p-4">
 				<div className="space-y-3">
 					<div className="flex items-start">
 						<div className="flex-shrink-0">
@@ -886,9 +886,10 @@ export default function ExecutorStep({
 			</div>
 
 			{/* Executor Selection Dropdown - Full Width */}
-			<div className="space-y-4 mt-6">
-				<div className="flex justify-between items-center">
-					<h3 className="text-lg font-medium">Select Executor</h3>
+			<div className="space-y-4">
+				<div className="text-lg font-medium">Select Executor</div>
+				<div className="text-[#696868] text-[0.875rem] -mt-4">
+					Choose from existing people in your will or add a new executor.
 				</div>
 
 				<div className="w-full">
@@ -961,206 +962,20 @@ export default function ExecutorStep({
 				</div>
 			</div>
 
-			<div className="space-y-6 mt-6">
-				<div className="flex justify-between items-center">
-					<h3 className="text-lg font-medium">Appointed Executors</h3>
-					<Dialog
-						open={executorDialogOpen}
-						onOpenChange={setExecutorDialogOpen}
-					>
-						<DialogTrigger asChild>
-							<Button
-								variant="outline"
-								onClick={() => {
-									setExecutorForm({
-										id: "",
-										type: "individual",
-										firstName: "",
-										lastName: "",
-										relationshipId: "",
-										name: "",
-										rc_number: "",
-										personId: "",
-										corporateExecutorId: "",
-										isPrimary: false,
-									});
-									setEditingExecutor(null);
-								}}
-								className="cursor-pointer"
-							>
-								<Plus className="mr-2 h-4 w-4" />
-								Add New Executor
-							</Button>
-						</DialogTrigger>
-						<DialogContent className="bg-white max-w-2xl">
-							<DialogHeader>
-								<DialogTitle>
-									{editingExecutor ? "Edit Executor" : "Add Executor"}
-								</DialogTitle>
-								<DialogDescription>
-									Add an executor who will be responsible for carrying out the
-									terms of your will. You can appoint either an individual or a
-									corporate executor.
-								</DialogDescription>
-							</DialogHeader>
-							<div className="space-y-4 py-4">
-								<div className="flex space-x-4 mb-4">
-									<Button
-										variant={
-											executorForm.type === "individual" ? "default" : "outline"
-										}
-										onClick={() =>
-											setExecutorForm((prev) => ({
-												...prev,
-												type: "individual",
-											}))
-										}
-										className={`cursor-pointer ${
-											executorForm.type === "individual"
-												? "bg-primary text-white"
-												: ""
-										}`}
-									>
-										Individual Executor
-									</Button>
-									<Button
-										variant={
-											executorForm.type === "corporate" ? "default" : "outline"
-										}
-										onClick={() =>
-											setExecutorForm((prev) => ({
-												...prev,
-												type: "corporate",
-											}))
-										}
-										className={`cursor-pointer ${
-											executorForm.type === "corporate"
-												? "bg-primary text-white"
-												: ""
-										}`}
-									>
-										Corporate Executor
-									</Button>
-								</div>
-
-								{executorForm.type === "individual" ? (
-									<>
-										<div className="grid grid-cols-2 gap-4">
-											<div className="space-y-2">
-												<Label htmlFor="executorFirstName">First Name</Label>
-												<Input
-													id="executorFirstName"
-													value={executorForm.firstName}
-													onChange={handleExecutorFormChange("firstName")}
-													placeholder="John"
-												/>
-											</div>
-											<div className="space-y-2">
-												<Label htmlFor="executorLastName">Last Name</Label>
-												<Input
-													id="executorLastName"
-													value={executorForm.lastName}
-													onChange={handleExecutorFormChange("lastName")}
-													placeholder="Doe"
-												/>
-											</div>
-										</div>
-										<div className="space-y-2">
-											<RelationshipSelect
-												value={executorForm.relationshipId}
-												label="Relationship"
-												onValueChange={(value) =>
-													setExecutorForm((prev) => ({
-														...prev,
-														relationshipId: value,
-													}))
-												}
-												required={true}
-											/>
-										</div>
-									</>
-								) : (
-									<>
-										<div className="space-y-2">
-											<Label htmlFor="companyName">Company Name</Label>
-											<Input
-												id="companyName"
-												value={executorForm.name}
-												onChange={handleExecutorFormChange("name")}
-												placeholder="Enter company name"
-											/>
-										</div>
-										<div className="space-y-2">
-											<Label htmlFor="registrationNumber">
-												Registration Number
-											</Label>
-											<Input
-												id="registrationNumber"
-												value={executorForm.rc_number}
-												onChange={handleExecutorFormChange("rc_number")}
-												placeholder="Enter company registration number"
-											/>
-										</div>
-									</>
-								)}
-
-								<div className="flex items-center space-x-2">
-									<Checkbox
-										id="isPrimaryExecutor"
-										checked={executorForm.isPrimary}
-										onCheckedChange={(checked: boolean) =>
-											setExecutorForm((prev) => ({
-												...prev,
-												isPrimary: checked,
-											}))
-										}
-									/>
-									<Label htmlFor="isPrimaryExecutor" className="text-sm">
-										Appoint as Primary Executor
-									</Label>
-								</div>
-								<div className="flex justify-end space-x-2">
-									<Button
-										variant="outline"
-										onClick={() => setExecutorDialogOpen(false)}
-										disabled={isSubmitting}
-										className="cursor-pointer"
-									>
-										Cancel
-									</Button>
-									<Button
-										onClick={handleSaveExecutor}
-										disabled={!isFormValid() || isSubmitting}
-										className="cursor-pointer bg-primary hover:bg-primary/90 text-white"
-									>
-										{isSubmitting ? "Saving..." : "Save"}
-									</Button>
-								</div>
-							</div>
-						</DialogContent>
-					</Dialog>
-				</div>
-
-				{isLoadingExecutors ? (
-					<p className="text-muted-foreground text-center py-4">
-						Loading executors...
-					</p>
-				) : executors.length === 0 ? (
-					<p className="text-muted-foreground text-center py-4">
-						No executors added yet. Click "Add Executor" to appoint executors
-						for your estate.
-					</p>
-				) : (
-					<div className="space-y-4">
+			{/* Appointed Executors Section */}
+			<div className="space-y-4 mb-[2.45rem]">
+				{/* Executors List - Only show when there are executors */}
+				{executors.length > 0 && (
+					<div className="mb-6 space-y-4">
 						{executors.map((executor) => (
 							<Card key={executor.id}>
 								<CardContent className="p-4">
-									<div className="flex justify-between items-start">
-										<div className="space-y-1">
+									<div className="flex justify-between items-center">
+										<div>
 											{executor.type === "individual" ? (
 												<p className="font-medium">
 													{executor.firstName} {executor.lastName}
-													<span className="text-sm text-muted-foreground ml-2">
+													<span className="ml-2 text-sm text-muted-foreground">
 														(
 														{getFormattedRelationshipNameById(
 															executor.relationshipId || ""
@@ -1179,10 +994,10 @@ export default function ExecutorStep({
 													)}
 												</p>
 											) : (
-												<div className="space-y-1">
+												<div>
 													<p className="font-medium">
 														{executor.name}
-														<span className="text-sm text-muted-foreground ml-2">
+														<span className="ml-2 text-sm text-muted-foreground">
 															(Corporate Executor)
 														</span>
 														{executor.isPrimary && (
@@ -1231,13 +1046,223 @@ export default function ExecutorStep({
 					</div>
 				)}
 
-				{/* Validation message for multiple primary executors */}
-				{executors.filter((executor) => executor.isPrimary).length > 1 && (
-					<div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-4">
+				{/* Add New Executor Button - Full width like Add Guardian */}
+				<Dialog open={executorDialogOpen} onOpenChange={setExecutorDialogOpen}>
+					<DialogTrigger asChild>
+						<Button
+							variant="outline"
+							onClick={() => {
+								setExecutorForm({
+									id: "",
+									type: "individual",
+									firstName: "",
+									lastName: "",
+									relationshipId: "",
+									name: "",
+									rc_number: "",
+									personId: "",
+									corporateExecutorId: "",
+									isPrimary: false,
+								});
+								setEditingExecutor(null);
+							}}
+							className="w-full h-16 bg-white text-[#050505] rounded-[0.25rem] font-medium"
+						>
+							<Plus className="mr-2 h-4 w-4" />
+							Add New Executor
+						</Button>
+					</DialogTrigger>
+					<DialogContent className="bg-white max-w-2xl">
+						<DialogHeader>
+							<DialogTitle>
+								{editingExecutor ? "Edit Executor" : "Add Executor"}
+							</DialogTitle>
+							<DialogDescription>
+								Add an executor who will be responsible for carrying out the
+								terms of your will. You can appoint either an individual or a
+								corporate executor.
+							</DialogDescription>
+						</DialogHeader>
+						<div className="space-y-4 py-4">
+							<div className="flex space-x-4 mb-4">
+								<Button
+									variant={
+										executorForm.type === "individual" ? "default" : "outline"
+									}
+									onClick={() =>
+										setExecutorForm((prev) => ({
+											...prev,
+											type: "individual",
+										}))
+									}
+									className={`cursor-pointer ${
+										executorForm.type === "individual"
+											? "bg-primary text-white"
+											: ""
+									}`}
+								>
+									Individual Executor
+								</Button>
+								<Button
+									variant={
+										executorForm.type === "corporate" ? "default" : "outline"
+									}
+									onClick={() =>
+										setExecutorForm((prev) => ({
+											...prev,
+											type: "corporate",
+										}))
+									}
+									className={`cursor-pointer ${
+										executorForm.type === "corporate"
+											? "bg-primary text-white"
+											: ""
+									}`}
+								>
+									Corporate Executor
+								</Button>
+							</div>
+
+							{executorForm.type === "individual" ? (
+								<>
+									<div className="grid grid-cols-2 gap-4">
+										<div className="space-y-2">
+											<Label htmlFor="executorFirstName">First Name</Label>
+											<Input
+												id="executorFirstName"
+												value={executorForm.firstName}
+												onChange={handleExecutorFormChange("firstName")}
+												placeholder="John"
+											/>
+										</div>
+										<div className="space-y-2">
+											<Label htmlFor="executorLastName">Last Name</Label>
+											<Input
+												id="executorLastName"
+												value={executorForm.lastName}
+												onChange={handleExecutorFormChange("lastName")}
+												placeholder="Doe"
+											/>
+										</div>
+									</div>
+									<div className="space-y-2">
+										<RelationshipSelect
+											value={executorForm.relationshipId}
+											label="Relationship"
+											onValueChange={(value) =>
+												setExecutorForm((prev) => ({
+													...prev,
+													relationshipId: value,
+												}))
+											}
+											required={true}
+										/>
+									</div>
+								</>
+							) : (
+								<>
+									<div className="space-y-2">
+										<Label htmlFor="companyName">Company Name</Label>
+										<Input
+											id="companyName"
+											value={executorForm.name}
+											onChange={handleExecutorFormChange("name")}
+											placeholder="Enter company name"
+										/>
+									</div>
+									<div className="space-y-2">
+										<Label htmlFor="registrationNumber">
+											Registration Number
+										</Label>
+										<Input
+											id="registrationNumber"
+											value={executorForm.rc_number}
+											onChange={handleExecutorFormChange("rc_number")}
+											placeholder="Enter company registration number"
+										/>
+									</div>
+								</>
+							)}
+
+							<div className="flex items-center space-x-2">
+								<Checkbox
+									id="isPrimaryExecutor"
+									checked={executorForm.isPrimary}
+									onCheckedChange={(checked: boolean) =>
+										setExecutorForm((prev) => ({
+											...prev,
+											isPrimary: checked,
+										}))
+									}
+								/>
+								<Label htmlFor="isPrimaryExecutor" className="text-sm">
+									Appoint as Primary Executor
+								</Label>
+							</div>
+							<div className="flex justify-end space-x-2">
+								<Button
+									variant="outline"
+									onClick={() => setExecutorDialogOpen(false)}
+									disabled={isSubmitting}
+									className="cursor-pointer"
+								>
+									Cancel
+								</Button>
+								<Button
+									onClick={handleSaveExecutor}
+									disabled={!isFormValid() || isSubmitting}
+									className="cursor-pointer bg-primary hover:bg-primary/90 text-white"
+								>
+									{isSubmitting ? "Saving..." : "Save"}
+								</Button>
+							</div>
+						</div>
+					</DialogContent>
+				</Dialog>
+			</div>
+
+			{/* Validation Messages */}
+			{/* Validation message for multiple primary executors */}
+			{executors.filter((executor) => executor.isPrimary).length > 1 && (
+				<div className="bg-red-50 border border-red-200 rounded-lg p-4">
+					<div className="flex items-start">
+						<div className="flex-shrink-0">
+							<svg
+								className="h-5 w-5 text-red-400"
+								viewBox="0 0 20 20"
+								fill="currentColor"
+							>
+								<path
+									fillRule="evenodd"
+									d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+									clipRule="evenodd"
+								/>
+							</svg>
+						</div>
+						<div className="ml-3">
+							<h3 className="text-sm font-medium text-red-800">
+								Multiple Primary Executors Selected
+							</h3>
+							<div className="mt-2 text-sm text-red-700">
+								<p>
+									You can only have one primary executor. Please uncheck the
+									"Primary Executor" option for all but one executor to
+									continue.
+								</p>
+							</div>
+						</div>
+					</div>
+				</div>
+			)}
+
+			{/* Validation message for no primary executor */}
+			{executors.length > 0 &&
+				executors.filter((executor) => executor.isPrimary).length === 0 && (
+					<div className="bg-red-50 border border-red-200 rounded-lg p-4">
 						<div className="flex items-start">
 							<div className="flex-shrink-0">
 								<svg
-									className="h-5 w-5 text-yellow-400"
+									className="h-5 w-5 text-red-400"
 									viewBox="0 0 20 20"
 									fill="currentColor"
 								>
@@ -1249,14 +1274,14 @@ export default function ExecutorStep({
 								</svg>
 							</div>
 							<div className="ml-3">
-								<h3 className="text-sm font-medium text-yellow-800">
-									Multiple Primary Executors Selected
+								<h3 className="text-sm font-medium text-red-800">
+									No Primary Executor Selected
 								</h3>
-								<div className="mt-2 text-sm text-yellow-700">
+								<div className="mt-2 text-sm text-red-700">
 									<p>
-										You can only have one primary executor. Please uncheck the
-										"Primary Executor" option for all but one executor to
-										continue.
+										You must designate one executor as the primary executor.
+										Please check the "Primary Executor" option for one of your
+										executors to continue.
 									</p>
 								</div>
 							</div>
@@ -1264,56 +1289,23 @@ export default function ExecutorStep({
 					</div>
 				)}
 
-				{/* Validation message for no primary executor */}
-				{executors.length > 0 &&
-					executors.filter((executor) => executor.isPrimary).length === 0 && (
-						<div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-4">
-							<div className="flex items-start">
-								<div className="flex-shrink-0">
-									<svg
-										className="h-5 w-5 text-yellow-400"
-										viewBox="0 0 20 20"
-										fill="currentColor"
-									>
-										<path
-											fillRule="evenodd"
-											d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-											clipRule="evenodd"
-										/>
-									</svg>
-								</div>
-								<div className="ml-3">
-									<h3 className="text-sm font-medium text-yellow-800">
-										No Primary Executor Selected
-									</h3>
-									<div className="mt-2 text-sm text-yellow-700">
-										<p>
-											You must designate one executor as the primary executor.
-											Please check the "Primary Executor" option for one of your
-											executors to continue.
-										</p>
-									</div>
-								</div>
-							</div>
-						</div>
-					)}
-
-				<div className="flex justify-between pt-4">
-					<Button variant="outline" onClick={onBack} className="cursor-pointer">
-						<ArrowLeft className="mr-2 h-4 w-4" /> Back
-					</Button>
-					<Button
-						onClick={onNext}
-						disabled={
-							executors.length === 0 ||
-							executors.filter((executor) => executor.isPrimary).length > 1 ||
-							executors.filter((executor) => executor.isPrimary).length === 0
-						}
-						className="cursor-pointer bg-primary hover:bg-primary/90 text-white"
-					>
-						Next <ArrowRight className="ml-2 h-4 w-4" />
-					</Button>
-				</div>
+			{/* Navigation buttons */}
+			<div className="flex justify-between pt-4">
+				<Button variant="outline" onClick={onBack} className="cursor-pointer">
+					<ArrowLeft className="mr-2 h-4 w-4" />
+					Back
+				</Button>
+				<Button
+					onClick={onNext}
+					disabled={
+						executors.length === 0 ||
+						executors.filter((executor) => executor.isPrimary).length > 1 ||
+						executors.filter((executor) => executor.isPrimary).length === 0
+					}
+					className="cursor-pointer bg-primary hover:bg-primary/90 text-white"
+				>
+					Next <ArrowRight className="ml-2 h-4 w-4" />
+				</Button>
 			</div>
 
 			{/* Confirm Delete Dialog */}
