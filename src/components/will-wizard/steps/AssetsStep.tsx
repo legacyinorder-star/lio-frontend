@@ -1,8 +1,4 @@
 import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight, Plus } from "lucide-react";
 import { Asset, WillFormData } from "../types/will.types";
@@ -13,18 +9,6 @@ import { AssetDialog } from "../components/AssetDialog";
 import { NewBeneficiaryDialog } from "../components/NewBeneficiaryDialog";
 import { AssetCard } from "../components/AssetCard";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-
-const assetSchema = z.object({
-	assetType: z.string().min(1, "Asset type is required"),
-	description: z.string().min(1, "Description is required"),
-	distributionType: z.enum(["equal", "percentage"]),
-	beneficiaries: z.array(
-		z.object({
-			id: z.string(),
-			percentage: z.number().optional(),
-		})
-	),
-});
 
 interface AssetsStepProps {
 	onUpdate: (data: Partial<WillFormData>) => void;
@@ -54,16 +38,6 @@ export default function AssetsStep({
 	} = useWillData();
 
 	const { activeWill } = useWill();
-
-	const form = useForm<z.infer<typeof assetSchema>>({
-		resolver: zodResolver(assetSchema),
-		defaultValues: {
-			assetType: "Property",
-			description: "",
-			distributionType: "equal",
-			beneficiaries: [],
-		},
-	});
 
 	// Function to check if a beneficiary is deleted
 	const isBeneficiaryDeleted = (
@@ -190,119 +164,106 @@ export default function AssetsStep({
 	};
 
 	return (
-		<div className="space-y-4">
+		<div className="space-y-6">
 			<div className="text-xl sm:text-2xl lg:text-[2rem] font-medium text-black">
 				List your accounts and property
 			</div>
-			<div className="text-muted-foreground">
+			<div className="text-[#696868] text-[0.875rem] -mt-4">
 				This includes your bank accounts, investments, property and life
 				insurance policies. It helps your executors, the people who will deal
 				with your estate after you die, know which providers to contact.
 			</div>
-			<div className="text-muted-foreground">
+			<div className="text-[#696868] text-[0.875rem] -mt-4">
 				We will not ask for specific details like account or policy numbers.
 			</div>
 
-			<Form {...form}>
-				<div className="space-y-6">
-					<div className="space-y-4">
-						<div className="flex justify-between items-center">
-							<h3 className="text-lg font-medium">Your Assets</h3>
-							<Button
-								variant="outline"
-								onClick={() => {
-									setEditingAsset(null);
-									setAssetDialogOpen(true);
-								}}
-								className="cursor-pointer"
-								disabled={isLoadingBeneficiaries}
-							>
-								<Plus className="mr-2 h-4 w-4" />
-								Add Asset
-							</Button>
-						</div>
+			{/* Assets Management Section */}
+			<div className="space-y-4 mb-[2.45rem]">
+				{/* Assets List - Only show when there are assets */}
+				{assets.length > 0 && (
+					<div className="mb-6 space-y-4">
+						{assets.map((asset) => {
+							// Check if this specific asset has deleted beneficiaries (only for assets with beneficiaries)
+							const hasDeletedBeneficiaries =
+								asset.hasBeneficiaries &&
+								asset.beneficiaries.some((beneficiary) =>
+									isBeneficiaryDeleted(beneficiary.id, asset.id)
+								);
 
-						{assets.length === 0 ? (
-							<p className="text-muted-foreground text-center py-4">
-								No assets added yet. Click "Add Asset" to add your assets.
-							</p>
-						) : (
-							<div className="space-y-4">
-								{assets.map((asset) => {
-									// Check if this specific asset has deleted beneficiaries (only for assets with beneficiaries)
-									const hasDeletedBeneficiaries =
-										asset.hasBeneficiaries &&
-										asset.beneficiaries.some((beneficiary) =>
-											isBeneficiaryDeleted(beneficiary.id, asset.id)
-										);
-
-									return (
-										<AssetCard
-											key={asset.id}
-											asset={asset}
-											onEdit={handleEditAsset}
-											onRemove={handleRemoveAsset}
-											hasDeletedBeneficiaries={hasDeletedBeneficiaries}
-										/>
-									);
-								})}
-							</div>
-						)}
+							return (
+								<AssetCard
+									key={asset.id}
+									asset={asset}
+									onEdit={handleEditAsset}
+									onRemove={handleRemoveAsset}
+									hasDeletedBeneficiaries={hasDeletedBeneficiaries}
+								/>
+							);
+						})}
 					</div>
+				)}
 
-					{/* Validation message for deleted beneficiaries */}
-					{hasAnyDeletedBeneficiaries && (
-						<div className="bg-red-50 border border-red-200 rounded-lg p-4">
-							<div className="flex items-start">
-								<div className="flex-shrink-0">
-									<svg
-										className="h-5 w-5 text-red-400"
-										viewBox="0 0 20 20"
-										fill="currentColor"
-									>
-										<path
-											fillRule="evenodd"
-											d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-											clipRule="evenodd"
-										/>
-									</svg>
-								</div>
-								<div className="ml-3">
-									<h3 className="text-sm font-medium text-red-800">
-										Deleted Beneficiaries Detected
-									</h3>
-									<div className="mt-2 text-sm text-red-700">
-										<p>
-											Some assets have beneficiaries that have been deleted.
-											Please edit those assets to fix this issue before
-											proceeding.
-										</p>
-									</div>
-								</div>
+				{/* Add Asset Button - Full width like Add Guardian */}
+				<Button
+					variant="outline"
+					onClick={() => {
+						setEditingAsset(null);
+						setAssetDialogOpen(true);
+					}}
+					className="w-full h-16 bg-white text-[#050505] rounded-[0.25rem] font-medium"
+					disabled={isLoadingBeneficiaries}
+				>
+					<Plus className="mr-2 h-4 w-4" />
+					Add Asset
+				</Button>
+			</div>
+
+			{/* Validation message for deleted beneficiaries */}
+			{hasAnyDeletedBeneficiaries && (
+				<div className="bg-red-50 border border-red-200 rounded-lg p-4 mt-4">
+					<div className="flex items-start">
+						<div className="flex-shrink-0">
+							<svg
+								className="h-5 w-5 text-red-400"
+								viewBox="0 0 20 20"
+								fill="currentColor"
+							>
+								<path
+									fillRule="evenodd"
+									d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+									clipRule="evenodd"
+								/>
+							</svg>
+						</div>
+						<div className="ml-3">
+							<h3 className="text-sm font-medium text-red-800">
+								Deleted Beneficiaries Detected
+							</h3>
+							<div className="mt-2 text-sm text-red-700">
+								<p>
+									Some assets have beneficiaries that have been deleted. Please
+									edit those assets to fix this issue before proceeding.
+								</p>
 							</div>
 						</div>
-					)}
-
-					<div className="flex justify-between pt-4">
-						<Button
-							type="button"
-							variant="outline"
-							onClick={onBack}
-							className="cursor-pointer"
-						>
-							<ArrowLeft className="mr-2 h-4 w-4" /> Back
-						</Button>
-						<Button
-							type="button"
-							onClick={handleSubmit}
-							disabled={hasAnyDeletedBeneficiaries}
-							className="cursor-pointer bg-primary hover:bg-primary/90 text-white disabled:bg-gray-300 disabled:cursor-not-allowed"
-						>
-							Next <ArrowRight className="ml-2 h-4 w-4" />
-						</Button>
 					</div>
 				</div>
-			</Form>
+			)}
+
+			{/* Navigation buttons */}
+			<div className="flex justify-between pt-4">
+				<Button variant="outline" onClick={onBack} className="cursor-pointer">
+					<ArrowLeft className="mr-2 h-4 w-4" />
+					Back
+				</Button>
+				<Button
+					onClick={handleSubmit}
+					disabled={hasAnyDeletedBeneficiaries}
+					className="cursor-pointer bg-primary hover:bg-primary/90 text-white"
+				>
+					Next <ArrowRight className="ml-2 h-4 w-4" />
+				</Button>
+			</div>
 
 			{/* Asset Dialog */}
 			<AssetDialog
