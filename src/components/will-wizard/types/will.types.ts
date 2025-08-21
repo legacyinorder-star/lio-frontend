@@ -162,6 +162,7 @@ export interface WillFormData {
 	children: Child[];
 	guardians: Guardian[];
 	hasPets: boolean;
+	petId?: string; // Store the pet record ID for API operations
 	petGuardianId?: string;
 	petGuardians?: PetGuardian[];
 	hasAssets: boolean;

@@ -47,6 +47,7 @@ interface FamilyInfoStepProps {
 		hasChildren: boolean;
 		children?: Child[];
 		hasPets: boolean;
+		petId?: string;
 	}) => void;
 	onBack: () => void;
 	initialData?: {
@@ -161,6 +162,40 @@ export default function FamilyInfoStep({
 		},
 	});
 
+	const loadExistingPets = async (willId: string) => {
+		try {
+			const { data, error } = await apiClient<{ id: string }>(
+				`/pets/get-by-will/${willId}`
+			);
+
+			if (error) {
+				// If 404, no pets exist - this is normal
+				if (error.includes("404")) {
+					console.log("No existing pets found");
+					setHasPets(false);
+					setInitialHasPets(false);
+					return;
+				}
+				console.error("Error loading existing pets:", error);
+				return;
+			}
+
+			if (data) {
+				// User has pets
+				setHasPets(true);
+				setInitialHasPets(true);
+				setPetId(data.id);
+				console.log("Found existing pets, pet ID:", data.id);
+			} else {
+				// No pets found
+				setHasPets(false);
+				setInitialHasPets(false);
+			}
+		} catch (error) {
+			console.error("Error loading existing pets:", error);
+		}
+	};
+
 	// ✅ UPDATED: Enhanced sync logic that respects deletion state
 	useEffect(() => {
 		const hasSpouse = hasSpouseFromData || initialData?.hasSpouse || false;
@@ -241,18 +276,16 @@ export default function FamilyInfoStep({
 	useEffect(() => {
 		if (activeWill?.id) {
 			loadChildren(activeWill.id);
-			// Check for existing pets to get the pet ID
-			if (initialData?.hasPets) {
-				loadExistingPetId(activeWill.id);
-			}
+			// Always check for existing pets to determine if user has pets
+			loadExistingPets(activeWill.id);
 		} else if (initialData?.children && initialData.children.length > 0) {
 			setChildren(initialData.children);
 			setHasChildren(initialData.hasChildren);
 			form.setValue("hasChildren", initialData.hasChildren);
 		}
 
-		// Handle initial pets data
-		if (initialData?.hasPets !== undefined) {
+		// Only use initialData for pets if we don't have an active will (fallback)
+		if (!activeWill?.id && initialData?.hasPets !== undefined) {
 			setHasPets(initialData.hasPets);
 			setInitialHasPets(initialData.hasPets);
 		}
@@ -265,26 +298,6 @@ export default function FamilyInfoStep({
 				...activeWill,
 				children: newChildren,
 			});
-		}
-	};
-
-	// ✅ ADDED: Load existing pet ID if user has pets
-	const loadExistingPetId = async (willId: string) => {
-		try {
-			const { data, error } = await apiClient<{ id: string }[]>(
-				`/pets/get-by-will/${willId}`
-			);
-
-			if (error) {
-				console.error("Error loading existing pet ID:", error);
-				return;
-			}
-
-			if (data && data.length > 0) {
-				setPetId(data[0].id);
-			}
-		} catch (error) {
-			console.error("Error loading existing pet ID:", error);
 		}
 	};
 
@@ -360,6 +373,7 @@ export default function FamilyInfoStep({
 			hasChildren: values.hasChildren,
 			children: children,
 			hasPets: hasPets,
+			petId: petId || undefined, // Convert null to undefined for type compatibility
 		});
 	};
 

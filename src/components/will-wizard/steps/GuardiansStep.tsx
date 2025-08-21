@@ -55,6 +55,26 @@ interface GuardianshipApiResponse {
 	};
 }
 
+// API response interface for pets endpoint
+interface PetApiResponse {
+	id: string;
+	created_at: string;
+	user_id: string;
+	will_id: string;
+	guardian_id: string;
+	person: {
+		id: string;
+		user_id: string;
+		will_id: string;
+		relationship_id: string;
+		first_name: string;
+		last_name: string;
+		is_minor: boolean;
+		created_at: string;
+		is_witness: boolean;
+	};
+}
+
 export default function GuardiansStep({
 	data,
 	onUpdate,
@@ -81,12 +101,56 @@ export default function GuardiansStep({
 	const [guardianSelectDialogOpen, setGuardianSelectDialogOpen] =
 		useState(false);
 	const [petGuardianId, setPetGuardianId] = useState<string>("");
+	const [hasPetsFromAPI, setHasPetsFromAPI] = useState(false);
+	const [petIdFromAPI, setPetIdFromAPI] = useState<string>("");
 
 	// Delete confirmation state
 	const [deleteConfirmDialogOpen, setDeleteConfirmDialogOpen] = useState(false);
 	const [guardianToDelete, setGuardianToDelete] = useState<Guardian | null>(
 		null
 	);
+
+	const loadPetData = async () => {
+		if (!activeWill?.id) return;
+
+		try {
+			const { data: petData, error } = await apiClient<PetApiResponse>(
+				`/pets/get-by-will/${activeWill.id}`,
+				{
+					method: "GET",
+				}
+			);
+
+			if (error) {
+				// If 404, no pet record exists - this is normal
+				if (error.includes("404")) {
+					console.log("No existing pet record found");
+					setHasPetsFromAPI(false);
+					return;
+				}
+				console.error("Error loading pet data:", error);
+				setHasPetsFromAPI(false);
+				return;
+			}
+
+			if (petData && petData.guardian_id) {
+				// Pet has a guardian assigned
+				setPetGuardianId(petData.guardian_id);
+				setHasPetsFromAPI(true);
+				setPetIdFromAPI(petData.id);
+				// Update form data with the existing pet guardian ID
+				onUpdate({ petGuardianId: petData.guardian_id });
+				console.log("Found existing pet guardian:", petData.guardian_id);
+			} else if (petData) {
+				// Pet record exists but no guardian assigned
+				setHasPetsFromAPI(true);
+				setPetIdFromAPI(petData.id);
+			}
+		} catch (error) {
+			console.error("Error loading pet data:", error);
+			setHasPetsFromAPI(false);
+		}
+	};
 
 	// Load guardians from API when component mounts
 	const loadGuardians = async () => {
@@ -146,6 +210,24 @@ export default function GuardiansStep({
 		loadGuardians();
 	}, [activeWill?.id]);
 
+	// Initialize petGuardianId from form data when component mounts
+	useEffect(() => {
+		if (data.petGuardianId) {
+			setPetGuardianId(data.petGuardianId);
+		}
+	}, [data.petGuardianId]);
+
+	useEffect(() => {
+		loadPetData();
+	}, [activeWill?.id]);
+
+	// Initialize petGuardianId from form data when component mounts (fallback)
+	useEffect(() => {
+		if (data.petGuardianId && !petGuardianId) {
+			setPetGuardianId(data.petGuardianId);
+		}
+	}, [data.petGuardianId, petGuardianId]);
+
 	// Update active will when guardians state changes
 	const updateActiveWillGuardians = (newGuardians: Guardian[]) => {
 		if (activeWill) {
@@ -166,6 +248,8 @@ export default function GuardiansStep({
 
 	const handleSelectGuardian = (guardianId: string) => {
 		setPetGuardianId(guardianId);
+		// Update the form data with the selected pet guardian ID
+		onUpdate({ petGuardianId: guardianId });
 		setGuardianSelectDialogOpen(false);
 	};
 
@@ -328,6 +412,8 @@ export default function GuardiansStep({
 				// If this was created from the pet guardian flow, set it as the pet guardian
 				if (guardianDialogOpen) {
 					setPetGuardianId(newGuardian.id);
+					// Update form data with the new pet guardian ID
+					onUpdate({ petGuardianId: newGuardian.id });
 					setGuardianDialogOpen(false);
 				}
 
@@ -411,6 +497,12 @@ export default function GuardiansStep({
 			onUpdate({ guardians: updatedGuardians });
 			updateActiveWillGuardians(updatedGuardians);
 
+			// If the deleted guardian was the pet guardian, clear the pet guardian ID
+			if (petGuardianId === guardianToDelete.id) {
+				setPetGuardianId("");
+				onUpdate({ petGuardianId: undefined });
+			}
+
 			toast.success("Guardian removed successfully");
 
 			// Refresh beneficiary lists
@@ -432,9 +524,15 @@ export default function GuardiansStep({
 
 	const areGuardiansValid = () => {
 		const currentGuardians = data.guardians || [];
-		return (
-			currentGuardians.some((g) => g.isPrimary) && currentGuardians.length >= 2
-		);
+		const hasValidGuardians =
+			currentGuardians.some((g) => g.isPrimary) && currentGuardians.length >= 2;
+
+		// If user has pets, also check that they have a pet guardian
+		if (hasPetsFromAPI) {
+			return hasValidGuardians && petGuardianId !== "";
+		}
+
+		return hasValidGuardians;
 	};
 
 	const getValidationErrors = () => {
@@ -449,7 +547,44 @@ export default function GuardiansStep({
 			errors.push("You must appoint 1 primary guardian");
 		}
 
+		// If user has pets, check that they have a pet guardian
+		if (hasPetsFromAPI && !petGuardianId) {
+			errors.push("You must appoint a guardian for your pets");
+		}
+
 		return errors;
+	};
+
+	// Handle Next button click - update pet guardian if selected
+	const handleNext = async () => {
+		// If user has pets and has selected a pet guardian, update the pet record
+		if (hasPetsFromAPI && petGuardianId && petIdFromAPI) {
+			try {
+				const { error } = await apiClient(`/pets/${petIdFromAPI}`, {
+					method: "PATCH",
+					body: JSON.stringify({
+						guardian_id: petGuardianId,
+					}),
+				});
+
+				if (error) {
+					console.error("Error updating pet guardian:", error);
+					toast.error("Failed to update pet guardian. Please try again.");
+					return;
+				}
+
+				toast.success("Pet guardian updated successfully");
+			} catch (error) {
+				console.error("Error updating pet guardian:", error);
+				toast.error(
+					"An error occurred while updating pet guardian. Please try again."
+				);
+				return;
+			}
+		}
+
+		// Proceed to next step
+		await onNext();
 	};
 
 	const currentGuardians = data.guardians || [];
@@ -686,7 +821,7 @@ export default function GuardiansStep({
 				)}
 
 				{/* Pet Guardian Section */}
-				{true && (
+				{hasPetsFromAPI && (
 					<div className="space-y-4 mb-[2.45rem]">
 						<div className="text-xl sm:text-2xl lg:text-[2rem] font-medium text-black">
 							Pet Guardian
@@ -741,6 +876,8 @@ export default function GuardiansStep({
 														size="icon"
 														onClick={() => {
 															setPetGuardianId("");
+															// Clear the pet guardian ID from form data
+															onUpdate({ petGuardianId: undefined });
 														}}
 														className="cursor-pointer"
 														disabled={isDeleting}
@@ -979,7 +1116,7 @@ export default function GuardiansStep({
 					<ArrowLeft className="mr-2 h-4 w-4" /> Back
 				</Button>
 				<Button
-					onClick={async () => await onNext()}
+					onClick={async () => await handleNext()}
 					disabled={!areGuardiansValid()}
 					className="cursor-pointer bg-primary hover:bg-primary/90 text-white"
 				>
