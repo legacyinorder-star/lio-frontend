@@ -19,7 +19,6 @@ import FamilyInfoStep from "./steps/FamilyInfoStep";
 import GuardiansStep from "./steps/GuardiansStep";
 import AssetsStep from "./steps/AssetsStep";
 import GiftsStep from "./steps/GiftsStep";
-import DigitalAssetsStep from "./steps/DigitalAssetsStep";
 import ResiduaryStep from "./steps/ResiduaryStep";
 import ExecutorStep from "./steps/ExecutorStep";
 import FuneralInstructionsStep from "./steps/FuneralInstructionsStep";
@@ -56,7 +55,6 @@ export default function WillWizard() {
 		hasPets: false,
 		hasAssets: false,
 		assets: [],
-		digitalAssets: undefined,
 		otherBeneficiaries: [],
 		gifts: [],
 		residuaryBeneficiaries: [],
@@ -336,9 +334,6 @@ export default function WillWizard() {
 				setWillWizardState(true, "hasAssets");
 				break;
 			case "hasAssets":
-				setWillWizardState(true, "digitalAssets");
-				break;
-			case "digitalAssets":
 				setWillWizardState(true, "gifts");
 				break;
 			case "gifts":
@@ -373,11 +368,8 @@ export default function WillWizard() {
 			case "hasAssets":
 				setWillWizardState(true, "residuary");
 				break;
-			case "digitalAssets":
-				setWillWizardState(true, "hasAssets");
-				break;
 			case "gifts":
-				setWillWizardState(true, "digitalAssets");
+				setWillWizardState(true, "hasAssets");
 				break;
 			case "executors":
 				setWillWizardState(true, "gifts");
@@ -435,9 +427,6 @@ export default function WillWizard() {
 
 			case "gifts":
 				return <GiftsStep {...commonProps} />;
-
-			case "digitalAssets":
-				return <DigitalAssetsStep {...commonProps} />;
 
 			case "residuary":
 				return <ResiduaryStep {...commonProps} />;

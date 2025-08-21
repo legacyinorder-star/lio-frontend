@@ -14,7 +14,6 @@ export function WillWizardSidebar() {
 		"guardians",
 		"residuary",
 		"hasAssets",
-		"digitalAssets",
 		"gifts",
 		"executors",
 		"funeralInstructions",

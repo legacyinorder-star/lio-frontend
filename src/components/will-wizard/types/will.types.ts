@@ -5,7 +5,6 @@ export type QuestionType =
 	| "guardians"
 	| "hasAssets"
 	| "gifts"
-	| "digitalAssets"
 	| "residuary"
 	| "executors"
 	| "funeralInstructions"
@@ -18,7 +17,6 @@ export interface StepCompletion {
 	guardians: boolean;
 	hasAssets: boolean;
 	gifts: boolean;
-	digitalAssets: boolean;
 	residuary: boolean;
 	executors: boolean;
 	funeralInstructions: boolean;
@@ -167,9 +165,6 @@ export interface WillFormData {
 	petGuardians?: PetGuardian[];
 	hasAssets: boolean;
 	assets: Asset[];
-	digitalAssets?: {
-		beneficiaryId: string;
-	};
 	otherBeneficiaries: NewBeneficiary[];
 	gifts: Gift[];
 	residuaryBeneficiaries: Array<{

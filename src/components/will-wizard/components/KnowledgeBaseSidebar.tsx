@@ -51,14 +51,6 @@ const KNOWLEDGE_BASE: Record<QuestionType, KnowledgeArticle[]> = {
 			url: "/help/gifts",
 		},
 	],
-	digitalAssets: [
-		{
-			title: "Digital Assets",
-			description:
-				"Learn about managing your digital assets and online accounts.",
-			url: "/help/digital-assets",
-		},
-	],
 	residuary: [
 		{
 			title: "Residuary Estate",
