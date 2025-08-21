@@ -1,15 +1,9 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-	ArrowLeft,
-	ArrowRight,
-	X,
-	Plus,
-	Share2,
-	Edit3,
-	ChevronsUpDown,
-} from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Card, CardContent } from "@/components/ui/card";
+import { ArrowLeft, ArrowRight, X, Plus, ChevronsUpDown } from "lucide-react";
 import { useWill } from "@/context/WillContext";
 import { useWillData } from "@/hooks/useWillData";
 import { getFormattedRelationshipNameById } from "@/utils/relationships";
@@ -627,269 +621,290 @@ export default function ResiduaryStep({
 
 	return (
 		<div className="space-y-6">
-			<div className="space-y-2">
-				<h2 className="text-xl sm:text-2xl lg:text-[2rem] font-medium text-black">
-					Distribution of Residuary Estate
-				</h2>
-				<p className="text-muted-foreground">
-					Specify how you would like to distribute any remaining assets not
-					specifically mentioned in your will.
-				</p>
+			<div className="text-xl sm:text-2xl lg:text-[2rem] font-medium text-black">
+				Distribution of Residuary Estate
+			</div>
+			<div className="text-[#696868] text-[0.875rem] -mt-4">
+				Specify how you would like to distribute any remaining assets not
+				specifically mentioned in your will.
 			</div>
 
 			{/* Main Content */}
-			<div className="space-y-4">
-				<div className="space-y-4">
-					{/* Distribution Mode Toggle */}
-					<div className="flex items-center justify-between p-4 border rounded-lg bg-gray-50">
-						<div>
-							<h3 className="font-medium">Distribution Mode</h3>
-							<p className="text-sm text-muted-foreground">
-								{isEqualDistribution
-									? "Equal distribution among all beneficiaries"
-									: "Manual allocation with custom percentages"}
-							</p>
-						</div>
-						<div className="flex gap-2">
-							<Button
-								variant={isEqualDistribution ? "default" : "outline"}
-								size="sm"
-								onClick={() => setIsEqualDistribution(true)}
-								className={`flex items-center gap-2 ${
-									isEqualDistribution
-										? "bg-primary hover:bg-primary/90 text-white"
-										: ""
-								}`}
-							>
-								<Share2 className="h-4 w-4" />
-								Equal
-							</Button>
-							<Button
-								variant={!isEqualDistribution ? "default" : "outline"}
-								size="sm"
-								onClick={() => setIsEqualDistribution(false)}
-								className={`flex items-center gap-2 ${
-									!isEqualDistribution
-										? "bg-primary hover:bg-primary/90 text-white"
-										: ""
-								}`}
-							>
-								<Edit3 className="h-4 w-4" />
-								Manual
-							</Button>
-						</div>
+			<div className="space-y-4 mb-[2.45rem]">
+				{/* Distribution Mode Toggle */}
+				<div className="space-y-4 mb-[2.45rem]">
+					<div className="flex items-center gap-2">
+						<span
+							style={{
+								fontSize: "1rem",
+								color: "#000",
+								fontWeight: 400,
+								fontFamily: "TMT Limkin",
+							}}
+						>
+							How would you like to distribute your residuary estate?
+						</span>
+					</div>
+					<div className="text-[#696868] text-[0.875rem] -mt-4">
+						Choose between equal distribution among all beneficiaries or manual
+						allocation with custom percentages.
 					</div>
 
-					{/* Beneficiary Selection */}
-					<div className="space-y-4">
-						<div className="flex justify-between items-center">
-							<h3 className="text-lg font-medium">Select Beneficiaries</h3>
-							<Button
-								variant="outline"
-								size="sm"
-								onClick={handleAddNewBeneficiary}
-								className="cursor-pointer"
+					<div className="space-y-3 mt-[-0.5rem]">
+						<div className="flex items-center space-x-2">
+							<Checkbox
+								id="equalDistribution"
+								checked={isEqualDistribution}
+								onCheckedChange={(checked) => {
+									if (checked) {
+										setIsEqualDistribution(true);
+									}
+								}}
+								className="rounded-full"
+							/>
+							<label
+								htmlFor="equalDistribution"
+								className="text-sm font-normal cursor-pointer"
 							>
-								<Plus className="mr-2 h-4 w-4" />
-								Add New Beneficiary
-							</Button>
+								Equal distribution among all beneficiaries
+							</label>
 						</div>
-
-						{/* Beneficiary Select Dropdown */}
-						<div className="w-full">
-							<DropdownMenu
-								onOpenChange={setIsDropdownOpen}
-								className="w-full max-h-[300px]"
+						<div className="flex items-center space-x-2">
+							<Checkbox
+								id="manualDistribution"
+								checked={!isEqualDistribution}
+								onCheckedChange={(checked) => {
+									if (checked) {
+										setIsEqualDistribution(false);
+									}
+								}}
+								className="rounded-full"
+							/>
+							<label
+								htmlFor="manualDistribution"
+								className="text-sm font-normal cursor-pointer"
 							>
-								<Button
-									variant="outline"
-									role="combobox"
-									aria-expanded={isDropdownOpen}
-									className="w-full justify-between"
-								>
-									{searchQuery || "Search and select beneficiaries..."}
-									<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-								</Button>
-								<DropdownMenuContent className="w-[700px] max-h-[300px] overflow-y-auto">
-									<div className="p-2">
-										<Input
-											placeholder="Search beneficiaries..."
-											value={searchQuery}
-											onChange={(e) => setSearchQuery(e.target.value)}
-											className="mb-2"
-										/>
-										{filteredBeneficiaries.length === 0 ? (
-											<div className="text-sm text-muted-foreground p-2">
-												No beneficiaries found.
-											</div>
-										) : (
-											<div className="space-y-1">
-												{filteredBeneficiaries.map((beneficiary) => (
-													<DropdownMenuItem
-														key={beneficiary.id}
-														onSelect={() =>
-															handleSelectBeneficiary(beneficiary.id)
-														}
-														className="cursor-pointer"
-													>
-														{beneficiary.fullName} ({beneficiary.relationship})
-													</DropdownMenuItem>
-												))}
-											</div>
-										)}
-									</div>
-								</DropdownMenuContent>
-							</DropdownMenu>
+								Manual allocation with custom percentages
+							</label>
 						</div>
-
-						{/* Combined Selected Beneficiaries and Allocation List */}
-						{selectedBeneficiaries.size === 0 ? (
-							<p className="text-sm text-muted-foreground">
-								No beneficiaries selected. Use the dropdown above to add
-								beneficiaries.
-							</p>
-						) : (
-							<div className="space-y-2">
-								<p className="text-sm text-muted-foreground mb-2">
-									Selected beneficiaries for residuary estate:
-								</p>
-								<div className="grid gap-4">
-									{getAllPotentialBeneficiaries()
-										.filter((beneficiary) =>
-											selectedBeneficiaries.has(beneficiary.id)
-										)
-										.map((beneficiary) => {
-											const existingAllocation =
-												residuaryBeneficiaries.find(
-													(b) => b.beneficiaryId === beneficiary.id
-												)?.percentage || "";
-
-											return (
-												<div
-													key={beneficiary.id}
-													className="flex items-center justify-between p-4 border rounded-lg"
-												>
-													<div>
-														<p className="font-medium">
-															{beneficiary.fullName}
-														</p>
-														<p className="text-sm text-muted-foreground">
-															{beneficiary.relationship}
-														</p>
-													</div>
-													<div className="flex items-center gap-4">
-														<Input
-															type="number"
-															value={existingAllocation}
-															onChange={(e) =>
-																handleResiduaryBeneficiaryChange(
-																	beneficiary.id,
-																	Number(e.target.value) || 0
-																)
-															}
-															className="w-24"
-															min="0"
-															max="100"
-															disabled={isEqualDistribution}
-															placeholder="0"
-														/>
-														<span className="text-sm">%</span>
-														<Button
-															variant="ghost"
-															size="icon"
-															onClick={() =>
-																handleRemoveResiduaryBeneficiary(beneficiary.id)
-															}
-															className="cursor-pointer"
-														>
-															<X className="h-4 w-4" />
-														</Button>
-													</div>
-												</div>
-											);
-										})}
-								</div>
-							</div>
-						)}
-					</div>
-
-					{/* Total allocation warning */}
-					{!isEqualDistribution &&
-						totalAllocation !== 100 &&
-						selectedBeneficiaries.size > 0 && (
-							<div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-4">
-								<div className="flex items-start">
-									<div className="flex-shrink-0">
-										<svg
-											className="h-5 w-5 text-yellow-400"
-											viewBox="0 0 20 20"
-											fill="currentColor"
-										>
-											<path
-												fillRule="evenodd"
-												d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-												clipRule="evenodd"
-											/>
-										</svg>
-									</div>
-									<div className="ml-3">
-										<h3 className="text-sm font-medium text-yellow-800">
-											Allocation Total Mismatch
-										</h3>
-										<div className="mt-2 text-sm text-yellow-700">
-											<p>
-												Total allocation must equal 100%. Current total:{" "}
-												{totalAllocation}%. Please adjust the percentages to
-												continue.
-											</p>
-										</div>
-									</div>
-								</div>
-							</div>
-						)}
-
-					{/* Navigation buttons */}
-					<div className="flex justify-between pt-6">
-						<Button
-							variant="outline"
-							onClick={onBack}
-							className="flex items-center gap-2 cursor-pointer"
-						>
-							<ArrowLeft className="h-4 w-4" />
-							Back
-						</Button>
-						<Button
-							onClick={handleSubmit}
-							className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-white cursor-pointer"
-							disabled={
-								isSubmitting ||
-								selectedBeneficiaries.size === 0 ||
-								(!isEqualDistribution && totalAllocation !== 100)
-							}
-						>
-							{isSubmitting ? (
-								<>
-									<div className="h-4 w-4 animate-spin rounded-full border-t-2 border-b-2 border-black"></div>
-									Saving...
-								</>
-							) : (
-								<>
-									Next
-									<ArrowRight className="h-4 w-4" />
-								</>
-							)}
-						</Button>
 					</div>
 				</div>
 
-				{/* New Beneficiary Dialog */}
-				<NewBeneficiaryDialog
-					open={newBeneficiaryDialogOpen}
-					onOpenChange={setNewBeneficiaryDialogOpen}
-					onAddIndividual={handleAddIndividualBeneficiary}
-					onAddCharity={handleAddCharityBeneficiary}
-				/>
+				{/* Beneficiary Selection */}
+				<div className="space-y-4 mb-[2.45rem]">
+					<div className="flex items-center gap-2">
+						<span
+							style={{
+								fontSize: "1rem",
+								color: "#000",
+								fontWeight: 400,
+								fontFamily: "TMT Limkin",
+							}}
+						>
+							Select beneficiaries for your residuary estate
+						</span>
+					</div>
+					<div className="text-[#696868] text-[0.875rem] -mt-4">
+						Choose who will receive the remaining assets. You can add new
+						beneficiaries or select from existing ones.
+					</div>
+
+					<div className="flex justify-between items-center">
+						<div className="text-lg font-medium">Available Beneficiaries</div>
+						<Button
+							variant="outline"
+							onClick={handleAddNewBeneficiary}
+							className="cursor-pointer"
+						>
+							<Plus className="mr-2 h-4 w-4" />
+							Add New Beneficiary
+						</Button>
+					</div>
+
+					{/* Beneficiary Select Dropdown */}
+					<div className="w-full">
+						<DropdownMenu
+							onOpenChange={setIsDropdownOpen}
+							className="w-full max-h-[300px]"
+						>
+							<Button
+								variant="outline"
+								role="combobox"
+								aria-expanded={isDropdownOpen}
+								className="w-full justify-between h-16 bg-white text-[#050505] rounded-[0.25rem] font-medium"
+							>
+								{searchQuery || "Search and select beneficiaries..."}
+								<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+							</Button>
+							<DropdownMenuContent className="w-[700px] max-h-[300px] overflow-y-auto">
+								<div className="p-2">
+									<Input
+										placeholder="Search beneficiaries..."
+										value={searchQuery}
+										onChange={(e) => setSearchQuery(e.target.value)}
+										className="mb-2"
+									/>
+									{filteredBeneficiaries.length === 0 ? (
+										<div className="text-sm text-muted-foreground p-2">
+											No beneficiaries found.
+										</div>
+									) : (
+										<div className="space-y-1">
+											{filteredBeneficiaries.map((beneficiary) => (
+												<DropdownMenuItem
+													key={beneficiary.id}
+													onSelect={() =>
+														handleSelectBeneficiary(beneficiary.id)
+													}
+													className="cursor-pointer"
+												>
+													{beneficiary.fullName} ({beneficiary.relationship})
+												</DropdownMenuItem>
+											))}
+										</div>
+									)}
+								</div>
+							</DropdownMenuContent>
+						</DropdownMenu>
+					</div>
+
+					{/* Combined Selected Beneficiaries and Allocation List */}
+					{selectedBeneficiaries.size >= 0 && (
+						<div className="space-y-2 pt-4">
+							<div className="grid gap-4">
+								{getAllPotentialBeneficiaries()
+									.filter((beneficiary) =>
+										selectedBeneficiaries.has(beneficiary.id)
+									)
+									.map((beneficiary) => {
+										const existingAllocation =
+											residuaryBeneficiaries.find(
+												(b) => b.beneficiaryId === beneficiary.id
+											)?.percentage || "";
+
+										return (
+											<Card key={beneficiary.id}>
+												<CardContent className="p-4">
+													<div className="flex justify-between items-center">
+														<div>
+															<p className="font-medium">
+																{beneficiary.fullName}
+															</p>
+															<p className="text-sm text-muted-foreground">
+																{beneficiary.relationship}
+															</p>
+														</div>
+														<div className="flex items-center gap-4">
+															<Input
+																type="number"
+																value={existingAllocation}
+																onChange={(e) =>
+																	handleResiduaryBeneficiaryChange(
+																		beneficiary.id,
+																		Number(e.target.value) || 0
+																	)
+																}
+																className="w-24"
+																min="0"
+																max="100"
+																disabled={isEqualDistribution}
+																placeholder="0"
+															/>
+															<span className="text-sm">%</span>
+															<Button
+																variant="ghost"
+																size="icon"
+																onClick={() =>
+																	handleRemoveResiduaryBeneficiary(
+																		beneficiary.id
+																	)
+																}
+																className="cursor-pointer"
+															>
+																<X className="h-4 w-4" />
+															</Button>
+														</div>
+													</div>
+												</CardContent>
+											</Card>
+										);
+									})}
+							</div>
+						</div>
+					)}
+				</div>
+
+				{/* Total allocation warning */}
+				{!isEqualDistribution &&
+					totalAllocation !== 100 &&
+					selectedBeneficiaries.size > 0 && (
+						<div className="bg-red-50 border border-red-200 rounded-lg p-4 mt-4">
+							<div className="flex items-start">
+								<div className="flex-shrink-0">
+									<svg
+										className="h-5 w-5 text-red-400"
+										viewBox="0 0 20 20"
+										fill="currentColor"
+									>
+										<path
+											fillRule="evenodd"
+											d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+											clipRule="evenodd"
+										/>
+									</svg>
+								</div>
+								<div className="ml-3">
+									<h3 className="text-sm font-medium text-red-800">
+										Allocation Total Mismatch
+									</h3>
+									<div className="mt-2 text-sm text-red-700">
+										<p>
+											Total allocation must equal 100%. Current total:{" "}
+											{totalAllocation}%. Please adjust the percentages to
+											continue.
+										</p>
+									</div>
+								</div>
+							</div>
+						</div>
+					)}
 			</div>
+
+			{/* Navigation buttons */}
+			<div className="flex justify-between pt-4">
+				<Button variant="outline" onClick={onBack} className="cursor-pointer">
+					<ArrowLeft className="mr-2 h-4 w-4" />
+					Back
+				</Button>
+				<Button
+					onClick={handleSubmit}
+					className="cursor-pointer bg-primary hover:bg-primary/90 text-white"
+					disabled={
+						isSubmitting ||
+						selectedBeneficiaries.size === 0 ||
+						(!isEqualDistribution && totalAllocation !== 100)
+					}
+				>
+					{isSubmitting ? (
+						<>
+							<div className="h-4 w-4 animate-spin rounded-full border-t-2 border-b-2 border-black mr-2" />
+							Saving...
+						</>
+					) : (
+						<>
+							Next <ArrowRight className="ml-2 h-4 w-4" />
+						</>
+					)}
+				</Button>
+			</div>
+
+			{/* New Beneficiary Dialog */}
+			<NewBeneficiaryDialog
+				open={newBeneficiaryDialogOpen}
+				onOpenChange={setNewBeneficiaryDialogOpen}
+				onAddIndividual={handleAddIndividualBeneficiary}
+				onAddCharity={handleAddCharityBeneficiary}
+			/>
 		</div>
 	);
 }
