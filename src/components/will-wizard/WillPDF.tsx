@@ -486,16 +486,6 @@ interface WillPDFProps {
 }
 
 const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
-	// Find primary executor
-	const primaryExecutor = data.executors.find((exec) => exec.isPrimary);
-	// Get additional executors (excluding primary)
-	const additionalExecutors = data.executors.filter((exec) => !exec.isPrimary);
-
-	// Find primary and alternative guardians
-	const primaryGuardian = data.guardians?.find((g) => g.isPrimary);
-	const alternativeGuardians =
-		data.guardians?.filter((g) => !g.isPrimary) || [];
-
 	// Helper function to check if guardians section should be shown
 	const shouldShowGuardiansSection = () => {
 		return data.guardians && data.guardians.length > 0;
@@ -802,24 +792,25 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 						{sections.scope}. Scope of this will
 					</Text>
 					<Text style={styles.scopeText}>
-						I am {data.personal.fullName} of {data.personal.address}.
+						<Text style={{ fontWeight: "bold" }}>1.1.</Text>I,{" "}
+						{data.personal.fullName}, of {data.personal.address} and born on
+						[DOB], revoke all previous Wills made by me (as far as they relate
+						to my property in the United Kingdom) and declare this to be my last
+						will and testament.
 					</Text>
 					<Text style={styles.scopeText}>
-						This is my last will, disposing of all my assets in the United
-						Kingdom.
+						<Text style={{ fontWeight: "bold" }}>1.2.</Text> This Will records
+						how I want my estate to be dealt with after my death. It applies to
+						all assets that I own in the United Kingdom, whether movable or
+						immovable, and to any property over which I hold a general power of
+						appointment.
 					</Text>
 					<Text style={styles.scopeText}>
-						I declare, being of sound mind, that this will is made in accordance
-						with my wishes and is intended to be my last will and testament,
-						revoking all previous wills and testamentary dispositions made by
-						me.
-						{/* I revoke any previous wills and codicils. */}
-					</Text>
-					<Text style={styles.scopeText}>
-						This will sets out my wishes regarding the distribution of my estate
-						after my death. It includes all my assets, both movable and
-						immovable, wherever they may be situated, and any property over
-						which I have a power of appointment or disposition.
+						<Text style={{ fontWeight: "bold" }}>1.3.</Text> I have included an
+						Appendix to accompany this Will. The Appendix is a non-testamentary
+						document and does not form part of my legally binding instructions
+						but is provided to assist my Executors and Trustees in identifying
+						my financial assets and conveying personal messages I wish to share.
 					</Text>
 				</View>
 
@@ -830,7 +821,8 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 							{sections.funeral}. Funeral wishes
 						</Text>
 						<Text style={styles.funeralText}>
-							I want my body to be {data.funeralInstructions.wishes}.
+							<Text style={{ fontWeight: "bold" }}>2.1.</Text> It is my wish
+							that I am {data.funeralInstructions.wishes}.
 						</Text>
 					</View>
 				)}
@@ -838,154 +830,132 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 				{/* Executors Section */}
 				<View style={styles.executorSection}>
 					<Text style={styles.executorTitle}>
-						{sections.executors}. Appointment of Executors
+						{sections.executors}. Appointment of Executors and Trustees
 					</Text>
 
-					{primaryExecutor && (
-						<Text style={styles.executorText}>
-							I appoint{" "}
-							{primaryExecutor.type === "individual" ? (
-								<>
-									<Text style={{ fontWeight: "bold" }}>
-										{primaryExecutor.fullName}
-									</Text>
-									{primaryExecutor.relationship && (
-										<> (my {primaryExecutor.relationship.toLowerCase()})</>
-									)}
-								</>
-							) : (
-								<Text style={{ fontWeight: "bold" }}>
-									{primaryExecutor.companyName}
-								</Text>
-							)}{" "}
-							as my primary executor
-							{primaryExecutor.type === "corporate"
-								? " (a corporate executor)"
-								: ""}
-							.
-						</Text>
-					)}
-
-					{additionalExecutors.length > 0 && (
-						<>
-							<Text style={styles.executorText}>
-								If my primary executor dies before me, refuses to act or is
-								unable to act, or their appointment does not take effect for any
-								other reason, I also appoint the following as my alternative
-								executors to fill the resulting vacancy:
-							</Text>
-							<View style={styles.executorList}>
-								{additionalExecutors.map((executor, index) => (
-									<View key={index} style={styles.executorItem}>
-										<Text style={styles.executorText}>
-											{index + 1}.{" "}
-											{executor.type === "individual"
-												? `${executor.fullName}${
-														executor.relationship
-															? ` (my ${executor.relationship.toLowerCase()})`
-															: ""
-												  }`
-												: `${executor.companyName}`}
-											{executor.type === "corporate"
-												? " (a corporate executor)"
-												: ""}
-										</Text>
-									</View>
-								))}
-							</View>
-						</>
-					)}
-
 					<Text style={styles.executorText}>
-						I give my executors full power to deal with my estate as they think
-						fit, including the power to sell, lease, mortgage, or otherwise deal
-						with any part of my estate, and to invest and reinvest the proceeds
-						of any such dealing.
+						<Text style={{ fontWeight: "bold" }}>3.1.</Text> I appoint{" "}
+						{data.executors.map((executor, index) => {
+							const isLast = index === data.executors.length - 1;
+							const prefix = index === 0 ? "" : isLast ? " and " : ", ";
+
+							return (
+								<React.Fragment key={index}>
+									{prefix}
+									<Text style={{ fontWeight: "bold" }}>
+										{executor.type === "individual"
+											? executor.fullName
+											: executor.companyName}
+									</Text>
+									{executor.relationship && executor.type === "individual" && (
+										<> (my {executor.relationship.toLowerCase()})</>
+									)}
+									{executor.type === "corporate" && (
+										<> (a corporate executor)</>
+									)}
+								</React.Fragment>
+							);
+						})}{" "}
+						to act as the executors and trustees of my estate. If any of them
+						are unwilling or unable to act, the others may continue, and they
+						may appoint a suitable replacement if needed.
+					</Text>
+					<Text style={styles.executorText}>
+						<Text style={{ fontWeight: "bold" }}>3.2.</Text> In this Will, the
+						expression <Text style={{ fontWeight: "bold" }}>“My Trustees”</Text>{" "}
+						means my personal representative who obtain a grant of probate for
+						this Will and, as the context requires, my executors and/ or
+						trustees of my Will and of any trust that may arise under this Will.
+					</Text>
+					<Text style={styles.executorText}>
+						<Text style={{ fontWeight: "bold" }}>3.3.</Text> I direct my
+						Trustees to take all actions legally permissible to have this Will
+						executed in accordance with my wishes.
 					</Text>
 				</View>
 
-				{/* Guardians Section */}
-				{shouldShowGuardiansSection() && (
-					<View style={styles.guardianSection}>
-						<Text style={styles.guardianTitle}>
-							{sections.guardians}. Appointment of Guardians
+				{/* Estate Administration Section */}
+				<View style={styles.distributionSection}>
+					<Text style={styles.distributionTitle}>
+						4. Definition and Administration of Estate
+					</Text>
+					<Text style={styles.distributionText}>
+						<Text style={{ fontWeight: "bold" }}>4.1.</Text> In my Will "my
+						Estate" shall mean:
+					</Text>
+
+					<Text style={styles.distributionText}>
+						a) All my property, possessions and money of every kind in the
+						United Kingdom including property that I have a general power of
+						appointment; and
+					</Text>
+
+					<Text style={styles.distributionText}>
+						b) The money investments and property from time to time representing
+						all such property.
+					</Text>
+
+					<Text style={styles.distributionText}>
+						<Text style={{ fontWeight: "bold" }}>4.2.</Text> My Trustees may
+						sell or convert any or all my remaining assets as they consider
+						appropriate and then shall hold my Estate on trust to:
+					</Text>
+
+					<Text style={styles.distributionText}>
+						a) Pay any debts, funeral and testamentary expenses.
+					</Text>
+
+					<Text style={styles.distributionText}>
+						b) Satisfy all specific gifts of specified property referred to in
+						my Will.
+					</Text>
+
+					<Text style={styles.distributionText}>
+						c) Deal with the remainder ("my Residuary Estate") as I state in
+						this will.
+					</Text>
+				</View>
+
+				{/* Specific Bequests Section - Moved here */}
+				{data.gifts && data.gifts.length > 0 && (
+					<View style={styles.giftSection}>
+						<Text style={styles.giftTitle}>5. Specific Gifts</Text>
+						<Text style={styles.giftText}>
+							<Text style={{ fontWeight: "bold" }}>5.1.</Text> I give the
+							following, free of inheritance tax:
 						</Text>
 
-						{primaryGuardian && (
-							<Text style={styles.guardianText}>
-								I appoint{" "}
+						{data.gifts.map((gift, index) => (
+							<Text key={index} style={styles.giftText}>
+								{String.fromCharCode(97 + index)}) To{" "}
 								<Text style={{ fontWeight: "bold" }}>
-									{primaryGuardian.fullName}
-									{primaryGuardian.relationship
-										? ` (my ${primaryGuardian.relationship.toLowerCase()})`
-										: ""}{" "}
-								</Text>
-								as the primary guardian of my minor children.
+									{gift.beneficiaryName}
+								</Text>{" "}
+								of {gift.beneficiaryId} my{" "}
+								{gift.type === "Cash" && gift.value
+									? `$${Number(gift.value).toLocaleString()} (${
+											gift.description
+									  })`
+									: gift.description}
+								;
 							</Text>
-						)}
+						))}
 
-						{alternativeGuardians.length > 0 && (
-							<>
-								<Text style={styles.guardianText}>
-									If my primary guardian is unable or unwilling to act, I
-									appoint the following as alternative guardians:
-								</Text>
-								<View style={styles.guardianList}>
-									{alternativeGuardians.map((guardian, index) => (
-										<View key={index} style={styles.guardianItem}>
-											<Text style={styles.guardianText}>
-												{index + 1}. {guardian.fullName}
-												{guardian.relationship
-													? ` (my ${guardian.relationship.toLowerCase()})`
-													: ""}{" "}
-											</Text>
-										</View>
-									))}
-								</View>
-							</>
-						)}
-
-						<Text style={styles.guardianText}>
-							I direct that my appointed guardians shall have full authority to
-							make decisions regarding the care, education, and welfare of my
-							minor children, including but not limited to decisions about their
-							residence, education, healthcare, and general upbringing.
-						</Text>
-					</View>
-				)}
-
-				{/* Pet Care Section */}
-				{shouldShowPetsSection() && (
-					<View style={styles.guardianSection}>
-						<Text style={styles.guardianTitle}>
-							{sections.pets}. Pet Care Provision
+						<Text style={styles.giftText}>
+							b) In giving effect to any gift above, my Trustees shall have the
+							final and binding decisions as to the identity of any items
+							specifically given and as to the nature and extent of any gift.
 						</Text>
 
-						<Text style={styles.guardianText}>
-							I give and bequeath my pet(s) to{" "}
-							<Text style={{ fontWeight: "bold" }}>
-								{data.petsGuardian?.fullName}
-								{data.petsGuardian?.relationship
-									? ` (my ${data.petsGuardian.relationship.toLowerCase()})`
-									: ""}
-							</Text>
-							.
+						<Text style={styles.giftText}>
+							c) My Residuary Estate shall pay the costs of delivering any gift
+							to a beneficiary, Vesting any gift in a beneficiary, and the
+							upkeep of any gift until delivery or vesting.
 						</Text>
 
-						<Text style={styles.guardianText}>
-							I request that this person provide a loving home for my pet(s) and
-							care for them according to their individual needs. This includes
-							providing adequate food, water, shelter, veterinary care,
-							exercise, and companionship for the remainder of their natural
-							lives.
-						</Text>
-
-						<Text style={styles.guardianText}>
-							If this designated caregiver is unable or unwilling to accept
-							responsibility for my pet(s), I direct my executors to make
-							appropriate arrangements for their care, including placement with
-							a suitable alternative caregiver or, if necessary, a reputable
-							animal rescue organization.
+						<Text style={styles.giftText}>
+							d) Any specific gift that fails to pass to a beneficiary will
+							return to my estate to be included in my Residuary Estate.
 						</Text>
 					</View>
 				)}
@@ -1000,11 +970,12 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 					) && (
 						<View style={styles.distributionSection}>
 							<Text style={styles.distributionTitle}>
-								{sections.distribution}. Distribution of Assets
+								11. Distribution of Assets
 							</Text>
 
 							<Text style={styles.distributionText}>
-								I give, devise, and bequeath my estate as follows:
+								<Text style={{ fontWeight: "bold" }}>11.1.</Text> I give,
+								devise, and bequeath my estate as follows:
 							</Text>
 
 							{data.assets
@@ -1017,7 +988,10 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 								.map((asset, index) => (
 									<View key={index} style={styles.assetItem}>
 										<Text style={styles.assetDescription}>
-											{index + 1}. <Text>{asset.description}</Text> (
+											<Text style={{ fontWeight: "bold" }}>
+												11.{index + 2}.
+											</Text>{" "}
+											<Text>{asset.description}</Text> (
 											<Text>{asset.type}</Text>) to{" "}
 											{renderAssetDistributionText(asset)}.
 										</Text>
@@ -1026,347 +1000,202 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 						</View>
 					)}
 
-				{/* Specific Bequests Section */}
-				{data.gifts && data.gifts.length > 0 && (
-					<View style={styles.giftSection}>
-						<Text style={styles.giftTitle}>
-							{sections.gifts}. Specific Bequests
-						</Text>
-						<Text style={styles.giftText}>
-							I hereby make the following specific bequests:
-						</Text>
+				{/* Distribution of my Residuary Estate Section */}
+				{data.residuaryBeneficiaries &&
+					data.residuaryBeneficiaries.length > 0 && (
+						<View style={styles.distributionSection}>
+							<Text style={styles.distributionTitle}>
+								6. Distribution of my Residuary Estate
+							</Text>
 
-						{data.gifts.map((gift, index) => (
-							<View key={index} style={styles.giftItem}>
-								<Text style={styles.giftDescription}>
-									{index + 1}. I give and bequeath{" "}
-									{gift.type === "Cash" && gift.value
-										? `the sum of $${Number(gift.value).toLocaleString()} (${
-												gift.description
-										  })${" "}`
-										: `my ${gift.description}${" "}`}
-									to{" "}
-									<Text style={{ fontWeight: "bold" }}>
-										{gift.beneficiaryName}
+							<Text style={styles.distributionText}>
+								<Text style={{ fontWeight: "bold" }}>6.1.</Text> I direct that
+								my Trustees shall distribute my Residuary Estate in accordance
+								with the following provisions:
+							</Text>
+
+							{data.residuaryBeneficiaries?.map((beneficiary, index) => {
+								const beneficiaryDetails = data.beneficiaries.find(
+									(b) => b.id === beneficiary.beneficiaryId
+								);
+								if (!beneficiaryDetails) return null;
+
+								return (
+									<Text key={index} style={styles.distributionText}>
+										{String.fromCharCode(97 + index)}){" "}
+										{(data.residuaryBeneficiaries?.length || 0) > 1 && (
+											<>{beneficiary.percentage}% to </>
+										)}
+										{(data.residuaryBeneficiaries?.length || 0) === 1 && "to "}
+										<Text style={{ fontWeight: "bold" }}>
+											{beneficiaryDetails.fullName}
+										</Text>{" "}
+										my {beneficiaryDetails.relationship.toLowerCase()}
+										{beneficiaryDetails.requiresGuardian ? (
+											<>
+												{" "}
+												(but if they die before me their share shall go to their
+												children who survive me in equal shares)
+											</>
+										) : (
+											<>
+												{" "}
+												(but if they die before me their share shall be
+												distributed equally among the surviving residuary
+												beneficiaries named in this clause)
+											</>
+										)}
+										;
 									</Text>
-									.
-								</Text>
-							</View>
-						))}
+								);
+							})}
 
-						<Text style={styles.giftText}>
-							I direct that these specific bequests shall be paid or delivered
-							as soon as practicable after my death, and that any interest
-							accruing on cash bequests shall be paid to the respective
-							beneficiaries.
+							<Text style={styles.distributionText}>
+								<Text style={{ fontWeight: "bold" }}>6.2.</Text> If any of the
+								shares set out in this clause fails it shall be added
+								proportionately to the shares which do not fail.
+							</Text>
+						</View>
+					)}
+
+				{/* Guardians Section */}
+				{shouldShowGuardiansSection() && (
+					<View style={styles.guardianSection}>
+						<Text style={styles.guardianTitle}>
+							7. Appointment of Guardians
+						</Text>
+
+						{data.guardians?.map((guardian, index) => (
+							<Text key={index} style={styles.guardianText}>
+								<Text style={{ fontWeight: "bold" }}>7.{index + 1}.</Text>{" "}
+								{guardian.isPrimary ? (
+									<>
+										If my partner dies before me, I appoint{" "}
+										<Text style={{ fontWeight: "bold" }}>
+											{guardian.fullName}
+										</Text>{" "}
+										my {guardian.relationship.toLowerCase()} as the primary
+										guardian of my minor children.
+									</>
+								) : (
+									<>
+										If my primary guardian is unable or unwilling to act, I
+										appoint the following as alternative guardians{" "}
+										<Text style={{ fontWeight: "bold" }}>
+											{guardian.fullName}
+										</Text>
+										.
+									</>
+								)}
+							</Text>
+						))}
+					</View>
+				)}
+
+				{/* Pet Care Section */}
+				{shouldShowPetsSection() && (
+					<View style={styles.guardianSection}>
+						<Text style={styles.guardianTitle}>8. Guardianship of Pets</Text>
+
+						<Text style={styles.guardianText}>
+							<Text style={{ fontWeight: "bold" }}>8.1.</Text> I give my pet(s)
+							to{" "}
+							<Text style={{ fontWeight: "bold" }}>
+								{data.petsGuardian?.fullName}
+								{data.petsGuardian?.relationship
+									? ` (my ${data.petsGuardian.relationship.toLowerCase()})`
+									: ""}
+							</Text>
+							.
+						</Text>
+
+						<Text style={styles.guardianText}>
+							<Text style={{ fontWeight: "bold" }}>8.2.</Text> If they are
+							unable or unwilling to act, I direct my Trustees to make
+							appropriate arrangements for their care, including placement with
+							a suitable alternative caregiver or, if necessary, a reputable
+							animal rescue organisation.
 						</Text>
 					</View>
 				)}
 
 				{/* Digital Assets Section */}
-				{data.digitalAssets?.beneficiaryId && (
-					<View style={styles.distributionSection}>
-						<Text style={styles.distributionTitle}>
-							{sections.digitalAssets}. Digital Assets
-						</Text>
-						<Text style={styles.distributionText}>
-							I give all of my digitally stored information, digital
-							collections, social media accounts, online shopping accounts, and
-							paid subscription accounts (except for any specific items gifted
-							elsewhere in this Will or in any codicil), free of all taxes and
-							death duties, to{" "}
-							<Text style={{ fontWeight: "bold" }}>
-								{data.digitalAssets.beneficiaryName ||
-									"my designated beneficiary"}
-							</Text>
-							{data.digitalAssets.relationship && (
-								<> (my {data.digitalAssets.relationship.toLowerCase()})</>
-							)}
-							, absolutely.
-						</Text>
-						<Text style={styles.distributionText}>
-							I authorise my Executors and the beneficiary of my digital assets
-							to access, manage, and transfer any of my digital accounts, files,
-							and assets, including bypassing passwords or digital locks,{" "}
-							<Text style={{ fontWeight: "bold" }}>
-								insofar as permitted by applicable law
-							</Text>
-							.
-						</Text>
-						<Text style={styles.distributionText}>
-							I request (but do not require) that{" "}
-							<Text style={{ fontWeight: "bold" }}>
-								{data.digitalAssets.beneficiaryName ||
-									"my designated beneficiary"}
-							</Text>{" "}
-							have regard to any Letter of wishes I may leave concerning the
-							use, management, or disposal of my digital assets, provided such
-							memorandum comes to their attention within one month of my death.
-							The Letter shall not create any binding obligation and shall not
-							confer any rights on any third party.
-						</Text>
-					</View>
-				)}
-
-				{/* Estate Administration Section */}
 				<View style={styles.distributionSection}>
-					<Text style={styles.distributionTitle}>
-						{sections.administration}. Administration of Estate
-					</Text>
+					<Text style={styles.distributionTitle}>9. Digital Assets</Text>
 					<Text style={styles.distributionText}>
-						All the assets that I can dispose of by will are my Estate. My
-						executors may sell all or any of the assets in my Estate as they
-						consider appropriate. From my Estate they must pay:
-					</Text>
-
-					<Text style={styles.distributionText}>1. my debts;</Text>
-
-					<Text style={styles.distributionText}>
-						2. my funeral and testamentary expenses; and
-					</Text>
-
-					<Text style={styles.distributionText}>
-						3. all the previous bequests in this will.
-					</Text>
-
-					<Text style={styles.distributionText}>
-						My Residuary Estate is whatever remains when these payments have
-						been made. The term Residuary Estate also includes the assets
-						representing the remainder, and any added income.
+						<Text style={{ fontWeight: "bold" }}>9.1.</Text> I authorise my
+						Trustees to access, use, distribute and dispose of my digital
+						devices and digital assets, (including online accounts, emails,
+						photos, social media, subscriptions, software, licences,
+						cryptocurrencies, and similar items and accounts), wherever or
+						however stored, as they think fit giving due consideration to any
+						letter of wishes I may prepare. If no such letter has been left by
+						me to cover specific digital assets, then they will pass under my
+						Residuary estate.
 					</Text>
 				</View>
 
-				{/* Residuary Estate Section */}
-				{data.residuaryBeneficiaries &&
-					data.residuaryBeneficiaries.length > 0 && (
-						<View style={styles.distributionSection}>
-							<Text style={styles.distributionTitle}>
-								{sections.residuary}. Distribution of my Residuary Estate
-							</Text>
-
-							<Text style={styles.distributionText}>
-								I direct that my executors shall distribute my residuary estate
-								in accordance with the following provisions:
-							</Text>
-
-							<Text style={styles.distributionText}>
-								I give my residuary estate to{" "}
-								{data.residuaryBeneficiaries?.map((beneficiary, index) => {
-									const beneficiaryDetails = data.beneficiaries.find(
-										(b) => b.id === beneficiary.beneficiaryId
-									);
-									if (!beneficiaryDetails) return null;
-
-									const isLast =
-										index === (data.residuaryBeneficiaries?.length || 0) - 1;
-
-									let prefix = "";
-									if (index === 0) {
-										prefix = "";
-									} else if (isLast) {
-										prefix = " and ";
-									} else {
-										prefix = ", ";
-									}
-
-									return (
-										<Text key={index} style={styles.distributionText}>
-											{prefix}
-											<Text style={{ fontWeight: "bold" }}>
-												{beneficiaryDetails.fullName}
-											</Text>
-											{beneficiaryDetails.relationship && (
-												<>
-													{" "}
-													(my {beneficiaryDetails.relationship.toLowerCase()})
-												</>
-											)}
-										</Text>
-									);
-								})}
-								{data.residuaryBeneficiaries &&
-									data.residuaryBeneficiaries.length > 1 &&
-									(data.residuaryDistributionType === "equal" ? (
-										<Text style={styles.distributionText}>
-											{" "}
-											to be shared equally between them.
-										</Text>
-									) : (
-										<Text style={styles.distributionText}>
-											{" "}
-											in the following proportions:{" "}
-											{data.residuaryBeneficiaries?.map(
-												(beneficiary, index) => {
-													const beneficiaryDetails = data.beneficiaries.find(
-														(b) => b.id === beneficiary.beneficiaryId
-													);
-													if (!beneficiaryDetails) return null;
-
-													const isLast =
-														index ===
-														(data.residuaryBeneficiaries?.length || 0) - 1;
-
-													let prefix = "";
-													if (index === 0) {
-														prefix = "";
-													} else if (isLast) {
-														prefix = " and ";
-													} else {
-														prefix = ", ";
-													}
-
-													return (
-														<Text
-															key={`percentage-${index}`}
-															style={styles.distributionText}
-														>
-															{prefix}
-															{beneficiary.percentage}% to{" "}
-															<Text style={{ fontWeight: "bold" }}>
-																{beneficiaryDetails.fullName}
-															</Text>
-															{isLast ? "." : ""}
-														</Text>
-													);
-												}
-											)}
-										</Text>
-									))}
-								{data.residuaryBeneficiaries &&
-									data.residuaryBeneficiaries.length === 1 && (
-										<Text style={styles.distributionText}>.</Text>
-									)}
-							</Text>
-
-							<Text style={styles.distributionText}>
-								I declare that if any of my residuary beneficiaries predecease
-								me, their share shall be distributed equally among the surviving
-								residuary beneficiaries.
-							</Text>
-						</View>
-					)}
-
+				{/* General Provisions Section */}
 				<View style={styles.distributionSection}>
-					<Text style={styles.distributionTitle}>
-						{sections.disclaimer}. Power for beneficiaries to disclaim bequests
+					<Text style={styles.distributionTitle}>10. General Provisions</Text>
+					<Text style={styles.distributionText}>
+						<Text style={{ fontWeight: "bold" }}>10.1.</Text> The standard
+						provisions and all of the special provisions of the Society of Trust
+						and Estate Practitioners (3rd Edition) shall apply.
 					</Text>
 					<Text style={styles.distributionText}>
-						Any beneficiary of this will may disclaim any interest in my Estate
-						in whole or in part.
-					</Text>
-				</View>
-
-				<View style={styles.distributionSection}>
-					<Text style={styles.distributionTitle}>
-						{sections.powers}. Powers for my executors
+						<Text style={{ fontWeight: "bold" }}>10.2.</Text> Any person who
+						does not survive me by 28 days who would otherwise be a beneficiary
+						under this Will shall be treated for all the purposes of my will as
+						having died in my lifetime.
 					</Text>
 					<Text style={styles.distributionText}>
-						My executors may transfer assets in kind from my Estate or from my
-						Residuary Estate to any beneficiary to satisfy (wholly or partly)
-						the beneficiary's interest in my Estate or my Residuary Estate.
-					</Text>
-					<Text style={styles.distributionText}>
-						My executors may borrow cash or other assets for any purpose and may
-						mortgage or charge assets in my Estate as security for any borrowing
-					</Text>
-				</View>
-
-				<View style={styles.distributionSection}>
-					<Text style={styles.distributionTitle}>
-						{sections.protection}. Paying and protecting my executors
-					</Text>
-					<Text style={styles.distributionText}>
-						Anyone who is acting as one of my executors in the course of a
-						business or profession (Professional Executor) is entitled to charge
-						and be paid reasonable remuneration for any services that they or
-						their firm provides.
-					</Text>
-					<Text style={styles.distributionText}>
-						None of my executors, other than a Professional Executor, is liable
-						for any loss to my Estate or my Residuary Estate unless it results
-						from the executor in question:
-					</Text>
-					<Text style={styles.distributionText}>
-						1. acting in a way they know to be contrary to the interests of the
-						beneficiaries of this will; or{" "}
-					</Text>
-
-					<Text style={styles.distributionText}>
-						2. being recklessly indifferent about whether an action is contrary
-						to the beneficiaries' interests.
-					</Text>
-				</View>
-
-				{/* Definitions Section */}
-				<View style={styles.distributionSection}>
-					<Text style={styles.distributionTitle}>
-						{sections.definitions}. Meaning of words used in this will
-					</Text>
-					<Text style={styles.distributionText}>
-						The rules of interpretation in this clause apply in this will.
-					</Text>
-					<Text style={styles.distributionText}>
-						Express and implied references to an individual's children [do not
-						include the individual's children who are illegitimate] [but do]
-						include the individual's stepchildren, even if the individual has
-						not adopted them
-					</Text>
-					<Text style={styles.distributionText}>
-						References to testamentary expenses include all the expenses
-						incurred in obtaining a grant of probate for my Estate, such as:
-					</Text>
-					<Text style={styles.distributionText}>
-						any fees for the preparation of the will;
-					</Text>
-					<Text style={styles.distributionText}>
-						1. the costs of any action that my executors need to take, including
-						necessary legal proceedings;
-					</Text>
-					<Text style={styles.distributionText}>
-						2. the costs of collecting in, preserving and selling assets in my
-						Estate;
-					</Text>
-					<Text style={styles.distributionText}>
-						3. the costs of administering my Estate, including the professional
-						charges of solicitors, valuers and other advisers; and{" "}
-					</Text>
-					<Text style={styles.distributionText}>
-						4. inheritance tax for which my executors are liable under this will
-						and which is treated as part of the general testamentary and
-						administration expenses of my Estate
+						<Text style={{ fontWeight: "bold" }}>10.3.</Text> Clause headings in
+						this Will are for ease of reference only and do not affect the
+						interpretation of this Will.
 					</Text>
 				</View>
 
 				{/* Final Declaration Section */}
 				<View style={styles.finalDeclarationSection}>
 					<Text style={styles.finalDeclarationTitle}>
-						{sections.finalDeclaration}. Final Declaration
-					</Text>
-					<Text style={styles.finalDeclarationText}>I declare that:</Text>
-					<Text style={styles.finalDeclarationText}>1. I am over 18;</Text>
-					<Text style={styles.finalDeclarationText}>
-						2. I am mentally capable of making my own decisions about my will;
+						12. Final Declaration
 					</Text>
 					<Text style={styles.finalDeclarationText}>
-						3. I am freely and voluntarily making this will;
+						<Text style={{ fontWeight: "bold" }}>12.1.</Text> I declare that:
 					</Text>
 					<Text style={styles.finalDeclarationText}>
-						4. I have considered all those persons I might reasonably be
-						expected to provide for by my will; and
+						<Text style={{ fontWeight: "bold" }}>12.2.</Text> I am over 18;
 					</Text>
 					<Text style={styles.finalDeclarationText}>
-						5. I understand this will and approve it as a true reflection of my
-						wishes.
+						<Text style={{ fontWeight: "bold" }}>12.3.</Text> I am mentally
+						capable of making my own decisions about my will;
+					</Text>
+					<Text style={styles.finalDeclarationText}>
+						<Text style={{ fontWeight: "bold" }}>12.4.</Text> I am freely and
+						voluntarily making this will;
+					</Text>
+					<Text style={styles.finalDeclarationText}>
+						<Text style={{ fontWeight: "bold" }}>12.5.</Text> I have considered
+						all those persons I might reasonably be expected to provide for by
+						my will; and
+					</Text>
+					<Text style={styles.finalDeclarationText}>
+						<Text style={{ fontWeight: "bold" }}>12.6.</Text> I understand this
+						will and approve it as a true reflection of my wishes.
 					</Text>
 				</View>
 
 				{/* Witness Signatures Section */}
 				<View style={styles.witnessSection}>
-					<Text style={styles.witnessTitle}>
-						{sections.witnesses}. Witness Signatures
+					<Text style={styles.witnessTitle}>13. Witness Signatures</Text>
+					<Text style={styles.witnessText}>
+						<Text style={{ fontWeight: "bold" }}>SIGNATURE</Text>
 					</Text>
 					<Text style={styles.witnessText}>
-						I declare that this is my last will and testament, and I sign it in
+						<Text style={{ fontWeight: "bold" }}>13.1.</Text> I,{" "}
+						<Text style={{ fontWeight: "bold" }}>{data.personal.fullName}</Text>{" "}
+						declare that this is my last will and testament, and I sign it in
 						the presence of the following witnesses, who in my presence and in
 						the presence of each other, sign as witnesses:
 					</Text>
@@ -1425,8 +1254,9 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 					)}
 
 					<Text style={styles.witnessText}>
-						Signed by the testator in our presence and then by us in the
-						presence of the testator and each other on the date shown above.
+						<Text style={{ fontWeight: "bold" }}>13.2.</Text> Signed by the
+						testator in our presence and then by us in the presence of the
+						testator and each other on the date shown above.
 					</Text>
 				</View>
 			</Page>
@@ -1436,17 +1266,26 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 				<View style={styles.appendixSection}>
 					<Text style={styles.appendixTitle}>Appendix</Text>
 					<Text style={styles.appendixIntro}>
-						I have included an Appendix to this Will which is not a testamentary
-						document but has been placed with this Will to assist my Trustees.
+						<Text style={{ fontWeight: "bold" }}>
+							This Appendix does not form part of the Will.
+						</Text>{" "}
+						Your Will becomes a public document once probate has been issued by
+						the courts. This Appendix is a 'non-testamentary' document. This
+						means that it is excluded from being made public, keeping your
+						detailed assets, personal messages and funeral wishes private.
+					</Text>
+					<Text style={styles.appendixIntro}>
+						This Appendix has been included alongside my Will solely to provide
+						guidance and practical assistance to my Trustees.
 					</Text>
 
-					<Text style={styles.assetDetailsTitle}>Asset Details</Text>
+					<Text style={styles.assetDetailsTitle}>Schedule of Assets</Text>
 					<Text style={styles.assetDetailsIntro}>
-						I have included details of my assets to help my Trustees to
-						administer my estate. This list is accurate at the time of writing,
-						though not necessarily exhaustive, and appropriate efforts should
-						still be made to locate additional assets that may not be listed
-						here.
+						I have provided a record of my assets to support my Trustees in the
+						administration of my estate. While this information reflects my
+						holdings at the date of writing, it may not be complete. My Trustees
+						should therefore take reasonable steps to identify and secure any
+						other assets that may exist but are not listed here.
 					</Text>
 
 					{data.assets && data.assets.length > 0 ? (
