@@ -28,9 +28,14 @@ export function WillWizardSidebar() {
 	};
 
 	const handleStepClick = (step: QuestionType) => {
+		// Only allow navigation if the step is accessible
 		if (canAccessStep(step)) {
 			navigateToStep(step);
 		}
+	};
+
+	const isStepClickable = (step: QuestionType) => {
+		return canAccessStep(step);
 	};
 
 	return (
@@ -82,7 +87,7 @@ export function WillWizardSidebar() {
 							{STEPS.map((step, _index) => {
 								const stepInfo = getStepInfo(step);
 								const status = getStepStatus(step);
-								const isClickable = canAccessStep(step);
+								const isClickable = isStepClickable(step);
 
 								return (
 									<li
@@ -104,7 +109,9 @@ export function WillWizardSidebar() {
 													? "cursor-pointer hover:text-[#0F433E]"
 													: "cursor-not-allowed"
 											}`}
-											onClick={() => handleStepClick(step)}
+											onClick={
+												isClickable ? () => handleStepClick(step) : undefined
+											}
 										>
 											{stepInfo.name}
 										</div>
