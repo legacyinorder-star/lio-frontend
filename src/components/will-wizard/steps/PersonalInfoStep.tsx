@@ -242,11 +242,11 @@ export default function PersonalInfoStep({
 				}}
 			/>
 
-			<div className="space-y-4">
+			<div className="space-y-6">
 				<div className="text-xl sm:text-2xl lg:text-[2rem] font-medium text-black">
 					Personal Information
 				</div>
-				<div className="text-muted-foreground">
+				<div className="text-[#696868] text-[0.875rem] -mt-4">
 					Let's start with your basic information and address details.
 				</div>
 
@@ -254,17 +254,21 @@ export default function PersonalInfoStep({
 					<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
 						{/* Personal Information Section */}
 						<div className="space-y-4">
-							<h3 className="text-lg font-medium">Personal Details</h3>
-
 							<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 								<FormField
 									control={form.control}
 									name="firstName"
 									render={({ field }) => (
 										<FormItem>
-											<FormLabel>First Name *</FormLabel>
+											<FormLabel className="text-sm font-medium text-gray-700">
+												First Name *
+											</FormLabel>
 											<FormControl>
-												<Input placeholder="Enter your first name" {...field} />
+												<Input
+													placeholder="Enter your first name"
+													{...field}
+													className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+												/>
 											</FormControl>
 											<FormMessage />
 										</FormItem>
@@ -276,9 +280,15 @@ export default function PersonalInfoStep({
 									name="lastName"
 									render={({ field }) => (
 										<FormItem>
-											<FormLabel>Last Name *</FormLabel>
+											<FormLabel className="text-sm font-medium text-gray-700">
+												Last Name *
+											</FormLabel>
 											<FormControl>
-												<Input placeholder="Enter your last name" {...field} />
+												<Input
+													placeholder="Enter your last name"
+													{...field}
+													className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+												/>
 											</FormControl>
 											<FormMessage />
 										</FormItem>
@@ -289,18 +299,19 @@ export default function PersonalInfoStep({
 
 						{/* Address Section */}
 						<div className="space-y-4">
-							<h3 className="text-lg font-medium">Address Information</h3>
-
 							<FormField
 								control={form.control}
 								name="address"
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel>Street Address *</FormLabel>
+										<FormLabel className="text-sm font-medium text-gray-700">
+											Street Address *
+										</FormLabel>
 										<FormControl>
 											<Input
 												placeholder="Enter your street address"
 												{...field}
+												className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 											/>
 										</FormControl>
 										<FormMessage />
@@ -314,9 +325,15 @@ export default function PersonalInfoStep({
 									name="city"
 									render={({ field }) => (
 										<FormItem>
-											<FormLabel>City *</FormLabel>
+											<FormLabel className="text-sm font-medium text-gray-700">
+												City *
+											</FormLabel>
 											<FormControl>
-												<Input placeholder="Enter your city" {...field} />
+												<Input
+													placeholder="Enter your city"
+													{...field}
+													className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+												/>
 											</FormControl>
 											<FormMessage />
 										</FormItem>
@@ -328,7 +345,9 @@ export default function PersonalInfoStep({
 									name="state"
 									render={({ field }) => (
 										<FormItem>
-											<FormLabel>State/Province *</FormLabel>
+											<FormLabel className="text-sm font-medium text-gray-700">
+												State/Province *
+											</FormLabel>
 											<FormControl>
 												<Select
 													options={stateOptions}
@@ -340,6 +359,30 @@ export default function PersonalInfoStep({
 													}
 													placeholder="Select state/province"
 													className="w-full"
+													styles={{
+														control: (provided) => ({
+															...provided,
+															height: "48px",
+															borderRadius: "8px",
+															border: "1px solid #d1d5db",
+															"&:hover": {
+																borderColor: "#3b82f6",
+															},
+															"&:focus-within": {
+																borderColor: "#3b82f6",
+																boxShadow: "0 0 0 2px rgba(59, 130, 246, 0.1)",
+															},
+														}),
+														option: (provided, state) => ({
+															...provided,
+															backgroundColor: state.isSelected
+																? "#3b82f6"
+																: state.isFocused
+																? "#eff6ff"
+																: "white",
+															color: state.isSelected ? "white" : "#374151",
+														}),
+													}}
 												/>
 											</FormControl>
 											<FormMessage />
@@ -354,9 +397,15 @@ export default function PersonalInfoStep({
 									name="postCode"
 									render={({ field }) => (
 										<FormItem>
-											<FormLabel>Postal/ZIP Code *</FormLabel>
+											<FormLabel className="text-sm font-medium text-gray-700">
+												Postal/ZIP Code *
+											</FormLabel>
 											<FormControl>
-												<Input placeholder="Enter postal/ZIP code" {...field} />
+												<Input
+													placeholder="Enter postal/ZIP code"
+													{...field}
+													className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+												/>
 											</FormControl>
 											<FormMessage />
 										</FormItem>
@@ -368,7 +417,9 @@ export default function PersonalInfoStep({
 									name="country"
 									render={({ field }) => (
 										<FormItem>
-											<FormLabel>Country *</FormLabel>
+											<FormLabel className="text-sm font-medium text-gray-700">
+												Country *
+											</FormLabel>
 											<FormControl>
 												<Select
 													options={countryOptions}
@@ -380,6 +431,32 @@ export default function PersonalInfoStep({
 													}
 													placeholder="Select country"
 													className="w-full"
+													styles={{
+														control: (provided) => ({
+															...provided,
+															height: "48px",
+															borderRadius: "8px",
+															border: "1px solid #d1d5db",
+															"&:hover": {
+																borderColor: "#3b82f6",
+															},
+															"&:focus-within": {
+																borderColor: "#3b82f6",
+																boxShadow: "0 0 0 2px rgba(59, 130, 246, 0.1)",
+															},
+														}),
+														option: (provided, state) => ({
+															...provided,
+															backgroundColor: state.isSelected
+																? "#3b82f6"
+																: state.isFocused
+																? "#eff6ff"
+																: "white",
+															"&:hover": {
+																backgroundColor: "#eff6ff",
+															},
+														}),
+													}}
 												/>
 											</FormControl>
 											<FormMessage />
@@ -391,6 +468,22 @@ export default function PersonalInfoStep({
 
 						{/* Navigation buttons */}
 						<div className="flex justify-end pt-6">
+							{/* <Button
+								type="submit"
+								disabled={isSubmitting}
+								className="w-full h-16 bg-white text-[#050505] rounded-[0.25rem] font-medium border border-gray-300 hover:bg-gray-50 transition-colors"
+							>
+								{isSubmitting ? (
+									<>
+										<div className="h-4 w-4 animate-spin rounded-full border-t-2 border-b-2 border-black mr-2" />
+										Saving...
+									</>
+								) : (
+									<>
+										Next <ArrowRight className="ml-2 h-4 w-4" />
+									</>
+								)}
+							</Button> */}
 							<Button
 								type="submit"
 								disabled={isSubmitting}
