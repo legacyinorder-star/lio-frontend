@@ -160,7 +160,6 @@ export default function ManageAllWillsPage() {
 						guardians: false,
 						hasAssets: false,
 						gifts: false,
-						digitalAssets: false,
 						residuary: false,
 						executors: false,
 						funeralInstructions: false,

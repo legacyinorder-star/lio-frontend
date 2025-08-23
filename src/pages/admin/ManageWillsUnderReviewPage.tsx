@@ -189,7 +189,6 @@ export default function ManageWillsUnderReviewPage() {
 						guardians: false,
 						hasAssets: false,
 						gifts: false,
-						digitalAssets: false,
 						residuary: false,
 						executors: false,
 						funeralInstructions: false,
