@@ -1,15 +1,22 @@
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
+import {
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 import { getUserDetails } from "@/utils/auth";
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
 import { useWill } from "@/context/WillContext";
 
 export default function DashboardPage() {
 	const navigate = useNavigate();
 	const { activeWill } = useWill();
 	const [userName, setUserName] = useState<string>("");
+	const [showVaultModal, setShowVaultModal] = useState(false);
 
 	// Handler functions
 	const handleEditWill = () => {
@@ -183,7 +190,7 @@ export default function DashboardPage() {
 							documents, all in one place.
 						</p>
 						<div
-							onClick={() => navigate("/app/vault")}
+							onClick={() => setShowVaultModal(true)}
 							className="flex items-center text-white cursor-pointer hover:text-gray-300 transition-colors"
 						>
 							<span className="text-sm font-semibold">Get Started</span>
@@ -233,6 +240,26 @@ export default function DashboardPage() {
 					</div>
 				</div>
 			</div>
+
+			<Dialog open={showVaultModal} onOpenChange={setShowVaultModal}>
+				<DialogContent>
+					<DialogHeader>
+						<DialogTitle>Legacy Vault Coming Soon</DialogTitle>
+					</DialogHeader>
+					<p className="text-sm text-muted-foreground">
+						The Legacy Vault feature is under development.
+					</p>
+					<p className="text-sm text-muted-foreground">
+						We'll notify you when it's ready.
+					</p>
+					<Button
+						onClick={() => setShowVaultModal(false)}
+						className="mt-4 text-white"
+					>
+						Close
+					</Button>
+				</DialogContent>
+			</Dialog>
 		</div>
 	);
 }
