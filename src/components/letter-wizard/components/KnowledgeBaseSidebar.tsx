@@ -1,4 +1,5 @@
 import { ExternalLink } from "lucide-react";
+import { VideoGuide } from "@/components/ui/video-guide";
 
 interface KnowledgeArticle {
 	title: string;
@@ -9,6 +10,46 @@ interface KnowledgeArticle {
 interface KnowledgeBaseSidebarProps {
 	currentStep: string;
 }
+
+// Video content for each step
+const STEP_VIDEOS: Record<
+	string,
+	{
+		src: string;
+		poster: string;
+		title: string;
+		description: string;
+	}
+> = {
+	personalFamily: {
+		src: "https://drive.google.com/file/d/1Y9NELwX78wH8yMm7cB6I5jss5SC8hRCU/view",
+		poster: "/images/letter-personal-family-poster.jpg",
+		title: "Personal & Family Guide",
+		description:
+			"Learn how to write personal messages and family guidance in your letter of wishes.",
+	},
+	assetsPossessions: {
+		src: "https://drive.google.com/file/d/1Y9NELwX78wH8yMm7cB6I5jss5SC8hRCU/view",
+		poster: "/images/letter-assets-possessions-poster.jpg",
+		title: "Assets & Possessions Guide",
+		description:
+			"Understand how to provide guidance about your personal belongings and assets.",
+	},
+	funeralEndOfLife: {
+		src: "https://drive.google.com/file/d/1Y9NELwX78wH8yMm7cB6I5jss5SC8hRCU/view",
+		poster: "/images/letter-funeral-end-of-life-poster.jpg",
+		title: "Funeral & End of Life Guide",
+		description:
+			"Learn how to document your funeral wishes and end-of-life preferences.",
+	},
+	instructionsLegacy: {
+		src: "https://drive.google.com/file/d/1Y9NELwX78wH8yMm7cB6I5jss5SC8hRCU/view",
+		poster: "/images/letter-instructions-legacy-poster.jpg",
+		title: "Instructions & Legacy Guide",
+		description:
+			"Discover how to leave lasting instructions and legacy guidance for your loved ones.",
+	},
+};
 
 const stepArticles: Record<string, KnowledgeArticle[]> = {
 	introduction: [
@@ -87,12 +128,39 @@ export default function KnowledgeBaseSidebar({
 	currentStep,
 }: KnowledgeBaseSidebarProps) {
 	const articles = stepArticles[currentStep] || [];
+	const videoContent = STEP_VIDEOS[currentStep];
 
 	return (
 		<div
 			className="w-full lg:w-80 p-4 lg:p-6 self-start"
 			style={{ backgroundColor: "#EDFBF6" }}
 		>
+			{/* Video Section */}
+			<div className="mb-6">
+				{videoContent ? (
+					<VideoGuide
+						src={videoContent.src}
+						poster={videoContent.poster}
+						title={videoContent.title}
+						description={videoContent.description}
+					/>
+				) : (
+					<div className="space-y-3">
+						<h4 className="text-black font-medium text-sm">
+							Learn About This Step
+						</h4>
+						<div className="relative w-full h-32 bg-gray-100 rounded-lg overflow-hidden">
+							<div className="w-full h-full flex items-center justify-center text-gray-500 text-sm">
+								Video content not available for this step.
+							</div>
+						</div>
+						<p className="text-gray-600 text-xs">
+							No video content available for this step.
+						</p>
+					</div>
+				)}
+			</div>
+
 			<h3
 				className="text-black font-semibold mb-4"
 				style={{ fontSize: "1rem" }}
