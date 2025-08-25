@@ -27,7 +27,7 @@ const personalInfoSchema = z.object({
 	lastName: z.string().min(2, "Last name must be at least 2 characters"),
 	address: z.string().min(1, "Address is required"),
 	city: z.string().min(1, "City is required"),
-	state: z.string().min(1, "State/Province is required"),
+	state: z.string().min(1, "Town/Borough is required"),
 	postCode: z.string().min(1, "Postal/ZIP code is required"),
 	country: z.string().min(1, "Country is required"),
 });
@@ -206,7 +206,7 @@ export default function PersonalInfoStep({
 		})
 	);
 
-	// Get state/region options based on selected country
+	// Get town/borough options based on selected country
 	const getStateOptions = (selectedCountry: string): OptionType[] => {
 		const country = countryRegionData.find(
 			(c: CountryType) => c.countryName === selectedCountry
@@ -346,7 +346,7 @@ export default function PersonalInfoStep({
 									render={({ field }) => (
 										<FormItem>
 											<FormLabel className="text-sm font-medium text-gray-700">
-												State/Province *
+												Town/Borough *
 											</FormLabel>
 											<FormControl>
 												<Select
@@ -357,7 +357,7 @@ export default function PersonalInfoStep({
 													onChange={(option) =>
 														field.onChange(option?.value || "")
 													}
-													placeholder="Select state/province"
+													placeholder="Select town/borough"
 													className="w-full"
 													styles={{
 														control: (provided) => ({

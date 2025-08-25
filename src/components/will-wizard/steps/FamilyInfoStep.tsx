@@ -323,8 +323,6 @@ export default function FamilyInfoStep({
 					toast.error("Failed to remove pets. Please try again.");
 					return;
 				}
-
-				toast.success("Pets removed successfully");
 			}
 			// If user didn't have pets initially and now wants pets
 			else if (!initialHasPets && hasPets) {
@@ -348,8 +346,6 @@ export default function FamilyInfoStep({
 				if (data && data.id) {
 					setPetId(data.id);
 				}
-
-				toast.success("Pets record created successfully");
 			}
 			// If status remains the same, no API calls needed
 		} catch (error) {
@@ -675,7 +671,8 @@ export default function FamilyInfoStep({
 						Tell us about your family
 					</div>
 					<div className="text-[#696868] text-[0.875rem] -mt-4">
-						We'll help you include your loved ones in your will.
+						This will help to ensure the Will is based on your personal
+						circumstance.
 					</div>
 
 					{/* Spouse Section */}
@@ -689,7 +686,7 @@ export default function FamilyInfoStep({
 									fontFamily: "TMT Limkin",
 								}}
 							>
-								Are you married or in a legally recognized civil relationship?
+								Are you married or in a legally recognised civil relationship?
 							</span>
 						</div>
 
@@ -796,7 +793,7 @@ export default function FamilyInfoStep({
 						</div>
 						<div className="text-[#696868] text-[0.875rem] -mt-4">
 							This information helps us create the appropriate provisions in
-							your will, especially regarding guardianship for minor children.
+							your Will, especially regarding guardianship for minor children.
 						</div>
 
 						<div className="space-y-3 mt-[-0.5rem]">
@@ -961,7 +958,7 @@ export default function FamilyInfoStep({
 												</div>
 												<p className="text-sm text-muted-foreground mt-1">
 													This will help us include appropriate guardianship
-													provisions in your will.
+													provisions in your Will.
 												</p>
 											</div>
 											<div className="flex justify-end space-x-2">
@@ -1010,7 +1007,7 @@ export default function FamilyInfoStep({
 							</div>
 							<div className="text-[#696868] text-[0.875rem] -mt-4">
 								This information helps us include provisions for pet care in
-								your will, allowing you to specify who will take care of your
+								your Will, allowing you to specify who will take care of your
 								pets.
 							</div>
 
@@ -1142,7 +1139,7 @@ export default function FamilyInfoStep({
 							<strong>
 								{childToDelete?.firstName} {childToDelete?.lastName}
 							</strong>{" "}
-							from your will? This action cannot be undone.
+							from your Will? This action cannot be undone.
 						</AlertDialogDescription>
 					</AlertDialogHeader>
 					<AlertDialogFooter>

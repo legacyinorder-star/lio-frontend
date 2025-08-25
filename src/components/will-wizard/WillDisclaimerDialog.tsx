@@ -7,6 +7,7 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { FilePen } from "lucide-react";
 
 interface WillDisclaimerDialogProps {
 	open: boolean;
@@ -47,9 +48,11 @@ export default function WillDisclaimerDialog({
 						Before You Start Your Will
 					</DialogTitle>
 					<DialogDescription>
-						We're here to make getting your Legacy in Order simple, clear, and
-						stress-free. Before you begin, here are a few things to know so you
-						can use our service with confidence:
+						Writing your Will is the first step to getting your Legacy In Order.
+						<p className="mt-2">
+							Before you begin, here are a few things you should know to use our
+							service with confidence:
+						</p>
 					</DialogDescription>
 				</DialogHeader>
 
@@ -61,11 +64,11 @@ export default function WillDisclaimerDialog({
 								<div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
 								<div>
 									<p className="text-sm text-muted-foreground leading-relaxed">
-										<strong>How our templates work</strong>
+										<strong>How our service works</strong>
 									</p>
 									<p className="text-sm text-muted-foreground leading-relaxed mt-1">
 										We work with qualified lawyers in each supported
-										jurisdiction to prepare our legal document templates.
+										jurisdiction to ensure the documents are legally sound.
 									</p>
 								</div>
 							</div>
@@ -74,11 +77,11 @@ export default function WillDisclaimerDialog({
 								<div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
 								<div>
 									<p className="text-sm text-muted-foreground leading-relaxed">
-										<strong>You're in the driver's seat</strong>
+										<strong>You are in control</strong>
 									</p>
 									<p className="text-sm text-muted-foreground leading-relaxed mt-1">
-										We guide you step-by-step but You are responsible for making
-										sure the details you provide are complete and accurate.
+										We guide you step-by-step but you are responsible for making
+										sure the details provided are complete and accurate.
 									</p>
 								</div>
 							</div>
@@ -87,7 +90,7 @@ export default function WillDisclaimerDialog({
 								<div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
 								<div>
 									<p className="text-sm text-muted-foreground leading-relaxed">
-										<strong>We don't give personal legal advice</strong>
+										<strong>We do not give personalised legal advice</strong>
 									</p>
 									<p className="text-sm text-muted-foreground leading-relaxed mt-1">
 										Legacy in Order is not a law firm, and does offer tailored
@@ -103,7 +106,7 @@ export default function WillDisclaimerDialog({
 										<strong>Signing makes it official</strong>
 									</p>
 									<p className="text-sm text-muted-foreground leading-relaxed mt-1">
-										Your will only become legally binding once it is signed and
+										Your Will only becomes legally binding once it is signed and
 										witnessed according to the instructions for your
 										jurisdiction.
 									</p>
@@ -114,10 +117,10 @@ export default function WillDisclaimerDialog({
 								<div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
 								<div>
 									<p className="text-sm text-muted-foreground leading-relaxed">
-										<strong>Your will is just for you</strong>
+										<strong>Your Will is just for you</strong>
 									</p>
 									<p className="text-sm text-muted-foreground leading-relaxed mt-1">
-										Each person needs to complete their own will. You cannot
+										Each person needs to complete their own Will. You cannot
 										create one on behalf of someone else.
 									</p>
 								</div>
@@ -127,7 +130,7 @@ export default function WillDisclaimerDialog({
 								<div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
 								<div>
 									<p className="text-sm text-muted-foreground leading-relaxed">
-										<strong>Some situations need extra care</strong>
+										<strong>Some situations need extra attention</strong>
 									</p>
 									<p className="text-sm text-muted-foreground leading-relaxed mt-1">
 										If your circumstances are more complex, you may wish to
@@ -149,12 +152,12 @@ export default function WillDisclaimerDialog({
 								<div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
 								<div>
 									<p className="text-sm text-muted-foreground leading-relaxed">
-										<strong>We've got you covered — for most situations</strong>
+										<strong>We've got you covered for most situations</strong>
 									</p>
 									<p className="text-sm text-muted-foreground leading-relaxed mt-1">
 										Our platform is designed for standard estate planning needs.
-										If you're not sure whether we're right for you, we recommend
-										getting independent legal advice.
+										If you are not sure whether we are right for you, we
+										recommend that you get independent legal advice.
 									</p>
 								</div>
 							</div>
@@ -164,8 +167,8 @@ export default function WillDisclaimerDialog({
 					{/* Acknowledgment */}
 					<div className="space-y-4 border-t pt-0">
 						<p className="text-sm text-muted-foreground leading-relaxed">
-							By clicking "Agree & Continue", you confirm you understand and
-							accept Legacy in Order's Terms of Service and Privacy Policy.
+							By clicking "Agree & Continue", you confirm that you understand
+							and accept Legacy in Order's Terms of Service and Privacy Policy.
 						</p>
 					</div>
 				</div>
@@ -179,7 +182,7 @@ export default function WillDisclaimerDialog({
 						onClick={handleAccept}
 						className="bg-primary hover:bg-primary/90 text-white"
 					>
-						Agree & Continue
+						<FilePen className="mr-2 h-4 w-4" /> Agree & Continue
 					</Button>
 				</DialogFooter>
 			</DialogContent>

@@ -622,10 +622,10 @@ export default function ResiduaryStep({
 	return (
 		<div className="space-y-6">
 			<div className="text-xl sm:text-2xl lg:text-[2rem] font-medium text-black">
-				Distribution of Residuary Estate
+				Sharing your Residuary Estate
 			</div>
 			<div className="text-[#696868] text-[0.875rem] -mt-4">
-				Specify how you would like to distribute any remaining assets not
+				Specify who you would like to inherit any remaining assets not
 				specifically mentioned in your will.
 			</div>
 
@@ -642,12 +642,12 @@ export default function ResiduaryStep({
 								fontFamily: "TMT Limkin",
 							}}
 						>
-							How would you like to distribute your residuary estate?
+							How would you like to share your residuary estate?
 						</span>
 					</div>
 					<div className="text-[#696868] text-[0.875rem] -mt-4">
-						Choose between equal distribution among all beneficiaries or manual
-						allocation with custom percentages.
+						Choose between equal split among the selected beneficiaries or
+						manual allocation with custom percentages.
 					</div>
 
 					<div className="space-y-3 mt-[-0.5rem]">

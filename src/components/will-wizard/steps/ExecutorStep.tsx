@@ -830,7 +830,7 @@ export default function ExecutorStep({
 			</div>
 
 			{/* Legacy In Order Recommendation Section */}
-			<div className="bg-green-50 border border-green-200 rounded-lg p-4">
+			{/* <div className="bg-green-50 border border-green-200 rounded-lg p-4">
 				<div className="space-y-3">
 					<div className="flex items-start">
 						<div className="flex-shrink-0">
@@ -883,7 +883,7 @@ export default function ExecutorStep({
 						</div>
 					</div>
 				</div>
-			</div>
+			</div> */}
 
 			{/* Executor Selection Dropdown - Full Width */}
 			<div className="space-y-4">

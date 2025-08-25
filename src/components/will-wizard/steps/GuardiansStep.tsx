@@ -610,9 +610,13 @@ export default function GuardiansStep({
 					</span>
 				</div>
 				<div className="text-[#696868] text-[0.875rem] -mt-4">
+					Guardians are only needed if there are no parents with legal
+					responsibility still alive.
+				</div>
+				<div className="text-[#696868] text-[0.875rem] -mt-2">
 					You should pick two different people to be guardians. A primary
 					guardian and a backup guardian if, for whatever reason, the primary
-					guardian is unable to serve.
+					guardian is unable to step in.
 				</div>
 
 				{/* Guardians Management Section */}
