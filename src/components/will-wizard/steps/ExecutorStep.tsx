@@ -121,7 +121,7 @@ export default function ExecutorStep({
 	const [executorToDelete, setExecutorToDelete] = useState<Executor | null>(
 		null
 	);
-	const [useLegacyInOrder, setUseLegacyInOrder] = useState(false);
+	// const [useLegacyInOrder, setUseLegacyInOrder] = useState(false);
 	const prevExecutorsRef = useRef<Executor[]>([]);
 	const { activeWill } = useWill();
 	const {
@@ -563,12 +563,12 @@ export default function ExecutorStep({
 			);
 
 			// If removing Legacy In Order, update checkbox state
-			if (
-				executorToDelete.type === "corporate" &&
-				executorToDelete.name === "Legacy In Order"
-			) {
-				setUseLegacyInOrder(false);
-			}
+			// if (
+			// 	executorToDelete.type === "corporate" &&
+			// 	executorToDelete.name === "Legacy In Order"
+			// ) {
+			// 	setUseLegacyInOrder(false);
+			// }
 
 			toast.success("Executor removed successfully");
 			setExecutorToDelete(null);
@@ -581,118 +581,118 @@ export default function ExecutorStep({
 
 	const cancelRemoveExecutor = () => {
 		// If canceling removal of Legacy In Order, revert checkbox state
-		if (
-			executorToDelete &&
-			executorToDelete.type === "corporate" &&
-			executorToDelete.name === "Legacy In Order"
-		) {
-			setUseLegacyInOrder(true);
-		}
+		// if (
+		// 	executorToDelete &&
+		// 	executorToDelete.type === "corporate" &&
+		// 	executorToDelete.name === "Legacy In Order"
+		// ) {
+		// 	setUseLegacyInOrder(true);
+		// }
 
 		setExecutorToDelete(null);
 		setConfirmDeleteOpen(false);
 	};
 
 	// Handle Legacy In Order checkbox change
-	const handleLegacyInOrderChange = async (checked: boolean) => {
-		if (checked) {
-			// Check if Legacy In Order is already added
-			const existingLegacyExecutor = executors.find(
-				(executor) =>
-					executor.type === "corporate" && executor.name === "Legacy In Order"
-			);
+	// const handleLegacyInOrderChange = async (checked: boolean) => {
+	// 	if (checked) {
+	// 		// Check if Legacy In Order is already added
+	// 		const existingLegacyExecutor = executors.find(
+	// 			(executor) =>
+	// 				executor.type === "corporate" && executor.name === "Legacy In Order"
+	// 		);
 
-			if (existingLegacyExecutor) {
-				toast.error("Legacy In Order is already added as an executor");
-				return;
-			}
+	// 		if (existingLegacyExecutor) {
+	// 			toast.error("Legacy In Order is already added as an executor");
+	// 			return;
+	// 		}
 
-			if (!activeWill?.id) {
-				toast.error("Will ID is required");
-				return;
-			}
+	// 		if (!activeWill?.id) {
+	// 			toast.error("Will ID is required");
+	// 			return;
+	// 		}
 
-			setIsSubmitting(true);
-			try {
-				// Create corporate executor record using normal flow
-				const corporateExecutorPayload = {
-					will_id: activeWill.id,
-					name: "Legacy In Order",
-					rc_number: "RC123456", // Replace with actual RC number
-				};
+	// 		setIsSubmitting(true);
+	// 		try {
+	// 			// Create corporate executor record using normal flow
+	// 			const corporateExecutorPayload = {
+	// 				will_id: activeWill.id,
+	// 				name: "Legacy In Order",
+	// 				rc_number: "RC123456", // Replace with actual RC number
+	// 			};
 
-				const { data: corporateExecutorData, error: corporateExecutorError } =
-					await apiClient<{
-						id: string;
-					}>("/corporate_executors", {
-						method: "POST",
-						body: JSON.stringify(corporateExecutorPayload),
-					});
+	// 			const { data: corporateExecutorData, error: corporateExecutorError } =
+	// 				await apiClient<{
+	// 					id: string;
+	// 				}>("/corporate_executors", {
+	// 					method: "POST",
+	// 					body: JSON.stringify(corporateExecutorPayload),
+	// 				});
 
-				if (corporateExecutorError || !corporateExecutorData) {
-					toast.error("Failed to create Legacy In Order executor record");
-					return;
-				}
+	// 			if (corporateExecutorError || !corporateExecutorData) {
+	// 				toast.error("Failed to create Legacy In Order executor record");
+	// 				return;
+	// 			}
 
-				// Create executor record as primary
-				const executorPayload = {
-					will_id: activeWill.id,
-					corporate_executor_id: corporateExecutorData.id,
-					is_primary: true,
-				};
+	// 			// Create executor record as primary
+	// 			const executorPayload = {
+	// 				will_id: activeWill.id,
+	// 				corporate_executor_id: corporateExecutorData.id,
+	// 				is_primary: true,
+	// 			};
 
-				const { data: executorData, error: executorError } = await apiClient<{
-					id: string;
-				}>("/executors", {
-					method: "POST",
-					body: JSON.stringify(executorPayload),
-				});
+	// 			const { data: executorData, error: executorError } = await apiClient<{
+	// 				id: string;
+	// 			}>("/executors", {
+	// 				method: "POST",
+	// 				body: JSON.stringify(executorPayload),
+	// 			});
 
-				if (executorError || !executorData) {
-					toast.error("Failed to create executor record");
-					return;
-				}
+	// 			if (executorError || !executorData) {
+	// 				toast.error("Failed to create executor record");
+	// 				return;
+	// 			}
 
-				// Set all other executors as non-primary since Legacy In Order is primary
-				setExecutors((prev) =>
-					prev.map((e) => ({
-						...e,
-						isPrimary: false,
-					}))
-				);
+	// 			// Set all other executors as non-primary since Legacy In Order is primary
+	// 			setExecutors((prev) =>
+	// 				prev.map((e) => ({
+	// 					...e,
+	// 					isPrimary: false,
+	// 				}))
+	// 			);
 
-				// Add Legacy In Order to local state
-				const newExecutor: Executor = {
-					id: executorData.id,
-					type: "corporate",
-					name: "Legacy In Order",
-					rc_number: "RC123456", // Replace with actual RC number
-					corporateExecutorId: corporateExecutorData.id,
-					isPrimary: true,
-				};
+	// 			// Add Legacy In Order to local state
+	// 			const newExecutor: Executor = {
+	// 				id: executorData.id,
+	// 				type: "corporate",
+	// 				name: "Legacy In Order",
+	// 				rc_number: "RC123456", // Replace with actual RC number
+	// 				corporateExecutorId: corporateExecutorData.id,
+	// 				isPrimary: true,
+	// 			};
 
-				setExecutors((prev) => [...prev, newExecutor]);
-				toast.success("Legacy In Order added as primary executor");
-			} catch (error) {
-				console.error("Error adding Legacy In Order executor:", error);
-				toast.error("Failed to add Legacy In Order executor");
-			} finally {
-				setIsSubmitting(false);
-			}
-		} else {
-			// Don't immediately change state - let the confirmation dialog handle it
-			// Find Legacy In Order executor and trigger removal confirmation
-			const legacyExecutor = executors.find(
-				(executor) =>
-					executor.type === "corporate" && executor.name === "Legacy In Order"
-			);
+	// 			setExecutors((prev) => [...prev, newExecutor]);
+	// 			toast.success("Legacy In Order added as primary executor");
+	// 		} catch (error) {
+	// 			console.error("Error adding Legacy In Order executor:", error);
+	// 			toast.error("Failed to add Legacy In Order executor");
+	// 		} finally {
+	// 			setIsSubmitting(false);
+	// 		}
+	// 	} else {
+	// 		// Don't immediately change state - let the confirmation dialog handle it
+	// 		// Find Legacy In Order executor and trigger removal confirmation
+	// 		const legacyExecutor = executors.find(
+	// 			(executor) =>
+	// 				executor.type === "corporate" && executor.name === "Legacy In Order"
+	// 		);
 
-			if (legacyExecutor) {
-				// Don't change useLegacyInOrder state here - let the dialog handle it
-				handleRemoveExecutor(legacyExecutor);
-			}
-		}
-	};
+	// 		if (legacyExecutor) {
+	// 			// Don't change useLegacyInOrder state here - let the dialog handle it
+	// 			handleRemoveExecutor(legacyExecutor);
+	// 		}
+	// 	}
+	// };
 
 	// Load executors when component mounts or activeWill changes
 	useEffect(() => {
@@ -700,13 +700,13 @@ export default function ExecutorStep({
 	}, [activeWill?.id]);
 
 	// Update checkbox state based on whether Legacy In Order is already added
-	useEffect(() => {
-		const hasLegacyInOrder = executors.some(
-			(executor) =>
-				executor.type === "corporate" && executor.name === "Legacy In Order"
-		);
-		setUseLegacyInOrder(hasLegacyInOrder);
-	}, [executors]);
+	// useEffect(() => {
+	// 	const hasLegacyInOrder = executors.some(
+	// 		(executor) =>
+	// 			executor.type === "corporate" && executor.name === "Legacy In Order"
+	// 	);
+	// 	setUseLegacyInOrder(hasLegacyInOrder);
+	// }, [executors]);
 
 	// Update parent component when executors change
 	useEffect(() => {
