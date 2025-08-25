@@ -1,12 +1,12 @@
-import { ExternalLink } from "lucide-react";
+//import { ExternalLink } from "lucide-react";
 import { QuestionType } from "../types/will.types";
 import { VideoGuide } from "@/components/ui/video-guide";
 
-interface KnowledgeArticle {
-	title: string;
-	description: string;
-	url: string;
-}
+// interface KnowledgeArticle {
+// 	title: string;
+// 	description: string;
+// 	url: string;
+// }
 
 interface KnowledgeBaseSidebarProps {
 	currentStep: QuestionType;
@@ -83,80 +83,80 @@ const STEP_VIDEOS: Record<
 	},
 };
 
-const KNOWLEDGE_BASE: Record<QuestionType, KnowledgeArticle[]> = {
-	personalInfo: [
-		{
-			title: "Personal Information",
-			description:
-				"Learn about collecting basic personal and address information for your will.",
-			url: "/help/personal-information",
-		},
-	],
-	familyInfo: [
-		{
-			title: "Family Information",
-			description:
-				"Learn about documenting your spouse, children, and pets in your will.",
-			url: "/help/family-information",
-		},
-	],
-	guardians: [
-		{
-			title: "Guardians",
-			description: "Learn about appointing guardians for minor children.",
-			url: "/help/guardians",
-		},
-	],
-	hasAssets: [
-		{
-			title: "Assets",
-			description:
-				"Learn about documenting your assets and how to distribute them.",
-			url: "/help/assets",
-		},
-	],
-	gifts: [
-		{
-			title: "Gifts",
-			description:
-				"Learn about making specific gifts to individuals or organizations.",
-			url: "/help/gifts",
-		},
-	],
-	residuary: [
-		{
-			title: "Residuary Estate",
-			description: "Learn about distributing the remainder of your estate.",
-			url: "/help/residuary-estate",
-		},
-	],
-	executors: [
-		{
-			title: "Executors",
-			description: "Learn about appointing executors to carry out your will.",
-			url: "/help/executors",
-		},
-	],
-	funeralInstructions: [
-		{
-			title: "Funeral Instructions",
-			description: "Learn about documenting your funeral and burial wishes.",
-			url: "/help/funeral-instructions",
-		},
-	],
-	review: [
-		{
-			title: "Review",
-			description: "Learn about reviewing and finalizing your will.",
-			url: "/help/review",
-		},
-	],
-};
+// const KNOWLEDGE_BASE: Record<QuestionType, KnowledgeArticle[]> = {
+// 	personalInfo: [
+// 		{
+// 			title: "Personal Information",
+// 			description:
+// 				"Learn about collecting basic personal and address information for your will.",
+// 			url: "/help/personal-information",
+// 		},
+// 	],
+// 	familyInfo: [
+// 		{
+// 			title: "Family Information",
+// 			description:
+// 				"Learn about documenting your spouse, children, and pets in your will.",
+// 			url: "/help/family-information",
+// 		},
+// 	],
+// 	guardians: [
+// 		{
+// 			title: "Guardians",
+// 			description: "Learn about appointing guardians for minor children.",
+// 			url: "/help/guardians",
+// 		},
+// 	],
+// 	hasAssets: [
+// 		{
+// 			title: "Assets",
+// 			description:
+// 				"Learn about documenting your assets and how to distribute them.",
+// 			url: "/help/assets",
+// 		},
+// 	],
+// 	gifts: [
+// 		{
+// 			title: "Gifts",
+// 			description:
+// 				"Learn about making specific gifts to individuals or organizations.",
+// 			url: "/help/gifts",
+// 		},
+// 	],
+// 	residuary: [
+// 		{
+// 			title: "Residuary Estate",
+// 			description: "Learn about distributing the remainder of your estate.",
+// 			url: "/help/residuary-estate",
+// 		},
+// 	],
+// 	executors: [
+// 		{
+// 			title: "Executors",
+// 			description: "Learn about appointing executors to carry out your will.",
+// 			url: "/help/executors",
+// 		},
+// 	],
+// 	funeralInstructions: [
+// 		{
+// 			title: "Funeral Instructions",
+// 			description: "Learn about documenting your funeral and burial wishes.",
+// 			url: "/help/funeral-instructions",
+// 		},
+// 	],
+// 	review: [
+// 		{
+// 			title: "Review",
+// 			description: "Learn about reviewing and finalizing your will.",
+// 			url: "/help/review",
+// 		},
+// 	],
+// };
 
 export default function KnowledgeBaseSidebar({
 	currentStep,
 }: KnowledgeBaseSidebarProps) {
-	const articles = KNOWLEDGE_BASE[currentStep] || [];
+	// const articles = KNOWLEDGE_BASE[currentStep] || [];
 	const videoContent = STEP_VIDEOS[currentStep] || STEP_VIDEOS.personalInfo; // Fallback to personal info
 
 	return (
@@ -174,7 +174,7 @@ export default function KnowledgeBaseSidebar({
 				/>
 			</div>
 
-			<h3
+			{/* <h3
 				className="text-black font-semibold mb-4"
 				style={{ fontSize: "1rem" }}
 			>
@@ -206,7 +206,7 @@ export default function KnowledgeBaseSidebar({
 					Browse All Articles
 					<ExternalLink className="ml-1 h-3 w-3" />
 				</a>
-			</div>
+			</div> */}
 		</div>
 	);
 }
