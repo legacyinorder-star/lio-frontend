@@ -108,7 +108,7 @@ export default function PersonalInfoStep({
 				city: activeWill.owner.city || "",
 				state: activeWill.owner.state || "",
 				postCode: activeWill.owner.postCode || "",
-				country: activeWill.owner.country || "",
+				country: "United Kingdom", // Always set to UK and disable
 			};
 		}
 
@@ -121,7 +121,7 @@ export default function PersonalInfoStep({
 			city: data.address?.city || "",
 			state: data.address?.state || "",
 			postCode: data.address?.postCode || "",
-			country: data.address?.country || "",
+			country: "United Kingdom", // Always set to UK and disable
 		};
 	};
 
@@ -148,7 +148,7 @@ export default function PersonalInfoStep({
 					city: formData.city,
 					state: formData.state,
 					postCode: formData.postCode,
-					country: formData.country,
+					country: "United Kingdom", // Always set to UK
 				},
 			};
 
@@ -169,7 +169,7 @@ export default function PersonalInfoStep({
 					city: formData.city,
 					state: formData.state,
 					post_code: formData.postCode,
-					country: formData.country,
+					country: "United Kingdom", // Always set to UK
 				}),
 			});
 
@@ -195,7 +195,7 @@ export default function PersonalInfoStep({
 							city: formData.city,
 							state: formData.state,
 							postCode: formData.postCode,
-							country: formData.country,
+							country: "United Kingdom", // Always set to UK
 						},
 					});
 				}
@@ -480,25 +480,27 @@ export default function PersonalInfoStep({
 												<Select
 													options={countryOptions}
 													value={countryOptions.find(
-														(option) => option.value === field.value
+														(option) => option.value === "United Kingdom"
 													)}
 													onChange={(option) =>
-														field.onChange(option?.value || "")
+														field.onChange("United Kingdom")
 													}
 													placeholder="Select country"
 													className="w-full"
+													isDisabled={true}
 													styles={{
 														control: (provided) => ({
 															...provided,
 															height: "48px",
 															borderRadius: "8px",
 															border: "1px solid #d1d5db",
+															backgroundColor: "#f9fafb",
 															"&:hover": {
-																borderColor: "#3b82f6",
+																borderColor: "#d1d5db",
 															},
 															"&:focus-within": {
-																borderColor: "#3b82f6",
-																boxShadow: "0 0 0 2px rgba(59, 130, 246, 0.1)",
+																borderColor: "#d1d5db",
+																boxShadow: "none",
 															},
 														}),
 														option: (provided, state) => ({

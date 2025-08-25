@@ -165,7 +165,7 @@ export default function KnowledgeBaseSidebar({
 			style={{ backgroundColor: "#EDFBF6" }}
 		>
 			{/* Video Section */}
-			<div className="mb-6">
+			<div className="mb-0">
 				<VideoGuide
 					src={videoContent.src}
 					poster={videoContent.poster}
