@@ -24,7 +24,9 @@ import { useNavigate } from "react-router-dom";
 
 const personalInfoSchema = z.object({
 	firstName: z.string().min(2, "First name must be at least 2 characters"),
+	middleName: z.string().optional(),
 	lastName: z.string().min(2, "Last name must be at least 2 characters"),
+	dateOfBirth: z.string().min(1, "Date of birth is required"),
 	address: z.string().min(1, "Address is required"),
 	city: z.string().min(1, "City is required"),
 	state: z.string().min(1, "Town/Borough is required"),
@@ -53,7 +55,9 @@ interface OptionType {
 interface PersonalInfoStepProps extends StepProps {
 	willOwnerData?: {
 		firstName: string;
+		middleName?: string;
 		lastName: string;
+		dateOfBirth: string;
 		address: string;
 		city: string;
 		state: string;
@@ -62,7 +66,9 @@ interface PersonalInfoStepProps extends StepProps {
 	} | null;
 	onWillOwnerDataSave?: (data: {
 		firstName: string;
+		middleName?: string;
 		lastName: string;
+		dateOfBirth: string;
 		address: string;
 		city: string;
 		state: string;
@@ -95,7 +101,9 @@ export default function PersonalInfoStep({
 		if (activeWill?.owner) {
 			return {
 				firstName: activeWill.owner.firstName || "",
+				middleName: activeWill.owner.middleName || "",
 				lastName: activeWill.owner.lastName || "",
+				dateOfBirth: activeWill.owner.dateOfBirth || "",
 				address: activeWill.owner.address || "",
 				city: activeWill.owner.city || "",
 				state: activeWill.owner.state || "",
@@ -106,7 +114,9 @@ export default function PersonalInfoStep({
 
 		return {
 			firstName: data.firstName || "",
+			middleName: data.middleName || "",
 			lastName: data.lastName || "",
+			dateOfBirth: data.dateOfBirth || "",
 			address: data.address?.address || "",
 			city: data.address?.city || "",
 			state: data.address?.state || "",
@@ -130,7 +140,9 @@ export default function PersonalInfoStep({
 			const updatedData = {
 				...data,
 				firstName: formData.firstName,
+				middleName: formData.middleName,
 				lastName: formData.lastName,
+				dateOfBirth: formData.dateOfBirth,
 				address: {
 					address: formData.address,
 					city: formData.city,
@@ -150,7 +162,9 @@ export default function PersonalInfoStep({
 				body: JSON.stringify({
 					will_id: activeWill?.id || null, // Include will_id if it exists, otherwise null
 					first_name: formData.firstName,
+					middle_name: formData.middleName,
 					last_name: formData.lastName,
+					date_of_birth: formData.dateOfBirth,
 					address: formData.address,
 					city: formData.city,
 					state: formData.state,
@@ -174,7 +188,9 @@ export default function PersonalInfoStep({
 						owner: {
 							...activeWill.owner,
 							firstName: formData.firstName,
+							middleName: formData.middleName,
 							lastName: formData.lastName,
+							dateOfBirth: formData.dateOfBirth,
 							address: formData.address,
 							city: formData.city,
 							state: formData.state,
@@ -254,7 +270,7 @@ export default function PersonalInfoStep({
 					<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
 						{/* Personal Information Section */}
 						<div className="space-y-4">
-							<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+							<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 								<FormField
 									control={form.control}
 									name="firstName"
@@ -266,6 +282,26 @@ export default function PersonalInfoStep({
 											<FormControl>
 												<Input
 													placeholder="Enter your first name"
+													{...field}
+													className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+												/>
+											</FormControl>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+
+								<FormField
+									control={form.control}
+									name="middleName"
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel className="text-sm font-medium text-gray-700">
+												Middle Name
+											</FormLabel>
+											<FormControl>
+												<Input
+													placeholder="Enter your middle name"
 													{...field}
 													className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 												/>
@@ -295,6 +331,26 @@ export default function PersonalInfoStep({
 									)}
 								/>
 							</div>
+
+							<FormField
+								control={form.control}
+								name="dateOfBirth"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel className="text-sm font-medium text-gray-700">
+											Date of Birth *
+										</FormLabel>
+										<FormControl>
+											<Input
+												type="date"
+												{...field}
+												className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+											/>
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
 						</div>
 
 						{/* Address Section */}

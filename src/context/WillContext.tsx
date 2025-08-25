@@ -16,7 +16,9 @@ export interface Address {
 export interface WillPersonalData {
 	id?: string;
 	firstName: string;
+	middleName?: string;
 	lastName: string;
+	dateOfBirth?: string;
 	maritalStatus: string;
 	address: string;
 	city: string;

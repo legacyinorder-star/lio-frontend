@@ -151,7 +151,9 @@ export interface FuneralInstructions {
 // Main Form Data Type
 export interface WillFormData {
 	firstName: string;
+	middleName?: string;
 	lastName: string;
+	dateOfBirth?: string;
 	phone: string;
 	address: Address;
 	hasSpouse: boolean;
