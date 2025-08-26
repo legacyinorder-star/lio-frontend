@@ -2,7 +2,7 @@ import { Link, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
 	LogOut,
-	Settings,
+	// Settings,
 	UserCog,
 	MessageCircleQuestion,
 	Bell,
@@ -450,7 +450,10 @@ export function DashboardLayout() {
 											asChild
 											className="cursor-pointer hover:bg-[#F5F5F5]"
 										>
-											<Link to="/admin/dashboard" className="flex items-center">
+											<Link
+												to="/admin/dashboard"
+												className="flex items-center w-full"
+											>
 												<UserCog className="mr-2 h-4 w-4" />
 												<span>Admin Dashboard</span>
 											</Link>
@@ -458,20 +461,20 @@ export function DashboardLayout() {
 										<DropdownMenuSeparator />
 									</>
 								)}
-								<DropdownMenuItem
+								{/* <DropdownMenuItem
 									asChild
 									className="cursor-pointer hover:bg-[#F5F5F5]"
 								>
-									<Link to="/app/settings" className="flex items-center">
+									 <Link to="/app/settings" className="flex items-center">
 										<Settings className="mr-2 h-4 w-4" />
 										<span>Settings</span>
-									</Link>
-								</DropdownMenuItem>
+									</Link> 
+								</DropdownMenuItem> */}
 								<DropdownMenuItem
 									asChild
 									className="cursor-pointer hover:bg-[#F5F5F5]"
 								>
-									<Link to="/logout" className="flex items-center">
+									<Link to="/logout" className="flex items-center w-full">
 										<LogOut className="mr-2 h-4 w-4" />
 										<span>Logout</span>
 									</Link>

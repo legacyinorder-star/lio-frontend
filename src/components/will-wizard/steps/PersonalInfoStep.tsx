@@ -22,6 +22,17 @@ import Select from "react-select";
 import countryRegionData from "country-region-data/data.json";
 import { useNavigate } from "react-router-dom";
 
+// Calculate the date that would make someone exactly 18 years old today
+const getEighteenYearsAgoDate = () => {
+	const today = new Date();
+	const eighteenYearsAgo = new Date(
+		today.getFullYear() - 18,
+		today.getMonth(),
+		today.getDate()
+	);
+	return eighteenYearsAgo.toISOString().split("T")[0];
+};
+
 const personalInfoSchema = z.object({
 	firstName: z.string().min(2, "First name must be at least 2 characters"),
 	middleName: z.string().optional(),
@@ -44,7 +55,7 @@ const personalInfoSchema = z.object({
 					: age;
 
 			return adjustedAge >= 18;
-		}, "You must be at least 18 years old to create a will"),
+		}, "You must be at least 18 years old to create a Will"),
 	address: z.string().min(1, "Address is required"),
 	city: z.string().min(1, "City is required"),
 	state: z.string().min(1, "Town/Borough is required"),
@@ -117,13 +128,13 @@ export default function PersonalInfoStep({
 
 	// Determine the initial values for the form
 	const getInitialValues = () => {
-		// Priority: activeWill > data prop > empty strings
+		// Priority: activeWill > data prop > default 18-year-ago date
 		if (activeWill?.owner) {
 			return {
 				firstName: activeWill.owner.firstName || "",
 				middleName: activeWill.owner.middleName || "",
 				lastName: activeWill.owner.lastName || "",
-				dateOfBirth: activeWill.owner.dateOfBirth || "",
+				dateOfBirth: activeWill.owner.dateOfBirth || getEighteenYearsAgoDate(),
 				address: activeWill.owner.address || "",
 				city: activeWill.owner.city || "",
 				state: activeWill.owner.state || "",
@@ -136,7 +147,7 @@ export default function PersonalInfoStep({
 			firstName: data.firstName || "",
 			middleName: data.middleName || "",
 			lastName: data.lastName || "",
-			dateOfBirth: data.dateOfBirth || "",
+			dateOfBirth: data.dateOfBirth || getEighteenYearsAgoDate(),
 			address: data.address?.address || "",
 			city: data.address?.city || "",
 			state: data.address?.state || "",
@@ -404,6 +415,7 @@ export default function PersonalInfoStep({
 											<FormControl>
 												<Input
 													type="date"
+													max={getEighteenYearsAgoDate()}
 													{...field}
 													className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
 												/>

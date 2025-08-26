@@ -128,9 +128,18 @@ export function mapWillDataFromAPI(apiData: unknown): WillData {
 				((converted.owner as Record<string, unknown>)?.firstName as string) ||
 				((converted.owner as Record<string, unknown>)?.first_name as string) ||
 				"",
+			middleName:
+				((converted.owner as Record<string, unknown>)?.middleName as string) ||
+				((converted.owner as Record<string, unknown>)?.middle_name as string) ||
+				"",
 			lastName:
 				((converted.owner as Record<string, unknown>)?.lastName as string) ||
 				((converted.owner as Record<string, unknown>)?.last_name as string) ||
+				"",
+			dateOfBirth:
+				((converted.owner as Record<string, unknown>)?.dateOfBirth as string) ||
+				((converted.owner as Record<string, unknown>)
+					?.date_of_birth as string) ||
 				"",
 			maritalStatus:
 				((converted.owner as Record<string, unknown>)
