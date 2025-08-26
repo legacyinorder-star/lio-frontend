@@ -110,6 +110,8 @@ export default function PersonalInfoStep({
 	data,
 	onUpdate,
 	onNext,
+	willOwnerData,
+	onWillOwnerDataSave,
 }: PersonalInfoStepProps) {
 	const { activeWill, setActiveWill } = useWill();
 	const [isSubmitting, setIsSubmitting] = useState(false);
@@ -128,7 +130,21 @@ export default function PersonalInfoStep({
 
 	// Determine the initial values for the form
 	const getInitialValues = () => {
-		// Priority: activeWill > data prop > default 18-year-ago date
+		// Priority: willOwnerData > activeWill > data prop > default 18-year-ago date
+		if (willOwnerData) {
+			return {
+				firstName: willOwnerData.firstName || "",
+				middleName: willOwnerData.middleName || "",
+				lastName: willOwnerData.lastName || "",
+				dateOfBirth: willOwnerData.dateOfBirth || getEighteenYearsAgoDate(),
+				address: willOwnerData.address || "",
+				city: willOwnerData.city || "",
+				state: willOwnerData.state || "",
+				postCode: willOwnerData.postCode || "",
+				country: "United Kingdom", // Always set to UK and disable
+			};
+		}
+
 		if (activeWill?.owner) {
 			return {
 				firstName: activeWill.owner.firstName || "",
@@ -163,6 +179,44 @@ export default function PersonalInfoStep({
 		defaultValues: initialValues,
 	});
 
+	// Pre-fill form when willOwnerData changes
+	useEffect(() => {
+		if (willOwnerData) {
+			form.setValue("firstName", willOwnerData.firstName || "", {
+				shouldValidate: false,
+			});
+			form.setValue("middleName", willOwnerData.middleName || "", {
+				shouldValidate: false,
+			});
+			form.setValue("lastName", willOwnerData.lastName || "", {
+				shouldValidate: false,
+			});
+			form.setValue(
+				"dateOfBirth",
+				willOwnerData.dateOfBirth || getEighteenYearsAgoDate(),
+				{
+					shouldValidate: false,
+				}
+			);
+			form.setValue("address", willOwnerData.address || "", {
+				shouldValidate: false,
+			});
+			form.setValue("city", willOwnerData.city || "", {
+				shouldValidate: false,
+			});
+			form.setValue("state", willOwnerData.state || "", {
+				shouldValidate: false,
+			});
+			form.setValue("postCode", willOwnerData.postCode || "", {
+				shouldValidate: false,
+			});
+			form.setValue("country", "United Kingdom", {
+				shouldValidate: false,
+			});
+			form.trigger();
+		}
+	}, [willOwnerData, form]);
+
 	const onSubmit = async (formData: PersonalInfoData) => {
 		setIsSubmitting(true);
 
@@ -185,54 +239,76 @@ export default function PersonalInfoStep({
 
 			onUpdate(updatedData);
 
-			// Always submit to /will_owner endpoint
-			const { data: ownerResponse, error: ownerError } = await apiClient<{
-				will_id?: string;
-			}>("/will_owner", {
-				method: "POST",
-				body: JSON.stringify({
-					will_id: activeWill?.id || null, // Include will_id if it exists, otherwise null
-					first_name: formData.firstName,
-					middle_name: formData.middleName,
-					last_name: formData.lastName,
-					date_of_birth: formData.dateOfBirth,
+			// If we have the new save function, use it
+			if (onWillOwnerDataSave) {
+				const success = await onWillOwnerDataSave({
+					firstName: formData.firstName,
+					middleName: formData.middleName,
+					lastName: formData.lastName,
+					dateOfBirth: formData.dateOfBirth,
 					address: formData.address,
 					city: formData.city,
 					state: formData.state,
-					post_code: formData.postCode,
-					country: "United Kingdom", // Always set to UK
-				}),
-			});
+					postCode: formData.postCode,
+					country: "United Kingdom",
+				});
 
-			if (ownerError) {
-				console.error("Error creating/updating will owner:", ownerError);
-				toast.error("Failed to save personal information");
-				return;
-			}
-
-			// If this was a new will and we got a response with will_id, update the active will
-			if (!activeWill?.id && ownerResponse?.will_id) {
-				if (setActiveWill && activeWill) {
-					setActiveWill({
-						...activeWill,
-						id: ownerResponse.will_id,
-						owner: {
-							...activeWill.owner,
-							firstName: formData.firstName,
-							middleName: formData.middleName,
-							lastName: formData.lastName,
-							dateOfBirth: formData.dateOfBirth,
-							address: formData.address,
-							city: formData.city,
-							state: formData.state,
-							postCode: formData.postCode,
-							country: "United Kingdom", // Always set to UK
-						},
-					});
+				if (!success) {
+					toast.error("Failed to save personal information. Please try again.");
+					return;
 				}
-				toast.success("Will created successfully!");
-			} else {
+
 				toast.success("Personal information saved successfully!");
+			} else {
+				// Fall back to original approach
+				const { data: ownerResponse, error: ownerError } = await apiClient<{
+					will_id?: string;
+				}>("/will_owner", {
+					method: "POST",
+					body: JSON.stringify({
+						will_id: activeWill?.id || null,
+						first_name: formData.firstName,
+						middle_name: formData.middleName,
+						last_name: formData.lastName,
+						date_of_birth: formData.dateOfBirth,
+						address: formData.address,
+						city: formData.city,
+						state: formData.state,
+						post_code: formData.postCode,
+						country: "United Kingdom",
+					}),
+				});
+
+				if (ownerError) {
+					console.error("Error creating/updating will owner:", ownerError);
+					toast.error("Failed to save personal information");
+					return;
+				}
+
+				// If this was a new will and we got a response with will_id, update the active will
+				if (!activeWill?.id && ownerResponse?.will_id) {
+					if (setActiveWill && activeWill) {
+						setActiveWill({
+							...activeWill,
+							id: ownerResponse.will_id,
+							owner: {
+								...activeWill.owner,
+								firstName: formData.firstName,
+								middleName: formData.middleName,
+								lastName: formData.lastName,
+								dateOfBirth: formData.dateOfBirth,
+								address: formData.address,
+								city: formData.city,
+								state: formData.state,
+								postCode: formData.postCode,
+								country: "United Kingdom",
+							},
+						});
+					}
+					toast.success("Will created successfully!");
+				} else {
+					toast.success("Personal information saved successfully!");
+				}
 			}
 
 			// Proceed to next step
