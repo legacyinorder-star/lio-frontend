@@ -26,7 +26,25 @@ const personalInfoSchema = z.object({
 	firstName: z.string().min(2, "First name must be at least 2 characters"),
 	middleName: z.string().optional(),
 	lastName: z.string().min(2, "Last name must be at least 2 characters"),
-	dateOfBirth: z.string().min(1, "Date of birth is required"),
+	dateOfBirth: z
+		.string()
+		.min(1, "Date of birth is required")
+		.refine((date) => {
+			if (!date) return false;
+			const birthDate = new Date(date);
+			const today = new Date();
+			const age = today.getFullYear() - birthDate.getFullYear();
+			const monthDiff = today.getMonth() - birthDate.getMonth();
+
+			// Adjust age if birthday hasn't occurred this year
+			const adjustedAge =
+				monthDiff < 0 ||
+				(monthDiff === 0 && today.getDate() < birthDate.getDate())
+					? age - 1
+					: age;
+
+			return adjustedAge >= 18;
+		}, "You must be at least 18 years old to create a will"),
 	address: z.string().min(1, "Address is required"),
 	city: z.string().min(1, "City is required"),
 	state: z.string().min(1, "Town/Borough is required"),
@@ -269,8 +287,8 @@ export default function PersonalInfoStep({
 				<Form {...form}>
 					<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
 						{/* Personal Information Section */}
-						<div className="space-y-4">
-							<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+						<div className="space-y-4 mb-[2.45rem]">
+							<div className="space-y-4 mt-[-0.5rem]">
 								<FormField
 									control={form.control}
 									name="firstName"
@@ -283,7 +301,7 @@ export default function PersonalInfoStep({
 												<Input
 													placeholder="Enter your first name"
 													{...field}
-													className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+													className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary "
 												/>
 											</FormControl>
 											<FormMessage />
@@ -303,7 +321,7 @@ export default function PersonalInfoStep({
 												<Input
 													placeholder="Enter your middle name"
 													{...field}
-													className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+													className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary "
 												/>
 											</FormControl>
 											<FormMessage />
@@ -323,59 +341,54 @@ export default function PersonalInfoStep({
 												<Input
 													placeholder="Enter your last name"
 													{...field}
-													className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+													className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary"
 												/>
 											</FormControl>
 											<FormMessage />
 										</FormItem>
 									)}
 								/>
-							</div>
 
-							<FormField
-								control={form.control}
-								name="dateOfBirth"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel className="text-sm font-medium text-gray-700">
-											Date of Birth *
-										</FormLabel>
-										<FormControl>
-											<Input
-												type="date"
-												{...field}
-												className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-											/>
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-						</div>
+								<FormField
+									control={form.control}
+									name="dateOfBirth"
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel className="text-sm font-medium text-gray-700">
+												Date of Birth *
+											</FormLabel>
+											<FormControl>
+												<Input
+													type="date"
+													{...field}
+													className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+												/>
+											</FormControl>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
 
-						{/* Address Section */}
-						<div className="space-y-4">
-							<FormField
-								control={form.control}
-								name="address"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel className="text-sm font-medium text-gray-700">
-											Street Address *
-										</FormLabel>
-										<FormControl>
-											<Input
-												placeholder="Enter your street address"
-												{...field}
-												className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-											/>
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
+								<FormField
+									control={form.control}
+									name="address"
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel className="text-sm font-medium text-gray-700">
+												Street Address *
+											</FormLabel>
+											<FormControl>
+												<Input
+													placeholder="Enter your street address"
+													{...field}
+													className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary "
+												/>
+											</FormControl>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
 
-							<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 								<FormField
 									control={form.control}
 									name="city"
@@ -388,7 +401,7 @@ export default function PersonalInfoStep({
 												<Input
 													placeholder="Enter your city"
 													{...field}
-													className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+													className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary "
 												/>
 											</FormControl>
 											<FormMessage />
@@ -422,19 +435,19 @@ export default function PersonalInfoStep({
 															borderRadius: "8px",
 															border: "1px solid #d1d5db",
 															"&:hover": {
-																borderColor: "#3b82f6",
+																borderColor: "#173c37",
 															},
 															"&:focus-within": {
-																borderColor: "#3b82f6",
-																boxShadow: "0 0 0 2px rgba(59, 130, 246, 0.1)",
+																borderColor: "#173c37",
+																boxShadow: "0 0 0 2px rgba(23, 60, 55, 0.1)",
 															},
 														}),
 														option: (provided, state) => ({
 															...provided,
 															backgroundColor: state.isSelected
-																? "#3b82f6"
+																? "#173c37"
 																: state.isFocused
-																? "#eff6ff"
+																? "rgba(23, 60, 55, 0.1)"
 																: "white",
 															color: state.isSelected ? "white" : "#374151",
 														}),
@@ -445,9 +458,7 @@ export default function PersonalInfoStep({
 										</FormItem>
 									)}
 								/>
-							</div>
 
-							<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 								<FormField
 									control={form.control}
 									name="postCode"
@@ -460,7 +471,7 @@ export default function PersonalInfoStep({
 												<Input
 													placeholder="Enter postal/ZIP code"
 													{...field}
-													className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+													className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary "
 												/>
 											</FormControl>
 											<FormMessage />
