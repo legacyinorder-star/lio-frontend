@@ -84,6 +84,8 @@ export default function GuardiansStep({
 	const { activeWill, setActiveWill } = useWill();
 	const { refetch } = useWillData();
 	const [guardianDialogOpen, setGuardianDialogOpen] = useState(false);
+	const [createGuardianDialogOpen, setCreateGuardianDialogOpen] =
+		useState(false);
 	const [editingGuardian, setEditingGuardian] = useState<Guardian | null>(null);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [isDeleting, setIsDeleting] = useState(false);
@@ -238,6 +240,17 @@ export default function GuardiansStep({
 		}
 	};
 
+	const resetGuardianForm = () => {
+		setGuardianForm({
+			id: "",
+			firstName: "",
+			lastName: "",
+			relationship: "",
+			isPrimary: false,
+		});
+		setEditingGuardian(null);
+	};
+
 	const handleGuardianFormChange =
 		(field: keyof Guardian) => (e: React.ChangeEvent<HTMLInputElement>) => {
 			setGuardianForm((prev) => ({
@@ -348,91 +361,111 @@ export default function GuardiansStep({
 				// Refresh beneficiary lists
 				await refetch();
 			} else {
-				// Creating new guardian - send POST requests
+				// Creating new guardian - send POST requests with proper error handling
+				let createdPersonId: string | null = null;
 
-				// First create the guardian person record
-				const { data: personData, error: personError } =
-					await apiClient<ApiPersonResponse>("/people", {
-						method: "POST",
-						body: JSON.stringify({
-							will_id: activeWill.id,
-							first_name: guardianForm.firstName,
-							last_name: guardianForm.lastName,
-							relationship_id: guardianForm.relationship,
-							is_minor: false, // Guardians are never minors
-						}),
-					});
+				try {
+					// First create the guardian person record
+					const { data: personData, error: personError } =
+						await apiClient<ApiPersonResponse>("/people", {
+							method: "POST",
+							body: JSON.stringify({
+								will_id: activeWill.id,
+								first_name: guardianForm.firstName,
+								last_name: guardianForm.lastName,
+								relationship_id: guardianForm.relationship,
+								is_minor: false, // Guardians are never minors
+							}),
+						});
 
-				if (personError || !personData) {
-					toast.error("Failed to save guardian information");
-					return;
-				}
+					if (personError || !personData) {
+						toast.error("Failed to save guardian information");
+						return;
+					}
 
-				// Then create the guardianship record
-				const { data: guardianshipData, error: guardianshipError } =
-					await apiClient("/guardianship", {
-						method: "POST",
-						body: JSON.stringify({
-							will_id: activeWill.id,
-							guardian_id: personData.id,
-							is_primary: guardianForm.isPrimary,
-						}),
-					});
+					createdPersonId = personData.id;
 
-				if (guardianshipError || !guardianshipData) {
-					toast.error("Failed to save guardianship information");
-					return;
-				}
+					// Then create the guardianship record
+					const { data: guardianshipData, error: guardianshipError } =
+						await apiClient("/guardianship", {
+							method: "POST",
+							body: JSON.stringify({
+								will_id: activeWill.id,
+								guardian_id: personData.id,
+								is_primary: guardianForm.isPrimary,
+							}),
+						});
 
-				const newGuardian: Guardian = {
-					id: personData.id,
-					firstName: personData.first_name,
-					lastName: personData.last_name,
-					relationship:
-						getFormattedRelationshipNameById(guardianForm.relationship) ||
-						guardianForm.relationship,
-					isPrimary: guardianForm.isPrimary,
-				};
-
-				const currentGuardians = data.guardians || [];
-				const updatedGuardians = [...currentGuardians, newGuardian];
-
-				// If this is a primary guardian, ensure no other primary exists
-				if (guardianForm.isPrimary) {
-					updatedGuardians.forEach((g) => {
-						if (g.id !== newGuardian.id) {
-							g.isPrimary = false;
+					if (guardianshipError || !guardianshipData) {
+						// Rollback: Delete the created person record
+						if (createdPersonId) {
+							await apiClient(`/people/${createdPersonId}`, {
+								method: "DELETE",
+							});
 						}
-					});
+						toast.error("Failed to save guardianship information");
+						return;
+					}
+
+					const newGuardian: Guardian = {
+						id: personData.id,
+						firstName: personData.first_name,
+						lastName: personData.last_name,
+						relationship:
+							getFormattedRelationshipNameById(guardianForm.relationship) ||
+							guardianForm.relationship,
+						isPrimary: guardianForm.isPrimary,
+					};
+
+					const currentGuardians = data.guardians || [];
+					const updatedGuardians = [...currentGuardians, newGuardian];
+
+					// If this is a primary guardian, ensure no other primary exists
+					if (guardianForm.isPrimary) {
+						updatedGuardians.forEach((g) => {
+							if (g.id !== newGuardian.id) {
+								g.isPrimary = false;
+							}
+						});
+					}
+
+					onUpdate({ guardians: updatedGuardians });
+					updateActiveWillGuardians(updatedGuardians);
+
+					// If this was created from the pet guardian flow, set it as the pet guardian
+					if (createGuardianDialogOpen) {
+						setPetGuardianId(newGuardian.id);
+						// Update form data with the new pet guardian ID
+						onUpdate({ petGuardianId: newGuardian.id });
+						setCreateGuardianDialogOpen(false);
+					}
+
+					toast.success("Guardian saved successfully");
+
+					// Refresh beneficiary lists
+					await refetch();
+				} catch (error) {
+					// Rollback: Delete the created person record if it exists
+					if (createdPersonId) {
+						try {
+							await apiClient(`/people/${createdPersonId}`, {
+								method: "DELETE",
+							});
+						} catch (rollbackError) {
+							console.error(
+								"Failed to rollback created person:",
+								rollbackError
+							);
+						}
+					}
+					throw error; // Re-throw to be caught by outer catch
 				}
-
-				onUpdate({ guardians: updatedGuardians });
-				updateActiveWillGuardians(updatedGuardians);
-
-				// If this was created from the pet guardian flow, set it as the pet guardian
-				if (guardianDialogOpen) {
-					setPetGuardianId(newGuardian.id);
-					// Update form data with the new pet guardian ID
-					onUpdate({ petGuardianId: newGuardian.id });
-					setGuardianDialogOpen(false);
-				}
-
-				toast.success("Guardian saved successfully");
-
-				// Refresh beneficiary lists
-				await refetch();
 			}
 
-			// Reset form and close dialog
-			setGuardianForm({
-				id: "",
-				firstName: "",
-				lastName: "",
-				relationship: "",
-				isPrimary: false,
-			});
-			setEditingGuardian(null);
+			// Reset form and close dialogs
+			resetGuardianForm();
 			setGuardianDialogOpen(false);
+			setCreateGuardianDialogOpen(false);
 		} catch (error) {
 			console.error("Error saving guardian:", error);
 			toast.error("An error occurred while saving guardian information");
@@ -677,21 +710,19 @@ export default function GuardiansStep({
 					{/* Add Guardian Button - Full width like Add Child */}
 					<Dialog
 						open={guardianDialogOpen}
-						onOpenChange={isSubmitting ? undefined : setGuardianDialogOpen}
+						onOpenChange={(open) => {
+							if (!isSubmitting) {
+								setGuardianDialogOpen(open);
+								if (!open) {
+									resetGuardianForm();
+								}
+							}
+						}}
 					>
 						<DialogTrigger asChild>
 							<Button
 								variant="outline"
-								onClick={() => {
-									setGuardianForm({
-										id: "",
-										firstName: "",
-										lastName: "",
-										relationship: "",
-										isPrimary: false,
-									});
-									setEditingGuardian(null);
-								}}
+								onClick={resetGuardianForm}
 								className="w-full h-16 bg-white text-[#050505] rounded-[0.25rem] font-medium"
 								disabled={isLoadingGuardians}
 							>
@@ -762,7 +793,10 @@ export default function GuardiansStep({
 								<div className="flex justify-end space-x-2">
 									<Button
 										variant="outline"
-										onClick={() => setGuardianDialogOpen(false)}
+										onClick={() => {
+											setGuardianDialogOpen(false);
+											resetGuardianForm();
+										}}
 										className="cursor-pointer"
 										disabled={isSubmitting}
 									>
@@ -965,11 +999,20 @@ export default function GuardiansStep({
 
 							<div className="border-t pt-4">
 								<Dialog
-									open={guardianDialogOpen}
-									onOpenChange={setGuardianDialogOpen}
+									open={createGuardianDialogOpen}
+									onOpenChange={(open) => {
+										setCreateGuardianDialogOpen(open);
+										if (!open) {
+											resetGuardianForm();
+										}
+									}}
 								>
 									<DialogTrigger asChild>
-										<Button variant="outline" className="cursor-pointer w-full">
+										<Button
+											variant="outline"
+											className="cursor-pointer w-full"
+											onClick={resetGuardianForm}
+										>
 											<Plus className="h-4 w-4 mr-2" />
 											Create New Guardian
 										</Button>
@@ -997,7 +1040,15 @@ export default function GuardiansStep({
 				</Dialog>
 
 				{/* Create Guardian Modal */}
-				<Dialog open={guardianDialogOpen} onOpenChange={setGuardianDialogOpen}>
+				<Dialog
+					open={createGuardianDialogOpen}
+					onOpenChange={(open) => {
+						setCreateGuardianDialogOpen(open);
+						if (!open) {
+							resetGuardianForm();
+						}
+					}}
+				>
 					<DialogContent className="bg-white max-w-2xl">
 						<DialogHeader>
 							<DialogTitle>Create New Guardian</DialogTitle>
@@ -1011,6 +1062,7 @@ export default function GuardiansStep({
 										value={guardianForm.firstName}
 										onChange={handleGuardianFormChange("firstName")}
 										placeholder="First name"
+										disabled={isSubmitting}
 									/>
 								</div>
 								<div className="space-y-2">
@@ -1020,6 +1072,7 @@ export default function GuardiansStep({
 										value={guardianForm.lastName}
 										onChange={handleGuardianFormChange("lastName")}
 										placeholder="Last name"
+										disabled={isSubmitting}
 									/>
 								</div>
 							</div>
@@ -1034,13 +1087,17 @@ export default function GuardiansStep({
 										}))
 									}
 									placeholder="Select relationship"
+									disabled={isSubmitting}
 								/>
 							</div>
 						</div>
 						<div className="flex justify-end space-x-2">
 							<Button
 								variant="outline"
-								onClick={() => setGuardianDialogOpen(false)}
+								onClick={() => {
+									setCreateGuardianDialogOpen(false);
+									resetGuardianForm();
+								}}
 								disabled={isSubmitting}
 								className="cursor-pointer"
 							>
