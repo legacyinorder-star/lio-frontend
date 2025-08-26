@@ -75,7 +75,7 @@ interface PersonalInfoStepProps extends StepProps {
 		firstName: string;
 		middleName?: string;
 		lastName: string;
-		dateOfBirth: string;
+		dateOfBirth?: string;
 		address: string;
 		city: string;
 		state: string;
@@ -86,7 +86,7 @@ interface PersonalInfoStepProps extends StepProps {
 		firstName: string;
 		middleName?: string;
 		lastName: string;
-		dateOfBirth: string;
+		dateOfBirth?: string;
 		address: string;
 		city: string;
 		state: string;
@@ -537,9 +537,7 @@ export default function PersonalInfoStep({
 													value={countryOptions.find(
 														(option) => option.value === "United Kingdom"
 													)}
-													onChange={(option) =>
-														field.onChange("United Kingdom")
-													}
+													onChange={() => field.onChange("United Kingdom")}
 													placeholder="Select country"
 													className="w-full"
 													isDisabled={true}
