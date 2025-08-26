@@ -230,8 +230,9 @@ export default function FuneralInstructionsStep({
 				Funeral Wishes
 			</div>
 			<div className="text-muted-foreground">
-				Please indicate your preference for funeral arrangements. This
-				information will help your loved ones carry out your wishes.
+				Please indicate your preference for funeral arrangements. Funeral wishes
+				are not legally binding, but writing them down can guide your loved ones
+				and make things a little easier during a difficult time.
 			</div>
 
 			<Form {...form}>

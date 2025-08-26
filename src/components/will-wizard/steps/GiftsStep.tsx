@@ -696,12 +696,20 @@ export default function GiftsStep({ onNext, onBack }: GiftsStepProps) {
 	return (
 		<div className="space-y-6">
 			<div className="text-xl sm:text-2xl lg:text-[2rem] font-medium text-black">
-				Specify any one-off gifts
+				Specific gifts
+			</div>
+
+			<div className="text-[#696868] text-[0.875rem] -mt-4">
+				Add any specific gifts you would like to leave to particular
+				individuals. This could include cash gifts or sentimental items such as
+				wedding rings, piece of art or collectibles.
 			</div>
 			<div className="text-[#696868] text-[0.875rem] -mt-4">
-				Add any specific gifts you'd like to leave to particular individuals.
-				This could include cash gifts, personal items, or other specific
-				bequests.
+				Specific gifts or cash gifts are given out first. If there is not enough
+				money available, other assets may need to be sold to cover them.
+				Whatever is left then goes to your residuary beneficiaries, though their
+				share could be reduced, or even disappear, if earlier gifts use up the
+				estate.
 			</div>
 
 			{/* Gifts Management Section */}

@@ -6,7 +6,9 @@ interface WillOwnerApiResponse {
 	id: string;
 	will_id: string;
 	first_name: string;
+	middle_name?: string;
 	last_name: string;
+	date_of_birth?: string;
 	marital_status: string;
 	address: string;
 	city: string;
@@ -31,7 +33,9 @@ export interface WillOwnerData {
 	id: string;
 	willId: string;
 	firstName: string;
+	middleName?: string;
 	lastName: string;
+	dateOfBirth?: string;
 	maritalStatus: string;
 	address: string;
 	city: string;
@@ -114,7 +118,9 @@ export function useWillOwnerData(): UseWillOwnerDataReturn {
 						id: ownerResponse.id,
 						willId: ownerResponse.will_id,
 						firstName: ownerResponse.first_name,
+						middleName: ownerResponse.middle_name,
 						lastName: ownerResponse.last_name,
+						dateOfBirth: ownerResponse.date_of_birth,
 						maritalStatus: ownerResponse.marital_status,
 						address: ownerResponse.address,
 						city: ownerResponse.city,
@@ -186,7 +192,11 @@ export function useWillOwnerData(): UseWillOwnerDataReturn {
 
 				if (data.firstName !== undefined)
 					requestData.first_name = data.firstName;
+				if (data.middleName !== undefined)
+					requestData.middle_name = data.middleName;
 				if (data.lastName !== undefined) requestData.last_name = data.lastName;
+				if (data.dateOfBirth !== undefined)
+					requestData.date_of_birth = data.dateOfBirth;
 				if (data.maritalStatus !== undefined)
 					requestData.marital_status = data.maritalStatus;
 				if (data.address !== undefined) requestData.address = data.address;

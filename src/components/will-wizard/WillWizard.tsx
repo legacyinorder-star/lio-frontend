@@ -463,30 +463,32 @@ export default function WillWizard() {
 			{/* Main Content Area */}
 			<div className="flex-1 container mx-auto py-4 lg:py-8 px-4 lg:px-8">
 				<div className="max-w-3xl mx-auto">
-					{/* Mobile Knowledge Base Toggle */}
-					<div className="lg:hidden mb-4">
-						<Button
-							variant="outline"
-							size="sm"
-							onClick={() => setShowKnowledgeBase(!showKnowledgeBase)}
-							className="flex items-center gap-2"
-						>
-							{showKnowledgeBase ? (
-								<>
-									<X className="h-4 w-4" />
-									Hide Help
-								</>
-							) : (
-								<>
-									<BookOpen className="h-4 w-4" />
-									Show Help
-								</>
-							)}
-						</Button>
-					</div>
+					{/* Mobile Knowledge Base Toggle - Only show if not on review step */}
+					{currentQuestion !== "review" && (
+						<div className="lg:hidden mb-4">
+							<Button
+								variant="outline"
+								size="sm"
+								onClick={() => setShowKnowledgeBase(!showKnowledgeBase)}
+								className="flex items-center gap-2"
+							>
+								{showKnowledgeBase ? (
+									<>
+										<X className="h-4 w-4" />
+										Hide Help
+									</>
+								) : (
+									<>
+										<BookOpen className="h-4 w-4" />
+										Show Help
+									</>
+								)}
+							</Button>
+						</div>
+					)}
 
-					{/* Mobile Knowledge Base */}
-					{showKnowledgeBase && (
+					{/* Mobile Knowledge Base - Only show if not on review step */}
+					{showKnowledgeBase && currentQuestion !== "review" && (
 						<div className="lg:hidden mb-6">
 							<KnowledgeBaseSidebar currentStep={currentQuestion} />
 						</div>
@@ -496,10 +498,12 @@ export default function WillWizard() {
 				</div>
 			</div>
 
-			{/* Knowledge Base Sidebar - Hidden on mobile, visible on large screens */}
-			<div className="hidden lg:block">
-				<KnowledgeBaseSidebar currentStep={currentQuestion} />
-			</div>
+			{/* Knowledge Base Sidebar - Hidden on mobile, visible on large screens, but not on review step */}
+			{currentQuestion !== "review" && (
+				<div className="hidden lg:block">
+					<KnowledgeBaseSidebar currentStep={currentQuestion} />
+				</div>
+			)}
 		</div>
 	);
 }

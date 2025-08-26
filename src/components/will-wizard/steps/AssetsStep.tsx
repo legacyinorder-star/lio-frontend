@@ -174,7 +174,13 @@ export default function AssetsStep({
 				with your estate after you die, know which providers to contact.
 			</div>
 			<div className="text-[#696868] text-[0.875rem] -mt-4">
-				We will not ask for specific details like account or policy numbers.
+				For <span className="font-bold">digital assets</span>; like social media
+				accounts, cryptocurrency wallets, digital photos, and cloud storage we
+				recommend listing them in your Letter of Wishes, with clear instructions
+				on how to access them.
+			</div>
+			<div className="text-[#696868] text-[0.875rem] -mt-4">
+				For more guidance, see our Digital Assets Guide.
 			</div>
 
 			{/* Assets Management Section */}

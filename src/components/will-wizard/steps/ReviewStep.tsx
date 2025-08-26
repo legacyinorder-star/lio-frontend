@@ -1613,7 +1613,7 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 								</span>
 							</div>
 							<h3 className="text-xl font-semibold text-gray-900">
-								All Assets
+								Asset List
 							</h3>
 						</div>
 						<div className="grid gap-4">
@@ -1655,11 +1655,8 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 					</div>
 					<div className="text-lg text-gray-600 mx-auto">
 						{paymentStatus === "paid"
-							? "Please carefully review all the information below before submitting your will for review."
+							? "Please carefully review all the information below before submitting your Will for review."
 							: "Please carefully review all the information below before proceeding to payment."}
-					</div>
-					<div className="text-lg text-gray-600 mx-auto">
-						This document will be legally binding once completed.
 					</div>
 				</div>
 
