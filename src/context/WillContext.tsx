@@ -125,6 +125,9 @@ export interface WillData {
 	createdAt: string;
 	status: string;
 	userId: string;
+	// Disclaimer data
+	agreed_disclaimer?: boolean;
+	agreed_disclaimer_date?: string;
 	// Payment data
 	paymentStatus?: string;
 	paymentDate?: string;

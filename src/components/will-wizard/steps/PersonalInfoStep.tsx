@@ -105,13 +105,15 @@ export default function PersonalInfoStep({
 	const [showDisclaimer, setShowDisclaimer] = useState(false);
 	const navigate = useNavigate();
 
-	// Auto-show disclaimer for new wills when component mounts
+	// Auto-show disclaimer if user hasn't agreed to it yet
 	useEffect(() => {
-		const isNewWill = !activeWill?.id;
-		if (isNewWill && !showDisclaimer) {
+		const hasNotAgreedToDisclaimer =
+			activeWill?.agreed_disclaimer === false ||
+			activeWill?.agreed_disclaimer === null;
+		if (hasNotAgreedToDisclaimer && !showDisclaimer) {
 			setShowDisclaimer(true);
 		}
-	}, [activeWill?.id]);
+	}, [activeWill?.agreed_disclaimer]);
 
 	// Determine the initial values for the form
 	const getInitialValues = () => {
@@ -257,6 +259,53 @@ export default function PersonalInfoStep({
 	const selectedCountry = form.watch("country");
 	const stateOptions = getStateOptions(selectedCountry);
 
+	// Handle disclaimer acceptance
+	const handleDisclaimerAccept = async () => {
+		if (!activeWill?.id) {
+			// For new wills, just close the disclaimer
+			setShowDisclaimer(false);
+			toast.success(
+				"Disclaimer accepted. You can now proceed with creating your will."
+			);
+			return;
+		}
+
+		try {
+			// Update the will with disclaimer agreement
+			const { error } = await apiClient(
+				`/wills/${activeWill.id}/accept-disclaimer`,
+				{
+					method: "POST",
+				}
+			);
+
+			if (error) {
+				console.error("Error updating disclaimer agreement:", error);
+				toast.error("Failed to save disclaimer agreement. Please try again.");
+				return;
+			}
+
+			// Update the active will context
+			if (setActiveWill && activeWill) {
+				setActiveWill({
+					...activeWill,
+					agreed_disclaimer: true,
+					agreed_disclaimer_date: new Date().toISOString(),
+				});
+			}
+
+			setShowDisclaimer(false);
+			toast.success(
+				"Disclaimer accepted. You can now proceed with creating your will."
+			);
+		} catch (error) {
+			console.error("Error in disclaimer acceptance:", error);
+			toast.error(
+				"An error occurred while saving disclaimer agreement. Please try again."
+			);
+		}
+	};
+
 	return (
 		<>
 			<WillDisclaimerDialog
@@ -268,12 +317,7 @@ export default function PersonalInfoStep({
 					);
 					navigate("/app/dashboard");
 				}}
-				onAccept={() => {
-					setShowDisclaimer(false);
-					toast.success(
-						"Disclaimer accepted. You can now proceed with creating your will."
-					);
-				}}
+				onAccept={handleDisclaimerAccept}
 			/>
 
 			<div className="space-y-6">
