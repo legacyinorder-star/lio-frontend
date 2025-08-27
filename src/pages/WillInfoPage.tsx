@@ -28,7 +28,7 @@ export default function WillInfoPage() {
 							<div className="space-y-8 flex flex-col justify-center py-12 px-8 md:px-10 lg:px-12">
 								<div className="space-y-4 pt-12">
 									<h1 className="text-[4rem] font-semibold leading-tight text-[#173C37]">
-										Write a will that's tailored to you.
+										Write a Will that's tailored to you.
 									</h1>
 									<p className="text-[1rem] font-normal leading-relaxed text-[#173C37]">
 										LegacyInOrder simplifies and secures your most important
@@ -137,7 +137,7 @@ export default function WillInfoPage() {
 							</div>
 						</div>
 						<p className="text-center text-[#173C37] text-[1rem] font-semibold mt-16 mb-6 max-w-xl mx-auto">
-							Without a will, the law decides who receives your estate — and it
+							Without a Will, the law decides who receives your estate — and it
 							may not be who you would have chosen.
 						</p>
 					</div>

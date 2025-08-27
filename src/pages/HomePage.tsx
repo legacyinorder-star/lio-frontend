@@ -12,7 +12,6 @@ export default function HomePage() {
 	const carouselImages = [
 		"/images/header1.jpg",
 		"/images/product_1.jpg",
-		"/images/product_2.jpg",
 		"/images/will_page.png",
 	];
 
@@ -41,28 +40,25 @@ export default function HomePage() {
 							<div className="space-y-8 flex flex-col justify-center py-12 px-8 md:px-10 lg:px-12">
 								<div className="space-y-4 pt-12">
 									<h1 className="text-4xl md:text-5xl lg:text-6xl font-semibold leading-tight text-[#173C37]">
-										Planning for the future should be simple.
+										Your Will, made simple.
 									</h1>
 									<p className="text-[1rem] font-normal leading-relaxed text-[#173C37]">
-										We make it easy to create your Will, Lasting Power of
-										Attorney, and securely store everything in one place.
+										Create your legally valid Will online in minutes.
+										<br />
+										<span className="font-[500]">
+											Secure. Affordable. Reviewed by Experts.
+										</span>
 									</p>
 								</div>
 
 								<div className="flex flex-col sm:flex-row gap-4">
 									<Button
 										variant="default"
-										className="bg-[#173C37] text-white hover:bg-[#173C37]/90 font-semibold rounded px-[1.625rem] py-[2.4375rem] text-lg"
+										className="bg-[#173C37] text-white hover:bg-[#173C37]/90 font-semibold rounded p-[1.5rem] text-lg"
 									>
 										<Link to={user ? "/dashboard" : "/login"}>
 											Write my Will
 										</Link>
-									</Button>
-									<Button
-										variant="default"
-										className="bg-[#173C37] text-white hover:bg-[#173C37]/90 font-semibold rounded px-[1.625rem] py-[2.4375rem] text-lg"
-									>
-										<Link to="/#">Lasting Power of Attorney</Link>
 									</Button>
 								</div>
 							</div>
@@ -84,8 +80,8 @@ export default function HomePage() {
 									))}
 									<div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-8 z-10">
 										<p className="text-white text-xl md:text-2xl font-normal leading-relaxed">
-											Let's help you create a legacy. Start the conversation
-											today and put your loved ones in good hands.
+											Let us help you create a legacy. Start the conversation
+											today and take the first step toward peace of mind.
 										</p>
 									</div>
 								</div>
@@ -187,7 +183,7 @@ export default function HomePage() {
 								variant="default"
 								className="text-white bg-[#173C37] rounded border border-[#173C37] font-semibold px-8 py-6 hover:bg-[#173C37]/90"
 							>
-								Write my Will
+								<Link to={user ? "/dashboard" : "/login"}>Write my Will</Link>
 							</Button>
 							{/* <Button
 								variant="outline"
@@ -203,7 +199,7 @@ export default function HomePage() {
 				<section className="w-full bg-white pt-12 pb-4">
 					<div className="w-full max-w-[2000px] mx-auto px-4 md:px-6 lg:px-8">
 						<h2 className="text-[3rem] md:text-4xl font-semibold text-center text-[#173C37] pt-4 mb-18">
-							What happens if you die without a will?
+							What happens if you die without a Will?
 						</h2>
 						<div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
 							{/* Card 1 */}
@@ -307,7 +303,7 @@ export default function HomePage() {
 								/>
 								<div>
 									<h3 className="text-lg font-semibold text-[#173C37] mb-2">
-										Lack of a will often leads to family disagreements
+										Lack of a Will often leads to family disagreements
 									</h3>
 									<p className="text-gray-700">
 										Unclear wishes can lead to family disagreements and even
@@ -324,7 +320,7 @@ export default function HomePage() {
 					<div className="w-full px-4 md:px-6 lg:px-8">
 						<video
 							className="w-full rounded-[1.5rem] shadow-lg mb-16"
-							style={{ aspectRatio: "16/9" }}
+							style={{ aspectRatio: "16/9", display: "none" }}
 							controls
 							preload="metadata"
 						>
@@ -332,13 +328,13 @@ export default function HomePage() {
 							Your browser does not support the video tag.
 						</video>
 
-						<div className="mt-30 text-center max-w-4xl mx-auto">
+						<div className="mt-4 text-center max-w-4xl mx-auto">
 							<h2 className="text-[1.5rem] md:text-4xl lg:text-5xl font-semibold text-black mb-6">
 								The good news?
 							</h2>
 							<p className="text-lg md:text-xl text-gray-700 mb-8 leading-relaxed">
 								Creating your Will with Legacy in Order is simple, secure, and
-								takes as little as 15 minutes — from the comfort of your home.
+								takes as little as 15 minutes from the comfort of your home.
 								Start today and give your family peace of mind.
 							</p>
 							<Button
@@ -356,7 +352,7 @@ export default function HomePage() {
 					<div className="w-full max-w-[2000px] mx-auto px-4 md:px-6 lg:px-8">
 						<div className="relative flex flex-col items-center justify-center">
 							<h1 className="text-[3rem] font-semibold text-center text-[#173C37]">
-								All your life's affairs in one place
+								Services we offer
 							</h1>
 
 							{/* Product Boxes */}
@@ -429,12 +425,12 @@ export default function HomePage() {
 									className="w-16 h-16 mb-4"
 								/>
 								<h5 className="text-[1.5rem] font-semibold text-[#173C37] mb-2">
-									15+ Years of Experience
+									An Experienced Legal Team
 								</h5>
 								<p className="text-[1rem] text-[#173C37] leading-relaxed">
-									Our expertise, built since 1990, simplifies complex processes
-									and guides clients effectively. The system is quick and
-									simple.
+									Our trusted legal experts bring decades of experience,
+									ensuring every step of the process is simple, secure, and
+									tailored to your needs
 								</p>
 							</div>
 
@@ -448,9 +444,9 @@ export default function HomePage() {
 									Secure Storage and Accessibility
 								</h5>
 								<p className="text-[1rem] text-[#173C37] leading-relaxed">
-									Your documents are protected with bank-level encryption,
-									ensuring your information stays private and accessible only to
-									you.
+									Your documents are safeguarded with enterprise-grade
+									encryption, giving you complete peace of mind while ensuring
+									you, and only you, can access them whenever needed.
 								</p>
 							</div>
 
@@ -462,11 +458,12 @@ export default function HomePage() {
 									className="w-16 h-16 mb-4"
 								/>
 								<h5 className="text-[1.5rem] font-semibold text-[#173C37] mb-2">
-									Expert-Reviewed Documents
+									Professionally Reviewed Documents
 								</h5>
 								<p className="text-[1rem] text-[#173C37] leading-relaxed">
-									Every document follows legal best practices, with templates
-									reviewed by professionals to give you peace of mind.
+									Every template is designed and checked against best practice
+									standards, so you can be confident your documents are
+									accurate, reliable, and legally sound.
 								</p>
 							</div>
 
@@ -477,11 +474,12 @@ export default function HomePage() {
 									className="w-16 h-16 mb-4"
 								/>
 								<h5 className="text-[1.5rem] font-semibold text-[#173C37] mb-2">
-									Affordable and Transparent
+									Clear, Affordable, and Transparent
 								</h5>
 								<p className="text-[1rem] text-[#173C37] leading-relaxed">
-									No hidden fees or costly lawyer consultations—just a
-									straightforward, cost-effective way to plan your future.
+									No hidden costs. No complicated legal jargon. Just a
+									straightforward, affordable way to protect your future and
+									your loved ones.
 								</p>
 							</div>
 						</div>
@@ -514,7 +512,7 @@ export default function HomePage() {
 									</div>
 									<p className="text-gray-700 text-sm mb-4 leading-relaxed flex-grow">
 										LegacyInOrder made the entire process so simple. I was able
-										to create my will in under 15 minutes and feel completely
+										to create my Will in under 15 minutes and feel completely
 										confident about my family's future.
 									</p>
 									<div className="flex items-center gap-3 mt-auto">
@@ -548,8 +546,8 @@ export default function HomePage() {
 									</div>
 									<p className="text-gray-700 text-sm mb-4 leading-relaxed flex-grow">
 										The security features give me peace of mind. I can update my
-										documents anytime and know they're protected with bank-level
-										encryption.
+										documents anytime and know they're protected with
+										enterprise-grade encryption.
 									</p>
 									<div className="flex items-center gap-3 mt-auto">
 										<img
@@ -588,12 +586,12 @@ export default function HomePage() {
 									<div className="flex items-center gap-3 mt-auto">
 										<img
 											src="/avatars/user3.png"
-											alt="Emily R."
+											alt="Priyanka R."
 											className="w-10 h-10 rounded-full"
 										/>
 										<div>
 											<h4 className="font-semibold text-gray-900 text-sm">
-												Emily R.
+												Priyanka R.
 											</h4>
 											<p className="text-gray-600 text-xs">
 												Healthcare Professional
@@ -624,12 +622,12 @@ export default function HomePage() {
 									<div className="flex items-center gap-3 mt-auto">
 										<img
 											src="/avatars/user4.png"
-											alt="David T."
+											alt="Christina T."
 											className="w-10 h-10 rounded-full"
 										/>
 										<div>
 											<h4 className="font-semibold text-gray-900 text-sm">
-												David T.
+												Christina T.
 											</h4>
 											<p className="text-gray-600 text-xs">Retired Teacher</p>
 										</div>
@@ -644,7 +642,7 @@ export default function HomePage() {
 				<section className="w-full bg-white py-12">
 					<div className="w-full max-w-[2000px] mx-auto px-4 md:px-6 lg:px-8">
 						<h2 className="text-[3rem] font-semibold text-center text-[#173C37] mb-16">
-							What People Usually Ask Us
+							Frequently Asked Questions
 						</h2>
 						<div className="max-w-4xl mx-auto space-y-0">
 							<div className="border rounded-lg bg-[#FAFAFA]">
@@ -686,10 +684,9 @@ export default function HomePage() {
 									className="hidden px-[35px] py-[35px] bg-white"
 								>
 									<p className="text-[1rem] font-normal text-[#545454] font-['DM_Sans']">
-										You can create legally binding wills, power of attorney
-										documents, and letters of wishes. Our platform guides you
-										through each document creation process with clear,
-										step-by-step instructions.
+										You can create legally binding Wills and letters of wishes.
+										Our platform guides you through each document creation
+										process with clear, step-by-step instructions.
 									</p>
 								</div>
 							</div>
@@ -733,10 +730,12 @@ export default function HomePage() {
 									className="hidden px-[35px] py-[35px] bg-white"
 								>
 									<p className="text-[1rem] font-normal text-[#545454] font-['DM_Sans']">
-										We use bank-level encryption to protect your data. All
+										We use enterprise-grade encryption to protect your data. All
 										documents are stored securely and can only be accessed by
 										you. We never share your information with third parties
-										without your explicit consent.
+										without your explicit consent. We never share your
+										information with third parties without your explicit
+										consent.
 									</p>
 								</div>
 							</div>

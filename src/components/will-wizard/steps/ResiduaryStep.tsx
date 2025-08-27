@@ -736,7 +736,7 @@ export default function ResiduaryStep({
 								{searchQuery || "Search and select beneficiaries..."}
 								<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
 							</Button>
-							<DropdownMenuContent className="w-[700px] max-h-[300px] overflow-y-auto">
+							<DropdownMenuContent className="w-full max-h-[300px] overflow-y-auto">
 								<div className="p-2">
 									<Input
 										placeholder="Search beneficiaries..."

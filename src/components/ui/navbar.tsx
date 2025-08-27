@@ -1,13 +1,8 @@
 import { Link, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { Menu, X, ChevronDown, Wrench } from "lucide-react";
+import { Menu, X, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-} from "@/components/ui/custom-dropdown-menu";
 import {
 	Tooltip,
 	TooltipContent,
@@ -16,17 +11,21 @@ import {
 } from "@/components/ui/tooltip";
 
 const NAV_LINKS = [
+	{ label: "Home", to: "/", exists: true },
+	{ label: "Wills", to: "/will-information", exists: true },
+	{ label: "Letter of Wishes", to: "/letter-of-wishes", exists: true },
+	{ label: "Pricing", to: "/pricing", exists: false },
 	{ label: "About Us", to: "/about-us", exists: true },
 	{ label: "Guides & Checklist", to: "#", exists: false },
 	{ label: "Pricing", to: "#", exists: false },
 	// { label: "Vault", to: "#", exists: false },
 ];
 
-const SERVICES_LINKS = [
-	{ label: "Wills", to: "/will-information", exists: true },
-	{ label: "Power of Attorney", to: "/power-of-attorney", exists: true },
-	{ label: "Letter of Wishes", to: "#", exists: false },
-];
+// const SERVICES_LINKS = [
+// 	{ label: "Wills", to: "/will-information", exists: true },
+// 	{ label: "Power of Attorney", to: "/power-of-attorney", exists: false },
+// 	{ label: "Letter of Wishes", to: "#", exists: false },
+// ];
 
 export default function Navbar() {
 	const { user } = useAuth();
@@ -49,7 +48,7 @@ export default function Navbar() {
 					{/* Desktop Nav Links */}
 					<div className="hidden md:flex items-center gap-6">
 						{/* About Us */}
-						<Link
+						{/* <Link
 							to="/about-us"
 							className={`text-[#173C37] hover:text-[#173C37] transition-colors font-semibold px-2 py-1 text-[0.875rem] font-[600] ${
 								location.pathname === "/about-us"
@@ -59,61 +58,45 @@ export default function Navbar() {
 							style={{ fontFamily: "TMT Limkin" }}
 						>
 							About Us
-						</Link>
+						</Link> */}
 
-						{/* Our Services Dropdown */}
-						<DropdownMenu>
-							<Button
-								variant="ghost"
-								className="text-[#173C37] hover:text-[#173C37] transition-colors font-semibold px-2 py-1 text-[0.875rem] font-[600] h-auto p-0 hover:bg-transparent flex items-center gap-1"
-								style={{ fontFamily: "TMT Limkin" }}
-								aria-haspopup="menu"
-							>
-								Our Services
-								<ChevronDown className="h-4 w-4" />
-							</Button>
-							<DropdownMenuContent className="w-56 bg-white border border-gray-200 shadow-md">
-								{SERVICES_LINKS.map((service) =>
-									service.exists ? (
-										<DropdownMenuItem
-											key={service.label}
-											asChild
-											className="cursor-pointer hover:bg-gray-50"
+						{/* Services Links - Flattened */}
+						{/* {SERVICES_LINKS.map((service) =>
+							service.exists ? (
+								<Link
+									key={service.label}
+									to={service.to}
+									className={`text-[#173C37] hover:text-[#173C37] transition-colors font-semibold px-2 py-1 text-[0.875rem] font-[600] ${
+										location.pathname === service.to
+											? "underline underline-offset-4"
+											: ""
+									}`}
+									style={{ fontFamily: "TMT Limkin" }}
+								>
+									{service.label}
+								</Link>
+							) : (
+								<Tooltip key={service.label}>
+									<TooltipTrigger asChild>
+										<span
+											className="text-[#173C37] hover:text-[#173C37] transition-colors font-semibold px-2 py-1 text-[0.875rem] font-[600] cursor-pointer"
+											style={{ fontFamily: "TMT Limkin" }}
 										>
-											<Link
-												to={service.to}
-												className="flex items-center w-full px-2 py-2 text-sm text-[#173C37] font-medium"
-												style={{ fontFamily: "TMT Limkin" }}
-											>
-												{service.label}
-											</Link>
-										</DropdownMenuItem>
-									) : (
-										<Tooltip key={service.label}>
-											<TooltipTrigger asChild>
-												<div className="cursor-pointer hover:bg-gray-50 px-2 py-2">
-													<span
-														className="flex items-center w-full text-sm text-[#173C37] font-medium"
-														style={{ fontFamily: "TMT Limkin" }}
-													>
-														{service.label}
-													</span>
-												</div>
-											</TooltipTrigger>
-											<TooltipContent className="bg-white border border-gray-200 shadow-md">
-												<div className="flex items-center gap-2">
-													<Wrench className="h-4 w-4 text-orange-500" />
-													<p>Coming Soon</p>
-												</div>
-											</TooltipContent>
-										</Tooltip>
-									)
-								)}
-							</DropdownMenuContent>
-						</DropdownMenu>
+											{service.label}
+										</span>
+									</TooltipTrigger>
+									<TooltipContent className="bg-white border border-gray-200 shadow-md">
+										<div className="flex items-center gap-2">
+											<Wrench className="h-4 w-4 text-orange-500" />
+											<p>Coming Soon</p>
+										</div>
+									</TooltipContent>
+								</Tooltip>
+							)
+						)} */}
 
 						{/* Remaining Nav Links */}
-						{NAV_LINKS.slice(1).map((link) =>
+						{NAV_LINKS.map((link) =>
 							link.exists ? (
 								<Link
 									key={link.label}
@@ -128,22 +111,7 @@ export default function Navbar() {
 									{link.label}
 								</Link>
 							) : (
-								<Tooltip key={link.label}>
-									<TooltipTrigger asChild>
-										<span
-											className="text-[#173C37] hover:text-[#173C37] transition-colors font-semibold px-2 py-1 text-[0.875rem] font-[600] cursor-pointer"
-											style={{ fontFamily: "TMT Limkin" }}
-										>
-											{link.label}
-										</span>
-									</TooltipTrigger>
-									<TooltipContent className="bg-white border border-gray-200 shadow-md">
-										<div className="flex items-center gap-2">
-											<Wrench className="h-4 w-4 text-orange-500" />
-											<p>Coming Soon</p>
-										</div>
-									</TooltipContent>
-								</Tooltip>
+								""
 							)
 						)}
 					</div>
@@ -151,7 +119,7 @@ export default function Navbar() {
 					{/* Right Side Buttons */}
 					<div className="hidden md:flex items-center gap-3">
 						<a
-							href="https://calendly.com/" // TODO: Replace with actual scheduling link
+							href="https://calendly.com/legacyinorder/new-meeting"
 							target="_blank"
 							rel="noopener noreferrer"
 						>
@@ -214,45 +182,41 @@ export default function Navbar() {
 							About Us
 						</Link>
 
-						{/* Our Services Section for Mobile */}
-						<div>
-							<div
-								className="text-[#173C37] font-semibold text-[0.875rem] font-[600] py-2"
-								style={{ fontFamily: "TMT Limkin" }}
-							>
-								Our Services
-							</div>
-							{SERVICES_LINKS.map((service) =>
-								service.exists ? (
-									<Link
-										key={service.label}
-										to={service.to}
-										className="block text-[#173C37] hover:text-[#173C37] font-medium py-2 pl-4 text-[0.875rem] font-[500]"
-										onClick={() => setMobileOpen(false)}
-										style={{ fontFamily: "TMT Limkin" }}
-									>
-										{service.label}
-									</Link>
-								) : (
-									<Tooltip key={service.label}>
-										<TooltipTrigger asChild>
-											<span
-												className="block text-[#173C37] hover:text-[#173C37] font-medium py-2 pl-4 text-[0.875rem] font-[500] cursor-pointer"
-												style={{ fontFamily: "TMT Limkin" }}
-											>
-												{service.label}
-											</span>
-										</TooltipTrigger>
-										<TooltipContent className="bg-white border border-gray-200 shadow-md">
-											<div className="flex items-center gap-2">
-												<Wrench className="h-4 w-4 text-orange-500" />
-												<p>Coming Soon</p>
-											</div>
-										</TooltipContent>
-									</Tooltip>
-								)
-							)}
-						</div>
+						{/* Services Links - Flattened for Mobile */}
+						{/* {SERVICES_LINKS.map((service) =>
+							service.exists ? (
+								<Link
+									key={service.label}
+									to={service.to}
+									className={`block text-[#173C37] hover:text-[#173C37] font-medium py-2 text-[0.875rem] font-[600] ${
+										location.pathname === service.to
+											? "underline underline-offset-4"
+											: ""
+									}`}
+									onClick={() => setMobileOpen(false)}
+									style={{ fontFamily: "TMT Limkin" }}
+								>
+									{service.label}
+								</Link>
+							) : (
+								<Tooltip key={service.label}>
+									<TooltipTrigger asChild>
+										<span
+											className="block text-[#173C37] hover:text-[#173C37] font-medium py-2 text-[0.875rem] font-[600] cursor-pointer"
+											style={{ fontFamily: "TMT Limkin" }}
+										>
+											{service.label}
+										</span>
+									</TooltipTrigger>
+									<TooltipContent className="bg-white border border-gray-200 shadow-md">
+										<div className="flex items-center gap-2">
+											<Wrench className="h-4 w-4 text-orange-500" />
+											<p>Coming Soon</p>
+										</div>
+									</TooltipContent>
+								</Tooltip>
+							)
+						)} */}
 
 						{/* Remaining Nav Links */}
 						{NAV_LINKS.slice(1).map((link) =>
