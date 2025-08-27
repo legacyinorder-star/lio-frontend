@@ -19,20 +19,6 @@ export default function PricingPage() {
 		"Family permissions and sharing",
 	];
 
-	const poaFeatures = [
-		"Guided LPA creation",
-		"Document saving",
-		"Basic customer support",
-		"Health & Welfare LPA",
-		"Property & Financial LPA",
-		"Easy updates and modifications",
-		"Professional legal document format",
-		"24/7 customer support",
-		"Downloadable PDF format",
-		"Expert legal guidance",
-		"Complete package option",
-	];
-
 	const letterFeatures = [
 		"Complimentary for will creators",
 		"Guided letter creation",

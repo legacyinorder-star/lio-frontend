@@ -111,9 +111,11 @@ export default function SpouseStep({
 
 		// Check if both firstName and lastName exist and are not empty strings
 		const hasValidFirstName =
-			spouseData.firstName && spouseData.firstName.trim().length > 0;
+			typeof spouseData.firstName === "string" &&
+			spouseData.firstName.trim().length > 0;
 		const hasValidLastName =
-			spouseData.lastName && spouseData.lastName.trim().length > 0;
+			typeof spouseData.lastName === "string" &&
+			spouseData.lastName.trim().length > 0;
 
 		return hasValidFirstName && hasValidLastName;
 	};
@@ -292,7 +294,7 @@ export default function SpouseStep({
 								<div className="flex justify-between items-center">
 									<div className="space-y-1">
 										<p className="font-medium text-gray-900">
-											{localSpouseData.firstName} {localSpouseData.lastName}
+											{localSpouseData?.firstName} {localSpouseData?.lastName}
 										</p>
 										<p className="text-sm text-muted-foreground">
 											Spouse or Civil Partner
