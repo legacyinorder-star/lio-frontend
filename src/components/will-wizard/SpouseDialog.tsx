@@ -7,6 +7,7 @@ import {
 	DialogContent,
 	DialogHeader,
 	DialogTitle,
+	DialogDescription,
 	DialogFooter,
 } from "@/components/ui/dialog";
 import {
@@ -74,6 +75,11 @@ export default function SpouseDialog({
 		onOpenChange(false);
 	};
 
+	const handleCancel = () => {
+		form.reset();
+		onOpenChange(false);
+	};
+
 	// Don't render anything during SSR
 	if (!isMounted) {
 		return null;
@@ -88,6 +94,11 @@ export default function SpouseDialog({
 					<DialogTitle>
 						{isEditing ? "Edit Partner Details" : "Add Partner Details"}
 					</DialogTitle>
+					<DialogDescription>
+						{isEditing
+							? "Update your partner's information below."
+							: "Please provide your partner's details below."}
+					</DialogDescription>
 				</DialogHeader>
 				<Form {...form}>
 					<form
@@ -132,6 +143,14 @@ export default function SpouseDialog({
 							/>
 						</div>
 						<DialogFooter>
+							<Button
+								type="button"
+								variant="outline"
+								onClick={handleCancel}
+								disabled={isSubmitting}
+							>
+								Cancel
+							</Button>
 							<Button
 								type="submit"
 								className="cursor-pointer bg-primary hover:bg-primary/90 text-white"

@@ -59,6 +59,7 @@ export default function SpouseStep({
 	const { isLoading: relationshipsLoading } = useRelationships();
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 	const [deleteLoading, setDeleteLoading] = useState(false);
+	const [validationError, setValidationError] = useState<string | null>(null);
 	const { refetch } = useWillData();
 
 	// Determine if has spouse based on marital status or existing spouse data
@@ -77,6 +78,7 @@ export default function SpouseStep({
 		const hasSpouse = hasSpouseFromData || initialData?.hasSpouse || false;
 		form.setValue("hasSpouse", hasSpouse);
 
+		// Prioritize spouseData from props, then initialData, then undefined
 		if (spouseData) {
 			setLocalSpouseData({
 				firstName: spouseData.firstName,
@@ -84,10 +86,50 @@ export default function SpouseStep({
 			});
 		} else if (initialData?.spouse) {
 			setLocalSpouseData(initialData.spouse);
+		} else {
+			// Clear local spouse data if no data exists
+			setLocalSpouseData(undefined);
 		}
 	}, [willOwnerData, spouseData, initialData, hasSpouseFromData, form]);
 
+	// Additional effect to handle race conditions when spouseData loads asynchronously
+	useEffect(() => {
+		if (spouseData && !localSpouseData) {
+			// If spouseData exists but localSpouseData is undefined, update local state
+			setLocalSpouseData({
+				firstName: spouseData.firstName,
+				lastName: spouseData.lastName,
+			});
+			// Ensure form reflects the correct state
+			form.setValue("hasSpouse", true);
+		}
+	}, [spouseData, localSpouseData, form]);
+
+	// Helper function to check if spouse data is valid and complete
+	const isSpouseDataValid = (spouseData: SpouseData | undefined): boolean => {
+		if (!spouseData) return false;
+
+		// Check if both firstName and lastName exist and are not empty strings
+		const hasValidFirstName =
+			spouseData.firstName && spouseData.firstName.trim().length > 0;
+		const hasValidLastName =
+			spouseData.lastName && spouseData.lastName.trim().length > 0;
+
+		return hasValidFirstName && hasValidLastName;
+	};
+
 	const handleSubmit = async (values: z.infer<typeof spouseSchema>) => {
+		// Clear any previous validation errors
+		setValidationError(null);
+
+		// Validate: if user selected "Yes" but hasn't provided valid spouse details
+		if (values.hasSpouse && !isSpouseDataValid(localSpouseData)) {
+			setValidationError(
+				"Please provide your partner's details or select 'No' if you don't have a spouse."
+			);
+			return;
+		}
+
 		await onNext({
 			hasSpouse: values.hasSpouse,
 			spouse: localSpouseData,
@@ -118,6 +160,7 @@ export default function SpouseStep({
 			// Update local state
 			setLocalSpouseData(data);
 			setSpouseDialogOpen(false);
+			setValidationError(null); // Clear validation error when spouse data is saved
 
 			// Show success message
 			toast.success("Spouse information saved successfully");
@@ -131,6 +174,17 @@ export default function SpouseStep({
 			);
 		} finally {
 			setIsSubmitting(false);
+		}
+	};
+
+	const handleSpouseDialogClose = (open: boolean) => {
+		setSpouseDialogOpen(open);
+		console.log("Spouse dialog closed:", open);
+
+		// If dialog is being closed and no valid spouse data exists, reset to "No"
+		if (!open && !isSpouseDataValid(localSpouseData)) {
+			console.log("Closing spouse dialog and resetting to No");
+			form.setValue("hasSpouse", false);
 		}
 	};
 
@@ -189,6 +243,7 @@ export default function SpouseStep({
 								!form.watch("hasSpouse") ? "bg-primary text-white" : ""
 							}
 							onClick={() => {
+								setValidationError(null); // Clear validation error
 								if (spouseData) {
 									setShowDeleteConfirm(true);
 								} else {
@@ -205,8 +260,10 @@ export default function SpouseStep({
 							variant={form.watch("hasSpouse") ? "default" : "outline"}
 							className={form.watch("hasSpouse") ? "bg-primary text-white" : ""}
 							onClick={() => {
+								setValidationError(null); // Clear validation error
 								form.setValue("hasSpouse", true);
-								if (!localSpouseData) setSpouseDialogOpen(true);
+								if (!isSpouseDataValid(localSpouseData))
+									setSpouseDialogOpen(true);
 							}}
 							disabled={isSubmitting}
 						>
@@ -214,7 +271,16 @@ export default function SpouseStep({
 						</Button>
 					</div>
 
-					{form.watch("hasSpouse") && localSpouseData && (
+					{/* Validation Error Message */}
+					{validationError && (
+						<div className="bg-red-50 border border-red-200 rounded-lg p-4 mt-4">
+							<p className="text-red-800 text-sm font-medium">
+								{validationError}
+							</p>
+						</div>
+					)}
+
+					{form.watch("hasSpouse") && isSpouseDataValid(localSpouseData) && (
 						<Card className="border-2 border-green-100 bg-green-50/50">
 							<CardHeader className="pb-3">
 								<CardTitle className="flex items-center gap-2 text-lg">
@@ -280,7 +346,7 @@ export default function SpouseStep({
 
 			<SpouseDialog
 				open={spouseDialogOpen}
-				onOpenChange={setSpouseDialogOpen}
+				onOpenChange={handleSpouseDialogClose}
 				onSave={handleSpouseData}
 				initialData={localSpouseData}
 				isSubmitting={isSubmitting}

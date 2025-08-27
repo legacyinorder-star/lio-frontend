@@ -23,59 +23,59 @@ const STEP_VIDEOS: Record<
 	}
 > = {
 	personalInfo: {
-		src: "https://drive.google.com/file/d/1Y9NELwX78wH8yMm7cB6I5jss5SC8hRCU/view?usp=sharing",
+		src: "https://drive.google.com/file/d/1Y9NELwX78wH8yMm7cB6I5jss5SC8hRCU/preview",
 		poster: "/images/personal-info-poster.jpg",
 		title: "Personal Information Guide",
 		description:
 			"Learn how to provide your basic personal details and address information.",
 	},
 	familyInfo: {
-		src: "https://drive.google.com/file/d/15uTTWi5m3JmMJ1yDspkn4PmEumpljjf5/view?usp=sharing",
+		src: "https://drive.google.com/file/d/15uTTWi5m3JmMJ1yDspkn4PmEumpljjf5/preview",
 		poster: "/images/family-info-poster.jpg",
 		title: "Family Information Guide",
 		description:
 			"Understand how to document your spouse, children, and pets in your will.",
 	},
 	guardians: {
-		src: "https://drive.google.com/file/d/1KG8L7Zo0wFqz2-CEgemQ8Ccr6194UWNy/view?usp=sharing",
+		src: "https://drive.google.com/file/d/1KG8L7Zo0wFqz2-CEgemQ8Ccr6194UWNy/preview",
 		poster: "/images/guardians-poster.jpg",
 		title: "Guardians Guide",
 		description: "Learn about appointing guardians for your minor children.",
 	},
 	hasAssets: {
-		src: "https://drive.google.com/file/d/1711JH5shwm2NW1-vtyQsMYLYSgQFPGFU/view?usp=sharing",
+		src: "https://drive.google.com/file/d/1711JH5shwm2NW1-vtyQsMYLYSgQFPGFU/preview",
 		poster: "/images/assets-poster.jpg",
 		title: "Assets Guide",
 		description:
 			"Discover how to document and distribute your assets effectively.",
 	},
 	gifts: {
-		src: "https://drive.google.com/file/d/1JajuIvTClzV8zQQsQDYCVdycKIb0ACXv/view?usp=sharing",
+		src: "https://drive.google.com/file/d/1JajuIvTClzV8zQQsQDYCVdycKIb0ACXv/preview",
 		poster: "/images/gifts-poster.jpg",
 		title: "Gifts Guide",
 		description:
 			"Learn how to make specific gifts to individuals or organizations.",
 	},
 	residuary: {
-		src: "https://drive.google.com/file/d/1-7pahh83o-SOnOBLZfrd9TxH1guclIxW/view?usp=sharing",
+		src: "https://drive.google.com/file/d/1-7pahh83o-SOnOBLZfrd9TxH1guclIxW/preview",
 		poster: "/images/residuary-poster.jpg",
 		title: "Residuary Estate Guide",
 		description: "Understand how to distribute the remainder of your estate.",
 	},
 	executors: {
-		src: "https://drive.google.com/file/d/12depyRm1g0HNSchaG-kZxLfYTY4QL0zB/view?usp=sharing",
+		src: "https://drive.google.com/file/d/12depyRm1g0HNSchaG-kZxLfYTY4QL0zB/preview",
 		poster: "/images/executors-poster.jpg",
 		title: "Executors Guide",
 		description: "Learn about appointing executors to carry out your will.",
 	},
 	funeralInstructions: {
-		src: "https://drive.google.com/file/d/1Y9NELwX78wH8yMm7cB6I5jss5SC8hRCU/view",
+		src: "https://drive.google.com/file/d/1Y9NELwX78wH8yMm7cB6I5jss5SC8hRCU/preview",
 		poster: "/images/funeral-poster.jpg",
 		title: "Funeral Instructions Guide",
 		description: "Document your funeral and burial wishes for your loved ones.",
 	},
 	review: {
-		src: "https://drive.google.com/file/d/1Y9NELwX78wH8yMm7cB6I5jss5SC8hRCU/view",
+		src: "https://drive.google.com/file/d/1Y9NELwX78wH8yMm7cB6I5jss5SC8hRCU/preview",
 		poster: "/images/review-poster.jpg",
 		title: "Review Guide",
 		description:
