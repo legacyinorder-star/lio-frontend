@@ -163,7 +163,13 @@ export default function DashboardPage() {
 
 				<div
 					className="bg-white rounded-lg p-6 mt-6 w-2/3"
-					style={{ boxShadow: "0px 2px 12px 0px rgba(0, 0, 0, 0.15)" }}
+					style={{
+						boxShadow: "0px 2px 12px 0px rgba(0, 0, 0, 0.15)",
+						backgroundImage: "url('/images/LIOIllustration.png')",
+						backgroundRepeat: "no-repeat",
+						backgroundPosition: "right center",
+						backgroundSize: "auto 100%",
+					}}
 				>
 					<h3 className="text-[1.25rem] font-semibold text-black mb-2">
 						{activeWill?.status === "completed"
