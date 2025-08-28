@@ -13,7 +13,7 @@ export default function AboutUsPage() {
 						<div className="text-center space-y-8">
 							<div className="space-y-6">
 								<h1 className="text-[3rem] font-semibold leading-tight text-[#173C37]">
-									Your future, organized by LegacyInOrder
+									Your future, organised by LegacyInOrder
 								</h1>
 								<p className="text-[1rem] font-normal leading-relaxed text-[#173C37] max-w-3xl mx-auto">
 									LegacyInOrder simplifies and secures your most important
@@ -22,7 +22,7 @@ export default function AboutUsPage() {
 								</p>
 
 								<p className="text-[1rem] font-normal leading-relaxed text-[#173C37] max-w-3xl mx-auto">
-									With everything organized and easily accessible, you can focus
+									With everything organised and easily accessible, you can focus
 									on what truly matters: your future and the people you care
 									about.
 								</p>
@@ -139,7 +139,7 @@ export default function AboutUsPage() {
 								By helping individuals take control of their futures, we
 								contribute to a broader culture of planning, protection, and
 								care. We envision a world where end-of-life planning is
-								normalized, not avoided.
+								normalised, not avoided.
 							</p>
 						</div>
 

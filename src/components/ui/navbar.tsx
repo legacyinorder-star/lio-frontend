@@ -35,7 +35,7 @@ export default function Navbar() {
 	return (
 		<TooltipProvider>
 			<nav className="w-full bg-white border-b border-gray-light sticky top-0 z-30 font-sans">
-				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-20">
+				<div className="w-full px-4 sm:px-6 lg:px-8 flex items-center justify-between h-20">
 					{/* Logo */}
 					<Link to="/" className="flex items-center gap-2 min-w-[160px]">
 						<img

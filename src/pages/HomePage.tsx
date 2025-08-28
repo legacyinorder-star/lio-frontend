@@ -341,7 +341,7 @@ export default function HomePage() {
 								variant="default"
 								className="bg-[#173C37] text-white hover:bg-[#173C37]/90 font-semibold rounded px-[1.625rem] py-[2.4375rem] text-lg"
 							>
-								<Link to="/#">Get Your LegacyInOrder</Link>
+								<Link to="/login">Get Your LegacyInOrder</Link>
 							</Button>
 						</div>
 					</div>
