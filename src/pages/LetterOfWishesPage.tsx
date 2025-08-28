@@ -49,7 +49,7 @@ export default function LetterOfWishesPage() {
 							</div>
 
 							{/* Right Side - Image */}
-							<div className="relative h-full min-h-[500px] flex lg:ml-0 px-8 md:px-10 lg:px-0">
+							<div className="relative h-[600px] flex lg:ml-0 px-8 md:px-10 lg:px-0">
 								<div className="relative w-full h-full overflow-hidden shadow-2xl flex">
 									<img
 										src="/images/will_page.png"
@@ -203,7 +203,7 @@ export default function LetterOfWishesPage() {
 							guidance to your loved ones.
 						</p>
 					</div>
-					<div className="grid grid-cols-1 lg:grid-cols-1 gap-6 max-w-2xl mx-auto">
+					<div className="grid grid-cols-1 lg:grid-cols-1 gap-6 w-lg mx-auto">
 						{/* Letter of Wishes */}
 						<Card className="relative bg-gray-50 flex flex-col border-2 border-teal">
 							<CardHeader className="text-left pb-4">

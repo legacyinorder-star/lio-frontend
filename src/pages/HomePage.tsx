@@ -64,7 +64,7 @@ export default function HomePage() {
 							</div>
 
 							{/* Right Side - Image Carousel with Text Overlay */}
-							<div className="relative h-full min-h-[500px] flex lg:ml-0 px-8 md:px-10 lg:px-0">
+							<div className="relative h-[600px] flex lg:ml-0 px-8 md:px-10 lg:px-0">
 								<div className="relative w-full h-full overflow-hidden shadow-2xl flex">
 									{carouselImages.map((image, index) => (
 										<img

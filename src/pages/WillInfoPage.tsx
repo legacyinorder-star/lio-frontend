@@ -6,13 +6,12 @@ import Footer from "@/components/ui/footer";
 
 export default function WillInfoPage() {
 	const features = [
-		"Legally valid will that meets your state's requirements",
+		"Legally valid, customisable Will",
+		"Complimentary Letter of Wishes",
 		"Secure & encrypted data storage",
-		"Lifetime access to your will",
 		"Unlimited beneficiaries and executors",
 		"Easy updates and modifications",
 		"Professional legal document format",
-		"24/7 customer support",
 		"Downloadable PDF format",
 	];
 
@@ -48,7 +47,7 @@ export default function WillInfoPage() {
 							</div>
 
 							{/* Right Side - Image with Text Overlay */}
-							<div className="relative h-full min-h-[500px] flex lg:ml-0 px-8 md:px-10 lg:px-0">
+							<div className="relative h-[600px] flex lg:ml-0 px-8 md:px-10 lg:px-0">
 								<div className="relative w-full h-full overflow-hidden shadow-2xl flex">
 									<img
 										src="/images/poa_1.jpg"
@@ -256,59 +255,23 @@ export default function WillInfoPage() {
 				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
 					<div className="text-center mb-12">
 						<h2 className="text-3xl font-bold text-gray-900">
-							Our different types of wills
+							Simple, Transparent Pricing
 						</h2>
 					</div>
-					<div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+					<div className="grid grid-cols-1 lg:grid-cols-1 gap-6 w-lg mx-auto">
 						{/* Single Will */}
-						<Card className="relative bg-gray-50 flex flex-col">
+						<Card className="relative bg-gray-50 border-2 border-teal flex flex-col">
 							<CardHeader className="text-left pb-8">
 								<CardTitle className="text-[1.65rem] font-medium text-black">
-									Single Will
+									Will Creation
 								</CardTitle>
 								<div className="mt-4">
 									<span className="text-[3.375rem] font-medium text-black">
-										£150
+										£100
 									</span>
 								</div>
 								<p className="text-base font-normal text-black mt-2">
-									Perfect for individual estate planning
-								</p>
-							</CardHeader>
-							<CardContent className="space-y-4 flex-1 flex flex-col">
-								<ul className="space-y-3 flex-1">
-									{features.slice(0, 4).map((feature, index) => (
-										<li key={index} className="flex items-start">
-											<img
-												src="/svgs/wills_page/dot.svg"
-												alt="Feature marker"
-												className="h-5 w-5 mt-0.5 mr-3 flex-shrink-0"
-											/>
-											<span className="text-[0.8rem] font-normal text-black">
-												{feature}
-											</span>
-										</li>
-									))}
-								</ul>
-								<Button className="w-full bg-white border border-[#173C37] text-[#173C37] hover:bg-gray-50 mt-8">
-									Get Started
-								</Button>
-							</CardContent>
-						</Card>
-
-						{/* Mirror Will */}
-						<Card className="relative bg-gray-50 flex flex-col">
-							<CardHeader className="text-left pb-8">
-								<CardTitle className="text-[1.65rem] font-medium text-black">
-									Mirror Will
-								</CardTitle>
-								<div className="mt-4">
-									<span className="text-[3.375rem] font-medium text-black">
-										£200
-									</span>
-								</div>
-								<p className="text-base font-normal text-black mt-2">
-									Ideal for couples with similar wishes
+									Create a legally binding Will with professional guidance
 								</p>
 							</CardHeader>
 							<CardContent className="space-y-4 flex-1 flex flex-col">
@@ -327,73 +290,17 @@ export default function WillInfoPage() {
 									))}
 								</ul>
 								<Link to="/login">
-									<Button className="w-full bg-white border border-[#173C37] text-[#173C37] hover:bg-gray-50 mt-8">
+									<Button className="w-full bg-[#173C37] hover:bg-[#173C37]/90 text-white mt-8">
 										Get Started
 									</Button>
 								</Link>
-							</CardContent>
-						</Card>
-
-						{/* Will with Trust */}
-						<Card className="relative bg-gray-50 border-2 border-teal flex flex-col">
-							<CardHeader className="text-left pb-8">
-								<CardTitle className="text-[1.65rem] font-medium text-black">
-									Will with Trust
-								</CardTitle>
-								<div className="mt-4">
-									<span className="text-[3.375rem] font-medium text-black">
-										£400
-									</span>
-								</div>
-								<p className="text-base font-normal text-black mt-2">
-									Advanced planning with trust protection
-								</p>
-							</CardHeader>
-							<CardContent className="space-y-4 flex-1 flex flex-col">
-								<ul className="space-y-3 flex-1">
-									{features.map((feature, index) => (
-										<li key={index} className="flex items-start">
-											<img
-												src="/svgs/wills_page/dot.svg"
-												alt="Feature marker"
-												className="h-5 w-5 mt-0.5 mr-3 flex-shrink-0"
-											/>
-											<span className="text-[0.8rem] font-normal text-black">
-												{feature}
-											</span>
-										</li>
-									))}
-								</ul>
-								<li className="flex items-start">
-									<img
-										src="/svgs/wills_page/dot.svg"
-										alt="Feature marker"
-										className="h-5 w-5 mt-0.5 mr-3 flex-shrink-0"
-									/>
-									<span className="text-[0.8rem] font-normal text-black">
-										Trust creation and management
-									</span>
-								</li>
-								<li className="flex items-start">
-									<img
-										src="/svgs/wills_page/dot.svg"
-										alt="Feature marker"
-										className="h-5 w-5 mt-0.5 mr-3 flex-shrink-0"
-									/>
-									<span className="text-[0.8rem] font-normal text-black">
-										Advanced tax planning
-									</span>
-								</li>
-								<Button className="w-full bg-[#173C37] hover:bg-[#173C37]/90 text-white mt-8">
-									Get Started
-								</Button>
 							</CardContent>
 						</Card>
 					</div>
 				</div>
 
 				{/* Features Section */}
-				<div className="bg-white py-16">
+				<div className="bg-[#E2F3ED] py-16 mb-24">
 					<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 						<div className="text-center mb-12">
 							<h2 className="text-[3rem] font-semibold text-[#173C37]">
@@ -453,8 +360,11 @@ export default function WillInfoPage() {
 									Upload and store your will and other legacy documents securely
 									online.
 								</p>
-								<Button className="w-[300px] bg-[#173C37] hover:bg-[#173C37]/90 text-white mt-6">
-									Get Started
+								<Button
+									disabled
+									className="w-[300px] bg-white border border-[#173C37] text-[#173C37] hover:bg-gray-50 mt-6 cursor-not-allowed"
+								>
+									Coming soon
 								</Button>
 							</div>
 						</div>

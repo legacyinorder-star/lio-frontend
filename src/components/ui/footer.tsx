@@ -197,7 +197,7 @@ export default function Footer({ showCTA = true }: FooterProps) {
 								online will writing service is an online service providing legal
 								forms and information to allow you to draft your own will. Our
 								telephone service provides guidance, we do not provide bespoke
-								advice, including tax advice.
+								advice or tax advice.
 							</p>
 						</div>
 					</div>
