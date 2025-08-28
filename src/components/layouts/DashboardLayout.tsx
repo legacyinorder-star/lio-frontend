@@ -159,7 +159,7 @@ export function DashboardLayout() {
 						{/* Logo */}
 						<Link to="/" className="flex items-center flex-shrink-0">
 							<img
-								src="/logos/Original.svg"
+								src="/logos/Logo_Colored.png"
 								alt="Legacy In Order"
 								className="h-8 sm:h-10"
 							/>

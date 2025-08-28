@@ -41,9 +41,9 @@ export default function Footer({ showCTA = true }: FooterProps) {
 						<div className="flex flex-col space-y-6">
 							<Link to="/" className="flex items-center">
 								<img
-									src="/logos/White.svg"
+									src="/logos/Logo_White.png"
 									alt="LegacyInOrder Logo"
-									className="w-40 h-auto"
+									className="w-45 h-auto"
 								/>
 							</Link>
 							<div className="flex space-x-6">

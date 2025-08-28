@@ -39,7 +39,7 @@ export default function Navbar() {
 					{/* Logo */}
 					<Link to="/" className="flex items-center gap-2 min-w-[160px]">
 						<img
-							src="/logos/Original.svg"
+							src="/logos/Logo_Colored.png"
 							alt="Legacy In Order Logo"
 							className="h-12 w-auto"
 						/>

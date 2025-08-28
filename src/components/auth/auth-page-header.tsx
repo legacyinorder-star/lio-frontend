@@ -9,7 +9,7 @@ export function AuthPageHeader() {
 					<div className="flex">
 						<Link to="/" className="flex items-center">
 							<img
-								src="/logos/Original.svg"
+								src="/logos/Logo_Colored.png"
 								alt="Legacy In Order"
 								className="h-12"
 							/>
