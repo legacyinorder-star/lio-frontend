@@ -66,7 +66,7 @@ export default function DashboardPage() {
 				text: "Under Review",
 				action: null,
 				description:
-					"Your will is currently being reviewed by our legal team. We'll notify you once the review is complete.",
+					"Your Will is currently being reviewed by our legal team. We'll notify you once the review is complete.",
 			};
 		}
 
@@ -75,7 +75,7 @@ export default function DashboardPage() {
 				text: "Continue Will",
 				action: handleEditWill,
 				description:
-					"Continue working on your will where you left off. Complete your estate planning today.",
+					"Continue working on your Will where you left off. Complete your estate planning today.",
 			};
 		}
 
@@ -84,7 +84,7 @@ export default function DashboardPage() {
 				text: "Pay & Submit",
 				action: handlePayAndSubmit,
 				description:
-					"Your will is ready! Complete payment and submit for review.",
+					"Your Will is ready! Complete payment and submit for review.",
 			};
 		}
 
@@ -93,7 +93,7 @@ export default function DashboardPage() {
 				text: "Download Will",
 				action: handleDownloadWill,
 				description:
-					"Your will is ready! You can download it for your records.",
+					"Your Will is ready! You can download it for your records.",
 			};
 		}
 
@@ -110,24 +110,22 @@ export default function DashboardPage() {
 
 	const actions = [
 		// Only show Will action if not under review
-		...(willButtonInfo.action !== null
-			? [
-					{
-						title: "Will",
-						description: willButtonInfo.description,
-						href: "/app/create-will",
-						action: willButtonInfo.text,
-						onClick: willButtonInfo.action,
-					},
-			  ]
-			: []),
+		{
+			title: "Will",
+			description: willButtonInfo.description,
+			href: "/app/create-will",
+			action: willButtonInfo.text,
+			onClick: willButtonInfo.action,
+			disabled: willButtonInfo.action === null, // Disable if under review
+		},
 		{
 			title: "Letter of Wishes",
 			description:
-				"Share personal guidance for your loved ones that complements your formal will.",
+				"Share personal guidance for your loved ones that complements your formal Will.",
 			href: "/app/letter-of-wishes",
 			action: "Add a Letter of Wishes",
 			onClick: handleStartLetterOfWishes,
+			disabled: activeWill?.status !== "completed", // Only enable when Will is completed
 		},
 	];
 
@@ -178,9 +176,9 @@ export default function DashboardPage() {
 					</h3>
 					<p className="text-black font-normal text-sm mb-4">
 						{!activeWill
-							? "Get started with your will"
+							? "Get started with your Will"
 							: activeWill.status === "completed"
-							? "Your will is complete! Consider adding a letter of wishes to provide personal guidance for your loved ones."
+							? "Your Will is complete! Consider adding a letter of wishes to provide personal guidance for your loved ones."
 							: willButtonInfo.description}
 					</p>
 					<Button
@@ -232,10 +230,16 @@ export default function DashboardPage() {
 						<div
 							key={action.title}
 							onClick={
-								action.onClick ||
-								(() => navigate(action.href || "/app/create-will"))
+								!action.disabled
+									? action.onClick ||
+									  (() => navigate(action.href || "/app/create-will"))
+									: undefined
 							}
-							className="block transition-transform hover:scale-105 cursor-pointer"
+							className={`block transition-transform ${
+								!action.disabled
+									? "hover:scale-105 cursor-pointer"
+									: "cursor-not-allowed opacity-60"
+							}`}
 						>
 							<Card
 								className="p-8 h-full rounded-lg bg-white"
@@ -248,21 +252,29 @@ export default function DashboardPage() {
 									<p className="text-sm font-[400] text-muted-foreground mb-6">
 										{action.description}
 									</p>
-									<div className="flex items-center text-sm font-semibold text-primary hover:text-primary/80 transition-colors">
+									<div
+										className={`flex items-center text-sm font-semibold ${
+											!action.disabled
+												? "text-primary hover:text-primary/80 transition-colors"
+												: "text-gray-400"
+										}`}
+									>
 										{action.action}
-										<svg
-											width="20"
-											height="8"
-											viewBox="0 0 20 8"
-											fill="none"
-											xmlns="http://www.w3.org/2000/svg"
-											className="ml-2 w-6 h-auto"
-										>
-											<path
-												d="M19.3536 4.45707C19.5488 4.26181 19.5488 3.94523 19.3536 3.74996L16.1716 0.567983C15.9763 0.372721 15.6597 0.372721 15.4645 0.567983C15.2692 0.763245 15.2692 1.07983 15.4645 1.27509L18.2929 4.10352L15.4645 6.93194C15.2692 7.12721 15.2692 7.44379 15.4645 7.63905C15.6597 7.83431 15.9763 7.83431 16.1716 7.63905L19.3536 4.45707ZM0 4.10352L-4.37114e-08 4.60352L19 4.60352L19 4.10352L19 3.60352L4.37114e-08 3.60352L0 4.10352Z"
-												fill="currentColor"
-											/>
-										</svg>
+										{!action.disabled && (
+											<svg
+												width="20"
+												height="8"
+												viewBox="0 0 20 8"
+												fill="none"
+												xmlns="http://www.w3.org/2000/svg"
+												className="ml-2 w-6 h-auto"
+											>
+												<path
+													d="M19.3536 4.45707C19.5488 4.26181 19.5488 3.94523 19.3536 3.74996L16.1716 0.567983C15.9763 0.372721 15.6597 0.372721 15.4645 0.567983C15.2692 0.763245 15.2692 1.07983 15.4645 1.27509L18.2929 4.10352L15.4645 6.93194C15.2692 7.12721 15.2692 7.44379 15.4645 7.63905C15.6597 7.83431 15.9763 7.83431 16.1716 7.63905L19.3536 4.45707ZM0 4.10352L-4.37114e-08 4.60352L19 4.60352L19 4.10352L19 3.60352L4.37114e-08 3.60352L0 4.10352Z"
+													fill="currentColor"
+												/>
+											</svg>
+										)}
 									</div>
 								</div>
 							</Card>
