@@ -913,9 +913,7 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 				}
 
 				toast.success("Will submitted successfully!");
-				// Optionally, navigate to a confirmation page or update UI
-				// For now, we'll just reload the page to show the updated status
-				window.location.reload();
+				navigate("/app/dashboard");
 			} catch (error) {
 				console.error("Error submitting will:", error);
 				toast.error("Failed to submit will.");
