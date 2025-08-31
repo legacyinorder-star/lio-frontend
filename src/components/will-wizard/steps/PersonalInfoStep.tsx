@@ -93,17 +93,6 @@ interface PersonalInfoStepProps extends StepProps {
 		postCode: string;
 		country: string;
 	} | null;
-	onWillOwnerDataSave?: (data: {
-		firstName: string;
-		middleName?: string;
-		lastName: string;
-		dateOfBirth?: string;
-		address: string;
-		city: string;
-		state: string;
-		postCode: string;
-		country: string;
-	}) => Promise<boolean>;
 }
 
 export default function PersonalInfoStep({
@@ -111,7 +100,6 @@ export default function PersonalInfoStep({
 	onUpdate,
 	onNext,
 	willOwnerData,
-	onWillOwnerDataSave,
 }: PersonalInfoStepProps) {
 	const { activeWill, setActiveWill } = useWill();
 	const [isSubmitting, setIsSubmitting] = useState(false);
@@ -239,76 +227,74 @@ export default function PersonalInfoStep({
 
 			onUpdate(updatedData);
 
-			// If we have the new save function, use it
-			if (onWillOwnerDataSave) {
-				const success = await onWillOwnerDataSave({
-					firstName: formData.firstName,
-					middleName: formData.middleName,
-					lastName: formData.lastName,
-					dateOfBirth: formData.dateOfBirth,
+			// Create or update will owner via API
+			const { data: ownerResponse, error: ownerError } = await apiClient<{
+				id: string;
+				will_id: string;
+			}>("/will_owner", {
+				method: "POST",
+				body: JSON.stringify({
+					will_id: activeWill?.id || null,
+					first_name: formData.firstName,
+					middle_name: formData.middleName,
+					last_name: formData.lastName,
+					date_of_birth: formData.dateOfBirth,
 					address: formData.address,
 					city: formData.city,
 					state: formData.state,
-					postCode: formData.postCode,
+					post_code: formData.postCode,
 					country: "United Kingdom",
-				});
+				}),
+			});
 
-				if (!success) {
-					toast.error("Failed to save personal information. Please try again.");
-					return;
-				}
+			if (ownerError || !ownerResponse) {
+				console.error("Error creating/updating will owner:", ownerError);
+				toast.error("Failed to save personal information. Please try again.");
+				return;
+			}
 
-				toast.success("Personal information saved successfully!");
-			} else {
-				// Fall back to original approach
-				const { data: ownerResponse, error: ownerError } = await apiClient<{
-					will_id?: string;
-				}>("/will_owner", {
-					method: "POST",
-					body: JSON.stringify({
-						will_id: activeWill?.id || null,
-						first_name: formData.firstName,
-						middle_name: formData.middleName,
-						last_name: formData.lastName,
-						date_of_birth: formData.dateOfBirth,
+			// For new wills, wait for the will to be created and context updated
+			if (!activeWill?.id && ownerResponse.will_id) {
+				// Update the active will context
+				const newWillData = {
+					id: ownerResponse.will_id,
+					lastUpdatedAt: new Date().toISOString(),
+					createdAt: new Date().toISOString(),
+					status: "draft" as const,
+					userId: "",
+					owner: {
+						id: ownerResponse.id,
+						firstName: formData.firstName,
+						middleName: formData.middleName,
+						lastName: formData.lastName,
+						dateOfBirth: formData.dateOfBirth,
 						address: formData.address,
 						city: formData.city,
 						state: formData.state,
-						post_code: formData.postCode,
+						postCode: formData.postCode,
 						country: "United Kingdom",
-					}),
-				});
+						maritalStatus: "",
+					},
+					assets: [],
+					gifts: [],
+					beneficiaries: [],
+					executors: [],
+					witnesses: [],
+				};
 
-				if (ownerError) {
-					console.error("Error creating/updating will owner:", ownerError);
-					toast.error("Failed to save personal information");
-					return;
+				if (setActiveWill) {
+					setActiveWill(newWillData);
 				}
 
-				// If this was a new will and we got a response with will_id, update the active will
-				if (!activeWill?.id && ownerResponse?.will_id) {
-					if (setActiveWill && activeWill) {
-						setActiveWill({
-							...activeWill,
-							id: ownerResponse.will_id,
-							owner: {
-								...activeWill.owner,
-								firstName: formData.firstName,
-								middleName: formData.middleName,
-								lastName: formData.lastName,
-								dateOfBirth: formData.dateOfBirth,
-								address: formData.address,
-								city: formData.city,
-								state: formData.state,
-								postCode: formData.postCode,
-								country: "United Kingdom",
-							},
-						});
-					}
-					toast.success("Will created successfully!");
-				} else {
-					toast.success("Personal information saved successfully!");
-				}
+				toast.success("Will created successfully!");
+
+				// Wait a brief moment for React context to update before navigation
+				await new Promise((resolve) => setTimeout(resolve, 100));
+
+				// Verify the context was updated before proceeding
+				console.log("🔍 Will created with ID:", ownerResponse.will_id);
+			} else {
+				toast.success("Personal information saved successfully!");
 			}
 
 			// Proceed to next step

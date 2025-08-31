@@ -21,7 +21,8 @@ export function WillWizardSidebar() {
 	];
 
 	const getStepStatus = (step: QuestionType) => {
-		if (completedSteps[step]) return "completed";
+		if (!completedSteps) return "locked";
+		if (step && completedSteps[step]) return "completed";
 		if (step === currentStep) return "current";
 		if (canAccessStep(step)) return "accessible";
 		return "locked";

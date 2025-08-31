@@ -305,27 +305,34 @@ export default function WillWizard() {
 		setFormData((prev) => ({ ...prev, ...data }));
 	}, []);
 
-	// Handle will owner data saving
-	const handleWillOwnerDataSave = useCallback(
-		async (_data: unknown): Promise<boolean> => {
-			// This function will handle saving will owner data
-			// For now, return true to allow navigation
-			return true;
-		},
-		[]
-	);
-
 	const handleNext = useCallback(async () => {
 		// Mark current step as complete before moving to next step
 		console.log("🚀 handleNext called for step:", currentQuestion);
+		console.log("📊 Current form data:", formData);
 		await markStepComplete(currentQuestion);
+
+		// Helper function to check if there are minor children
+		const hasMinorChildren = () => {
+			return (
+				formData.hasChildren && formData.children.some((child) => child.isMinor)
+			);
+		};
 
 		switch (currentQuestion) {
 			case "personalInfo":
 				setWillWizardState(true, "familyInfo");
 				break;
 			case "familyInfo":
-				setWillWizardState(true, "guardians");
+				// Conditional navigation based on whether user has minor children
+				if (hasMinorChildren()) {
+					console.log("✅ User has minor children - navigating to guardians");
+					setWillWizardState(true, "guardians");
+				} else {
+					console.log(
+						"⏭️ No minor children - skipping guardians, going to residuary"
+					);
+					setWillWizardState(true, "residuary");
+				}
 				break;
 			case "guardians":
 				setWillWizardState(true, "residuary");
@@ -355,6 +362,13 @@ export default function WillWizard() {
 	}, [currentQuestion, markStepComplete, setWillWizardState, formData]);
 
 	const handleBack = useCallback(() => {
+		// Helper function to check if there are minor children
+		const hasMinorChildren = () => {
+			return (
+				formData.hasChildren && formData.children.some((child) => child.isMinor)
+			);
+		};
+
 		switch (currentQuestion) {
 			case "familyInfo":
 				setWillWizardState(true, "personalInfo");
@@ -363,7 +377,15 @@ export default function WillWizard() {
 				setWillWizardState(true, "familyInfo");
 				break;
 			case "residuary":
-				setWillWizardState(true, "guardians");
+				// Conditional back navigation - if we have minor children, go back to guardians
+				// otherwise go back to familyInfo
+				if (hasMinorChildren()) {
+					console.log("⬅️ Going back to guardians (has minor children)");
+					setWillWizardState(true, "guardians");
+				} else {
+					console.log("⬅️ Going back to familyInfo (no minor children)");
+					setWillWizardState(true, "familyInfo");
+				}
 				break;
 			case "hasAssets":
 				setWillWizardState(true, "residuary");
@@ -383,7 +405,7 @@ export default function WillWizard() {
 			default:
 				console.warn("Unknown step for back navigation:", currentQuestion);
 		}
-	}, [currentQuestion, setWillWizardState]);
+	}, [currentQuestion, setWillWizardState, formData]);
 
 	// Memoize common props to prevent infinite re-renders
 	const commonProps = useMemo(
@@ -401,11 +423,7 @@ export default function WillWizard() {
 		switch (currentQuestion) {
 			case "personalInfo":
 				return (
-					<PersonalInfoStep
-						{...commonProps}
-						willOwnerData={willOwnerData}
-						onWillOwnerDataSave={handleWillOwnerDataSave}
-					/>
+					<PersonalInfoStep {...commonProps} willOwnerData={willOwnerData} />
 				);
 
 			case "familyInfo":
@@ -449,11 +467,7 @@ export default function WillWizard() {
 
 			default:
 				return (
-					<PersonalInfoStep
-						{...commonProps}
-						willOwnerData={willOwnerData}
-						onWillOwnerDataSave={handleWillOwnerDataSave}
-					/>
+					<PersonalInfoStep {...commonProps} willOwnerData={willOwnerData} />
 				);
 		}
 	};

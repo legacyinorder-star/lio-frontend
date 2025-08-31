@@ -137,7 +137,14 @@ export function WillWizardProvider({ children }: { children: ReactNode }) {
 			const stepIndex = STEP_ORDER.indexOf(step);
 			console.log(`🔍 Checking access for step: ${step} (index: ${stepIndex})`);
 			console.log(`📊 Current completed steps:`, completedSteps);
-			return true;
+
+			// Add null check for completedSteps to prevent runtime errors
+			if (!completedSteps) {
+				console.log(
+					`⚠️ completedSteps is undefined, allowing access to step: ${step}`
+				);
+				return true;
+			}
 
 			// Check if all previous required steps are completed
 			for (let i = 0; i < stepIndex; i++) {

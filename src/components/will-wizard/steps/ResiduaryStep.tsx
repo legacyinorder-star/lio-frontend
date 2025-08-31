@@ -125,18 +125,25 @@ export default function ResiduaryStep({
 				const processedBeneficiaries: ResiduaryBeneficiary[] = [];
 				const selectedIds = new Set<string>();
 
-				data.beneficiaries.forEach((beneficiary) => {
-					const beneficiaryId =
-						beneficiary.people_id || beneficiary.charities_id;
-					if (beneficiaryId) {
-						selectedIds.add(beneficiaryId);
-						processedBeneficiaries.push({
-							id: beneficiary.id,
-							beneficiaryId: beneficiaryId,
-							percentage: parseInt(beneficiary.percentage) || 0,
-						});
-					}
-				});
+				// Add null check for beneficiaries array to prevent runtime errors
+				if (data.beneficiaries && Array.isArray(data.beneficiaries)) {
+					data.beneficiaries.forEach((beneficiary) => {
+						const beneficiaryId =
+							beneficiary.people_id || beneficiary.charities_id;
+						if (beneficiaryId) {
+							selectedIds.add(beneficiaryId);
+							processedBeneficiaries.push({
+								id: beneficiary.id,
+								beneficiaryId: beneficiaryId,
+								percentage: parseInt(beneficiary.percentage) || 0,
+							});
+						}
+					});
+				} else {
+					console.log(
+						"No beneficiaries found in residuary data or beneficiaries is not an array"
+					);
+				}
 
 				setResiduaryBeneficiaries(processedBeneficiaries);
 				setSelectedBeneficiaries(selectedIds);
@@ -146,7 +153,11 @@ export default function ResiduaryStep({
 					const residuaryData: WillResiduary = {
 						id: data.id,
 						distribution_type: data.distribution_type as "equal" | "manual",
-						beneficiaries: data.beneficiaries.map((beneficiary) => {
+						beneficiaries: (data.beneficiaries &&
+						Array.isArray(data.beneficiaries)
+							? data.beneficiaries
+							: []
+						).map((beneficiary) => {
 							if (beneficiary.charity) {
 								return {
 									id: beneficiary.id,
