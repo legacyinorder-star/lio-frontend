@@ -141,7 +141,7 @@ export function AdminLayout() {
 						className="flex items-center justify-center w-full"
 					>
 						<img
-							src="/logos/Logo_Colored.png"
+							src="/logos/Logo_White.png"
 							alt="Legacy In Order"
 							className="h-12"
 						/>

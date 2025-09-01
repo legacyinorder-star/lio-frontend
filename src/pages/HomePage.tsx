@@ -12,7 +12,7 @@ export default function HomePage() {
 	const carouselImages = [
 		"/images/header1.jpg",
 		"/images/product_1.jpg",
-		"/images/will_page.png",
+		"/images/LIO_new_img.jpg",
 	];
 
 	const [currentImageIndex, setCurrentImageIndex] = useState(0);

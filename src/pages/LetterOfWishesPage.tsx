@@ -52,7 +52,7 @@ export default function LetterOfWishesPage() {
 							<div className="relative h-[600px] flex lg:ml-0 px-8 md:px-10 lg:px-0">
 								<div className="relative w-full h-full overflow-hidden shadow-2xl flex">
 									<img
-										src="/images/will_page.png"
+										src="/images/LIO_new_img.jpg"
 										alt="Letter of Wishes Planning"
 										className="w-full h-full object-cover"
 									/>
