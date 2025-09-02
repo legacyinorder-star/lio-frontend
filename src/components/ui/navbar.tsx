@@ -18,14 +18,7 @@ const NAV_LINKS = [
 	{ label: "About Us", to: "/about-us", exists: true },
 	{ label: "Guides & Checklist", to: "#", exists: false },
 	{ label: "Pricing", to: "#", exists: false },
-	// { label: "Vault", to: "#", exists: false },
 ];
-
-// const SERVICES_LINKS = [
-// 	{ label: "Wills", to: "/will-information", exists: true },
-// 	{ label: "Power of Attorney", to: "/power-of-attorney", exists: false },
-// 	{ label: "Letter of Wishes", to: "#", exists: false },
-// ];
 
 export default function Navbar() {
 	const { user } = useAuth();
@@ -47,54 +40,6 @@ export default function Navbar() {
 
 					{/* Desktop Nav Links */}
 					<div className="hidden md:flex items-center gap-6">
-						{/* About Us */}
-						{/* <Link
-							to="/about-us"
-							className={`text-[#173C37] hover:text-[#173C37] transition-colors font-semibold px-2 py-1 text-[0.875rem] font-[600] ${
-								location.pathname === "/about-us"
-									? "underline underline-offset-4"
-									: ""
-							}`}
-							style={{ fontFamily: "TMT Limkin" }}
-						>
-							About Us
-						</Link> */}
-
-						{/* Services Links - Flattened */}
-						{/* {SERVICES_LINKS.map((service) =>
-							service.exists ? (
-								<Link
-									key={service.label}
-									to={service.to}
-									className={`text-[#173C37] hover:text-[#173C37] transition-colors font-semibold px-2 py-1 text-[0.875rem] font-[600] ${
-										location.pathname === service.to
-											? "underline underline-offset-4"
-											: ""
-									}`}
-									style={{ fontFamily: "TMT Limkin" }}
-								>
-									{service.label}
-								</Link>
-							) : (
-								<Tooltip key={service.label}>
-									<TooltipTrigger asChild>
-										<span
-											className="text-[#173C37] hover:text-[#173C37] transition-colors font-semibold px-2 py-1 text-[0.875rem] font-[600] cursor-pointer"
-											style={{ fontFamily: "TMT Limkin" }}
-										>
-											{service.label}
-										</span>
-									</TooltipTrigger>
-									<TooltipContent className="bg-white border border-gray-200 shadow-md">
-										<div className="flex items-center gap-2">
-											<Wrench className="h-4 w-4 text-orange-500" />
-											<p>Coming Soon</p>
-										</div>
-									</TooltipContent>
-								</Tooltip>
-							)
-						)} */}
-
 						{/* Remaining Nav Links */}
 						{NAV_LINKS.map((link) =>
 							link.exists ? (
@@ -168,56 +113,6 @@ export default function Navbar() {
 				{/* Mobile Menu */}
 				{mobileOpen && (
 					<div className="md:hidden bg-white border-t border-gray-light px-4 pb-6 pt-4 space-y-3 shadow-lg">
-						{/* About Us */}
-						<Link
-							to="/about-us"
-							className={`block text-primary hover:text-primary font-medium py-2 text-[0.875rem] font-[600] ${
-								location.pathname === "/about-us"
-									? "underline underline-offset-4"
-									: ""
-							}`}
-							onClick={() => setMobileOpen(false)}
-							style={{ fontFamily: "TMT Limkin" }}
-						>
-							About Us
-						</Link>
-
-						{/* Services Links - Flattened for Mobile */}
-						{/* {SERVICES_LINKS.map((service) =>
-							service.exists ? (
-								<Link
-									key={service.label}
-									to={service.to}
-									className={`block text-[#173C37] hover:text-[#173C37] font-medium py-2 text-[0.875rem] font-[600] ${
-										location.pathname === service.to
-											? "underline underline-offset-4"
-											: ""
-									}`}
-									onClick={() => setMobileOpen(false)}
-									style={{ fontFamily: "TMT Limkin" }}
-								>
-									{service.label}
-								</Link>
-							) : (
-								<Tooltip key={service.label}>
-									<TooltipTrigger asChild>
-										<span
-											className="block text-[#173C37] hover:text-[#173C37] font-medium py-2 text-[0.875rem] font-[600] cursor-pointer"
-											style={{ fontFamily: "TMT Limkin" }}
-										>
-											{service.label}
-										</span>
-									</TooltipTrigger>
-									<TooltipContent className="bg-white border border-gray-200 shadow-md">
-										<div className="flex items-center gap-2">
-											<Wrench className="h-4 w-4 text-orange-500" />
-											<p>Coming Soon</p>
-										</div>
-									</TooltipContent>
-								</Tooltip>
-							)
-						)} */}
-
 						{/* Remaining Nav Links */}
 						{NAV_LINKS.slice(1).map((link) =>
 							link.exists ? (
