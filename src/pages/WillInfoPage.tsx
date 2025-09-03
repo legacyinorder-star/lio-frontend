@@ -107,7 +107,7 @@ export default function WillInfoPage() {
 								</div>
 							</div>
 						</div>
-						<div className="flex justify-center gap-4">
+						<div className="flex flex-col md:flex-row md:justify-center gap-4 mb-8">
 							{/* Card 4 */}
 							<div className="flex items-center bg-white rounded-[0.5rem] border border-mint-light p-6 max-w-md">
 								<img
@@ -258,7 +258,7 @@ export default function WillInfoPage() {
 							Simple, Transparent Pricing
 						</h2>
 					</div>
-					<div className="grid grid-cols-1 lg:grid-cols-1 gap-6 w-lg mx-auto">
+					<div className="grid grid-cols-1 md:grid-cols-1 gap-6 w-full max-w-lg mx-auto">
 						{/* Single Will */}
 						<Card className="relative bg-gray-50 border-2 border-teal flex flex-col">
 							<CardHeader className="text-left pb-8">

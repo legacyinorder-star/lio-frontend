@@ -82,7 +82,7 @@ export default function LetterOfWishesPage() {
 							</p>
 						</div>
 
-						<div className="grid grid-cols-3 md:grid-cols-3 gap-4 mt-4 mx-auto">
+						<div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 mx-auto">
 							{/* Card 1 */}
 							<div className="flex items-center bg-white p-8 rounded-xl shadow-sm">
 								<div className="flex-shrink-0 mr-6">
@@ -203,7 +203,7 @@ export default function LetterOfWishesPage() {
 							guidance to your loved ones.
 						</p>
 					</div>
-					<div className="grid grid-cols-1 lg:grid-cols-1 gap-6 w-lg mx-auto">
+					<div className="grid grid-cols-1 md:grid-cols-1 gap-6 w-full max-w-lg mx-auto">
 						{/* Letter of Wishes */}
 						<Card className="relative bg-gray-50 flex flex-col border-2 border-teal">
 							<CardHeader className="text-left pb-4">
