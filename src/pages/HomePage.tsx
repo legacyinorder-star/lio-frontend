@@ -267,7 +267,8 @@ export default function HomePage() {
 								</div>
 							</div>
 						</div>
-						<div className="flex justify-center gap-4">
+						{/* Second row with flexbox for centering */}
+						<div className="flex flex-col md:flex-row md:justify-center gap-4 mb-8">
 							{/* Card 4 */}
 							<div
 								className="flex items-center bg-white rounded-[0.5rem] border-[#EAEAEA] p-6 max-w-md"
