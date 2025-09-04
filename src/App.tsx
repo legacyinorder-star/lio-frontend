@@ -46,6 +46,7 @@ import { VaultPage } from "@/pages/VaultPage";
 import { FolderViewPage } from "@/pages/FolderViewPage";
 import DocumentsPage from "@/pages/DocumentsPage";
 import LetterOfWishesPage from "@/pages/LetterOfWishesPage";
+import WillStatusGuard from "@/components/will-wizard/WillStatusGuard";
 
 function App() {
 	return (
@@ -148,10 +149,25 @@ function App() {
 										>
 											<Route path="dashboard" element={<DashboardPage />} />
 											<Route path="documents" element={<DocumentsPage />} />
-											<Route path="create-will" element={<WillWizard />} />
+											<Route
+												path="create-will"
+												element={
+													<WillStatusGuard
+														allowedStatuses={["in progress", "draft"]}
+													>
+														<WillWizard />
+													</WillStatusGuard>
+												}
+											/>
 											<Route
 												path="create-will/:step"
-												element={<WillWizard />}
+												element={
+													<WillStatusGuard
+														allowedStatuses={["in progress", "draft"]}
+													>
+														<WillWizard />
+													</WillStatusGuard>
+												}
 											/>
 											<Route
 												path="letter-of-wishes"
