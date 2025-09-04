@@ -220,7 +220,9 @@ const LetterOfWishesPDF: React.FC<LetterOfWishesPDFProps> = ({
 		if (!owner) return null;
 
 		// Format owner's full name
-		const fullName = `${owner.firstName} ${owner.lastName}`;
+		const fullName = `${owner.firstName}${
+			owner.middleName ? ` ${owner.middleName}` : ""
+		} ${owner.lastName}`;
 
 		// Format owner's address
 		const addressParts = [
