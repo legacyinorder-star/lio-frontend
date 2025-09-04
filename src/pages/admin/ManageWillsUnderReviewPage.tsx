@@ -128,8 +128,8 @@ export default function ManageWillsUnderReviewPage() {
 
 			setWills(Array.isArray(data) ? data : []);
 		} catch (error) {
-			console.error("Error fetching wills under review:", error);
-			toast.error("Failed to load wills under review");
+			console.error("Error fetching Wills under review:", error);
+			toast.error("Failed to load Wills under review");
 		} finally {
 			setIsLoading(false);
 		}
@@ -201,14 +201,14 @@ export default function ManageWillsUnderReviewPage() {
 
 			await smartDownloadWill(willData);
 		} catch (error) {
-			console.error("Error downloading will:", error);
-			toast.error("Failed to download will");
+			console.error("Error downloading Will:", error);
+			toast.error("Failed to download Will");
 		}
 	};
 
 	const handleApproveWill = async () => {
 		if (!approveDialog.willId) {
-			toast.error("No will selected for approval");
+			toast.error("No Will selected for approval");
 			return;
 		}
 
@@ -229,19 +229,22 @@ export default function ManageWillsUnderReviewPage() {
 			closeApproveDialog();
 			fetchWillsUnderReview(); // Refresh the list
 		} catch (error) {
-			console.error("Error approving will:", error);
-			toast.error("Failed to approve will");
+			console.error("Error approving Will:", error);
+			toast.error("Failed to approve Will");
 		} finally {
 			setIsProcessing(false);
 		}
 	};
 
 	const openApproveDialog = (will: WillUnderReview) => {
-		setApproveDialog({
-			isOpen: true,
-			willId: will.id,
-			willOwnerName: `${will.owner.first_name} ${will.owner.last_name}`,
-		});
+		// Use setTimeout to allow dropdown to close properly before opening dialog
+		setTimeout(() => {
+			setApproveDialog({
+				isOpen: true,
+				willId: will.id,
+				willOwnerName: `${will.owner.first_name} ${will.owner.last_name}`,
+			});
+		}, 100);
 	};
 
 	const closeApproveDialog = () => {
@@ -283,20 +286,23 @@ export default function ManageWillsUnderReviewPage() {
 			});
 			fetchWillsUnderReview(); // Refresh the list
 		} catch (error) {
-			console.error("Error rejecting will:", error);
-			toast.error("Failed to reject will");
+			console.error("Error rejecting Will:", error);
+			toast.error("Failed to reject Will");
 		} finally {
 			setIsProcessing(false);
 		}
 	};
 
 	const openRejectDialog = (will: WillUnderReview) => {
-		setRejectDialog({
-			isOpen: true,
-			willId: will.id,
-			willOwnerName: `${will.owner.first_name} ${will.owner.last_name}`,
-			reason: "",
-		});
+		// Use setTimeout to allow dropdown to close properly before opening dialog
+		setTimeout(() => {
+			setRejectDialog({
+				isOpen: true,
+				willId: will.id,
+				willOwnerName: `${will.owner.first_name} ${will.owner.last_name}`,
+				reason: "",
+			});
+		}, 100);
 	};
 
 	const closeRejectDialog = () => {
@@ -338,7 +344,7 @@ export default function ManageWillsUnderReviewPage() {
 						Wills Under Review
 					</h1>
 					<p className="text-muted-foreground">
-						Review and manage wills that are pending approval
+						Review and manage Wills needing approval
 					</p>
 				</div>
 			</div>
@@ -364,7 +370,7 @@ export default function ManageWillsUnderReviewPage() {
 					<div className="flex items-center justify-center py-8">
 						<div className="h-8 w-8 animate-spin rounded-full border-t-2 border-b-2 border-primary"></div>
 						<p className="text-muted-foreground ml-2">
-							Loading wills under review...
+							Loading Wills needing approval...
 						</p>
 					</div>
 				</Card>
@@ -374,19 +380,19 @@ export default function ManageWillsUnderReviewPage() {
 						<FileText className="w-8 h-8 text-gray-400" />
 					</div>
 					<h3 className="text-lg font-semibold text-gray-900 mb-2">
-						{wills.length === 0 ? "No wills under review" : "No wills found"}
+						No Wills found
 					</h3>
 					<p className="text-gray-600">
 						{wills.length === 0
-							? "All wills have been processed"
+							? "All Wills have been processed"
 							: "Try adjusting your search criteria"}
 					</p>
 				</div>
 			) : (
 				<div className="space-y-4">
 					<div className="text-sm text-muted-foreground">
-						Showing {filteredAndSortedWills.length} of {wills.length} wills
-						under review
+						Showing {filteredAndSortedWills.length} of {wills.length} Wills
+						needing approval
 					</div>
 					<div className="grid gap-4">
 						{filteredAndSortedWills.map((will) => (
@@ -489,7 +495,7 @@ export default function ManageWillsUnderReviewPage() {
 					<DialogHeader>
 						<DialogTitle>Reject Will</DialogTitle>
 						<DialogDescription>
-							Please provide a reason for rejecting the will for{" "}
+							Please provide a reason for rejecting the Will for{" "}
 							<span className="font-medium">{rejectDialog.willOwnerName}</span>.
 							This reason will be communicated to the user.
 						</DialogDescription>
@@ -499,7 +505,7 @@ export default function ManageWillsUnderReviewPage() {
 							<Label htmlFor="rejection-reason">Reason for Rejection</Label>
 							<Textarea
 								id="rejection-reason"
-								placeholder="Enter the reason for rejecting this will..."
+								placeholder="Enter the reason for rejecting this Will..."
 								value={rejectDialog.reason}
 								onChange={(e) =>
 									setRejectDialog({ ...rejectDialog, reason: e.target.value })
@@ -539,10 +545,10 @@ export default function ManageWillsUnderReviewPage() {
 					<DialogHeader>
 						<DialogTitle>Approve Will</DialogTitle>
 						<DialogDescription>
-							Are you sure you want to approve the will for{" "}
+							Are you sure you want to approve the Will for{" "}
 							<span className="font-medium">{approveDialog.willOwnerName}</span>
 							? <br />
-							This action will mark the will as completed and make it available
+							This action will mark the Will as completed and make it available
 							for download by the user.
 						</DialogDescription>
 					</DialogHeader>
