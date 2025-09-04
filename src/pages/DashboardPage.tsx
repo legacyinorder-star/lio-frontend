@@ -10,36 +10,71 @@ import { Button } from "@/components/ui/button";
 
 import { getUserDetails } from "@/utils/auth";
 import { useState, useEffect } from "react";
-import { useWill } from "@/context/WillContext";
+import { type WillData } from "@/context/WillContext";
+import { apiClient } from "@/utils/apiClient";
+import { mapWillDataFromAPI } from "@/utils/dataTransform";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { toast } from "sonner";
 
 export default function DashboardPage() {
 	const navigate = useNavigate();
-	const { activeWill } = useWill();
 	const [userName, setUserName] = useState<string>("");
 	const [showVaultModal, setShowVaultModal] = useState(false);
+	const [currentWill, setCurrentWill] = useState<WillData | null>(null);
+	const [isLoadingWill, setIsLoadingWill] = useState(true);
+
+	// Load will data directly from API
+	const loadWillData = async () => {
+		try {
+			setIsLoadingWill(true);
+			const { data, error } = await apiClient("/wills/get-user-active-will");
+
+			if (error) {
+				console.error("Error loading will data:", error);
+				setCurrentWill(null);
+				return;
+			}
+
+			// Handle both array and single object responses
+			const willData = Array.isArray(data) ? data[0] : data;
+			if (willData) {
+				// Transform API data to camelCase format
+				const transformedWillData = mapWillDataFromAPI(willData);
+				setCurrentWill(transformedWillData);
+			} else {
+				setCurrentWill(null);
+			}
+		} catch (error) {
+			console.error("Error loading will data:", error);
+			toast.error("Failed to load will data");
+			setCurrentWill(null);
+		} finally {
+			setIsLoadingWill(false);
+		}
+	};
 
 	// Handler functions
 	const handleEditWill = () => {
-		if (activeWill) {
+		if (currentWill) {
 			// Navigate to the current step from progress
-			const currentStep = activeWill.progress?.currentStep || "personalInfo";
+			const currentStep = currentWill.progress?.currentStep || "personalInfo";
 			navigate(`/app/create-will/${currentStep}`);
 		}
 	};
 
 	const handlePayAndSubmit = () => {
-		if (activeWill) {
+		if (currentWill) {
 			// Navigate to payment page
 			navigate(
-				`/app/payment/checkout?willId=${activeWill.id}&description=Will Creation Service`
+				`/app/payment/checkout?willId=${currentWill.id}&description=Will Creation Service`
 			);
 		}
 	};
 
 	const handleDownloadWill = () => {
-		if (activeWill) {
+		if (currentWill) {
 			// Navigate to will download page
-			navigate(`/app/will/${activeWill.id}`);
+			navigate(`/app/will/${currentWill.id}`);
 		}
 	};
 
@@ -49,7 +84,7 @@ export default function DashboardPage() {
 
 	// Determine button text and action based on will status and current step
 	const getWillButtonInfo = () => {
-		if (!activeWill) {
+		if (!currentWill) {
 			return {
 				text: "Start your Will",
 				action: () => navigate("/app/create-will"),
@@ -58,8 +93,8 @@ export default function DashboardPage() {
 			};
 		}
 
-		const willStatus = activeWill.status;
-		const currentStep = activeWill.progress?.currentStep;
+		const willStatus = currentWill.status;
+		const currentStep = currentWill.progress?.currentStep;
 
 		if (willStatus === "under review") {
 			return {
@@ -125,7 +160,7 @@ export default function DashboardPage() {
 			href: "/app/letter-of-wishes",
 			action: "Add a Letter of Wishes",
 			onClick: handleStartLetterOfWishes,
-			disabled: activeWill?.status !== "completed", // Only enable when Will is completed
+			disabled: currentWill?.status !== "completed", // Only enable when Will is completed
 		},
 	];
 
@@ -139,6 +174,52 @@ export default function DashboardPage() {
 		const name = userDetails.first_name || userDetails.email.split("@")[0];
 		setUserName(name);
 	}, [navigate]);
+
+	// Load will data on component mount
+	useEffect(() => {
+		loadWillData();
+	}, []);
+
+	// Show loading state if will data is loading
+	if (isLoadingWill) {
+		return (
+			<div className="space-y-8 min-h-screen flex flex-col">
+				<div
+					id="dashboard-header"
+					className="flex flex-col items-start justify-between p-8 ps-14 rounded-lg bg-primary relative"
+					style={{
+						backgroundImage: `url('/svgs/dashboard_icons/dashboard_card_top_left.svg')`,
+						backgroundRepeat: "no-repeat",
+						backgroundPosition: "left center",
+						backgroundSize: "auto 100%",
+					}}
+				>
+					<h1 className="text-[2.625rem] font-semibold text-white">
+						Welcome, {userName}
+					</h1>
+					<p className="text-white text-sm font-normal mt-2">
+						Let's get your legacy in order
+					</p>
+
+					<div
+						className="bg-white rounded-lg p-6 mt-6 w-2/3 flex items-center justify-center"
+						style={{
+							boxShadow: "0px 2px 12px 0px rgba(0, 0, 0, 0.15)",
+						}}
+					>
+						<LoadingSpinner message="Loading your will data..." />
+					</div>
+
+					{/* Bottom right corner SVG */}
+					<img
+						src="/svgs/dashboard_icons/dashboard_card_right_corner.svg"
+						alt=""
+						className="absolute bottom-0 right-0 w-48 h-48 opacity-90"
+					/>
+				</div>
+			</div>
+		);
+	}
 
 	return (
 		<div className="space-y-8 min-h-screen flex flex-col">
@@ -170,34 +251,34 @@ export default function DashboardPage() {
 					}}
 				>
 					<h3 className="text-[1.25rem] font-semibold text-black mb-2">
-						{activeWill?.status === "completed"
+						{currentWill?.status === "completed"
 							? "Letter of Wishes"
 							: "Your Will"}
 					</h3>
 					<p className="text-black font-normal text-sm mb-4">
-						{!activeWill
+						{!currentWill
 							? "Get started with your Will"
-							: activeWill.status === "completed"
+							: currentWill.status === "completed"
 							? "Your Will is complete! Consider adding a letter of wishes to provide personal guidance for your loved ones."
 							: willButtonInfo.description}
 					</p>
 					<Button
 						onClick={
-							activeWill?.status === "completed"
+							currentWill?.status === "completed"
 								? handleStartLetterOfWishes
 								: willButtonInfo.action || undefined
 						}
 						disabled={
-							activeWill?.status === "completed"
+							currentWill?.status === "completed"
 								? false
 								: willButtonInfo.action === null
 						}
 						className="bg-primary hover:bg-primary/90 text-white flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
 					>
-						{activeWill?.status === "completed"
+						{currentWill?.status === "completed"
 							? "Start Letter of Wishes"
 							: willButtonInfo.text}
-						{!activeWill && (
+						{!currentWill && (
 							<svg
 								width="20"
 								height="8"

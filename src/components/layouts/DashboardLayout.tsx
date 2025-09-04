@@ -242,9 +242,10 @@ export function DashboardLayout() {
 								<span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500"></span>
 							</Button>
 						</div>
-						{/* Hide continue/create will button in wizard mode */}
+						{/* Hide continue/create will button in wizard mode or when will is under review */}
 						{!isInWillWizard &&
-							!location.pathname.startsWith("/app/letter-of-wishes") && (
+							!location.pathname.startsWith("/app/letter-of-wishes") &&
+							activeWill?.status !== "under review" && (
 								<DropdownMenu
 									onOpenChange={(open) => {
 										if (!open) {
