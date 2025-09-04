@@ -15,6 +15,7 @@ type ReviewData = {
 		fullName: string;
 		address: string;
 		maritalStatus: string;
+		dateOfBirth?: string;
 	};
 	spouse?: {
 		fullName: string;
@@ -116,7 +117,9 @@ interface CompleteWillData {
 		will_id: string;
 		created_at: string;
 		first_name: string;
+		middle_name?: string;
 		last_name: string;
+		date_of_birth?: string;
 		marital_status: string;
 		address: string;
 		city: string;
@@ -516,9 +519,12 @@ const transformWillDataToReviewFormat = (
 
 	return {
 		personal: {
-			fullName: `${willData.owner.first_name} ${willData.owner.last_name}`,
+			fullName: `${willData.owner.first_name}${
+				willData.owner.middle_name ? ` ${willData.owner.middle_name}` : ""
+			} ${willData.owner.last_name}`,
 			address: `${willData.owner.address}, ${willData.owner.city}, ${willData.owner.state} ${willData.owner.post_code}, ${willData.owner.country}`,
 			maritalStatus: willData.owner.marital_status,
+			dateOfBirth: willData.owner.date_of_birth,
 		},
 		spouse: willData.spouse
 			? {
@@ -988,6 +994,22 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 									</p>
 								</div>
 							</div>
+							{reviewData.personal.dateOfBirth && (
+								<div className="space-y-2">
+									<label className="block text-sm font-medium text-gray-700">
+										Date of Birth
+									</label>
+									<p className="text-gray-900 font-medium">
+										{new Date(
+											reviewData.personal.dateOfBirth
+										).toLocaleDateString("en-US", {
+											year: "numeric",
+											month: "long",
+											day: "numeric",
+										})}
+									</p>
+								</div>
+							)}
 							<div className="space-y-2">
 								<label className="block text-sm font-medium text-gray-700">
 									Address
