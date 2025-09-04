@@ -17,7 +17,9 @@ interface CompleteWillData {
 		will_id: string;
 		created_at: string;
 		first_name: string;
+		middle_name?: string;
 		last_name: string;
+		date_of_birth?: string;
 		marital_status: string;
 		address: string;
 		city: string;
@@ -300,8 +302,10 @@ interface PDFData {
 const transformWillDataToPDFFormat = (willData: CompleteWillData): PDFData => {
 	return {
 		personal: {
-			fullName: `${willData.owner.first_name} ${willData.owner.last_name}`,
-			dateOfBirth: "Not specified", // Not available in API
+			fullName: `${willData.owner.first_name}${
+				willData.owner.middle_name ? ` ${willData.owner.middle_name}` : ""
+			} ${willData.owner.last_name}`,
+			dateOfBirth: willData.owner.date_of_birth || "",
 			address: `${willData.owner.address}, ${willData.owner.city}, ${willData.owner.state} ${willData.owner.post_code}, ${willData.owner.country}`,
 			phone: "Not specified", // Not available in API
 			maritalStatus: willData.owner.marital_status || "Not specified",

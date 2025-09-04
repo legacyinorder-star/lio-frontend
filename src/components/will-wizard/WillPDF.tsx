@@ -792,25 +792,29 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 						{sections.scope}. Scope of this will
 					</Text>
 					<Text style={styles.scopeText}>
-						<Text style={{ fontWeight: "bold" }}>1.1.</Text>I,{" "}
-						{data.personal.fullName}, of {data.personal.address} and born on
-						[DOB], revoke all previous Wills made by me (as far as they relate
-						to my property in the United Kingdom) and declare this to be my last
-						will and testament.
+						<Text style={{ fontWeight: "bold" }}>{sections.scope}.1.</Text> I,{" "}
+						{data.personal.fullName}, of {data.personal.address}
+						{data.personal.dateOfBirth
+							? ` and born on ${data.personal.dateOfBirth}`
+							: ""}
+						, revoke all previous Wills made by me (as far as they relate to my
+						property in the United Kingdom) and declare this to be my last will
+						and testament.
 					</Text>
 					<Text style={styles.scopeText}>
-						<Text style={{ fontWeight: "bold" }}>1.2.</Text> This Will records
-						how I want my estate to be dealt with after my death. It applies to
-						all assets that I own in the United Kingdom, whether movable or
-						immovable, and to any property over which I hold a general power of
-						appointment.
+						<Text style={{ fontWeight: "bold" }}>{sections.scope}.2.</Text> This
+						Will records how I want my estate to be dealt with after my death.
+						It applies to all assets that I own in the United Kingdom, whether
+						movable or immovable, and to any property over which I hold a
+						general power of appointment.
 					</Text>
 					<Text style={styles.scopeText}>
-						<Text style={{ fontWeight: "bold" }}>1.3.</Text> I have included an
-						Appendix to accompany this Will. The Appendix is a non-testamentary
-						document and does not form part of my legally binding instructions
-						but is provided to assist my Executors and Trustees in identifying
-						my financial assets and conveying personal messages I wish to share.
+						<Text style={{ fontWeight: "bold" }}>{sections.scope}.3.</Text> I
+						have included an Appendix to accompany this Will. The Appendix is a
+						non-testamentary document and does not form part of my legally
+						binding instructions but is provided to assist my Executors and
+						Trustees in identifying my financial assets and conveying personal
+						messages I wish to share.
 					</Text>
 				</View>
 
@@ -821,8 +825,8 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 							{sections.funeral}. Funeral wishes
 						</Text>
 						<Text style={styles.funeralText}>
-							<Text style={{ fontWeight: "bold" }}>2.1.</Text> It is my wish
-							that I am {data.funeralInstructions.wishes}.
+							<Text style={{ fontWeight: "bold" }}>{sections.funeral}.1.</Text>{" "}
+							It is my wish that I am {data.funeralInstructions.wishes}.
 						</Text>
 					</View>
 				)}
@@ -834,7 +838,8 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 					</Text>
 
 					<Text style={styles.executorText}>
-						<Text style={{ fontWeight: "bold" }}>3.1.</Text> I appoint{" "}
+						<Text style={{ fontWeight: "bold" }}>{sections.executors}.1.</Text>{" "}
+						I appoint{" "}
 						{data.executors.map((executor, index) => {
 							const isLast = index === data.executors.length - 1;
 							const prefix = index === 0 ? "" : isLast ? " and " : ", ";
@@ -861,27 +866,30 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 						may appoint a suitable replacement if needed.
 					</Text>
 					<Text style={styles.executorText}>
-						<Text style={{ fontWeight: "bold" }}>3.2.</Text> In this Will, the
-						expression <Text style={{ fontWeight: "bold" }}>“My Trustees”</Text>{" "}
-						means my personal representative who obtain a grant of probate for
-						this Will and, as the context requires, my executors and/ or
-						trustees of my Will and of any trust that may arise under this Will.
+						<Text style={{ fontWeight: "bold" }}>{sections.executors}.2.</Text>{" "}
+						In this Will, the expression{" "}
+						<Text style={{ fontWeight: "bold" }}>"My Trustees"</Text> means my
+						personal representative who obtain a grant of probate for this Will
+						and, as the context requires, my executors and/ or trustees of my
+						Will and of any trust that may arise under this Will.
 					</Text>
 					<Text style={styles.executorText}>
-						<Text style={{ fontWeight: "bold" }}>3.3.</Text> I direct my
-						Trustees to take all actions legally permissible to have this Will
-						executed in accordance with my wishes.
+						<Text style={{ fontWeight: "bold" }}>{sections.executors}.3.</Text>{" "}
+						I direct my Trustees to take all actions legally permissible to have
+						this Will executed in accordance with my wishes.
 					</Text>
 				</View>
 
 				{/* Estate Administration Section */}
 				<View style={styles.distributionSection}>
 					<Text style={styles.distributionTitle}>
-						4. Definition and Administration of Estate
+						{sections.administration}. Definition and Administration of Estate
 					</Text>
 					<Text style={styles.distributionText}>
-						<Text style={{ fontWeight: "bold" }}>4.1.</Text> In my Will "my
-						Estate" shall mean:
+						<Text style={{ fontWeight: "bold" }}>
+							{sections.administration}.1.
+						</Text>{" "}
+						In my Will "my Estate" shall mean:
 					</Text>
 
 					<Text style={styles.distributionText}>
@@ -896,9 +904,11 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 					</Text>
 
 					<Text style={styles.distributionText}>
-						<Text style={{ fontWeight: "bold" }}>4.2.</Text> My Trustees may
-						sell or convert any or all my remaining assets as they consider
-						appropriate and then shall hold my Estate on trust to:
+						<Text style={{ fontWeight: "bold" }}>
+							{sections.administration}.2.
+						</Text>{" "}
+						My Trustees may sell or convert any or all my remaining assets as
+						they consider appropriate and then shall hold my Estate on trust to:
 					</Text>
 
 					<Text style={styles.distributionText}>
@@ -919,10 +929,12 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 				{/* Specific Bequests Section - Moved here */}
 				{data.gifts && data.gifts.length > 0 && (
 					<View style={styles.giftSection}>
-						<Text style={styles.giftTitle}>5. Specific Gifts</Text>
+						<Text style={styles.giftTitle}>
+							{sections.gifts}. Specific Gifts
+						</Text>
 						<Text style={styles.giftText}>
-							<Text style={{ fontWeight: "bold" }}>5.1.</Text> I give the
-							following, free of inheritance tax:
+							<Text style={{ fontWeight: "bold" }}>{sections.gifts}.1.</Text> I
+							give the following, free of inheritance tax:
 						</Text>
 
 						{data.gifts.map((gift, index) => (
@@ -970,12 +982,14 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 					) && (
 						<View style={styles.distributionSection}>
 							<Text style={styles.distributionTitle}>
-								11. Distribution of Assets
+								{sections.distribution}. Distribution of Assets
 							</Text>
 
 							<Text style={styles.distributionText}>
-								<Text style={{ fontWeight: "bold" }}>11.1.</Text> I give,
-								devise, and bequeath my estate as follows:
+								<Text style={{ fontWeight: "bold" }}>
+									{sections.distribution}.1.
+								</Text>{" "}
+								I give, devise, and bequeath my estate as follows:
 							</Text>
 
 							{data.assets
@@ -989,7 +1003,7 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 									<View key={index} style={styles.assetItem}>
 										<Text style={styles.assetDescription}>
 											<Text style={{ fontWeight: "bold" }}>
-												11.{index + 2}.
+												{sections.distribution}.{index + 2}.
 											</Text>{" "}
 											<Text>{asset.description}</Text> (
 											<Text>{asset.type}</Text>) to{" "}
@@ -1005,13 +1019,15 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 					data.residuaryBeneficiaries.length > 0 && (
 						<View style={styles.distributionSection}>
 							<Text style={styles.distributionTitle}>
-								6. Distribution of my Residuary Estate
+								{sections.residuary}. Distribution of my Residuary Estate
 							</Text>
 
 							<Text style={styles.distributionText}>
-								<Text style={{ fontWeight: "bold" }}>6.1.</Text> I direct that
-								my Trustees shall distribute my Residuary Estate in accordance
-								with the following provisions:
+								<Text style={{ fontWeight: "bold" }}>
+									{sections.residuary}.1.
+								</Text>{" "}
+								I direct that my Trustees shall distribute my Residuary Estate
+								in accordance with the following provisions:
 							</Text>
 
 							{data.residuaryBeneficiaries?.map((beneficiary, index) => {
@@ -1051,9 +1067,11 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 							})}
 
 							<Text style={styles.distributionText}>
-								<Text style={{ fontWeight: "bold" }}>6.2.</Text> If any of the
-								shares set out in this clause fails it shall be added
-								proportionately to the shares which do not fail.
+								<Text style={{ fontWeight: "bold" }}>
+									{sections.residuary}.2.
+								</Text>{" "}
+								If any of the shares set out in this clause fails it shall be
+								added proportionately to the shares which do not fail.
 							</Text>
 						</View>
 					)}
@@ -1062,12 +1080,14 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 				{shouldShowGuardiansSection() && (
 					<View style={styles.guardianSection}>
 						<Text style={styles.guardianTitle}>
-							7. Appointment of Guardians
+							{sections.guardians}. Appointment of Guardians
 						</Text>
 
 						{data.guardians?.map((guardian, index) => (
 							<Text key={index} style={styles.guardianText}>
-								<Text style={{ fontWeight: "bold" }}>7.{index + 1}.</Text>{" "}
+								<Text style={{ fontWeight: "bold" }}>
+									{sections.guardians}.{index + 1}.
+								</Text>{" "}
 								{guardian.isPrimary ? (
 									<>
 										If my partner dies before me, I appoint{" "}
@@ -1095,11 +1115,13 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 				{/* Pet Care Section */}
 				{shouldShowPetsSection() && (
 					<View style={styles.guardianSection}>
-						<Text style={styles.guardianTitle}>8. Guardianship of Pets</Text>
+						<Text style={styles.guardianTitle}>
+							{sections.pets}. Guardianship of Pets
+						</Text>
 
 						<Text style={styles.guardianText}>
-							<Text style={{ fontWeight: "bold" }}>8.1.</Text> I give my pet(s)
-							to{" "}
+							<Text style={{ fontWeight: "bold" }}>{sections.pets}.1.</Text> I
+							give my pet(s) to{" "}
 							<Text style={{ fontWeight: "bold" }}>
 								{data.petsGuardian?.fullName}
 								{data.petsGuardian?.relationship
@@ -1110,8 +1132,8 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 						</Text>
 
 						<Text style={styles.guardianText}>
-							<Text style={{ fontWeight: "bold" }}>8.2.</Text> If they are
-							unable or unwilling to act, I direct my Trustees to make
+							<Text style={{ fontWeight: "bold" }}>{sections.pets}.2.</Text> If
+							they are unable or unwilling to act, I direct my Trustees to make
 							appropriate arrangements for their care, including placement with
 							a suitable alternative caregiver or, if necessary, a reputable
 							animal rescue organisation.
@@ -1121,12 +1143,16 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 
 				{/* Digital Assets Section */}
 				<View style={styles.distributionSection}>
-					<Text style={styles.distributionTitle}>9. Digital Assets</Text>
+					<Text style={styles.distributionTitle}>
+						{sections.digitalAssets}. Digital Assets
+					</Text>
 					<Text style={styles.distributionText}>
-						<Text style={{ fontWeight: "bold" }}>9.1.</Text> I authorise my
-						Trustees to access, use, distribute and dispose of my digital
-						devices and digital assets, (including online accounts, emails,
-						photos, social media, subscriptions, software, licences,
+						<Text style={{ fontWeight: "bold" }}>
+							{sections.digitalAssets}.1.
+						</Text>{" "}
+						I authorise my Trustees to access, use, distribute and dispose of my
+						digital devices and digital assets, (including online accounts,
+						emails, photos, social media, subscriptions, software, licences,
 						cryptocurrencies, and similar items and accounts), wherever or
 						however stored, as they think fit giving due consideration to any
 						letter of wishes I may prepare. If no such letter has been left by
@@ -1137,63 +1163,83 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 
 				{/* General Provisions Section */}
 				<View style={styles.distributionSection}>
-					<Text style={styles.distributionTitle}>10. General Provisions</Text>
-					<Text style={styles.distributionText}>
-						<Text style={{ fontWeight: "bold" }}>10.1.</Text> The standard
-						provisions and all of the special provisions of the Society of Trust
-						and Estate Practitioners (3rd Edition) shall apply.
+					<Text style={styles.distributionTitle}>
+						{sections.powers}. General Provisions
 					</Text>
 					<Text style={styles.distributionText}>
-						<Text style={{ fontWeight: "bold" }}>10.2.</Text> Any person who
-						does not survive me by 28 days who would otherwise be a beneficiary
-						under this Will shall be treated for all the purposes of my will as
-						having died in my lifetime.
+						<Text style={{ fontWeight: "bold" }}>{sections.powers}.1.</Text> The
+						standard provisions and all of the special provisions of the Society
+						of Trust and Estate Practitioners (3rd Edition) shall apply.
 					</Text>
 					<Text style={styles.distributionText}>
-						<Text style={{ fontWeight: "bold" }}>10.3.</Text> Clause headings in
-						this Will are for ease of reference only and do not affect the
-						interpretation of this Will.
+						<Text style={{ fontWeight: "bold" }}>{sections.powers}.2.</Text> Any
+						person who does not survive me by 28 days who would otherwise be a
+						beneficiary under this Will shall be treated for all the purposes of
+						my will as having died in my lifetime.
+					</Text>
+					<Text style={styles.distributionText}>
+						<Text style={{ fontWeight: "bold" }}>{sections.powers}.3.</Text>{" "}
+						Clause headings in this Will are for ease of reference only and do
+						not affect the interpretation of this Will.
 					</Text>
 				</View>
 
 				{/* Final Declaration Section */}
 				<View style={styles.finalDeclarationSection}>
 					<Text style={styles.finalDeclarationTitle}>
-						12. Final Declaration
+						{sections.finalDeclaration}. Final Declaration
 					</Text>
 					<Text style={styles.finalDeclarationText}>
-						<Text style={{ fontWeight: "bold" }}>12.1.</Text> I declare that:
+						<Text style={{ fontWeight: "bold" }}>
+							{sections.finalDeclaration}.1.
+						</Text>{" "}
+						I declare that:
 					</Text>
 					<Text style={styles.finalDeclarationText}>
-						<Text style={{ fontWeight: "bold" }}>12.2.</Text> I am over 18;
+						<Text style={{ fontWeight: "bold" }}>
+							{sections.finalDeclaration}.2.
+						</Text>{" "}
+						I am over 18;
 					</Text>
 					<Text style={styles.finalDeclarationText}>
-						<Text style={{ fontWeight: "bold" }}>12.3.</Text> I am mentally
-						capable of making my own decisions about my will;
+						<Text style={{ fontWeight: "bold" }}>
+							{sections.finalDeclaration}.3.
+						</Text>{" "}
+						I am mentally capable of making my own decisions about my will;
 					</Text>
 					<Text style={styles.finalDeclarationText}>
-						<Text style={{ fontWeight: "bold" }}>12.4.</Text> I am freely and
-						voluntarily making this will;
+						<Text style={{ fontWeight: "bold" }}>
+							{sections.finalDeclaration}.4.
+						</Text>{" "}
+						I am freely and voluntarily making this will;
 					</Text>
 					<Text style={styles.finalDeclarationText}>
-						<Text style={{ fontWeight: "bold" }}>12.5.</Text> I have considered
-						all those persons I might reasonably be expected to provide for by
-						my will; and
+						<Text style={{ fontWeight: "bold" }}>
+							{sections.finalDeclaration}.5.
+						</Text>{" "}
+						I have considered all those persons I might reasonably be expected
+						to provide for by my will; and
 					</Text>
 					<Text style={styles.finalDeclarationText}>
-						<Text style={{ fontWeight: "bold" }}>12.6.</Text> I understand this
-						will and approve it as a true reflection of my wishes.
+						<Text style={{ fontWeight: "bold" }}>
+							{sections.finalDeclaration}.6.
+						</Text>{" "}
+						I understand this will and approve it as a true reflection of my
+						wishes.
 					</Text>
 				</View>
 
 				{/* Witness Signatures Section */}
 				<View style={styles.witnessSection}>
-					<Text style={styles.witnessTitle}>13. Witness Signatures</Text>
+					<Text style={styles.witnessTitle}>
+						{sections.witnesses}. Witness Signatures
+					</Text>
 					<Text style={styles.witnessText}>
 						<Text style={{ fontWeight: "bold" }}>SIGNATURE</Text>
 					</Text>
 					<Text style={styles.witnessText}>
-						<Text style={{ fontWeight: "bold" }}>13.1.</Text> I,{" "}
+						<Text style={{ fontWeight: "bold" }}>{sections.witnesses}.1.</Text>{" "}
+						I,{" "}
 						<Text style={{ fontWeight: "bold" }}>{data.personal.fullName}</Text>{" "}
 						declare that this is my last will and testament, and I sign it in
 						the presence of the following witnesses, who in my presence and in
@@ -1254,53 +1300,57 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 					)}
 
 					<Text style={styles.witnessText}>
-						<Text style={{ fontWeight: "bold" }}>13.2.</Text> Signed by the
-						testator in our presence and then by us in the presence of the
-						testator and each other on the date shown above.
+						<Text style={{ fontWeight: "bold" }}>{sections.witnesses}.2.</Text>{" "}
+						Signed by the testator in our presence and then by us in the
+						presence of the testator and each other on the date shown above.
 					</Text>
 				</View>
 			</Page>
 
-			{/* Appendix: New Page */}
-			<Page style={styles.appendixPage} break>
-				<View style={styles.appendixSection}>
-					<Text style={styles.appendixTitle}>Appendix</Text>
-					<Text style={styles.appendixIntro}>
-						<Text style={{ fontWeight: "bold" }}>
-							This Appendix does not form part of the Will.
-						</Text>{" "}
-						Your Will becomes a public document once probate has been issued by
-						the courts. This Appendix is a 'non-testamentary' document. This
-						means that it is excluded from being made public, keeping your
-						detailed assets, personal messages and funeral wishes private.
-					</Text>
-					<Text style={styles.appendixIntro}>
-						This Appendix has been included alongside my Will solely to provide
-						guidance and practical assistance to my Trustees.
-					</Text>
+			{data.assets && data.assets.length > 0 && (
+				<Page style={styles.appendixPage} break>
+					<View style={styles.appendixSection}>
+						<Text style={styles.appendixTitle}>Appendix</Text>
+						<Text style={styles.appendixIntro}>
+							<Text style={{ fontWeight: "bold" }}>
+								This Appendix does not form part of the Will.
+							</Text>{" "}
+							Your Will becomes a public document once probate has been issued
+							by the courts. This Appendix is a 'non-testamentary' document.
+							This means that it is excluded from being made public, keeping
+							your detailed assets, personal messages and funeral wishes
+							private.
+						</Text>
+						<Text style={styles.appendixIntro}>
+							This Appendix has been included alongside my Will solely to
+							provide guidance and practical assistance to my Trustees.
+						</Text>
 
-					<Text style={styles.assetDetailsTitle}>Schedule of Assets</Text>
-					<Text style={styles.assetDetailsIntro}>
-						I have provided a record of my assets to support my Trustees in the
-						administration of my estate. While this information reflects my
-						holdings at the date of writing, it may not be complete. My Trustees
-						should therefore take reasonable steps to identify and secure any
-						other assets that may exist but are not listed here.
-					</Text>
+						<Text style={styles.assetDetailsTitle}>Schedule of Assets</Text>
+						<Text style={styles.assetDetailsIntro}>
+							I have provided a record of my assets to support my Trustees in
+							the administration of my estate. While this information reflects
+							my holdings at the date of writing, it may not be complete. My
+							Trustees should therefore take reasonable steps to identify and
+							secure any other assets that may exist but are not listed here.
+						</Text>
 
-					{data.assets && data.assets.length > 0 ? (
-						<View style={styles.assetList}>
-							{data.assets.map((asset, idx) => (
-								<Text key={idx} style={styles.assetListItem}>
-									- {asset.description} ({asset.type})
-								</Text>
-							))}
-						</View>
-					) : (
-						<Text style={styles.appendixText}>No assets have been added.</Text>
-					)}
-				</View>
-			</Page>
+						{data.assets && data.assets.length > 0 ? (
+							<View style={styles.assetList}>
+								{data.assets.map((asset, idx) => (
+									<Text key={idx} style={styles.assetListItem}>
+										- {asset.description} ({asset.type})
+									</Text>
+								))}
+							</View>
+						) : (
+							<Text style={styles.appendixText}>
+								No assets have been added.
+							</Text>
+						)}
+					</View>
+				</Page>
+			)}
 		</Document>
 	);
 };
