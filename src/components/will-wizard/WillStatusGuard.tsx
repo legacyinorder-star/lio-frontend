@@ -6,7 +6,7 @@ import { type WillData } from "@/context/WillContext";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Lock, CheckCircle, Clock, AlertTriangle } from "lucide-react";
+import { Lock, CheckCircle, Clock } from "lucide-react";
 import { toast } from "sonner";
 
 interface WillStatusGuardProps {
