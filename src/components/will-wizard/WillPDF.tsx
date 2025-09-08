@@ -339,7 +339,7 @@ const styles = StyleSheet.create({
 	checklistItem: {
 		flexDirection: "row",
 		alignItems: "flex-start",
-		marginBottom: 12,
+		marginBottom: 15,
 		paddingLeft: 20,
 	},
 	checklistCheckbox: {
@@ -354,7 +354,8 @@ const styles = StyleSheet.create({
 		fontSize: 14,
 		color: "#374151",
 		flex: 1,
-		lineHeight: 1.5,
+		lineHeight: 1.8,
+		marginBottom: 2,
 	},
 	checklistImportant: {
 		fontSize: 14,
