@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { useWillWizard } from "@/context/WillWizardContext";
 import { useWill } from "@/context/WillContext";
 import { useRelationships } from "@/context/RelationshipsContext";
@@ -25,10 +26,21 @@ import FuneralInstructionsStep from "./steps/FuneralInstructionsStep";
 import ReviewStep from "./steps/ReviewStep";
 
 export default function WillWizard() {
+	const navigate = useNavigate();
+	const { step: urlStep } = useParams<{ step: string }>();
 	const [showKnowledgeBase, setShowKnowledgeBase] = useState(false);
 	const { activeWill, setActiveWill } = useWill();
 	const { currentStep, setWillWizardState, markStepComplete, setActiveWillId } =
 		useWillWizard();
+
+	// Handle case where user visits /app/create-will without step parameter
+	useEffect(() => {
+		if (!urlStep) {
+			console.log("🔄 No step parameter found, redirecting to personalInfo");
+			navigate("/app/create-will/personalInfo", { replace: true });
+			return;
+		}
+	}, [urlStep, navigate]);
 
 	//const { activeWill } = useWill();
 	const {
