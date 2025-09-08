@@ -6,7 +6,7 @@ import { type WillData } from "@/context/WillContext";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Lock, CheckCircle, Clock } from "lucide-react";
+import { Lock, CheckCircle, Clock, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 
 interface WillStatusGuardProps {
@@ -29,7 +29,7 @@ interface WillStatusGuardProps {
  */
 export default function WillStatusGuard({
 	children,
-	allowedStatuses = ["in progress", "draft"],
+	allowedStatuses = ["in progress", "rejected", "draft"],
 	redirectTo = "/app/dashboard",
 }: WillStatusGuardProps) {
 	const navigate = useNavigate();
@@ -108,6 +108,8 @@ export default function WillStatusGuard({
 								<CheckCircle className="h-8 w-8 text-green-600" />
 							) : willData.status === "under review" ? (
 								<Clock className="h-8 w-8 text-orange-600" />
+							) : willData.status === "rejected" ? (
+								<AlertTriangle className="h-8 w-8 text-yellow-600" />
 							) : (
 								<Lock className="h-8 w-8 text-gray-600" />
 							)}
@@ -116,7 +118,8 @@ export default function WillStatusGuard({
 							{willData.status === "completed" && "Will Completed"}
 							{willData.status === "under review" && "Will Under Review"}
 							{willData.status === "submitted" && "Will Submitted"}
-							{!["completed", "under review", "submitted"].includes(
+							{willData.status === "rejected" && "Will Needs Revision"}
+							{!["completed", "under review", "submitted", "rejected"].includes(
 								willData.status
 							) && "Access Restricted"}
 						</CardTitle>
@@ -148,7 +151,13 @@ export default function WillStatusGuard({
 									<p>No further changes can be made at this time.</p>
 								</>
 							)}
-							{!["completed", "under review", "submitted"].includes(
+							{willData.status === "rejected" && (
+								<>
+									<p>Your will has been reviewed and needs revisions.</p>
+									<p>You can continue editing to address the feedback.</p>
+								</>
+							)}
+							{!["completed", "under review", "submitted", "rejected"].includes(
 								willData.status
 							) && (
 								<>
@@ -172,6 +181,15 @@ export default function WillStatusGuard({
 									className="w-full text-white"
 								>
 									Download Will
+								</Button>
+							)}
+							{willData.status === "rejected" && (
+								<Button
+									variant="outline"
+									onClick={() => navigate("/app/create-will")}
+									className="w-full"
+								>
+									Continue Editing
 								</Button>
 							)}
 						</div>

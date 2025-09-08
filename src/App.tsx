@@ -153,7 +153,11 @@ function App() {
 												path="create-will"
 												element={
 													<WillStatusGuard
-														allowedStatuses={["in progress", "draft"]}
+														allowedStatuses={[
+															"in progress",
+															"draft",
+															"rejected",
+														]}
 													>
 														<WillWizard />
 													</WillStatusGuard>
@@ -163,7 +167,11 @@ function App() {
 												path="create-will/:step"
 												element={
 													<WillStatusGuard
-														allowedStatuses={["in progress", "draft"]}
+														allowedStatuses={[
+															"in progress",
+															"draft",
+															"rejected",
+														]}
 													>
 														<WillWizard />
 													</WillStatusGuard>
