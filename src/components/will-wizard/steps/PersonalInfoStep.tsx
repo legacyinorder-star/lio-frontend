@@ -59,7 +59,7 @@ const personalInfoSchema = z.object({
 	address: z.string().min(1, "Address is required"),
 	city: z.string().min(1, "City is required"),
 	state: z.string().min(1, "Town/Borough is required"),
-	postCode: z.string().min(1, "Postal/ZIP code is required"),
+	postCode: z.string().min(1, "Postcode is required"),
 	country: z.string().min(1, "Country is required"),
 });
 
@@ -583,11 +583,11 @@ export default function PersonalInfoStep({
 									render={({ field }) => (
 										<FormItem>
 											<FormLabel className="text-sm font-medium text-gray-700">
-												Postal/ZIP Code *
+												Postcode *
 											</FormLabel>
 											<FormControl>
 												<Input
-													placeholder="Enter postal/ZIP code"
+													placeholder="Enter postcode"
 													{...field}
 													className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary "
 												/>

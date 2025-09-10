@@ -38,7 +38,7 @@ const addressSchema = z.object({
 	address: z.string().min(1, "Address is required"),
 	city: z.string().min(1, "City is required"),
 	state: z.string().min(1, "State/Province is required"),
-	postCode: z.string().min(1, "Postal/ZIP code is required"),
+	postCode: z.string().min(1, "Postcode is required"),
 	country: z.string().min(1, "Country is required"),
 });
 
@@ -345,7 +345,7 @@ export default function AddressStep({
 								name="postCode"
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel>Postal/ZIP Code</FormLabel>
+										<FormLabel>Postcode</FormLabel>
 										<FormControl>
 											<Input placeholder="M5V 2H1" {...field} />
 										</FormControl>
