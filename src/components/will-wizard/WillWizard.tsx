@@ -163,6 +163,7 @@ export default function WillWizard() {
 				activeWill.id
 			);
 			setActiveWillId(activeWill.id);
+			console.log("🚀 WillWizard: setActiveWillId call completed");
 		}
 	}, [activeWill?.id, setActiveWillId]);
 
@@ -319,9 +320,17 @@ export default function WillWizard() {
 
 	const handleNext = useCallback(async () => {
 		// Mark current step as complete before moving to next step
-		console.log("🚀 handleNext called for step:", currentQuestion);
-		console.log("📊 Current form data:", formData);
+		console.log("🚀 WillWizard: handleNext called for step:", currentQuestion);
+		console.log("📊 WillWizard: Current form data:", formData);
+		console.log(
+			"🔧 WillWizard: About to call markStepComplete for:",
+			currentQuestion
+		);
 		await markStepComplete(currentQuestion);
+		console.log(
+			"🔧 WillWizard: markStepComplete completed for:",
+			currentQuestion
+		);
 
 		// Helper function to check if there are minor children
 		const hasMinorChildren = () => {

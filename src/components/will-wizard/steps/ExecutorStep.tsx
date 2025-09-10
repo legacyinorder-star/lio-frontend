@@ -860,20 +860,23 @@ export default function ExecutorStep({
 						</div>
 						<div className="ml-3 flex-1">
 							<h3 className="text-sm font-medium text-green-800">
-								Recommended: Legacy In Order Professional Executor Service
+								Recommended: Legacy In Order Executor Network
 							</h3>
 							<div className="mt-2 text-sm text-green-700">
 								<p>
-									Legacy In Order offers professional executor services to
-									ensure your will is executed properly and efficiently. Our
-									experienced team handles all legal requirements, asset
-									distribution, and administrative tasks.
+									Protect your loved ones from stress and uncertainty by
+									appointing a professional executor through Legacy In Order,
+									ensuring your estate is handled smoothly, fairly, and with
+									complete peace of mind.
 								</p>
+								<p>Our trusted network of professional executors offers:</p>
 								<ul className="mt-2 list-disc list-inside space-y-1">
-									<li>Licensed and bonded professional executors</li>
-									<li>Experienced in estate administration</li>
+									<li>Licensed and bonded services</li>
+									<li>
+										Expertise in estate administration and asset distribution
+									</li>
 									<li>Available 24/7 for estate matters</li>
-									<li>Transparent fee structure</li>
+									<li>A transparent and fair fee structure</li>
 								</ul>
 							</div>
 							<div className="mt-3 flex items-center space-x-2">
@@ -887,7 +890,8 @@ export default function ExecutorStep({
 									htmlFor="useLegacyInOrder"
 									className="text-sm font-medium text-green-800"
 								>
-									Appoint Legacy In Order as my Primary Executor
+									Appoint Legacy In Order to connect me with a Professional
+									Executor
 								</Label>
 							</div>
 						</div>

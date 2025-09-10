@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -34,6 +34,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Child } from "../types/will.types";
 import { useWill } from "@/context/WillContext";
+import { useNavigate } from "react-router-dom";
+import { mapWillDataFromAPI } from "@/utils/dataTransform";
 
 const familyInfoSchema = z.object({
 	hasSpouse: z.boolean(),
@@ -101,12 +103,56 @@ export default function FamilyInfoStep({
 	isLoadingOwnerData,
 }: FamilyInfoStepProps) {
 	const { activeWill, setActiveWill } = useWill();
+	const navigate = useNavigate();
 	const { relationships, isLoading: relationshipsLoading } = useRelationships();
 	const [spouseDialogOpen, setSpouseDialogOpen] = useState(false);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 	const [deleteLoading, setDeleteLoading] = useState(false);
 	const { refetch } = useWillData();
+
+	// ✅ ADDED: State for managing will data independently
+	const [willData, setWillData] = useState<{ id: string } | null>(null);
+	const [isLoadingWill, setIsLoadingWill] = useState(true);
+	const [willLoadError, setWillLoadError] = useState<string | null>(null);
+
+	// ✅ ADDED: Function to load active will data
+	const loadActiveWill = useCallback(async () => {
+		try {
+			setIsLoadingWill(true);
+			setWillLoadError(null);
+
+			const { data, error } = await apiClient("/wills/get-user-active-will");
+
+			if (error) {
+				console.error("Error loading active will:", error);
+				setWillLoadError("Failed to load will data");
+				return;
+			}
+
+			// Handle both array and single object responses
+			const willData = Array.isArray(data) ? data[0] : data;
+			if (willData) {
+				// Transform API data to camelCase format
+				const transformedWillData = mapWillDataFromAPI(willData);
+				setWillData({ id: transformedWillData.id });
+			} else {
+				// No will found, redirect to dashboard
+				console.log("No active Will found, redirecting to dashboard");
+				navigate("/app/dashboard");
+			}
+		} catch (error) {
+			console.error("Error loading active will:", error);
+			setWillLoadError("An error occurred while loading will data");
+		} finally {
+			setIsLoadingWill(false);
+		}
+	}, [navigate]);
+
+	// ✅ ADDED: Load active will on component mount
+	useEffect(() => {
+		loadActiveWill();
+	}, [loadActiveWill]);
 
 	// ✅ ADDED: Local state to show spouse data immediately after save
 	const [localSpouseData, setLocalSpouseData] = useState<{
@@ -224,86 +270,92 @@ export default function FamilyInfoStep({
 		form.setValue("hasSpouse", hasSpouse);
 	}, [localSpouseData, form]);
 
-	// ✅ ADDED: Load children from API when component mounts
-	const loadChildren = async (willId: string) => {
-		setIsLoadingChildren(true);
-		try {
-			const { data, error } = await apiClient<ChildApiResponse[]>(
-				`/people/children/get-by-will/${willId}`
-			);
-
-			if (error) {
-				console.error("Error loading children:", error);
-				return;
+	// ✅ ADDED: Update active will when children state changes
+	const updateActiveWillChildren = useCallback(
+		(newChildren: Child[]) => {
+			if (activeWill) {
+				setActiveWill({
+					...activeWill,
+					children: newChildren,
+				});
 			}
+		},
+		[activeWill, setActiveWill]
+	);
 
-			if (data && data.length > 0) {
-				// Transform API data to component format
-				const transformedChildren: Child[] = data.map((child) => ({
-					id: child.id,
-					firstName: child.first_name,
-					lastName: child.last_name,
-					isMinor: child.is_minor,
-				}));
+	// ✅ ADDED: Load children from API when component mounts
+	const loadChildren = useCallback(
+		async (willId: string) => {
+			setIsLoadingChildren(true);
+			try {
+				const { data, error } = await apiClient<ChildApiResponse[]>(
+					`/people/children/get-by-will/${willId}`
+				);
 
-				setChildren(transformedChildren);
-				setHasChildren(true);
-				form.setValue("hasChildren", true);
+				if (error) {
+					console.error("Error loading children:", error);
+					return;
+				}
 
-				// Update active will context with loaded children
-				updateActiveWillChildren(transformedChildren);
-			} else {
-				// No children found, check initialData as fallback
+				if (data && data.length > 0) {
+					// Transform API data to component format
+					const transformedChildren: Child[] = data.map((child) => ({
+						id: child.id,
+						firstName: child.first_name,
+						lastName: child.last_name,
+						isMinor: child.is_minor,
+					}));
+
+					setChildren(transformedChildren);
+					setHasChildren(true);
+					form.setValue("hasChildren", true);
+
+					// Update active will context with loaded children
+					updateActiveWillChildren(transformedChildren);
+				} else {
+					// No children found, check initialData as fallback
+					if (initialData?.children && initialData.children.length > 0) {
+						setChildren(initialData.children);
+						setHasChildren(initialData.hasChildren);
+						form.setValue("hasChildren", initialData.hasChildren);
+					}
+				}
+			} catch (error) {
+				console.error("Error loading children:", error);
+				// Fall back to initialData if API call fails
 				if (initialData?.children && initialData.children.length > 0) {
 					setChildren(initialData.children);
 					setHasChildren(initialData.hasChildren);
 					form.setValue("hasChildren", initialData.hasChildren);
 				}
+			} finally {
+				setIsLoadingChildren(false);
 			}
-		} catch (error) {
-			console.error("Error loading children:", error);
-			// Fall back to initialData if API call fails
-			if (initialData?.children && initialData.children.length > 0) {
-				setChildren(initialData.children);
-				setHasChildren(initialData.hasChildren);
-				form.setValue("hasChildren", initialData.hasChildren);
-			}
-		} finally {
-			setIsLoadingChildren(false);
-		}
-	};
+		},
+		[form, initialData, updateActiveWillChildren]
+	);
 
 	useEffect(() => {
-		if (activeWill?.id) {
-			loadChildren(activeWill.id);
+		if (willData?.id) {
+			loadChildren(willData.id);
 			// Always check for existing pets to determine if user has pets
-			loadExistingPets(activeWill.id);
+			loadExistingPets(willData.id);
 		} else if (initialData?.children && initialData.children.length > 0) {
 			setChildren(initialData.children);
 			setHasChildren(initialData.hasChildren);
 			form.setValue("hasChildren", initialData.hasChildren);
 		}
 
-		// Only use initialData for pets if we don't have an active will (fallback)
-		if (!activeWill?.id && initialData?.hasPets !== undefined) {
+		// Only use initialData for pets if we don't have will data (fallback)
+		if (!willData?.id && initialData?.hasPets !== undefined) {
 			setHasPets(initialData.hasPets);
 			setInitialHasPets(initialData.hasPets);
 		}
-	}, [activeWill?.id, initialData]);
-
-	// ✅ ADDED: Update active will when children state changes
-	const updateActiveWillChildren = (newChildren: Child[]) => {
-		if (activeWill) {
-			setActiveWill({
-				...activeWill,
-				children: newChildren,
-			});
-		}
-	};
+	}, [willData?.id, initialData, form, loadChildren]);
 
 	// ✅ ADDED: Pet management function
 	const handlePetsChange = async () => {
-		if (!activeWill?.id) {
+		if (!willData?.id) {
 			toast.error(
 				"Will information not found. Please start from the beginning."
 			);
@@ -328,7 +380,7 @@ export default function FamilyInfoStep({
 			else if (!initialHasPets && hasPets) {
 				// Send POST request to create pets record
 				const petData = {
-					will_id: activeWill.id,
+					will_id: willData.id,
 				};
 
 				const { data, error } = await apiClient<{ id: string }>("/pets", {
@@ -484,8 +536,8 @@ export default function FamilyInfoStep({
 		setIsSubmitting(true);
 
 		try {
-			// Check if we have an active will
-			if (!activeWill?.id) {
+			// Check if we have will data
+			if (!willData?.id) {
 				toast.error(
 					"Will information not found. Please start from the beginning."
 				);
@@ -525,8 +577,8 @@ export default function FamilyInfoStep({
 				}
 
 				// Reload children from API to get the latest data
-				if (activeWill?.id) {
-					await loadChildren(activeWill.id);
+				if (willData?.id) {
+					await loadChildren(willData.id);
 				}
 
 				toast.success("Child information updated successfully");
@@ -536,7 +588,7 @@ export default function FamilyInfoStep({
 					first_name: childForm.firstName,
 					last_name: childForm.lastName,
 					relationship_id: childRelationship.id,
-					will_id: activeWill.id,
+					will_id: willData.id,
 					is_minor: childForm.isMinor,
 				};
 
@@ -553,8 +605,8 @@ export default function FamilyInfoStep({
 				}
 
 				// Reload children from API to get the latest data
-				if (activeWill?.id) {
-					await loadChildren(activeWill.id);
+				if (willData?.id) {
+					await loadChildren(willData.id);
 				}
 
 				toast.success("Child information saved successfully");
@@ -620,8 +672,8 @@ export default function FamilyInfoStep({
 			}
 
 			// Reload children from API to ensure consistency
-			if (activeWill?.id) {
-				await loadChildren(activeWill.id);
+			if (willData?.id) {
+				await loadChildren(willData.id);
 			}
 
 			toast.success("Child removed successfully");
@@ -651,6 +703,39 @@ export default function FamilyInfoStep({
 		setDeleteChildDialogOpen(false);
 		setChildToDelete(null);
 	};
+
+	// Show loading state if will data is loading or if relationships/owner data are still loading
+	if (isLoadingWill || relationshipsLoading || isLoadingOwnerData) {
+		return (
+			<div className="space-y-4">
+				<div className="flex justify-center py-8">
+					<LoadingSpinner
+						message={isLoadingWill ? "Loading will data..." : "Loading..."}
+					/>
+				</div>
+			</div>
+		);
+	}
+
+	// Show error state if will loading failed
+	if (willLoadError) {
+		return (
+			<div className="space-y-4">
+				<div className="flex flex-col items-center justify-center py-8 space-y-4">
+					<div className="text-red-600 text-center">
+						<p className="font-medium">Failed to load will data</p>
+						<p className="text-sm text-gray-600 mt-1">{willLoadError}</p>
+					</div>
+					<Button
+						onClick={() => navigate("/app/dashboard")}
+						className="cursor-pointer bg-primary hover:bg-primary/90 text-white"
+					>
+						Return to Dashboard
+					</Button>
+				</div>
+			</div>
+		);
+	}
 
 	// Show loading state if relationships or owner data are still loading
 	if (relationshipsLoading || isLoadingOwnerData) {

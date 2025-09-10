@@ -14,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { StepProps } from "../types/will.types";
 import { useWill } from "@/context/WillContext";
+import { useWillWizard } from "@/context/WillWizardContext";
 import { apiClient } from "@/utils/apiClient";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
@@ -71,6 +72,7 @@ export default function PersonalInfoStep({
 	willOwnerData,
 }: PersonalInfoStepProps) {
 	const { activeWill, setActiveWill } = useWill();
+	const { setActiveWillId } = useWillWizard();
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [showDisclaimer, setShowDisclaimer] = useState(false);
 	const navigate = useNavigate();
@@ -165,7 +167,19 @@ export default function PersonalInfoStep({
 	}, [willOwnerData, form]);
 
 	const onSubmit = async (formData: PersonalInfoData) => {
+		const submissionId = Math.random().toString(36).substr(2, 9);
+		console.log(
+			`🔧 PersonalInfoStep: onSubmit called [${submissionId}] - isSubmitting:`,
+			isSubmitting
+		);
+		if (isSubmitting) {
+			console.log(
+				"🔧 PersonalInfoStep: Already submitting, ignoring duplicate call"
+			);
+			return;
+		}
 		setIsSubmitting(true);
+		console.log("🔧 PersonalInfoStep: Set isSubmitting to true");
 
 		try {
 			// Update the context with the form data
@@ -212,54 +226,70 @@ export default function PersonalInfoStep({
 			}
 
 			// For new wills, wait for the will to be created and context updated
-			if (!activeWill?.id && ownerResponse.will_id) {
-				// Update the active will context
-				const newWillData = {
-					id: ownerResponse.will_id,
-					lastUpdatedAt: new Date().toISOString(),
-					createdAt: new Date().toISOString(),
-					status: "draft" as const,
-					userId: "",
-					owner: {
-						id: ownerResponse.id,
-						firstName: formData.firstName,
-						middleName: formData.middleName,
-						lastName: formData.lastName,
-						dateOfBirth: formData.dateOfBirth,
-						address: formData.address,
-						city: formData.city,
-						postCode: formData.postCode,
-						country: "United Kingdom",
-						maritalStatus: "",
-					},
-					assets: [],
-					gifts: [],
-					beneficiaries: [],
-					executors: [],
-					witnesses: [],
-				};
+			// if (!activeWill?.id && ownerResponse.will_id) {
+			// Update the active will context
+			const newWillData = {
+				id: ownerResponse.will_id,
+				lastUpdatedAt: new Date().toISOString(),
+				createdAt: new Date().toISOString(),
+				status: "in progress" as const,
+				userId: "",
+				owner: {
+					id: ownerResponse.id,
+					firstName: formData.firstName,
+					middleName: formData.middleName,
+					lastName: formData.lastName,
+					dateOfBirth: formData.dateOfBirth,
+					address: formData.address,
+					city: formData.city,
+					postCode: formData.postCode,
+					country: "United Kingdom",
+					maritalStatus: "",
+				},
+				assets: [],
+				gifts: [],
+				beneficiaries: [],
+				executors: [],
+				witnesses: [],
+			};
 
-				if (setActiveWill) {
-					setActiveWill(newWillData);
-				}
+			console.log(
+				`🔧 PersonalInfoStep [${submissionId}]: About to set activeWill with:`,
+				newWillData
+			);
+			setActiveWill(newWillData);
+			console.log(
+				`🔧 PersonalInfoStep [${submissionId}]: setActiveWill called`
+			);
 
-				toast.success("Will created successfully!");
+			// ✅ CRITICAL FIX: Set the willId in WillWizardContext before calling onNext()
+			// This ensures markStepComplete() has access to the willId
+			console.log(
+				`🔧 PersonalInfoStep [${submissionId}]: About to setActiveWillId with:`,
+				ownerResponse.will_id
+			);
+			setActiveWillId(ownerResponse.will_id);
+			console.log(
+				`🔧 PersonalInfoStep [${submissionId}]: setActiveWillId called`
+			);
 
-				// Wait a brief moment for React context to update before navigation
-				await new Promise((resolve) => setTimeout(resolve, 100));
-
-				// Verify the context was updated before proceeding
-				console.log("🔍 Will created with ID:", ownerResponse.will_id);
-			} else {
-				toast.success("Personal information saved successfully!");
-			}
-
+			toast.success("Personal information saved successfully!");
+			console.log(
+				`🔧 PersonalInfoStep [${submissionId}]: About to call onNext()`
+			);
 			// Proceed to next step
 			onNext();
+			console.log(`🔧 PersonalInfoStep [${submissionId}]: onNext() called`);
 		} catch (error) {
-			console.error("Error in PersonalInfoStep:", error);
+			console.error(
+				`🔧 PersonalInfoStep [${submissionId}]: Error occurred:`,
+				error
+			);
 			toast.error("An error occurred. Please try again.");
 		} finally {
+			console.log(
+				`🔧 PersonalInfoStep [${submissionId}]: Setting isSubmitting to false`
+			);
 			setIsSubmitting(false);
 		}
 	};
@@ -409,6 +439,7 @@ export default function PersonalInfoStep({
 											<FormControl>
 												<Input
 													type="date"
+													max={new Date().toISOString().split("T")[0]}
 													{...field}
 													className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
 												/>

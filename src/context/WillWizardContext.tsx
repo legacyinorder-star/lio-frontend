@@ -96,12 +96,25 @@ export function WillWizardProvider({ children }: { children: ReactNode }) {
 	// Progress tracking functions
 	const markStepComplete = useCallback(
 		async (step: QuestionType) => {
+			console.log(
+				"🔧 WillWizardContext: markStepComplete called for step:",
+				step
+			);
+			console.log("🔧 WillWizardContext: Current willId:", willId);
+			console.log(
+				"🔧 WillWizardContext: Current completedSteps:",
+				completedSteps
+			);
+
 			if (!willId) {
-				console.log("❌ No willId available for marking step complete:", step);
+				console.log(
+					"❌ WillWizardContext: No willId available for marking step complete:",
+					step
+				);
 				return;
 			}
 
-			console.log("✅ Marking step as complete:", step);
+			console.log("✅ WillWizardContext: Marking step as complete:", step);
 			const updatedCompletion = { ...completedSteps, [step]: true };
 			setCompletedSteps(updatedCompletion);
 
@@ -254,10 +267,15 @@ export function WillWizardProvider({ children }: { children: ReactNode }) {
 	}, [willId, loadProgress]);
 
 	// Set willId when entering wizard (this would be called from WillWizard component)
-	const setActiveWillId = useCallback((id: string | null) => {
-		console.log("🎯 setActiveWillId called with:", id);
-		setWillId(id);
-	}, []);
+	const setActiveWillId = useCallback(
+		(id: string | null) => {
+			console.log("🔧 WillWizardContext: setActiveWillId called with:", id);
+			console.log("🔧 WillWizardContext: Previous willId was:", willId);
+			setWillId(id);
+			console.log("🔧 WillWizardContext: setWillId called, new willId:", id);
+		},
+		[willId]
+	);
 
 	const getStepInfo = (
 		step: QuestionType

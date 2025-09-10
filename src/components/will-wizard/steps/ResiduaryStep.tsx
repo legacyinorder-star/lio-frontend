@@ -636,8 +636,8 @@ export default function ResiduaryStep({
 				Sharing your Residuary Estate
 			</div>
 			<div className="text-[#696868] text-[0.875rem] -mt-4">
-				Specify who you would like to inherit any remaining assets not
-				specifically mentioned in your will.
+				Here you state who should inherit the rest of your estate after any
+				debts, expenses, and specific gifts have been paid out
 			</div>
 
 			{/* Main Content */}
@@ -653,7 +653,7 @@ export default function ResiduaryStep({
 								fontFamily: "TMT Limkin",
 							}}
 						>
-							How would you like to share your residuary estate?
+							How would you like your estate to be shared out?
 						</span>
 					</div>
 					<div className="text-[#696868] text-[0.875rem] -mt-4">
@@ -712,12 +712,12 @@ export default function ResiduaryStep({
 								fontFamily: "TMT Limkin",
 							}}
 						>
-							Select beneficiaries for your residuary estate
+							Select the people who should inherit your estate
 						</span>
 					</div>
 					<div className="text-[#696868] text-[0.875rem] -mt-4">
-						Choose who will receive the remaining assets. You can add new
-						beneficiaries or select from existing ones.
+						Choose who will receive the remaining assets. You can add new people
+						or select from existing ones.
 					</div>
 
 					<div className="flex justify-between items-center">

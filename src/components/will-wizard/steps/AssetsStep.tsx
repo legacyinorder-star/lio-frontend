@@ -169,6 +169,12 @@ export default function AssetsStep({
 				List your accounts and property
 			</div>
 			<div className="text-[#696868] text-[0.875rem] -mt-4">
+				This list is designed to help your executors quickly find your assets.
+				It’s just a starting point and will be attached as an annex to your
+				will, but we recommend that you also keep a separate, more detailed list
+				for reference.
+			</div>
+			<div className="text-[#696868] text-[0.875rem] -mt-4">
 				This includes your bank accounts, investments, property and life
 				insurance policies. It helps your executors, the people who will deal
 				with your estate after you die, know which providers to contact.
