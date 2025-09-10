@@ -20,17 +20,6 @@ import { useState, useEffect } from "react";
 import WillDisclaimerDialog from "../WillDisclaimerDialog";
 import { useNavigate } from "react-router-dom";
 
-// Calculate the date that would make someone exactly 18 years old today
-const getEighteenYearsAgoDate = () => {
-	const today = new Date();
-	const eighteenYearsAgo = new Date(
-		today.getFullYear() - 18,
-		today.getMonth(),
-		today.getDate()
-	);
-	return eighteenYearsAgo.toISOString().split("T")[0];
-};
-
 const personalInfoSchema = z.object({
 	firstName: z.string().min(2, "First name must be at least 2 characters"),
 	middleName: z.string().optional(),
@@ -104,7 +93,7 @@ export default function PersonalInfoStep({
 				firstName: willOwnerData.firstName || "",
 				middleName: willOwnerData.middleName || "",
 				lastName: willOwnerData.lastName || "",
-				dateOfBirth: willOwnerData.dateOfBirth || getEighteenYearsAgoDate(),
+				dateOfBirth: willOwnerData.dateOfBirth || "",
 				address: willOwnerData.address || "",
 				city: willOwnerData.city || "",
 				postCode: willOwnerData.postCode || "",
@@ -117,7 +106,7 @@ export default function PersonalInfoStep({
 				firstName: activeWill.owner.firstName || "",
 				middleName: activeWill.owner.middleName || "",
 				lastName: activeWill.owner.lastName || "",
-				dateOfBirth: activeWill.owner.dateOfBirth || getEighteenYearsAgoDate(),
+				dateOfBirth: activeWill.owner.dateOfBirth || "",
 				address: activeWill.owner.address || "",
 				city: activeWill.owner.city || "",
 				postCode: activeWill.owner.postCode || "",
@@ -129,7 +118,7 @@ export default function PersonalInfoStep({
 			firstName: data.firstName || "",
 			middleName: data.middleName || "",
 			lastName: data.lastName || "",
-			dateOfBirth: data.dateOfBirth || getEighteenYearsAgoDate(),
+			dateOfBirth: data.dateOfBirth || "",
 			address: data.address?.address || "",
 			city: data.address?.city || "",
 			postCode: data.address?.postCode || "",
@@ -156,13 +145,9 @@ export default function PersonalInfoStep({
 			form.setValue("lastName", willOwnerData.lastName || "", {
 				shouldValidate: false,
 			});
-			form.setValue(
-				"dateOfBirth",
-				willOwnerData.dateOfBirth || getEighteenYearsAgoDate(),
-				{
-					shouldValidate: false,
-				}
-			);
+			form.setValue("dateOfBirth", willOwnerData.dateOfBirth || "", {
+				shouldValidate: false,
+			});
 			form.setValue("address", willOwnerData.address || "", {
 				shouldValidate: false,
 			});
@@ -424,7 +409,6 @@ export default function PersonalInfoStep({
 											<FormControl>
 												<Input
 													type="date"
-													max={getEighteenYearsAgoDate()}
 													{...field}
 													className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
 												/>
