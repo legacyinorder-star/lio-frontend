@@ -18,8 +18,6 @@ import { apiClient } from "@/utils/apiClient";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import WillDisclaimerDialog from "../WillDisclaimerDialog";
-import Select from "react-select";
-import countryRegionData from "country-region-data/data.json";
 import { useNavigate } from "react-router-dom";
 
 // Calculate the date that would make someone exactly 18 years old today
@@ -58,28 +56,11 @@ const personalInfoSchema = z.object({
 		}, "You must be at least 18 years old to create a Will"),
 	address: z.string().min(1, "Address is required"),
 	city: z.string().min(1, "City is required"),
-	state: z.string().min(1, "Town/Borough is required"),
 	postCode: z.string().min(1, "Postcode is required"),
 	country: z.string().min(1, "Country is required"),
 });
 
 type PersonalInfoData = z.infer<typeof personalInfoSchema>;
-
-interface RegionType {
-	name: string;
-	shortCode?: string;
-}
-
-interface CountryType {
-	countryName: string;
-	countryShortCode: string;
-	regions: RegionType[];
-}
-
-interface OptionType {
-	value: string;
-	label: string;
-}
 
 interface PersonalInfoStepProps extends StepProps {
 	willOwnerData?: {
@@ -89,7 +70,6 @@ interface PersonalInfoStepProps extends StepProps {
 		dateOfBirth?: string;
 		address: string;
 		city: string;
-		state: string;
 		postCode: string;
 		country: string;
 	} | null;
@@ -127,7 +107,6 @@ export default function PersonalInfoStep({
 				dateOfBirth: willOwnerData.dateOfBirth || getEighteenYearsAgoDate(),
 				address: willOwnerData.address || "",
 				city: willOwnerData.city || "",
-				state: willOwnerData.state || "",
 				postCode: willOwnerData.postCode || "",
 				country: "United Kingdom", // Always set to UK and disable
 			};
@@ -141,7 +120,6 @@ export default function PersonalInfoStep({
 				dateOfBirth: activeWill.owner.dateOfBirth || getEighteenYearsAgoDate(),
 				address: activeWill.owner.address || "",
 				city: activeWill.owner.city || "",
-				state: activeWill.owner.state || "",
 				postCode: activeWill.owner.postCode || "",
 				country: "United Kingdom", // Always set to UK and disable
 			};
@@ -154,7 +132,6 @@ export default function PersonalInfoStep({
 			dateOfBirth: data.dateOfBirth || getEighteenYearsAgoDate(),
 			address: data.address?.address || "",
 			city: data.address?.city || "",
-			state: data.address?.state || "",
 			postCode: data.address?.postCode || "",
 			country: "United Kingdom", // Always set to UK and disable
 		};
@@ -192,9 +169,6 @@ export default function PersonalInfoStep({
 			form.setValue("city", willOwnerData.city || "", {
 				shouldValidate: false,
 			});
-			form.setValue("state", willOwnerData.state || "", {
-				shouldValidate: false,
-			});
 			form.setValue("postCode", willOwnerData.postCode || "", {
 				shouldValidate: false,
 			});
@@ -219,7 +193,6 @@ export default function PersonalInfoStep({
 				address: {
 					address: formData.address,
 					city: formData.city,
-					state: formData.state,
 					postCode: formData.postCode,
 					country: "United Kingdom", // Always set to UK
 				},
@@ -241,7 +214,7 @@ export default function PersonalInfoStep({
 					date_of_birth: formData.dateOfBirth,
 					address: formData.address,
 					city: formData.city,
-					state: formData.state,
+					state: null, // Submit null for state field
 					post_code: formData.postCode,
 					country: "United Kingdom",
 				}),
@@ -270,7 +243,6 @@ export default function PersonalInfoStep({
 						dateOfBirth: formData.dateOfBirth,
 						address: formData.address,
 						city: formData.city,
-						state: formData.state,
 						postCode: formData.postCode,
 						country: "United Kingdom",
 						maritalStatus: "",
@@ -306,31 +278,6 @@ export default function PersonalInfoStep({
 			setIsSubmitting(false);
 		}
 	};
-
-	// Get country options for the select dropdown
-	const countryOptions: OptionType[] = countryRegionData.map(
-		(country: CountryType) => ({
-			value: country.countryName,
-			label: country.countryName,
-		})
-	);
-
-	// Get town/borough options based on selected country
-	const getStateOptions = (selectedCountry: string): OptionType[] => {
-		const country = countryRegionData.find(
-			(c: CountryType) => c.countryName === selectedCountry
-		);
-		if (country && country.regions) {
-			return country.regions.map((region: RegionType) => ({
-				value: region.name,
-				label: region.name,
-			}));
-		}
-		return [];
-	};
-
-	const selectedCountry = form.watch("country");
-	const stateOptions = getStateOptions(selectedCountry);
 
 	// Handle disclaimer acceptance
 	const handleDisclaimerAccept = async () => {
@@ -529,56 +476,6 @@ export default function PersonalInfoStep({
 
 								<FormField
 									control={form.control}
-									name="state"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel className="text-sm font-medium text-gray-700">
-												Town/Borough *
-											</FormLabel>
-											<FormControl>
-												<Select
-													options={stateOptions}
-													value={stateOptions.find(
-														(option) => option.value === field.value
-													)}
-													onChange={(option) =>
-														field.onChange(option?.value || "")
-													}
-													placeholder="Select town/borough"
-													className="w-full"
-													styles={{
-														control: (provided) => ({
-															...provided,
-															height: "48px",
-															borderRadius: "8px",
-															border: "1px solid #d1d5db",
-															"&:hover": {
-																borderColor: "#173c37",
-															},
-															"&:focus-within": {
-																borderColor: "#173c37",
-																boxShadow: "0 0 0 2px rgba(23, 60, 55, 0.1)",
-															},
-														}),
-														option: (provided, state) => ({
-															...provided,
-															backgroundColor: state.isSelected
-																? "#173c37"
-																: state.isFocused
-																? "rgba(23, 60, 55, 0.1)"
-																: "white",
-															color: state.isSelected ? "white" : "#374151",
-														}),
-													}}
-												/>
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-
-								<FormField
-									control={form.control}
 									name="postCode"
 									render={({ field }) => (
 										<FormItem>
@@ -600,48 +497,16 @@ export default function PersonalInfoStep({
 								<FormField
 									control={form.control}
 									name="country"
-									render={({ field }) => (
+									render={({ field: _field }) => (
 										<FormItem>
 											<FormLabel className="text-sm font-medium text-gray-700">
 												Country *
 											</FormLabel>
 											<FormControl>
-												<Select
-													options={countryOptions}
-													value={countryOptions.find(
-														(option) => option.value === "United Kingdom"
-													)}
-													onChange={() => field.onChange("United Kingdom")}
-													placeholder="Select country"
-													className="w-full"
-													isDisabled={true}
-													styles={{
-														control: (provided) => ({
-															...provided,
-															height: "48px",
-															borderRadius: "8px",
-															border: "1px solid #d1d5db",
-															backgroundColor: "#f9fafb",
-															"&:hover": {
-																borderColor: "#d1d5db",
-															},
-															"&:focus-within": {
-																borderColor: "#d1d5db",
-																boxShadow: "none",
-															},
-														}),
-														option: (provided, state) => ({
-															...provided,
-															backgroundColor: state.isSelected
-																? "#3b82f6"
-																: state.isFocused
-																? "#eff6ff"
-																: "white",
-															"&:hover": {
-																backgroundColor: "#eff6ff",
-															},
-														}),
-													}}
+												<Input
+													value="United Kingdom"
+													disabled
+													className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary bg-gray-50"
 												/>
 											</FormControl>
 											<FormMessage />

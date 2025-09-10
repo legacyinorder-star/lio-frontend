@@ -413,9 +413,9 @@ export default function ManageAllWillsPage() {
 												</div>
 											</div>
 											<div className="mt-2 text-sm text-muted-foreground">
-												{will.owner.address}, {will.owner.city},{" "}
-												{will.owner.state} {will.owner.post_code},{" "}
-												{will.owner.country}
+												{will.owner.address}, {will.owner.city}
+												{will.owner.state ? `, ${will.owner.state}` : ""}{" "}
+												{will.owner.post_code}, {will.owner.country}
 											</div>
 										</div>
 									</div>

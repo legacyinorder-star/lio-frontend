@@ -36,7 +36,7 @@ export type FormChangeEvent = React.ChangeEvent<HTMLInputElement>;
 export interface Address {
 	address: string;
 	city: string;
-	state: string;
+	state?: string; // Made optional since we're removing town/borough field
 	postCode: string;
 	country: string;
 }

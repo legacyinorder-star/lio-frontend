@@ -392,7 +392,9 @@ const transformWillDataToPDFFormat = (willData: CompleteWillData): PDFData => {
 				willData.owner.middle_name ? ` ${willData.owner.middle_name}` : ""
 			} ${willData.owner.last_name}`,
 			dateOfBirth: willData.owner.date_of_birth || "",
-			address: `${willData.owner.address}, ${willData.owner.city}, ${willData.owner.state} ${willData.owner.post_code}, ${willData.owner.country}`,
+			address: `${willData.owner.address}, ${willData.owner.city}${
+				willData.owner.state ? `, ${willData.owner.state}` : ""
+			} ${willData.owner.post_code}, ${willData.owner.country}`,
 			phone: "", // Not available in API
 			maritalStatus: willData.owner.marital_status,
 		},

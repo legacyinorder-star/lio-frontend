@@ -8,7 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 export interface Address {
 	address: string;
 	city: string;
-	state: string;
+	state?: string; // Made optional since we're removing town/borough field
 	postCode?: string;
 	country: string;
 }
@@ -22,7 +22,7 @@ export interface WillPersonalData {
 	maritalStatus: string;
 	address: string;
 	city: string;
-	state: string;
+	state?: string; // Made optional since we're removing town/borough field
 	postCode?: string;
 	country: string;
 }

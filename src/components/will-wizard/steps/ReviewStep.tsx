@@ -522,7 +522,9 @@ const transformWillDataToReviewFormat = (
 			fullName: `${willData.owner.first_name}${
 				willData.owner.middle_name ? ` ${willData.owner.middle_name}` : ""
 			} ${willData.owner.last_name}`,
-			address: `${willData.owner.address}, ${willData.owner.city}, ${willData.owner.state} ${willData.owner.post_code}, ${willData.owner.country}`,
+			address: `${willData.owner.address}, ${willData.owner.city}${
+				willData.owner.state ? `, ${willData.owner.state}` : ""
+			} ${willData.owner.post_code}, ${willData.owner.country}`,
 			maritalStatus: willData.owner.marital_status,
 			dateOfBirth: willData.owner.date_of_birth,
 		},
