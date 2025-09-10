@@ -968,8 +968,8 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 						key="personal"
 					>
 						<div className="flex items-center space-x-3 mb-6">
-							<div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-								<span className="text-blue-600 font-semibold text-sm">
+							<div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+								<span className="text-green-600 font-semibold text-sm">
 									{num}
 								</span>
 							</div>
@@ -1030,8 +1030,8 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 						key="spouse"
 					>
 						<div className="flex items-center space-x-3 mb-6">
-							<div className="w-8 h-8 bg-pink-100 rounded-full flex items-center justify-center">
-								<span className="text-pink-600 font-semibold text-sm">
+							<div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+								<span className="text-green-600 font-semibold text-sm">
 									{num}
 								</span>
 							</div>
@@ -1106,8 +1106,8 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 						key="guardians"
 					>
 						<div className="flex items-center space-x-3 mb-6">
-							<div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-								<span className="text-purple-600 font-semibold text-sm">
+							<div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+								<span className="text-green-600 font-semibold text-sm">
 									{num}
 								</span>
 							</div>
@@ -1156,8 +1156,8 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 						key="pets"
 					>
 						<div className="flex items-center space-x-3 mb-6">
-							<div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
-								<span className="text-emerald-600 font-semibold text-sm">
+							<div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+								<span className="text-green-600 font-semibold text-sm">
 									{num}
 								</span>
 							</div>
@@ -1194,8 +1194,8 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 						key="pets-guardian"
 					>
 						<div className="flex items-center space-x-3 mb-6">
-							<div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
-								<span className="text-emerald-600 font-semibold text-sm">
+							<div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+								<span className="text-green-600 font-semibold text-sm">
 									{num}
 								</span>
 							</div>
@@ -1241,8 +1241,8 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 						key="assets"
 					>
 						<div className="flex items-center space-x-3 mb-6">
-							<div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
-								<span className="text-yellow-600 font-semibold text-sm">
+							<div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+								<span className="text-green-600 font-semibold text-sm">
 									{num}
 								</span>
 							</div>
@@ -1337,8 +1337,8 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 						key="gifts"
 					>
 						<div className="flex items-center space-x-3 mb-6">
-							<div className="w-8 h-8 bg-pink-100 rounded-full flex items-center justify-center">
-								<span className="text-pink-600 font-semibold text-sm">
+							<div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+								<span className="text-green-600 font-semibold text-sm">
 									{num}
 								</span>
 							</div>
@@ -1403,8 +1403,8 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 						key="digital-assets"
 					>
 						<div className="flex items-center space-x-3 mb-6">
-							<div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-								<span className="text-purple-600 font-semibold text-sm">
+							<div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+								<span className="text-green-600 font-semibold text-sm">
 									{num}
 								</span>
 							</div>
@@ -1441,8 +1441,8 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 						key="residuary"
 					>
 						<div className="flex items-center space-x-3 mb-6">
-							<div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
-								<span className="text-orange-600 font-semibold text-sm">
+							<div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+								<span className="text-green-600 font-semibold text-sm">
 									{num}
 								</span>
 							</div>
@@ -1488,8 +1488,8 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 						key="executors"
 					>
 						<div className="flex items-center space-x-3 mb-6">
-							<div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-								<span className="text-red-600 font-semibold text-sm">
+							<div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+								<span className="text-green-600 font-semibold text-sm">
 									{num}
 								</span>
 							</div>
@@ -1557,8 +1557,8 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 						key="witnesses"
 					>
 						<div className="flex items-center space-x-3 mb-6">
-							<div className="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center">
-								<span className="text-teal-600 font-semibold text-sm">
+							<div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+								<span className="text-green-600 font-semibold text-sm">
 									{num}
 								</span>
 							</div>
@@ -1600,8 +1600,8 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 						key="funeral"
 					>
 						<div className="flex items-center space-x-3 mb-6">
-							<div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-								<span className="text-gray-600 font-semibold text-sm">
+							<div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+								<span className="text-green-600 font-semibold text-sm">
 									{num}
 								</span>
 							</div>
@@ -1629,8 +1629,8 @@ const ReviewStep = forwardRef<ReviewStepHandle, ReviewStepProps>(
 						key="all-assets"
 					>
 						<div className="flex items-center space-x-3 mb-6">
-							<div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center">
-								<span className="text-indigo-600 font-semibold text-sm">
+							<div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+								<span className="text-green-600 font-semibold text-sm">
 									{num}
 								</span>
 							</div>
