@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,8 @@ export default function PaymentSuccessPage() {
 	const [searchParams] = useSearchParams();
 	const [isLoading, setIsLoading] = useState(true);
 	const [isValid, setIsValid] = useState(false);
+	const [hasValidated, setHasValidated] = useState(false);
+	const abortControllerRef = useRef<AbortController | null>(null);
 
 	const willId = searchParams.get("willId");
 	const source = searchParams.get("source");
@@ -24,16 +26,43 @@ export default function PaymentSuccessPage() {
 			return;
 		}
 
+		// Prevent duplicate validation
+		if (hasValidated) {
+			return;
+		}
+
 		validatePaymentSuccess();
-	}, [willId, navigate]);
+
+		// Cleanup function to abort any ongoing requests
+		return () => {
+			if (abortControllerRef.current) {
+				abortControllerRef.current.abort();
+			}
+		};
+	}, [willId, hasValidated]);
 
 	const validatePaymentSuccess = async () => {
+		// Guard against duplicate calls
+		if (hasValidated || isLoading) {
+			return;
+		}
+
 		try {
 			setIsLoading(true);
+			setHasValidated(true);
+
+			// Create new AbortController for this request
+			abortControllerRef.current = new AbortController();
 
 			const { error } = await apiClient(`/wills/${willId}/payment-successful`, {
 				method: "POST",
+				signal: abortControllerRef.current.signal,
 			});
+
+			// Check if request was aborted
+			if (abortControllerRef.current.signal.aborted) {
+				return;
+			}
 
 			if (error) {
 				// Handle 400 or other error responses
@@ -64,6 +93,11 @@ export default function PaymentSuccessPage() {
 				);
 			}
 		} catch (error) {
+			// Check if request was aborted
+			if (abortControllerRef.current?.signal.aborted) {
+				return;
+			}
+
 			console.error("Error validating payment success:", error);
 			toast.error("Failed to validate payment. Please contact support.");
 			navigate("/app/dashboard");
