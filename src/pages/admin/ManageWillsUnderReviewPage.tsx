@@ -36,6 +36,7 @@ import {
 	Clock,
 	User,
 	Calendar,
+	Trash2,
 } from "lucide-react";
 import { formatDate } from "@/utils/format";
 
@@ -88,6 +89,12 @@ interface ApproveDialogData {
 	willOwnerName: string | null;
 }
 
+interface DeleteDocumentDialogData {
+	isOpen: boolean;
+	willId: string | null;
+	willOwnerName: string | null;
+}
+
 export default function ManageWillsUnderReviewPage() {
 	const navigate = useNavigate();
 	const { user } = useAuth();
@@ -105,7 +112,14 @@ export default function ManageWillsUnderReviewPage() {
 		willId: null,
 		willOwnerName: null,
 	});
+	const [deleteDocumentDialog, setDeleteDocumentDialog] =
+		useState<DeleteDocumentDialogData>({
+			isOpen: false,
+			willId: null,
+			willOwnerName: null,
+		});
 	const [isProcessing, setIsProcessing] = useState(false);
+	const [isDeleting, setIsDeleting] = useState(false);
 
 	useEffect(() => {
 		if (user?.role !== "admin") {
@@ -314,6 +328,52 @@ export default function ManageWillsUnderReviewPage() {
 		});
 	};
 
+	const handleDeleteDocument = async () => {
+		if (!deleteDocumentDialog.willId) {
+			toast.error("No will selected for document deletion");
+			return;
+		}
+
+		try {
+			setIsDeleting(true);
+			const { error } = await apiClient(
+				`/documents/delete-will/${deleteDocumentDialog.willId}`,
+				{
+					method: "DELETE",
+				}
+			);
+
+			if (error) {
+				throw new Error(error);
+			}
+
+			toast.success("Will document deleted successfully");
+			closeDeleteDocumentDialog();
+			fetchWillsUnderReview(); // Refresh the list
+		} catch (error) {
+			console.error("Error deleting will document:", error);
+			toast.error("Failed to delete will document");
+		} finally {
+			setIsDeleting(false);
+		}
+	};
+
+	const openDeleteDocumentDialog = (will: WillUnderReview) => {
+		setDeleteDocumentDialog({
+			isOpen: true,
+			willId: will.id,
+			willOwnerName: `${will.owner.first_name} ${will.owner.last_name}`,
+		});
+	};
+
+	const closeDeleteDocumentDialog = () => {
+		setDeleteDocumentDialog({
+			isOpen: false,
+			willId: null,
+			willOwnerName: null,
+		});
+	};
+
 	// Filter and sort wills
 	const filteredAndSortedWills = wills
 		.filter((will) => {
@@ -446,6 +506,17 @@ export default function ManageWillsUnderReviewPage() {
 											<Download className="h-4 w-4 mr-2" />
 											Download
 										</Button>
+										{will.document && (
+											<Button
+												variant="outline"
+												size="sm"
+												onClick={() => openDeleteDocumentDialog(will)}
+												className="hover:bg-red-50 text-red-600"
+											>
+												<Trash2 className="h-4 w-4 mr-2" />
+												Delete Doc
+											</Button>
+										)}
 										<DropdownMenu>
 											<DropdownMenuTrigger asChild>
 												<Button variant="outline" size="sm">
@@ -563,6 +634,42 @@ export default function ManageWillsUnderReviewPage() {
 						>
 							<CheckCircle className="h-4 w-4 mr-2" />
 							{isProcessing ? "Approving..." : "Approve Will"}
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
+
+			{/* Delete Document Confirmation Dialog */}
+			<Dialog
+				open={deleteDocumentDialog.isOpen}
+				onOpenChange={closeDeleteDocumentDialog}
+			>
+				<DialogContent>
+					<DialogHeader>
+						<DialogTitle>Delete Will Document</DialogTitle>
+						<DialogDescription>
+							Are you sure you want to delete the document for{" "}
+							<span className="font-medium">
+								{deleteDocumentDialog.willOwnerName}
+							</span>
+							? <br />
+							<br />
+							This will remove the existing PDF file. The next time someone
+							downloads this will, it will be regenerated from the current data.
+							This action cannot be undone.
+						</DialogDescription>
+					</DialogHeader>
+					<DialogFooter>
+						<Button variant="outline" onClick={closeDeleteDocumentDialog}>
+							Cancel
+						</Button>
+						<Button
+							onClick={handleDeleteDocument}
+							disabled={isDeleting}
+							className="bg-red-600 hover:bg-red-700 text-white"
+						>
+							<Trash2 className="h-4 w-4 mr-2" />
+							{isDeleting ? "Deleting..." : "Delete Document"}
 						</Button>
 					</DialogFooter>
 				</DialogContent>

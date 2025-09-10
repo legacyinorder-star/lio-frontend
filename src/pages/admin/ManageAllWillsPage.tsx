@@ -18,6 +18,14 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { apiClient } from "@/utils/apiClient";
 import { useAuth } from "@/hooks/useAuth";
@@ -34,6 +42,7 @@ import {
 	User,
 	Calendar,
 	Filter,
+	Trash2,
 } from "lucide-react";
 import { formatDate } from "@/utils/format";
 
@@ -79,6 +88,16 @@ export default function ManageAllWillsPage() {
 	const [isLoading, setIsLoading] = useState(true);
 	const [searchQuery, setSearchQuery] = useState("");
 	const [statusFilter, setStatusFilter] = useState<string>("all");
+	const [deleteDialog, setDeleteDialog] = useState<{
+		isOpen: boolean;
+		willId: string | null;
+		willOwnerName: string | null;
+	}>({
+		isOpen: false,
+		willId: null,
+		willOwnerName: null,
+	});
+	const [isDeleting, setIsDeleting] = useState(false);
 
 	useEffect(() => {
 		if (user?.role !== "admin") {
@@ -175,6 +194,52 @@ export default function ManageAllWillsPage() {
 			console.error("Error downloading will:", error);
 			toast.error("Failed to download will");
 		}
+	};
+
+	const handleDeleteDocument = async () => {
+		if (!deleteDialog.willId) {
+			toast.error("No will selected for document deletion");
+			return;
+		}
+
+		try {
+			setIsDeleting(true);
+			const { error } = await apiClient(
+				`/documents/delete-will/${deleteDialog.willId}`,
+				{
+					method: "DELETE",
+				}
+			);
+
+			if (error) {
+				throw new Error(error);
+			}
+
+			toast.success("Will document deleted successfully");
+			closeDeleteDialog();
+			fetchAllWills(); // Refresh the list
+		} catch (error) {
+			console.error("Error deleting will document:", error);
+			toast.error("Failed to delete will document");
+		} finally {
+			setIsDeleting(false);
+		}
+	};
+
+	const openDeleteDialog = (will: Will) => {
+		setDeleteDialog({
+			isOpen: true,
+			willId: will.id,
+			willOwnerName: `${will.owner.first_name} ${will.owner.last_name}`,
+		});
+	};
+
+	const closeDeleteDialog = () => {
+		setDeleteDialog({
+			isOpen: false,
+			willId: null,
+			willOwnerName: null,
+		});
 	};
 
 	const getStatusColor = (status: Will["status"]) => {
@@ -366,6 +431,17 @@ export default function ManageAllWillsPage() {
 												Download
 											</Button>
 										)}
+										{will.document && (
+											<Button
+												variant="outline"
+												size="sm"
+												onClick={() => openDeleteDialog(will)}
+												className="hover:bg-red-50 text-red-600"
+											>
+												<Trash2 className="h-4 w-4 mr-2" />
+												Delete Doc
+											</Button>
+										)}
 										<DropdownMenu>
 											<DropdownMenuTrigger asChild>
 												<Button variant="outline" size="sm">
@@ -412,6 +488,37 @@ export default function ManageAllWillsPage() {
 					</div>
 				</div>
 			)}
+
+			{/* Delete Document Confirmation Dialog */}
+			<Dialog open={deleteDialog.isOpen} onOpenChange={closeDeleteDialog}>
+				<DialogContent>
+					<DialogHeader>
+						<DialogTitle>Delete Will Document</DialogTitle>
+						<DialogDescription>
+							Are you sure you want to delete the document for{" "}
+							<span className="font-medium">{deleteDialog.willOwnerName}</span>?{" "}
+							<br />
+							<br />
+							This will remove the existing PDF file. The next time someone
+							downloads this will, it will be regenerated from the current data.
+							This action cannot be undone.
+						</DialogDescription>
+					</DialogHeader>
+					<DialogFooter>
+						<Button variant="outline" onClick={closeDeleteDialog}>
+							Cancel
+						</Button>
+						<Button
+							onClick={handleDeleteDocument}
+							disabled={isDeleting}
+							className="bg-red-600 hover:bg-red-700 text-white"
+						>
+							<Trash2 className="h-4 w-4 mr-2" />
+							{isDeleting ? "Deleting..." : "Delete Document"}
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 		</div>
 	);
 }
