@@ -65,6 +65,7 @@ interface WillUnderReview {
 		email: string;
 	};
 	document?: {
+		id: string;
 		willId: string;
 		userId: string;
 		document: {
@@ -173,6 +174,7 @@ export default function ManageWillsUnderReviewPage() {
 				},
 				document: will.document
 					? {
+							id: will.document.id,
 							willId: will.document.willId,
 							userId: will.document.userId,
 							document: {
@@ -334,10 +336,17 @@ export default function ManageWillsUnderReviewPage() {
 			return;
 		}
 
+		// Find the will to get its document ID
+		const will = wills.find((w) => w.id === deleteDocumentDialog.willId);
+		if (!will?.document) {
+			toast.error("No document found for this will");
+			return;
+		}
+
 		try {
 			setIsDeleting(true);
 			const { error } = await apiClient(
-				`/documents/delete-will/${deleteDocumentDialog.willId}`,
+				`/documents/delete-will/${will.document.id}`,
 				{
 					method: "DELETE",
 				}

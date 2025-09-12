@@ -70,6 +70,7 @@ interface Will {
 		email: string;
 	};
 	document?: {
+		id: string;
 		willId: string;
 		userId: string;
 		document: {
@@ -149,6 +150,7 @@ export default function ManageAllWillsPage() {
 				},
 				document: will.document
 					? {
+							id: will.document.id,
 							willId: will.document.willId,
 							userId: will.document.userId,
 							document: {
@@ -202,10 +204,17 @@ export default function ManageAllWillsPage() {
 			return;
 		}
 
+		// Find the will to get its document ID
+		const will = wills.find((w) => w.id === deleteDialog.willId);
+		if (!will?.document) {
+			toast.error("No document found for this will");
+			return;
+		}
+
 		try {
 			setIsDeleting(true);
 			const { error } = await apiClient(
-				`/documents/delete-will/${deleteDialog.willId}`,
+				`/documents/delete-will/${will.document.id}`,
 				{
 					method: "DELETE",
 				}
