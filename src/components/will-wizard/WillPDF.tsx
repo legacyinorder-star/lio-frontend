@@ -910,31 +910,60 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 					<Text style={styles.executorText}>
 						<Text style={{ fontWeight: "bold" }}>{sections.executors}.1.</Text>{" "}
 						I appoint{" "}
-						{data.executors.map((executor, index) => {
-							const isLast = index === data.executors.length - 1;
-							const prefix = index === 0 ? "" : isLast ? " and " : ", ";
+						{data.executors
+							.filter((executor) => {
+								const name =
+									executor.type === "individual"
+										? executor.fullName
+										: executor.companyName;
+								return name && !name.toLowerCase().includes("legacy in order");
+							})
+							.map((executor, index, filteredExecutors) => {
+								const isLast = index === filteredExecutors.length - 1;
+								const prefix = index === 0 ? "" : isLast ? " and " : ", ";
 
-							return (
-								<React.Fragment key={index}>
-									{prefix}
-									<Text style={{ fontWeight: "bold" }}>
-										{executor.type === "individual"
-											? executor.fullName
-											: executor.companyName}
-									</Text>
-									{executor.relationship && executor.type === "individual" && (
-										<> (my {executor.relationship.toLowerCase()})</>
-									)}
-									{executor.type === "corporate" && (
-										<> (a corporate executor)</>
-									)}
-								</React.Fragment>
-							);
-						})}{" "}
-						to act as the executors and trustees of my estate. If any of them
-						are unwilling or unable to act, the others may continue, and they
-						may appoint a suitable replacement if needed.
+								return (
+									<React.Fragment key={index}>
+										{prefix}
+										<Text style={{ fontWeight: "bold" }}>
+											{executor.type === "individual"
+												? executor.fullName
+												: executor.companyName}
+										</Text>
+										{executor.relationship &&
+											executor.type === "individual" && (
+												<> (my {executor.relationship.toLowerCase()})</>
+											)}
+										{executor.type === "corporate" && (
+											<> (a corporate executor)</>
+										)}
+									</React.Fragment>
+								);
+							})}{" "}
+						to act as the executor(s) and trustee(s) of my estate. If any of
+						them are unwilling or unable to act, the others may continue, and
+						they may appoint a suitable replacement if needed.
 					</Text>
+
+					{/* Legacy In Order Special Paragraph */}
+					{data.executors.some((executor) => {
+						const name =
+							executor.type === "individual"
+								? executor.fullName
+								: executor.companyName;
+						return name && name.toLowerCase().includes("legacy in order");
+					}) && (
+						<Text style={styles.executorText}>
+							<Text style={{ fontWeight: "bold" }}>
+								{sections.executors}.1.1.
+							</Text>{" "}
+							I request, without imposing any binding obligation, that they
+							appoint a professional executor through{" "}
+							<Text style={{ fontWeight: "bold" }}>Legacy In Order</Text> (or
+							any successor firm or incorporated practice carrying on its
+							business at the date of my death) to administer my Estate.
+						</Text>
+					)}
 					<Text style={styles.executorText}>
 						<Text style={{ fontWeight: "bold" }}>{sections.executors}.2.</Text>{" "}
 						In this Will, the expression{" "}
