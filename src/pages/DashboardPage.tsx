@@ -20,6 +20,7 @@ export default function DashboardPage() {
 	const navigate = useNavigate();
 	const [userName, setUserName] = useState<string>("");
 	const [showVaultModal, setShowVaultModal] = useState(false);
+	const [showUploadWillModal, setShowUploadWillModal] = useState(false);
 	const [currentWill, setCurrentWill] = useState<WillData | null>(null);
 	const [isLoadingWill, setIsLoadingWill] = useState(true);
 
@@ -80,6 +81,10 @@ export default function DashboardPage() {
 
 	const handleStartLetterOfWishes = () => {
 		navigate("/app/letter-of-wishes");
+	};
+
+	const handleUploadSignedWill = () => {
+		setShowUploadWillModal(true);
 	};
 
 	// Determine button text and action based on will status and current step
@@ -162,6 +167,20 @@ export default function DashboardPage() {
 			onClick: handleStartLetterOfWishes,
 			disabled: currentWill?.status !== "completed", // Only enable when Will is completed
 		},
+		// Only show upload will card when will is completed
+		...(currentWill?.status === "completed"
+			? [
+					{
+						title: "Upload Signed Will",
+						description:
+							"Upload your signed Will document to the Legacy Vault for secure storage and easy access.",
+						href: "#",
+						action: "Upload to Vault",
+						onClick: handleUploadSignedWill,
+						disabled: false,
+					},
+			  ]
+			: []),
 	];
 
 	useEffect(() => {
@@ -445,6 +464,77 @@ export default function DashboardPage() {
 					>
 						Close
 					</Button>
+				</DialogContent>
+			</Dialog>
+
+			{/* Upload Signed Will Modal */}
+			<Dialog open={showUploadWillModal} onOpenChange={setShowUploadWillModal}>
+				<DialogContent className="max-w-md">
+					<DialogHeader>
+						<DialogTitle>Upload Signed Will</DialogTitle>
+					</DialogHeader>
+					<div className="space-y-4">
+						<p className="text-sm text-muted-foreground">
+							Upload your signed Will document to the Legacy Vault for secure
+							storage.
+						</p>
+						<div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors">
+							<div className="space-y-2">
+								<div className="mx-auto w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+									<svg
+										className="w-6 h-6 text-gray-600"
+										fill="none"
+										stroke="currentColor"
+										viewBox="0 0 24 24"
+									>
+										<path
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											strokeWidth={2}
+											d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+										/>
+									</svg>
+								</div>
+								<div>
+									<p className="text-sm font-medium text-gray-900">
+										Click to upload or drag and drop
+									</p>
+									<p className="text-xs text-gray-500">
+										PDF files only (max 10MB)
+									</p>
+								</div>
+							</div>
+							<input
+								type="file"
+								className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+								accept=".pdf"
+								onChange={(e) => {
+									const file = e.target.files?.[0];
+									if (file) {
+										toast.success(`Selected: ${file.name}`);
+										// TODO: Implement actual file upload logic
+									}
+								}}
+							/>
+						</div>
+						<div className="flex justify-end space-x-2">
+							<Button
+								variant="outline"
+								onClick={() => setShowUploadWillModal(false)}
+							>
+								Cancel
+							</Button>
+							<Button
+								onClick={() => {
+									toast.info("Upload functionality coming soon!");
+									setShowUploadWillModal(false);
+								}}
+								className="bg-primary hover:bg-primary/90 text-white"
+							>
+								Upload
+							</Button>
+						</div>
+					</div>
 				</DialogContent>
 			</Dialog>
 		</div>
