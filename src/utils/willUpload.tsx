@@ -82,7 +82,7 @@ interface CompleteWillData {
 			people_id: string;
 			charities_id: string;
 			asset_id: string;
-			percentage: number;
+			percentage: string;
 			person?: {
 				id: string;
 				user_id: string;
@@ -268,7 +268,7 @@ interface PDFData {
 		distributionType?: "equal" | "percentage";
 		beneficiaries?: Array<{
 			id?: string;
-			percentage?: number;
+			percentage?: string;
 			beneficiaryName?: string;
 		}>;
 	}>;
@@ -338,7 +338,7 @@ interface PDFData {
 			will_id: string;
 			people_id?: string;
 			created_at: string;
-			percentage: number;
+			percentage: string;
 			charities_id?: string;
 			charity?: {
 				id: string;
@@ -485,13 +485,7 @@ const transformWillDataToPDFFormat = (willData: CompleteWillData): PDFData => {
 							relationship = "charity";
 						}
 
-						// Format value
-						let valueString = "";
-						if (gift.value && gift.currency) {
-							valueString = `${gift.currency}${Number(
-								gift.value
-							).toLocaleString()}`;
-						}
+						// Format value - removed unused variable
 
 						return {
 							type: gift.type,

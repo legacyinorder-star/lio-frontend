@@ -133,6 +133,7 @@ export interface WillData {
 	paymentDate?: string;
 	// Document data
 	document?: {
+		id: string;
 		willId: string;
 		userId: string;
 		document: {

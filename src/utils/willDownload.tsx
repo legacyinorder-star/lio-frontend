@@ -82,7 +82,7 @@ interface CompleteWillData {
 			people_id: string;
 			charities_id: string;
 			asset_id: string;
-			percentage: number;
+			percentage: string;
 			person?: {
 				id: string;
 				user_id: string;
@@ -239,7 +239,7 @@ interface PDFData {
 		distributionType?: "equal" | "percentage";
 		beneficiaries?: Array<{
 			id?: string;
-			percentage?: number;
+			percentage?: string;
 			beneficiaryName?: string;
 		}>;
 	}>;
@@ -283,7 +283,7 @@ interface PDFData {
 	residuaryBeneficiaries?: Array<{
 		id: string;
 		beneficiaryId: string;
-		percentage: number;
+		percentage: string;
 	}>;
 	residuaryDistributionType?: "equal" | "manual" | undefined;
 	funeralInstructions?: {
@@ -531,7 +531,7 @@ const transformWillDataToPDFFormat = (willData: CompleteWillData): PDFData => {
 						id: beneficiary.id,
 						beneficiaryId:
 							beneficiary.people_id || beneficiary.charities_id || "",
-						percentage: parseInt(beneficiary.percentage) || 0,
+						percentage: beneficiary.percentage,
 				  }))
 				: [],
 		residuaryDistributionType: willData.residuary?.distribution_type as

@@ -430,7 +430,7 @@ interface WillPDFProps {
 			distributionType?: "equal" | "percentage";
 			beneficiaries?: Array<{
 				id?: string;
-				percentage?: number;
+				percentage?: string;
 				beneficiaryName?: string;
 			}>;
 		}>;
@@ -501,7 +501,7 @@ interface WillPDFProps {
 				will_id: string;
 				people_id?: string;
 				created_at: string;
-				percentage: number;
+				percentage: string;
 				charities_id?: string;
 				charity?: {
 					id: string;
@@ -597,7 +597,7 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 		distributionType?: "equal" | "percentage";
 		beneficiaries?: {
 			id?: string;
-			percentage?: number;
+			percentage?: string;
 			beneficiaryName?: string;
 		}[];
 	}) => {

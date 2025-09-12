@@ -64,6 +64,9 @@ export function mapWillDataFromAPI(apiData: unknown): WillData {
 		// Document data
 		document: converted.document
 			? {
+					id:
+						((converted.document as Record<string, unknown>).id as string) ||
+						"",
 					willId:
 						((converted.document as Record<string, unknown>)
 							.willId as string) ||
