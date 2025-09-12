@@ -254,11 +254,13 @@ export default function FamilyInfoStep({
 			setLocalSpouseData(spouseData);
 		}
 	}, [
-		willOwnerData,
-		spouseData,
-		initialData,
+		willOwnerData?.maritalStatus,
+		spouseData?.id,
+		spouseData?.firstName,
+		spouseData?.lastName,
+		initialData?.hasSpouse,
+		initialData?.hasChildren,
 		hasSpouseFromData,
-		form,
 		justDeletedSpouse,
 		hasChildren,
 	]);
@@ -268,7 +270,11 @@ export default function FamilyInfoStep({
 		// Update form state based on whether we have spouse data
 		const hasSpouse = !!localSpouseData;
 		form.setValue("hasSpouse", hasSpouse);
-	}, [localSpouseData, form]);
+	}, [
+		localSpouseData?.id,
+		localSpouseData?.firstName,
+		localSpouseData?.lastName,
+	]);
 
 	// ✅ ADDED: Update active will when children state changes
 	const updateActiveWillChildren = useCallback(
@@ -351,7 +357,12 @@ export default function FamilyInfoStep({
 			setHasPets(initialData.hasPets);
 			setInitialHasPets(initialData.hasPets);
 		}
-	}, [willData?.id, initialData, form, loadChildren]);
+	}, [
+		willData?.id,
+		initialData?.children,
+		initialData?.hasChildren,
+		initialData?.hasPets,
+	]);
 
 	// ✅ ADDED: Pet management function
 	const handlePetsChange = async () => {

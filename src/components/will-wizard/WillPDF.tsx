@@ -558,8 +558,6 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 			scope: sectionNum++,
 			funeral: data.funeralInstructions ? sectionNum++ : null,
 			executors: sectionNum++,
-			guardians: shouldShowGuardiansSection() ? sectionNum++ : null,
-			pets: shouldShowPetsSection() ? sectionNum++ : null,
 			administration: sectionNum++,
 			distribution:
 				data.assets &&
@@ -578,6 +576,8 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 				data.residuary.beneficiaries.length > 0
 					? sectionNum++
 					: null,
+			guardians: shouldShowGuardiansSection() ? sectionNum++ : null,
+			pets: shouldShowPetsSection() ? sectionNum++ : null,
 			digitalAssets: sectionNum++,
 			powers: sectionNum++,
 			finalDeclaration: sectionNum++, // Add Final Declaration before witnesses

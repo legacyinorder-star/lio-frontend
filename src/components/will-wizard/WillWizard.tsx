@@ -334,9 +334,18 @@ export default function WillWizard() {
 
 		// Helper function to check if there are minor children
 		const hasMinorChildren = () => {
-			return (
-				formData.hasChildren && formData.children.some((child) => child.isMinor)
+			// Check both formData and activeWill for children data
+			const childrenFromForm = formData.children || [];
+			const childrenFromContext = activeWill?.children || [];
+			const allChildren = [...childrenFromForm, ...childrenFromContext];
+
+			// Remove duplicates based on id
+			const uniqueChildren = allChildren.filter(
+				(child, index, self) =>
+					index === self.findIndex((c) => c.id === child.id)
 			);
+
+			return uniqueChildren.some((child) => child.isMinor);
 		};
 
 		switch (currentQuestion) {
@@ -380,14 +389,29 @@ export default function WillWizard() {
 			default:
 				console.warn("Unknown step:", currentQuestion);
 		}
-	}, [currentQuestion, markStepComplete, setWillWizardState, formData]);
+	}, [
+		currentQuestion,
+		markStepComplete,
+		setWillWizardState,
+		formData,
+		activeWill,
+	]);
 
 	const handleBack = useCallback(() => {
 		// Helper function to check if there are minor children
 		const hasMinorChildren = () => {
-			return (
-				formData.hasChildren && formData.children.some((child) => child.isMinor)
+			// Check both formData and activeWill for children data
+			const childrenFromForm = formData.children || [];
+			const childrenFromContext = activeWill?.children || [];
+			const allChildren = [...childrenFromForm, ...childrenFromContext];
+
+			// Remove duplicates based on id
+			const uniqueChildren = allChildren.filter(
+				(child, index, self) =>
+					index === self.findIndex((c) => c.id === child.id)
 			);
+
+			return uniqueChildren.some((child) => child.isMinor);
 		};
 
 		switch (currentQuestion) {
@@ -426,7 +450,7 @@ export default function WillWizard() {
 			default:
 				console.warn("Unknown step for back navigation:", currentQuestion);
 		}
-	}, [currentQuestion, setWillWizardState, formData]);
+	}, [currentQuestion, setWillWizardState, formData, activeWill]);
 
 	// Memoize common props to prevent infinite re-renders
 	const commonProps = useMemo(
