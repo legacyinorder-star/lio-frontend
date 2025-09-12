@@ -178,7 +178,7 @@ export default function WillStatusGuard({
 								<Button
 									variant="outline"
 									onClick={() => navigate(`/app/will/${willData.id}`)}
-									className="w-full text-white"
+									className="w-full text-primary"
 								>
 									Download Will
 								</Button>
