@@ -75,6 +75,14 @@ interface PetApiResponse {
 	};
 }
 
+// API response interface for pet record creation
+interface PetRecordResponse {
+	id: string;
+	will_id: string;
+	guardian_id: string;
+	created_at: string;
+}
+
 export default function GuardiansStep({
 	data,
 	onUpdate,
@@ -590,27 +598,54 @@ export default function GuardiansStep({
 
 	// Handle Next button click - update pet guardian if selected
 	const handleNext = async () => {
-		// If user has pets and has selected a pet guardian, update the pet record
-		if (hasPetsFromAPI && petGuardianId && petIdFromAPI) {
+		// If user has pets and has selected a pet guardian, create or update the pet record
+		if (hasPetsFromAPI && petGuardianId && activeWill?.id) {
 			try {
-				const { error } = await apiClient(`/pets/${petIdFromAPI}`, {
-					method: "PATCH",
-					body: JSON.stringify({
-						guardian_id: petGuardianId,
-					}),
-				});
+				const requestBody = {
+					will_id: activeWill.id,
+					guardian_id: petGuardianId,
+				};
 
-				if (error) {
-					console.error("Error updating pet guardian:", error);
-					toast.error("Failed to update pet guardian. Please try again.");
-					return;
+				if (petIdFromAPI) {
+					// PATCH existing record
+					const { error } = await apiClient(`/pets/${petIdFromAPI}`, {
+						method: "PATCH",
+						body: JSON.stringify(requestBody),
+					});
+
+					if (error) {
+						console.error("Error updating pet guardian:", error);
+						toast.error("Failed to update pet guardian. Please try again.");
+						return;
+					}
+
+					toast.success("Pet guardian updated successfully");
+				} else {
+					// POST new record
+					const { data: petRecord, error } = await apiClient<PetRecordResponse>(
+						"/pets",
+						{
+							method: "POST",
+							body: JSON.stringify(requestBody),
+						}
+					);
+
+					if (error) {
+						console.error("Error creating pet guardian record:", error);
+						toast.error("Failed to save pet guardian. Please try again.");
+						return;
+					}
+
+					toast.success("Pet guardian saved successfully");
+					// Store the new record ID for future updates
+					if (petRecord?.id) {
+						setPetIdFromAPI(petRecord.id);
+					}
 				}
-
-				toast.success("Pet guardian updated successfully");
 			} catch (error) {
-				console.error("Error updating pet guardian:", error);
+				console.error("Error saving pet guardian:", error);
 				toast.error(
-					"An error occurred while updating pet guardian. Please try again."
+					"An error occurred while saving pet guardian. Please try again."
 				);
 				return;
 			}

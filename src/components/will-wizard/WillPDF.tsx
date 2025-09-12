@@ -355,6 +355,13 @@ const styles = StyleSheet.create({
 		marginBottom: 15,
 		paddingLeft: 20,
 	},
+	checklistParagraphText: {
+		fontSize: 14,
+		color: "#374151",
+		flex: 1,
+		lineHeight: 1.8,
+		marginBottom: 25,
+	},
 	checklistCheckbox: {
 		width: 20,
 		height: 20,
@@ -690,9 +697,7 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 						</Text>
 					</View>
 
-					<View>
-						<Text style={styles.checklistImportant}>Before you sign:</Text>
-					</View>
+					<Text style={styles.checklistParagraphText}>Before you sign:</Text>
 
 					<View style={styles.checklistItem}>
 						<View style={styles.checklistCheckbox} />
@@ -721,7 +726,7 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 						</Text>
 					</View>
 
-					<Text style={styles.checklistText}>
+					<Text style={styles.checklistParagraphText}>
 						You must sign your Will in front of two independent witnesses.
 					</Text>
 
@@ -791,7 +796,7 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 						</Text>
 					</View>
 
-					<Text style={styles.checklistText}>
+					<Text style={styles.checklistParagraphText}>
 						Once signed and witnessed, your Will is legally valid.
 					</Text>
 
@@ -1160,10 +1165,11 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 											"to "}
 										<Text style={{ fontWeight: "bold" }}>
 											{beneficiaryName}
-										</Text>{" "}
+										</Text>
+										{", "}
 										{relationship &&
 											relationship !== "charity" &&
-											`,my ${relationship.toLowerCase()},`}
+											`my ${relationship.toLowerCase()},`}
 										{requiresGuardian ? (
 											<>
 												{" "}
