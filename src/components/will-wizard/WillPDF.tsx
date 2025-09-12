@@ -1,5 +1,6 @@
 import React from "react";
 import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
+import { getFormattedRelationshipNameById } from "../../utils/relationships";
 
 // Create styles
 const styles = StyleSheet.create({
@@ -236,10 +237,22 @@ const styles = StyleSheet.create({
 		marginBottom: 20,
 		textAlign: "left",
 	},
+	finalDeclarationTextA: {
+		textAlign: "justify",
+		fontSize: 14,
+		marginBottom: 10,
+	},
 	finalDeclarationText: {
 		textAlign: "justify",
 		fontSize: 14,
 		marginBottom: 10,
+		paddingLeft: 20,
+	},
+	letteredListItem: {
+		textAlign: "justify",
+		fontSize: 14,
+		marginBottom: 10,
+		paddingLeft: 20,
 	},
 	appendixSection: {
 		marginTop: 40,
@@ -425,8 +438,10 @@ interface WillPDFProps {
 			type: string;
 			description: string;
 			value?: string;
+			currency?: string;
 			beneficiaryId: string;
 			beneficiaryName: string;
+			relationship?: string;
 		}>;
 		digitalAssets?: {
 			beneficiaryId: string;
@@ -466,12 +481,37 @@ interface WillPDFProps {
 			address?: string;
 		}>;
 
-		residuaryBeneficiaries?: Array<{
+		residuary?: {
 			id: string;
-			beneficiaryId: string;
-			percentage: number;
-		}>;
-		residuaryDistributionType?: "equal" | "manual";
+			will_id: string;
+			created_at: string;
+			beneficiaries: Array<{
+				id: string;
+				person?: {
+					id: string;
+					user_id: string;
+					will_id: string;
+					is_minor: boolean;
+					last_name: string;
+					created_at: string;
+					first_name: string;
+					is_witness: boolean;
+					relationship_id: string;
+				};
+				will_id: string;
+				people_id?: string;
+				created_at: string;
+				percentage: number;
+				charities_id?: string;
+				charity?: {
+					id: string;
+					name: string;
+					rc_number?: string;
+				};
+				residuary_id: string;
+			}>;
+			distribution_type: "equal" | "manual";
+		};
 		funeralInstructions?: {
 			wishes: string;
 		};
@@ -487,6 +527,20 @@ interface WillPDFProps {
 }
 
 const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
+	// Helper function to format date of birth
+	const formatDateOfBirth = (dateString: string) => {
+		try {
+			const date = new Date(dateString);
+			return date.toLocaleDateString("en-GB", {
+				day: "numeric",
+				month: "long",
+				year: "numeric",
+			});
+		} catch (error) {
+			return dateString; // Return original string if parsing fails
+		}
+	};
+
 	// Helper function to check if guardians section should be shown
 	const shouldShowGuardiansSection = () => {
 		return data.guardians && data.guardians.length > 0;
@@ -494,7 +548,7 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 
 	// Helper function to check if pets section should be shown
 	const shouldShowPetsSection = () => {
-		return data.pets?.hasPets && data.petsGuardian;
+		return data.petsGuardian;
 	};
 
 	// Helper function to calculate section numbers
@@ -506,22 +560,30 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 			executors: sectionNum++,
 			guardians: shouldShowGuardiansSection() ? sectionNum++ : null,
 			pets: shouldShowPetsSection() ? sectionNum++ : null,
-			distribution: sectionNum++,
-			gifts: data.gifts && data.gifts.length > 0 ? sectionNum++ : null,
-			digitalAssets: data.digitalAssets?.beneficiaryId ? sectionNum++ : null,
-
 			administration: sectionNum++,
-			residuary:
-				data.residuaryBeneficiaries && data.residuaryBeneficiaries.length > 0
+			distribution:
+				data.assets &&
+				data.assets.some(
+					(asset) =>
+						asset.distributionType &&
+						asset.beneficiaries &&
+						asset.beneficiaries.length > 0
+				)
 					? sectionNum++
 					: null,
-			disclaimer: sectionNum++,
+			gifts: data.gifts && data.gifts.length > 0 ? sectionNum++ : null,
+			residuary:
+				data.residuary &&
+				data.residuary.beneficiaries &&
+				data.residuary.beneficiaries.length > 0
+					? sectionNum++
+					: null,
+			digitalAssets: sectionNum++,
 			powers: sectionNum++,
-			protection: sectionNum++,
-			definitions: sectionNum++,
 			finalDeclaration: sectionNum++, // Add Final Declaration before witnesses
 			witnesses: sectionNum++,
 		};
+
 		return sections;
 	};
 
@@ -628,7 +690,9 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 						</Text>
 					</View>
 
-					<Text style={styles.checklistText}>Before you sign:</Text>
+					<View>
+						<Text style={styles.checklistImportant}>Before you sign:</Text>
+					</View>
 
 					<View style={styles.checklistItem}>
 						<View style={styles.checklistCheckbox} />
@@ -796,7 +860,7 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 						<Text style={{ fontWeight: "bold" }}>{sections.scope}.1.</Text> I,{" "}
 						{data.personal.fullName}, of {data.personal.address}
 						{data.personal.dateOfBirth
-							? ` and born on ${data.personal.dateOfBirth}`
+							? ` and born on ${formatDateOfBirth(data.personal.dateOfBirth)}`
 							: ""}
 						, revoke all previous Wills made by me (as far as they relate to my
 						property in the United Kingdom) and declare this to be my last will
@@ -893,15 +957,15 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 						In my Will "my Estate" shall mean:
 					</Text>
 
-					<Text style={styles.distributionText}>
-						a) All my property, possessions and money of every kind in the
-						United Kingdom including property that I have a general power of
-						appointment; and
+					<Text style={styles.letteredListItem}>
+						<Text style={{ fontWeight: "bold" }}>a)</Text> All my property,
+						possessions and money of every kind in the United Kingdom including
+						property that I have a general power of appointment; and
 					</Text>
 
-					<Text style={styles.distributionText}>
-						b) The money investments and property from time to time representing
-						all such property.
+					<Text style={styles.letteredListItem}>
+						<Text style={{ fontWeight: "bold" }}>b)</Text> The money investments
+						and property from time to time representing all such property.
 					</Text>
 
 					<Text style={styles.distributionText}>
@@ -912,18 +976,19 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 						they consider appropriate and then shall hold my Estate on trust to:
 					</Text>
 
-					<Text style={styles.distributionText}>
-						a) Pay any debts, funeral and testamentary expenses.
+					<Text style={styles.letteredListItem}>
+						<Text style={{ fontWeight: "bold" }}>a)</Text> Pay any debts,
+						funeral and testamentary expenses.
 					</Text>
 
-					<Text style={styles.distributionText}>
-						b) Satisfy all specific gifts of specified property referred to in
-						my Will.
+					<Text style={styles.letteredListItem}>
+						<Text style={{ fontWeight: "bold" }}>b)</Text> Satisfy all specific
+						gifts of specified property referred to in my Will.
 					</Text>
 
-					<Text style={styles.distributionText}>
-						c) Deal with the remainder ("my Residuary Estate") as I state in
-						this will.
+					<Text style={styles.letteredListItem}>
+						<Text style={{ fontWeight: "bold" }}>c)</Text> Deal with the
+						remainder ("my Residuary Estate") as I state in this will.
 					</Text>
 				</View>
 
@@ -938,37 +1003,71 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 							give the following, free of inheritance tax:
 						</Text>
 
-						{data.gifts.map((gift, index) => (
-							<Text key={index} style={styles.giftText}>
-								{String.fromCharCode(97 + index)}) To{" "}
-								<Text style={{ fontWeight: "bold" }}>
-									{gift.beneficiaryName}
-								</Text>{" "}
-								of {gift.beneficiaryId} my{" "}
-								{gift.type === "Cash" && gift.value
-									? `$${Number(gift.value).toLocaleString()} (${
-											gift.description
-									  })`
-									: gift.description}
-								;
-							</Text>
-						))}
+						{data.gifts.map((gift, index) => {
+							// Convert index to Roman numerals
+							const romanNumerals = [
+								"i",
+								"ii",
+								"iii",
+								"iv",
+								"v",
+								"vi",
+								"vii",
+								"viii",
+								"ix",
+								"x",
+							];
+							const romanNumeral =
+								romanNumerals[index] || (index + 1).toString();
+
+							return (
+								<Text key={index} style={styles.letteredListItem}>
+									<Text style={{ fontWeight: "bold" }}>{romanNumeral})</Text> I
+									give{" "}
+									{gift.type.toLowerCase() === "cash" &&
+									gift.value &&
+									gift.currency ? (
+										<>
+											<Text style={{ fontWeight: "bold" }}>
+												{gift.currency}
+												{Number(gift.value).toLocaleString()}
+											</Text>
+											{gift.description && ` (${gift.description})`}
+										</>
+									) : (
+										<Text style={{ fontWeight: "bold" }}>
+											{gift.description}
+										</Text>
+									)}{" "}
+									to{" "}
+									<Text style={{ fontWeight: "bold" }}>
+										{gift.beneficiaryName}
+									</Text>
+									{gift.relationship
+										? ` (my ${gift.relationship.toLowerCase()})`
+										: ""}
+								</Text>
+							);
+						})}
 
 						<Text style={styles.giftText}>
-							b) In giving effect to any gift above, my Trustees shall have the
-							final and binding decisions as to the identity of any items
-							specifically given and as to the nature and extent of any gift.
+							<Text style={{ fontWeight: "bold" }}>{sections.gifts}.2.</Text> In
+							giving effect to any gift above, my Trustees shall have the final
+							and binding decisions as to the identity of any items specifically
+							given and as to the nature and extent of any gift.
 						</Text>
 
 						<Text style={styles.giftText}>
-							c) My Residuary Estate shall pay the costs of delivering any gift
-							to a beneficiary, Vesting any gift in a beneficiary, and the
-							upkeep of any gift until delivery or vesting.
+							<Text style={{ fontWeight: "bold" }}>{sections.gifts}.3.</Text> My
+							Residuary Estate shall pay the costs of delivering any gift to a
+							beneficiary, Vesting any gift in a beneficiary, and the upkeep of
+							any gift until delivery or vesting.
 						</Text>
 
 						<Text style={styles.giftText}>
-							d) Any specific gift that fails to pass to a beneficiary will
-							return to my estate to be included in my Residuary Estate.
+							<Text style={{ fontWeight: "bold" }}>{sections.gifts}.4.</Text>{" "}
+							Any specific gift that fails to pass to a beneficiary will return
+							to my estate to be included in my Residuary Estate.
 						</Text>
 					</View>
 				)}
@@ -1016,8 +1115,9 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 					)}
 
 				{/* Distribution of my Residuary Estate Section */}
-				{data.residuaryBeneficiaries &&
-					data.residuaryBeneficiaries.length > 0 && (
+				{data.residuary &&
+					data.residuary.beneficiaries &&
+					data.residuary.beneficiaries.length > 0 && (
 						<View style={styles.distributionSection}>
 							<Text style={styles.distributionTitle}>
 								{sections.residuary}. Distribution of my Residuary Estate
@@ -1031,24 +1131,40 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 								in accordance with the following provisions:
 							</Text>
 
-							{data.residuaryBeneficiaries?.map((beneficiary, index) => {
-								const beneficiaryDetails = data.beneficiaries.find(
-									(b) => b.id === beneficiary.beneficiaryId
-								);
-								if (!beneficiaryDetails) return null;
+							{data.residuary.beneficiaries?.map((beneficiary, index) => {
+								// Determine beneficiary name and relationship
+								let beneficiaryName = "Unknown Beneficiary";
+								let relationship = "";
+								const requiresGuardian = false;
+
+								if (beneficiary.person) {
+									beneficiaryName = `${beneficiary.person.first_name} ${beneficiary.person.last_name}`;
+									relationship = getFormattedRelationshipNameById(
+										beneficiary.person.relationship_id
+									);
+									// requiresGuardian = beneficiary.person.is_minor;
+								} else if (beneficiary.charity) {
+									beneficiaryName = beneficiary.charity.name;
+									relationship = "charity";
+								}
 
 								return (
-									<Text key={index} style={styles.distributionText}>
-										{String.fromCharCode(97 + index)}){" "}
-										{(data.residuaryBeneficiaries?.length || 0) > 1 && (
+									<Text key={index} style={styles.letteredListItem}>
+										<Text style={{ fontWeight: "bold" }}>
+											{String.fromCharCode(97 + index)})
+										</Text>{" "}
+										{(data.residuary?.beneficiaries?.length || 0) > 1 && (
 											<>{beneficiary.percentage}% to </>
 										)}
-										{(data.residuaryBeneficiaries?.length || 0) === 1 && "to "}
+										{(data.residuary?.beneficiaries?.length || 0) === 1 &&
+											"to "}
 										<Text style={{ fontWeight: "bold" }}>
-											{beneficiaryDetails.fullName}
+											{beneficiaryName}
 										</Text>{" "}
-										my {beneficiaryDetails.relationship.toLowerCase()}
-										{beneficiaryDetails.requiresGuardian ? (
+										{relationship &&
+											relationship !== "charity" &&
+											`,my ${relationship.toLowerCase()},`}
+										{requiresGuardian ? (
 											<>
 												{" "}
 												(but if they die before me their share shall go to their
@@ -1190,50 +1306,38 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 					<Text style={styles.finalDeclarationTitle}>
 						{sections.finalDeclaration}. Final Declaration
 					</Text>
-					<Text style={styles.finalDeclarationText}>
+					<Text style={styles.finalDeclarationTextA}>
 						<Text style={{ fontWeight: "bold" }}>
 							{sections.finalDeclaration}.1.
 						</Text>{" "}
 						I declare that:
 					</Text>
 					<Text style={styles.finalDeclarationText}>
-						<Text style={{ fontWeight: "bold" }}>
-							{sections.finalDeclaration}.2.
-						</Text>{" "}
-						I am over 18;
+						<Text style={{ fontWeight: "bold" }}>a)</Text> I am over 18;
 					</Text>
 					<Text style={styles.finalDeclarationText}>
-						<Text style={{ fontWeight: "bold" }}>
-							{sections.finalDeclaration}.3.
-						</Text>{" "}
-						I am mentally capable of making my own decisions about my will;
+						<Text style={{ fontWeight: "bold" }}>b)</Text> I am mentally capable
+						of making my own decisions about my will;
 					</Text>
 					<Text style={styles.finalDeclarationText}>
-						<Text style={{ fontWeight: "bold" }}>
-							{sections.finalDeclaration}.4.
-						</Text>{" "}
-						I am freely and voluntarily making this will;
+						<Text style={{ fontWeight: "bold" }}>c)</Text> I am freely and
+						voluntarily making this will;
 					</Text>
 					<Text style={styles.finalDeclarationText}>
-						<Text style={{ fontWeight: "bold" }}>
-							{sections.finalDeclaration}.5.
-						</Text>{" "}
-						I have considered all those persons I might reasonably be expected
-						to provide for by my will; and
+						<Text style={{ fontWeight: "bold" }}>d)</Text> I have considered all
+						those persons I might reasonably be expected to provide for by my
+						will; and
 					</Text>
 					<Text style={styles.finalDeclarationText}>
-						<Text style={{ fontWeight: "bold" }}>
-							{sections.finalDeclaration}.6.
-						</Text>{" "}
-						I understand this will and approve it as a true reflection of my
-						wishes.
+						<Text style={{ fontWeight: "bold" }}>e)</Text> I understand this
+						will and approve it as a true reflection of my wishes.
 					</Text>
 				</View>
 
 				{/* Witness Signatures Section */}
 				<View style={styles.witnessSection}>
 					<Text style={styles.witnessTitle}>
-						{sections.witnesses}. Witness Signatures
+						{sections.witnesses}. Signatures and Witnesses
 					</Text>
 					<Text style={styles.witnessText}>
 						<Text style={{ fontWeight: "bold" }}>SIGNATURE</Text>
@@ -1241,8 +1345,8 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 					<Text style={styles.witnessText}>
 						<Text style={{ fontWeight: "bold" }}>{sections.witnesses}.1.</Text>{" "}
 						I,{" "}
-						<Text style={{ fontWeight: "bold" }}>{data.personal.fullName}</Text>{" "}
-						declare that this is my last will and testament, and I sign it in
+						<Text style={{ fontWeight: "bold" }}>{data.personal.fullName}</Text>
+						, declare that this is my last will and testament, and I sign it in
 						the presence of the following witnesses, who in my presence and in
 						the presence of each other, sign as witnesses:
 					</Text>
@@ -1316,6 +1420,8 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 							<Text style={{ fontWeight: "bold" }}>
 								This Appendix does not form part of the Will.
 							</Text>{" "}
+						</Text>
+						<Text style={styles.appendixIntro}>
 							Your Will becomes a public document once probate has been issued
 							by the courts. This Appendix is a 'non-testamentary' document.
 							This means that it is excluded from being made public, keeping

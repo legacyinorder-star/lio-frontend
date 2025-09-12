@@ -222,6 +222,36 @@ interface CompleteWillData {
 			is_witness: boolean;
 		};
 	};
+	gifts: Array<{
+		id: string;
+		type: string;
+		value?: number | null;
+		currency?: string | null;
+		people_id?: string | null;
+		charities_id?: string | null;
+		created_at: string;
+		description: string;
+		person?: {
+			id: string;
+			user_id: string;
+			will_id: string;
+			is_minor: boolean;
+			last_name: string;
+			created_at: string;
+			first_name: string;
+			is_witness: boolean;
+			relationship_id: string;
+		};
+		charity?: {
+			id: string;
+			created_at: string;
+			will_id: string;
+			name: string;
+			rc_number?: string | null;
+			user_id: string;
+		};
+		will_id: string;
+	}>;
 }
 
 // PDF Data interface (same as in willUpload.tsx)
@@ -270,6 +300,15 @@ interface PDFData {
 		fullName: string;
 		address: string;
 	}>;
+	gifts?: Array<{
+		type: string;
+		description: string;
+		value?: string;
+		currency?: string;
+		beneficiaryId: string;
+		beneficiaryName: string;
+		relationship?: string;
+	}>;
 	guardians?: Array<{
 		fullName: string;
 		relationship: string;
@@ -281,12 +320,37 @@ interface PDFData {
 		beneficiaryName?: string;
 		relationship?: string;
 	};
-	residuaryBeneficiaries?: Array<{
+	residuary?: {
 		id: string;
-		beneficiaryId: string;
-		percentage: number;
-	}>;
-	residuaryDistributionType?: "equal" | "manual" | undefined;
+		will_id: string;
+		created_at: string;
+		beneficiaries: Array<{
+			id: string;
+			person?: {
+				id: string;
+				user_id: string;
+				will_id: string;
+				is_minor: boolean;
+				last_name: string;
+				created_at: string;
+				first_name: string;
+				is_witness: boolean;
+				relationship_id: string;
+			};
+			will_id: string;
+			people_id?: string;
+			created_at: string;
+			percentage: number;
+			charities_id?: string;
+			charity?: {
+				id: string;
+				name: string;
+				rc_number?: string;
+			};
+			residuary_id: string;
+		}>;
+		distribution_type: "equal" | "manual";
+	};
 	funeralInstructions?: {
 		wishes: string;
 	};
@@ -403,6 +467,45 @@ const transformWillDataToPDFFormat = (willData: CompleteWillData): PDFData => {
 						address: `${witness.address}, ${witness.city}, ${witness.state} ${witness.post_code}, ${witness.country}`,
 				  }))
 				: [],
+		gifts:
+			willData.gifts && Array.isArray(willData.gifts)
+				? willData.gifts.map((gift) => {
+						// Determine beneficiary name and ID
+						let beneficiaryName = "Unknown Beneficiary";
+						let beneficiaryId = "";
+						let relationship = "";
+
+						if (gift.person) {
+							beneficiaryName = `${gift.person.first_name} ${gift.person.last_name}`;
+							beneficiaryId = gift.person.id;
+							relationship = getFormattedRelationshipNameById(
+								gift.person.relationship_id
+							);
+						} else if (gift.charity) {
+							beneficiaryName = gift.charity.name;
+							beneficiaryId = gift.charity.id;
+							relationship = "charity";
+						}
+
+						// Format value
+						let valueString = "";
+						if (gift.value && gift.currency) {
+							valueString = `${gift.currency}${Number(
+								gift.value
+							).toLocaleString()}`;
+						}
+
+						return {
+							type: gift.type,
+							description: gift.description,
+							value: gift.value ? gift.value.toString() : undefined,
+							currency: gift.currency || undefined,
+							beneficiaryId: beneficiaryId,
+							beneficiaryName: beneficiaryName,
+							relationship: relationship,
+						};
+				  })
+				: [],
 		guardians:
 			willData.guardians && Array.isArray(willData.guardians)
 				? willData.guardians
@@ -431,21 +534,17 @@ const transformWillDataToPDFFormat = (willData: CompleteWillData): PDFData => {
 						: "Unknown Relationship",
 			  }
 			: undefined,
-		residuaryBeneficiaries:
-			willData.residuary &&
-			willData.residuary.beneficiaries &&
-			Array.isArray(willData.residuary.beneficiaries)
-				? willData.residuary.beneficiaries.map((beneficiary) => ({
-						id: beneficiary.id,
-						beneficiaryId:
-							beneficiary.people_id || beneficiary.charities_id || "",
-						percentage: parseInt(beneficiary.percentage) || 0,
-				  }))
-				: [],
-		residuaryDistributionType: willData.residuary?.distribution_type as
-			| "equal"
-			| "manual"
-			| undefined,
+		residuary: willData.residuary
+			? {
+					id: willData.residuary.id,
+					will_id: willData.residuary.will_id,
+					created_at: willData.residuary.created_at,
+					beneficiaries: willData.residuary.beneficiaries || [],
+					distribution_type: willData.residuary.distribution_type as
+						| "equal"
+						| "manual",
+			  }
+			: undefined,
 		funeralInstructions: willData.funeral_instructions
 			? {
 					wishes: willData.funeral_instructions.wishes,
