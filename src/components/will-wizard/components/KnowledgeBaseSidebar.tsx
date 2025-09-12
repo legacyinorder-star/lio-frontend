@@ -16,10 +16,10 @@ interface KnowledgeBaseSidebarProps {
 const STEP_VIDEOS: Record<
 	QuestionType,
 	{
-		src: string;
-		poster: string;
-		title: string;
-		description: string;
+		src: string | string[];
+		poster: string | string[];
+		title: string | string[];
+		description: string | string[];
 	}
 > = {
 	personalInfo: {
@@ -43,11 +43,16 @@ const STEP_VIDEOS: Record<
 		description: "Learn about appointing guardians for your minor children.",
 	},
 	hasAssets: {
-		src: "https://drive.google.com/file/d/1711JH5shwm2NW1-vtyQsMYLYSgQFPGFU/preview",
-		poster: "/images/assets-poster.jpg",
-		title: "Assets Guide",
-		description:
+		src: [
+			"https://drive.google.com/file/d/1711JH5shwm2NW1-vtyQsMYLYSgQFPGFU/preview",
+			"https://drive.google.com/file/d/1Hn6uf109REzOVeUMSi9C-NQPVou1b-rk/preview",
+		],
+		poster: ["/images/assets-poster.jpg", "/images/assets-poster-2.jpg"],
+		title: ["Assets Guide", "Digital Assets Guide"],
+		description: [
 			"Discover how to document and distribute your assets effectively.",
+			"Learn how to document and distribute your digital assets effectively.",
+		],
 	},
 	gifts: {
 		src: "https://drive.google.com/file/d/1JajuIvTClzV8zQQsQDYCVdycKIb0ACXv/preview",
@@ -159,19 +164,50 @@ export default function KnowledgeBaseSidebar({
 	// const articles = KNOWLEDGE_BASE[currentStep] || [];
 	const videoContent = STEP_VIDEOS[currentStep] || STEP_VIDEOS.personalInfo; // Fallback to personal info
 
+	// Helper function to normalize video content
+	const normalizeVideoContent = (content: typeof videoContent) => {
+		if (Array.isArray(content.src)) {
+			return content.src.map((src, index) => ({
+				src,
+				poster: Array.isArray(content.poster)
+					? content.poster[index]
+					: content.poster,
+				title: Array.isArray(content.title)
+					? content.title[index]
+					: content.title,
+				description: Array.isArray(content.description)
+					? content.description[index]
+					: content.description,
+			}));
+		}
+		return [
+			{
+				src: content.src as string,
+				poster: content.poster as string,
+				title: content.title as string,
+				description: content.description as string,
+			},
+		];
+	};
+
+	const videos = normalizeVideoContent(videoContent);
+
 	return (
 		<div
 			className="w-full lg:w-80 p-4 lg:p-6 self-start"
 			style={{ backgroundColor: "#EDFBF6" }}
 		>
 			{/* Video Section */}
-			<div className="mb-0">
-				<VideoGuide
-					src={videoContent.src}
-					poster={videoContent.poster}
-					title={videoContent.title}
-					description={videoContent.description}
-				/>
+			<div className="mb-0 space-y-4">
+				{videos.map((video, index) => (
+					<VideoGuide
+						key={index}
+						src={video.src}
+						poster={video.poster}
+						title={video.title}
+						description={video.description}
+					/>
+				))}
 			</div>
 
 			{/* <h3
