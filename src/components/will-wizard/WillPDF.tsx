@@ -910,15 +910,16 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 					<Text style={styles.executorText}>
 						<Text style={{ fontWeight: "bold" }}>{sections.executors}.1.</Text>{" "}
 						I appoint{" "}
-						{data.executors
-							.filter((executor) => {
+						{(() => {
+							const filteredExecutors = data.executors.filter((executor) => {
 								const name =
 									executor.type === "individual"
 										? executor.fullName
 										: executor.companyName;
 								return name && !name.toLowerCase().includes("legacy in order");
-							})
-							.map((executor, index, filteredExecutors) => {
+							});
+
+							return filteredExecutors.map((executor, index) => {
 								const isLast = index === filteredExecutors.length - 1;
 								const prefix = index === 0 ? "" : isLast ? " and " : ", ";
 
@@ -939,10 +940,28 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 										)}
 									</React.Fragment>
 								);
-							})}{" "}
-						to act as the executor(s) and trustee(s) of my estate. If any of
-						them are unwilling or unable to act, the others may continue, and
-						they may appoint a suitable replacement if needed.
+							});
+						})()}{" "}
+						to act as the executor(s) and trustee(s) of my estate
+						{(() => {
+							const filteredExecutors = data.executors.filter((executor) => {
+								const name =
+									executor.type === "individual"
+										? executor.fullName
+										: executor.companyName;
+								return name && !name.toLowerCase().includes("legacy in order");
+							});
+
+							return filteredExecutors.length > 1 ? (
+								<>
+									. If any of them are unwilling or unable to act, the others
+									may continue, and they may appoint a suitable replacement if
+									needed.
+								</>
+							) : (
+								<>.</>
+							);
+						})()}
 					</Text>
 
 					{/* Legacy In Order Special Paragraph */}
