@@ -32,6 +32,12 @@ export async function apiClient<T = unknown>(
 		headers.set("Content-Type", "application/json");
 	}
 
+	// Add X-Data-Source header for non-production environments
+	const env = import.meta.env.VITE_ENV;
+	if (env && env !== "prod") {
+		headers.set("X-Data-Source", "dev");
+	}
+
 	// Add authentication token if required
 	if (authenticated) {
 		const token = getAuthToken();
