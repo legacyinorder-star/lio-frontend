@@ -23,6 +23,7 @@ import ManageAllWillsPage from "@/pages/admin/ManageAllWillsPage";
 import LogoutPage from "@/pages/LogoutPage";
 import HomePage from "@/pages/HomePage";
 import AboutUsPage from "@/pages/AboutUsPage";
+import ContactUsPage from "@/pages/ContactUsPage";
 import NotFoundPage from "@/pages/NotFoundPage";
 import WillInfoPage from "@/pages/WillInfoPage";
 import PowerOfAttorneyPage from "@/pages/PowerOfAttorneyPage";
@@ -71,6 +72,14 @@ function App() {
 											element={
 												<PublicRoute>
 													<AboutUsPage />
+												</PublicRoute>
+											}
+										/>
+										<Route
+											path="/contact-us"
+											element={
+												<PublicRoute>
+													<ContactUsPage />
 												</PublicRoute>
 											}
 										/>
