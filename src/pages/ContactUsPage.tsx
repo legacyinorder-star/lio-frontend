@@ -51,7 +51,6 @@ export default function ContactUsPage() {
 			}
 		} catch (error) {
 			toast.error("Failed to send message. Please try again.");
-			console.error("Contact form error:", error);
 		} finally {
 			setIsSubmitting(false);
 		}
@@ -61,7 +60,7 @@ export default function ContactUsPage() {
 		<div className="flex min-h-screen w-full flex-col">
 			<Navbar />
 			<main className="flex-1">
-				<div className="min-h-200 bg-[#E6F5EF] py-12">
+				<div className="min-h-300 bg-[#E6F5EF] py-12">
 					<div
 						id="contact-content"
 						className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"

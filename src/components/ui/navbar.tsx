@@ -12,6 +12,7 @@ const NAV_LINKS = [
 	{ label: "Letter of Wishes", to: "/letter-of-wishes", exists: true },
 	{ label: "Pricing", to: "/pricing", exists: false },
 	{ label: "About Us", to: "/about-us", exists: true },
+	{ label: "Contact Us", to: "/contact-us", exists: true },
 	{ label: "Guides & Checklist", to: "#", exists: false },
 ];
 
