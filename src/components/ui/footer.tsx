@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import ScrollLink from "@/utils/scrollLink";
 
 interface FooterProps {
 	showCTA?: boolean;
@@ -24,7 +25,9 @@ export default function Footer({ showCTA = true }: FooterProps) {
 									variant="default"
 									className="bg-[#173C37] text-white hover:bg-[#173C37]/90 rounded px-[0.625rem] py-[1.5rem] text-lg w-[6rem]"
 								>
-									<Link to={user ? "/dashboard" : "/login"}>Yes!</Link>
+									<ScrollLink to={user ? "/dashboard" : "/login"}>
+										Yes!
+									</ScrollLink>
 								</Button>
 							</div>
 						</div>
@@ -39,13 +42,13 @@ export default function Footer({ showCTA = true }: FooterProps) {
 					<div className="grid grid-cols-1 md:grid-cols-2 gap-8">
 						{/* Column 1: Logo and Social Media */}
 						<div className="flex flex-col space-y-6">
-							<Link to="/" className="flex items-center">
+							<ScrollLink to="/" className="flex items-center">
 								<img
 									src="/logos/Logo_White.png"
 									alt="LegacyInOrder Logo"
 									className="w-45 h-auto"
 								/>
-							</Link>
+							</ScrollLink>
 							<div className="flex space-x-6">
 								<a href="#" className="text-white/80 hover:text-white">
 									<svg
@@ -95,29 +98,36 @@ export default function Footer({ showCTA = true }: FooterProps) {
 								</h3>
 								<ul className="space-y-2">
 									<li>
-										<a href="#" className="text-white/80 hover:text-white">
-											How It Works
-										</a>
+										<ScrollLink
+											to="/"
+											className="text-white/80 hover:text-white"
+										>
+											Home
+										</ScrollLink>
 									</li>
 									<li>
-										<a href="#" className="text-white/80 hover:text-white">
-											Legal Documents
-										</a>
+										<ScrollLink
+											to="/will-information"
+											className="text-white/80 hover:text-white"
+										>
+											Wills
+										</ScrollLink>
 									</li>
 									<li>
-										<a href="#" className="text-white/80 hover:text-white">
-											Blog
-										</a>
+										<ScrollLink
+											to="/letter-of-wishes"
+											className="text-white/80 hover:text-white"
+										>
+											Letter of Wishes
+										</ScrollLink>
 									</li>
 									<li>
-										<a href="#" className="text-white/80 hover:text-white">
-											Glossary
-										</a>
-									</li>
-									<li>
-										<a href="#" className="text-white/80 hover:text-white">
-											Resources
-										</a>
+										<ScrollLink
+											to="/about-us"
+											className="text-white/80 hover:text-white"
+										>
+											About Us
+										</ScrollLink>
 									</li>
 								</ul>
 							</div>
@@ -129,19 +139,17 @@ export default function Footer({ showCTA = true }: FooterProps) {
 								</h3>
 								<ul className="space-y-2">
 									<li>
-										<a href="#" className="text-white/80 hover:text-white">
-											Help Center
-										</a>
-									</li>
-									<li>
-										<a href="#" className="text-white/80 hover:text-white">
+										<Link
+											to="/contact-us"
+											className="text-white/80 hover:text-white"
+										>
 											Contact Us
-										</a>
+										</Link>
 									</li>
 									<li>
-										<a href="#" className="text-white/80 hover:text-white">
+										<Link to="/#faq" className="text-white/80 hover:text-white">
 											FAQs
-										</a>
+										</Link>
 									</li>
 								</ul>
 							</div>

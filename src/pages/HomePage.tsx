@@ -640,7 +640,7 @@ export default function HomePage() {
 				</section>
 
 				{/* FAQ Section */}
-				<section className="w-full bg-white py-12">
+				<section id="faq" className="w-full bg-white py-12">
 					<div className="w-full max-w-[2000px] mx-auto px-4 md:px-6 lg:px-8">
 						<h2 className="text-[3rem] font-semibold text-center text-[#173C37] mb-16">
 							Frequently Asked Questions

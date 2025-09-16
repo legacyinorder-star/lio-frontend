@@ -1,14 +1,10 @@
-import { Link, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
+import ScrollLink from "@/utils/scrollLink";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { Menu, X, Wrench } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipProvider,
-	TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const NAV_LINKS = [
 	{ label: "Home", to: "/", exists: true },
@@ -17,7 +13,6 @@ const NAV_LINKS = [
 	{ label: "Pricing", to: "/pricing", exists: false },
 	{ label: "About Us", to: "/about-us", exists: true },
 	{ label: "Guides & Checklist", to: "#", exists: false },
-	{ label: "Pricing", to: "#", exists: false },
 ];
 
 export default function Navbar() {
@@ -30,20 +25,20 @@ export default function Navbar() {
 			<nav className="w-full bg-white border-b border-gray-light sticky top-0 z-30 font-sans">
 				<div className="w-full px-4 sm:px-6 lg:px-8 flex items-center justify-between h-20">
 					{/* Logo */}
-					<Link to="/" className="flex items-center gap-2 min-w-[160px]">
+					<ScrollLink to="/" className="flex items-center gap-2 min-w-[160px]">
 						<img
 							src="/logos/Logo_Colored.png"
 							alt="Legacy In Order Logo"
 							className="h-12 w-auto"
 						/>
-					</Link>
+					</ScrollLink>
 
 					{/* Desktop Nav Links */}
 					<div className="hidden md:flex items-center gap-6">
 						{/* Remaining Nav Links */}
 						{NAV_LINKS.map((link) =>
 							link.exists ? (
-								<Link
+								<ScrollLink
 									key={link.label}
 									to={link.to}
 									className={`text-[#173C37] hover:text-[#173C37] transition-colors font-semibold px-2 py-1 text-[0.875rem] font-[600] ${
@@ -54,7 +49,7 @@ export default function Navbar() {
 									style={{ fontFamily: "TMT Limkin" }}
 								>
 									{link.label}
-								</Link>
+								</ScrollLink>
 							) : (
 								""
 							)
@@ -76,23 +71,23 @@ export default function Navbar() {
 							</Button>
 						</a>
 						{user ? (
-							<Link to="/app/dashboard">
+							<ScrollLink to="/app/dashboard">
 								<Button
 									variant="default"
 									className="text-white bg-[#173C37] rounded border border-[#173C37] font-semibold hover:bg-[#173C37]/90"
 								>
 									Go to Dashboard
 								</Button>
-							</Link>
+							</ScrollLink>
 						) : (
-							<Link to="/login">
+							<ScrollLink to="/login">
 								<Button
 									variant="default"
 									className="text-white bg-[#173C37] rounded border border-[#173C37] font-semibold hover:bg-[#173C37]/90"
 								>
 									Sign In
 								</Button>
-							</Link>
+							</ScrollLink>
 						)}
 					</div>
 
@@ -114,9 +109,9 @@ export default function Navbar() {
 				{mobileOpen && (
 					<div className="md:hidden bg-white border-t border-gray-light px-4 pb-6 pt-4 space-y-3 shadow-lg">
 						{/* Remaining Nav Links */}
-						{NAV_LINKS.slice(1).map((link) =>
+						{NAV_LINKS.map((link) =>
 							link.exists ? (
-								<Link
+								<ScrollLink
 									key={link.label}
 									to={link.to}
 									className={`block text-primary hover:text-primary font-medium py-2 text-[0.875rem] font-[600] ${
@@ -128,24 +123,9 @@ export default function Navbar() {
 									style={{ fontFamily: "TMT Limkin" }}
 								>
 									{link.label}
-								</Link>
+								</ScrollLink>
 							) : (
-								<Tooltip key={link.label}>
-									<TooltipTrigger asChild>
-										<span
-											className="block text-primary hover:text-primary font-medium py-2 text-[0.875rem] font-[600] cursor-pointer"
-											style={{ fontFamily: "TMT Limkin" }}
-										>
-											{link.label}
-										</span>
-									</TooltipTrigger>
-									<TooltipContent className="bg-white border border-gray-200 shadow-md">
-										<div className="flex items-center gap-2">
-											<Wrench className="h-4 w-4 text-orange-500" />
-											<p>Coming Soon</p>
-										</div>
-									</TooltipContent>
-								</Tooltip>
+								""
 							)
 						)}
 						<a
@@ -158,23 +138,26 @@ export default function Navbar() {
 							</Button>
 						</a>
 						{user ? (
-							<Link to="/app/dashboard" onClick={() => setMobileOpen(false)}>
+							<ScrollLink
+								to="/app/dashboard"
+								onClick={() => setMobileOpen(false)}
+							>
 								<Button
 									variant="default"
 									className="w-full mt-2 text-white bg-[#173C37] rounded border border-[#173C37] font-semibold hover:text-[#173C37]"
 								>
 									Go to Dashboard
 								</Button>
-							</Link>
+							</ScrollLink>
 						) : (
-							<Link to="/login" onClick={() => setMobileOpen(false)}>
+							<ScrollLink to="/login" onClick={() => setMobileOpen(false)}>
 								<Button
 									variant="default"
 									className="w-full mt-2 text-white bg-[#173C37] rounded border border-[#173C37] font-semibold hover:text-[#173C37]"
 								>
 									Sign In
 								</Button>
-							</Link>
+							</ScrollLink>
 						)}
 					</div>
 				)}
