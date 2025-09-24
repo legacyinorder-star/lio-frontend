@@ -140,3 +140,4 @@ VITE_API_BASE_URL=<backend-api-url>
 VITE_ENV=<environment-name>
 VITE_STRIPE_WILL_PRICE_ID=<stripe-will-price-id>
 ```
+
