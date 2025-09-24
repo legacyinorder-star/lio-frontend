@@ -1,7 +1,7 @@
 export const API_CONFIG = {
 	baseUrl:
 		import.meta.env.VITE_API_BASE_URL ||
-		"https://xx4z-bjeb-pp4s.e2.xano.io/api:XXA97u_a",
+		"https://xx4z-bjeb-pp4s.e2.xano.io/api:XXA97u_a:local",
 	endpoints: {
 		auth: {
 			login: "/auth/login",
