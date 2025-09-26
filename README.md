@@ -68,6 +68,9 @@ debug_emails
 test_stripe_api_secret
 ```
 
+### Backup & Restore Strategy
+Xano has an automatic 14-day rolling backup for the entire instance (backend code & database). Read more here: https://docs.xano.com/xano-features/instance-settings/backup-and-restore
+
 ## Frontend
 The frontend is hosted on Vercel.
 
