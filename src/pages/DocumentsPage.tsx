@@ -5,6 +5,8 @@ import { FileText } from "lucide-react";
 import { useWill } from "@/context/WillContext";
 import { useLetterOfWishes } from "@/context/LetterOfWishesContext";
 import { useState, useEffect } from "react";
+import { smartDownloadWill } from "@/utils/willSmartDownload";
+import { toast } from "sonner";
 
 export default function DocumentsPage() {
 	const navigate = useNavigate();
@@ -31,10 +33,14 @@ export default function DocumentsPage() {
 		}
 	};
 
-	const handleDownloadWill = () => {
+	const handleDownloadWill = async () => {
 		if (activeWill) {
-			// Navigate to will download page
-			navigate(`/app/will/${activeWill.id}`);
+			try {
+				await smartDownloadWill(activeWill);
+			} catch (error) {
+				console.error("Error downloading will:", error);
+				toast.error("Failed to download will");
+			}
 		}
 	};
 

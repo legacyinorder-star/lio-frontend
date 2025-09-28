@@ -15,6 +15,7 @@ import { apiClient } from "@/utils/apiClient";
 import { mapWillDataFromAPI } from "@/utils/dataTransform";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { toast } from "sonner";
+import { smartDownloadWill } from "@/utils/willSmartDownload";
 
 export default function DashboardPage() {
 	const navigate = useNavigate();
@@ -72,10 +73,14 @@ export default function DashboardPage() {
 		}
 	};
 
-	const handleDownloadWill = () => {
+	const handleDownloadWill = async () => {
 		if (currentWill) {
-			// Navigate to will download page
-			navigate(`/app/will/${currentWill.id}`);
+			try {
+				await smartDownloadWill(currentWill);
+			} catch (error) {
+				console.error("Error downloading will:", error);
+				toast.error("Failed to download will");
+			}
 		}
 	};
 
