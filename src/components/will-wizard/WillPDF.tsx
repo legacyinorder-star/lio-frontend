@@ -859,7 +859,7 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 				{/* Scope Section */}
 				<View style={styles.scopeSection}>
 					<Text style={styles.scopeTitle}>
-						{sections.scope}. Scope of this will
+						{sections.scope}. Scope of this Will
 					</Text>
 					<Text style={styles.scopeText}>
 						<Text style={{ fontWeight: "bold" }}>{sections.scope}.1.</Text> I,{" "}

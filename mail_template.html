@@ -1,0 +1,196 @@
+<html>
+    <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+        <style>
+          @media screen{
+              @font-face {
+                  font-family: 'TMT Limkin';
+                  src: url('https://legacyinorder.com/fonts/TMT-LimkinVF.woff2') format('woff2'),
+                       url('https://legacyinorder.com/fonts/TMT-LimkinVF.woff') format('woff'),
+                       url('https://legacyinorder.com/fonts/TMT-LimkinVF.ttf') format('truetype');
+                  font-weight: normal;
+                  font-style: normal;
+                  font-display: swap;
+              }
+          	}
+            body {
+                color: #173C37;
+                font-family: 'TMT Limkin', sans-serif;
+                font-size: 1rem;
+                font-style: normal;
+                font-weight: 400;
+                line-height: 120%;
+                letter-spacing: -0.0125rem;
+                padding: 0px;
+                margin: 0px;
+            }
+            .container {
+                width: 100%;
+            }
+            .header {
+                background-color: #239485;
+                color: #FFFFFF;
+                padding: 2rem 0;
+                display: flex;
+                justify-content: center;
+                align-items: flex-start;
+                position: relative;
+                min-height: 200px;
+                width: 100%;
+            }
+            .header-inner {
+                max-width: 800px;
+                width: 100%;
+                padding: 0 2rem;
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                position: relative;
+            }
+            .header-left {
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                flex: 1 !important;
+                z-index: 2 !important;
+            }
+            .logo {
+                width: 180px !important;
+                height: auto !important;
+                margin-bottom: 1rem !important;
+            }
+            .header h1 {
+                font-size: 2rem;
+                font-weight: 600;
+            }
+            .header-svg {
+                position: absolute;
+                right: 2rem;
+                top: 0;
+                opacity: 0.8;
+                z-index: 1;
+            }
+            .header-title {
+                color: #FFF;
+                font-style: normal;
+                font-weight: 600;
+                line-height: 120%; /* 2.4rem */
+                letter-spacing: -0.0125rem;
+                margin-top: 2rem;
+            }
+            .content {
+                max-width: 800px;
+                margin: 0 auto;
+                padding: 0 2rem;
+                font-weight: 400;
+            }
+            .mail-content {
+                background-color: #ffffff;
+                padding: 2rem 0;
+                width: 100%;
+            }
+            .action-button {
+                border-radius: 0.25rem;
+                background: #173C37;
+                color: #FFFFFF;
+                padding: 1rem 1.5rem;
+                cursor: pointer;
+                text-decoration: none;
+                display: inline-block;
+                border: none;
+                font-family: inherit;
+                font-size: inherit;
+            }
+          	.action-button:active, .action-button:visited {
+            	  background: #173C37;
+                color: #FFFFFF;
+          	}
+            .secondary-content {
+                background-color: #DFF2EB;
+                padding: 2rem 0;
+                width: 100%;
+                color: #173C37;
+            }
+            .content .title {
+                font-size: 1.15rem;
+                font-style: normal;
+                font-weight: 700;
+                line-height: normal;
+                letter-spacing: -0.0125rem;
+                margin-bottom: 1rem;
+                margin-top: 0;
+            }
+            .footer {
+                background-color: #ffffff;
+                padding: 2rem 0;
+                width: 100%;
+            }
+            .footer-separator {
+                margin-top: 4rem;
+            }
+            .footer-text {
+                color: #545454;
+                text-align: center;
+                font-size: 0.75rem;
+                font-style: normal;
+                font-weight: 400;
+                line-height: normal;
+                letter-spacing: -0.0125rem;
+                margin-top: 2rem;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <div class="header-inner">
+                    <div class="header-left">
+                        <img src="https://legacyinorder.com/logos/Logo_White.png" alt="Legacy In Order Logo" class="logo">
+                        <h1 class="header-title">Welcome to <br/>Legacy In Order</h1>
+                    </div>
+                    <div class="header-svg">
+                        <img src="https://legacyinorder.com/emails/scroll.png" alt="Decorative scroll" width="189" height="213">
+                    </div>
+                </div>
+            </div>
+            <div class="mail-content">
+                <div class="content">
+                    <p>Hi {{ first_name }},</p>
+                    <p>Congratulations on taking the first step towards writing your Will. We&apos;ve set up your account now, so whenever you&apos;re ready just tap the button to log back in.</p>
+                    <p>
+                        <a href="{{ login_url }}" target="_blank" class="action-button">Log in to my account</a>
+                    </p>
+                </div>
+            </div>
+            <div class="secondary-content">
+                <div class="content">
+                    <p class="title">You&apos;re Never Alone in the Process</p>
+                    <p>Our easy-to-use tools walk you through writing your Will, one clear step at a time. Need more guidance? Our helpful guides break down everything — from naming executors to choosing beneficiaries and guardians.</p>
+                </div>
+            </div>
+            <div class="footer">
+                <div class="content" style="padding-top: 4rem;">
+                    All the best,
+                    <br/>
+                    Team LegacyinOrder
+                </div>
+                <div class="footer-separator">
+            <div class="content">
+                        <hr style="color: #DBDBDB;">
+                        <div class="footer-text">
+                            Copyright © 2025 LegacyInOrder, All rights reserved.<br/>
+                            You are receiving this email because you signed up on our platform www.legacyinorder.com<br/><br/>
+                            Our mailing address is:<br/>
+                            LegacyInOrder<br/>
+                            128 City Road,<br/>
+                            London,<br/>
+                            United Kingdom, EC1V 2NX.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
