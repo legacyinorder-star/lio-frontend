@@ -64,6 +64,33 @@ export default function DashboardPage() {
 		}
 	};
 
+	const handleStartNewWill = async () => {
+		try {
+			// Create a new will
+			const { data, error } = await apiClient("/wills", {
+				method: "POST",
+				body: null,
+			});
+
+			if (error) {
+				console.error("Error creating will:", error);
+				toast.error("Failed to create will");
+				return;
+			}
+
+			// Navigate to the will wizard with the new will ID
+			const willId = (data as { id: string })?.id;
+			if (willId) {
+				navigate(`/app/create-will/personalInfo?willId=${willId}`);
+			} else {
+				toast.error("Failed to get will ID");
+			}
+		} catch (error) {
+			console.error("Error creating will:", error);
+			toast.error("Failed to create will");
+		}
+	};
+
 	const handlePayAndSubmit = () => {
 		if (currentWill) {
 			// Navigate to payment page
@@ -97,7 +124,7 @@ export default function DashboardPage() {
 		if (!currentWill) {
 			return {
 				text: "Start your Will",
-				action: () => navigate("/app/create-will"),
+				action: handleStartNewWill,
 				description:
 					"Share personal guidance for your loved ones that complements your formal will.",
 			};
@@ -394,17 +421,18 @@ export default function DashboardPage() {
 					{/* Left Card - Black Background */}
 					<div className="rounded-[0.5rem] p-8 text-white bg-primary">
 						<h3 className="text-[1.5rem] text-white font-semibold mb-2">
-							Try out the Legacy Vault
+							Legacy Vault Coming Soon
 						</h3>
 						<p className="text-white text-sm mb-16 font-normal leading-relaxed">
-							The Legacy Vault is a new way for you to manage all you important
-							documents, all in one place.
+							The Legacy Vault will be a new way for you to manage all your
+							important documents, all in one place. We're working hard to bring
+							this feature to you soon.
 						</p>
 						<div
 							onClick={() => setShowVaultModal(true)}
 							className="flex items-center text-white cursor-pointer hover:text-gray-300 transition-colors"
 						>
-							<span className="text-sm font-semibold">Get Started</span>
+							<span className="text-sm font-semibold">Learn More</span>
 							<svg
 								width="20"
 								height="8"
@@ -446,7 +474,7 @@ export default function DashboardPage() {
 						</div>
 
 						<p className="text-sm font-semibold text-primary mt-20">
-							Learn how we keep you safe
+							Enterprise-grade security to keep you safe
 						</p>
 					</div>
 				</div>

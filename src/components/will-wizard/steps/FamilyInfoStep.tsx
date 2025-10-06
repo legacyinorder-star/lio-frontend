@@ -226,14 +226,16 @@ export default function FamilyInfoStep({
 				return;
 			}
 
-			if (data) {
+			if (data && data !== null && data.id) {
+				console.log(data);
 				// User has pets
 				setHasPets(true);
 				setInitialHasPets(true);
 				setPetId(data.id);
 				console.log("Found existing pets, pet ID:", data.id);
 			} else {
-				// No pets found
+				// No pets found (empty object or no ID)
+				console.log("No existing pets found (empty object)");
 				setHasPets(false);
 				setInitialHasPets(false);
 			}
@@ -1111,7 +1113,7 @@ export default function FamilyInfoStep({
 								<div className="flex items-center space-x-2">
 									<Checkbox
 										id="petsNo"
-										checked={!hasPets}
+										checked={hasPets === false}
 										onCheckedChange={(checked) => {
 											if (checked) {
 												setHasPets(false);
@@ -1125,7 +1127,7 @@ export default function FamilyInfoStep({
 								<div className="flex items-center space-x-2">
 									<Checkbox
 										id="petsYes"
-										checked={hasPets}
+										checked={hasPets === true}
 										onCheckedChange={(checked) => {
 											if (checked) {
 												setHasPets(true);

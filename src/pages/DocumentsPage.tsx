@@ -7,6 +7,7 @@ import { useLetterOfWishes } from "@/context/LetterOfWishesContext";
 import { useState, useEffect } from "react";
 import { smartDownloadWill } from "@/utils/willSmartDownload";
 import { toast } from "sonner";
+import { apiClient } from "@/utils/apiClient";
 
 export default function DocumentsPage() {
 	const navigate = useNavigate();
@@ -21,6 +22,33 @@ export default function DocumentsPage() {
 			// Navigate to the current step from progress
 			const currentStep = activeWill.progress?.currentStep || "personalInfo";
 			navigate(`/app/create-will/${currentStep}`);
+		}
+	};
+
+	const handleStartNewWill = async () => {
+		try {
+			// Create a new will
+			const { data, error } = await apiClient("/wills", {
+				method: "POST",
+				body: null,
+			});
+
+			if (error) {
+				console.error("Error creating will:", error);
+				toast.error("Failed to create will");
+				return;
+			}
+
+			// Navigate to the will wizard with the new will ID
+			const willId = (data as { id: string })?.id;
+			if (willId) {
+				navigate(`/app/create-will/personalInfo?willId=${willId}`);
+			} else {
+				toast.error("Failed to get will ID");
+			}
+		} catch (error) {
+			console.error("Error creating will:", error);
+			toast.error("Failed to create will");
 		}
 	};
 
@@ -66,7 +94,7 @@ export default function DocumentsPage() {
 		if (!activeWill) {
 			return {
 				text: "Start your Will",
-				action: () => navigate("/app/create-will"),
+				action: handleStartNewWill,
 				description: "Create your will to ensure your wishes are carried out.",
 				progress: "0/9 sections complete",
 				nextSection: "Personal Details",
@@ -388,49 +416,51 @@ export default function DocumentsPage() {
 						</div>
 					</Card>
 
-					{/* Letter Card Loading */}
-					<Card
-						className="p-6 w-full"
-						style={{
-							borderRadius: "0.5rem",
-							background: "#FFF",
-							boxShadow: "0 2px 12px 0 rgba(0, 0, 0, 0.15)",
-						}}
-					>
-						<div
-							className="flex items-center space-x-2 text-white text-sm font-medium mb-6 w-fit"
+					{/* Letter Card Loading - Only show if will is completed */}
+					{activeWill?.status === "completed" && (
+						<Card
+							className="p-6 w-full"
 							style={{
-								padding: "0.25rem 0.5rem",
-								borderRadius: "0.25rem",
-								background:
-									"linear-gradient(99deg, #482B02 42.51%, #C17E11 94.43%)",
+								borderRadius: "0.5rem",
+								background: "#FFF",
+								boxShadow: "0 2px 12px 0 rgba(0, 0, 0, 0.15)",
 							}}
 						>
-							<FileText className="w-4 h-4" />
-							<span>Letter of Wishes</span>
-						</div>
-						<div className="flex flex-col h-full">
-							<div className="flex items-center space-x-4 mb-14">
-								<div>
-									<div className="h-6 bg-gray-200 rounded animate-pulse mb-2"></div>
-									<div className="h-4 bg-gray-200 rounded animate-pulse w-32"></div>
+							<div
+								className="flex items-center space-x-2 text-white text-sm font-medium mb-6 w-fit"
+								style={{
+									padding: "0.25rem 0.5rem",
+									borderRadius: "0.25rem",
+									background:
+										"linear-gradient(99deg, #482B02 42.51%, #C17E11 94.43%)",
+								}}
+							>
+								<FileText className="w-4 h-4" />
+								<span>Letter of Wishes</span>
+							</div>
+							<div className="flex flex-col h-full">
+								<div className="flex items-center space-x-4 mb-14">
+									<div>
+										<div className="h-6 bg-gray-200 rounded animate-pulse mb-2"></div>
+										<div className="h-4 bg-gray-200 rounded animate-pulse w-32"></div>
+									</div>
+								</div>
+								<div className="mb-14">
+									<div className="flex justify-between items-center mb-2">
+										<div className="h-4 bg-gray-200 rounded animate-pulse w-24"></div>
+									</div>
+									<div className="w-full h-2 rounded bg-gray-200 animate-pulse"></div>
+								</div>
+								<div className="space-y-4">
+									<div className="mb-4">
+										<div className="h-4 bg-gray-200 rounded animate-pulse w-16 mb-2"></div>
+										<div className="h-4 bg-gray-200 rounded animate-pulse w-32"></div>
+									</div>
+									<div className="h-10 bg-gray-200 rounded animate-pulse"></div>
 								</div>
 							</div>
-							<div className="mb-14">
-								<div className="flex justify-between items-center mb-2">
-									<div className="h-4 bg-gray-200 rounded animate-pulse w-24"></div>
-								</div>
-								<div className="w-full h-2 rounded bg-gray-200 animate-pulse"></div>
-							</div>
-							<div className="space-y-4">
-								<div className="mb-4">
-									<div className="h-4 bg-gray-200 rounded animate-pulse w-16 mb-2"></div>
-									<div className="h-4 bg-gray-200 rounded animate-pulse w-32"></div>
-								</div>
-								<div className="h-10 bg-gray-200 rounded animate-pulse"></div>
-							</div>
-						</div>
-					</Card>
+						</Card>
+					)}
 				</div>
 			</div>
 		);
@@ -604,105 +634,111 @@ export default function DocumentsPage() {
 					</div>
 				</Card>
 
-				{/* Letter of Wishes Card */}
-				<Card
-					className="p-6 w-full"
-					style={{
-						borderRadius: "0.5rem",
-						background: "#FFF",
-						boxShadow: "0 2px 12px 0 rgba(0, 0, 0, 0.15)",
-					}}
-				>
-					{/* Document Type Badge */}
-					<div
-						className="flex items-center space-x-2 text-white text-sm font-medium mb-6 w-fit"
+				{/* Letter of Wishes Card - Only show if Will is completed or Letter already exists */}
+				{(activeWill?.status === "completed" || letterData) && (
+					<Card
+						className="p-6 w-full"
 						style={{
-							padding: "0.25rem 0.5rem",
-							borderRadius: "0.25rem",
-							background:
-								"linear-gradient(99deg, #482B02 42.51%, #C17E11 94.43%)",
+							borderRadius: "0.5rem",
+							background: "#FFF",
+							boxShadow: "0 2px 12px 0 rgba(0, 0, 0, 0.15)",
 						}}
 					>
-						<FileText className="w-4 h-4" />
-						<span>Letter of Wishes</span>
-					</div>
-
-					{/* Status Badge */}
-					{letterData && (
+						{/* Document Type Badge */}
 						<div
-							className={`flex items-center space-x-1 text-xs font-medium px-2 py-1 rounded-full mb-4 w-fit ${
-								letterData.available_to_download
-									? "bg-green-100 text-green-800"
-									: "bg-blue-100 text-blue-800"
-							}`}
+							className="flex items-center space-x-2 text-white text-sm font-medium mb-6 w-fit"
+							style={{
+								padding: "0.25rem 0.5rem",
+								borderRadius: "0.25rem",
+								background:
+									"linear-gradient(99deg, #482B02 42.51%, #C17E11 94.43%)",
+							}}
 						>
+							<FileText className="w-4 h-4" />
+							<span>Letter of Wishes</span>
+						</div>
+
+						{/* Status Badge */}
+						{letterData && (
 							<div
-								className={`w-2 h-2 rounded-full ${
+								className={`flex items-center space-x-1 text-xs font-medium px-2 py-1 rounded-full mb-4 w-fit ${
 									letterData.available_to_download
-										? "bg-green-500"
-										: "bg-blue-500"
-								}`}
-							></div>
-							<span>
-								{letterData.available_to_download ? "Completed" : "In Progress"}
-							</span>
-						</div>
-					)}
-
-					<div className="flex flex-col h-full">
-						{/* Header */}
-						<div className="flex items-center space-x-4 mb-14">
-							<div>
-								<h3 className="text-2xl font-semibold text-[#173C37]">
-									Letter of Wishes
-								</h3>
-								<p className="text-[#909090] text-sm">
-									Last edited {letterButtonInfo.lastEdited}
-								</p>
-							</div>
-						</div>
-
-						{/* Progress Section */}
-						<div className="mb-14">
-							<div className="flex justify-between items-center mb-2">
-								<span className="text-[0.875rem] font-medium text-[#173C37]">
-									{letterButtonInfo.progress}
-								</span>
-							</div>
-							<div className="w-full h-2 rounded bg-gray-200">
-								<div
-									className="h-2 rounded transition-all duration-300"
-									style={{
-										width: `${letterButtonInfo.progressPercentage}%`,
-										background:
-											"linear-gradient(90deg, #A2DD16 0%, #4A8607 100%)",
-									}}
-								></div>
-							</div>
-						</div>
-						<div className="space-y-4">
-							<div
-								className={`mb-4 ${
-									!letterButtonInfo.showNextStep ? "invisible" : ""
+										? "bg-green-100 text-green-800"
+										: "bg-blue-100 text-blue-800"
 								}`}
 							>
-								<h5 className="text-sm text-[#909090] font-[400]">Next step</h5>
-								<p className="text-sm text-[#173C37] font-[500]">
-									{letterButtonInfo.nextSection}
-								</p>
+								<div
+									className={`w-2 h-2 rounded-full ${
+										letterData.available_to_download
+											? "bg-green-500"
+											: "bg-blue-500"
+									}`}
+								></div>
+								<span>
+									{letterData.available_to_download
+										? "Completed"
+										: "In Progress"}
+								</span>
 							</div>
-							<div>
-								<Button
-									onClick={letterButtonInfo.action || undefined}
-									disabled={letterButtonInfo.action === null}
-									className="w-full text-sm font-medium text-[#173C37] bg-[#EDEDED] rounded-[0.25rem] disabled:opacity-50 disabled:cursor-not-allowed"
+						)}
+
+						<div className="flex flex-col h-full">
+							{/* Header */}
+							<div className="flex items-center space-x-4 mb-14">
+								<div>
+									<h3 className="text-2xl font-semibold text-[#173C37]">
+										Letter of Wishes
+									</h3>
+									<p className="text-[#909090] text-sm">
+										Last edited {letterButtonInfo.lastEdited}
+									</p>
+								</div>
+							</div>
+
+							{/* Progress Section */}
+							<div className="mb-14">
+								<div className="flex justify-between items-center mb-2">
+									<span className="text-[0.875rem] font-medium text-[#173C37]">
+										{letterButtonInfo.progress}
+									</span>
+								</div>
+								<div className="w-full h-2 rounded bg-gray-200">
+									<div
+										className="h-2 rounded transition-all duration-300"
+										style={{
+											width: `${letterButtonInfo.progressPercentage}%`,
+											background:
+												"linear-gradient(90deg, #A2DD16 0%, #4A8607 100%)",
+										}}
+									></div>
+								</div>
+							</div>
+							<div className="space-y-4">
+								<div
+									className={`mb-4 ${
+										!letterButtonInfo.showNextStep ? "invisible" : ""
+									}`}
 								>
-									{letterButtonInfo.text}
-								</Button>
+									<h5 className="text-sm text-[#909090] font-[400]">
+										Next step
+									</h5>
+									<p className="text-sm text-[#173C37] font-[500]">
+										{letterButtonInfo.nextSection}
+									</p>
+								</div>
+								<div>
+									<Button
+										onClick={letterButtonInfo.action || undefined}
+										disabled={letterButtonInfo.action === null}
+										className="w-full text-sm font-medium text-[#173C37] bg-[#EDEDED] rounded-[0.25rem] disabled:opacity-50 disabled:cursor-not-allowed"
+									>
+										{letterButtonInfo.text}
+									</Button>
+								</div>
 							</div>
 						</div>
-					</div>
-				</Card>
+					</Card>
+				)}
 			</div>
 		</div>
 	);
