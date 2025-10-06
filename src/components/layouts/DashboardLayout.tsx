@@ -4,8 +4,6 @@ import {
 	LogOut,
 	// Settings,
 	UserCog,
-	MessageCircleQuestion,
-	Bell,
 	Plus,
 	Scroll,
 	BookText,
@@ -223,7 +221,7 @@ export function DashboardLayout() {
 							<SessionStatus showInDropdown compact />
 						)} */}
 						{/* Help & Notifications - Hidden on small mobile, visible on sm+ */}
-						<div className="hidden sm:flex items-center space-x-2">
+						{/* <div className="hidden sm:flex items-center space-x-2">
 							<Button
 								variant="ghost"
 								size="icon"
@@ -241,7 +239,7 @@ export function DashboardLayout() {
 								<Bell className="h-5 w-5" />
 								<span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500"></span>
 							</Button>
-						</div>
+						</div> */}
 						{/* Hide continue/create will button in wizard mode or when will is under review or completed */}
 						{!isInWillWizard &&
 							!location.pathname.startsWith("/app/letter-of-wishes") &&
