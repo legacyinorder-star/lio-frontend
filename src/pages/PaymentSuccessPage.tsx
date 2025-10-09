@@ -20,7 +20,11 @@ export default function PaymentSuccessPage() {
 	const isLetterOfWishes = source === "letter-of-wishes";
 
 	useEffect(() => {
+		console.log("🎯 useEffect triggered");
+		console.log("📋 Effect parameters:", { willId, source, hasValidated });
+
 		if (!willId) {
+			console.error("❌ Missing willId, redirecting to dashboard");
 			toast.error("Invalid payment success page. Missing will ID.");
 			navigate("/app/dashboard");
 			return;
@@ -28,50 +32,70 @@ export default function PaymentSuccessPage() {
 
 		// Prevent duplicate validation
 		if (hasValidated) {
+			console.log("⏭️ Already validated, skipping");
 			return;
 		}
 
+		console.log("▶️ Calling validatePaymentSuccess...");
 		validatePaymentSuccess();
 
 		// Cleanup function to abort any ongoing requests
 		return () => {
+			console.log("🧹 Cleanup function called");
 			if (abortControllerRef.current) {
+				console.log("🛑 Aborting ongoing request");
 				abortControllerRef.current.abort();
 			}
 		};
 	}, [willId, hasValidated]);
 
 	const validatePaymentSuccess = async () => {
+		console.log("🔍 validatePaymentSuccess called");
+		console.log("📋 Current state:", {
+			hasValidated,
+			isLoading,
+			willId,
+			isLetterOfWishes,
+		});
+
 		// Guard against duplicate calls
-		if (hasValidated || isLoading) {
-			return;
-		}
+		// if (hasValidated || isLoading) {
+		// 	console.log("⚠️ Duplicate call prevented:", { hasValidated, isLoading });
+		// 	return;
+		// }
 
 		try {
+			console.log("🚀 Starting payment validation...");
 			setIsLoading(true);
 			setHasValidated(true);
 
 			// Create new AbortController for this request
 			abortControllerRef.current = new AbortController();
 
+			console.log(`📡 Calling API: /wills/${willId}/payment-successful`);
 			const { error } = await apiClient(`/wills/${willId}/payment-successful`, {
 				method: "POST",
 				signal: abortControllerRef.current.signal,
 			});
 
+			console.log("📥 API response received:", { error });
+
 			// Check if request was aborted
 			if (abortControllerRef.current.signal.aborted) {
+				console.log("🛑 Request was aborted");
 				return;
 			}
 
 			if (error) {
 				// Handle 400 or other error responses
+				console.error("❌ Payment validation failed:", error);
 				toast.error(error || "Payment validation failed");
 				navigate("/app/dashboard");
 				return;
 			}
 
 			// Success - 200 response
+			console.log("✅ Payment validation successful!");
 			setIsValid(true);
 			toast.success("Payment completed successfully!");
 
@@ -95,13 +119,20 @@ export default function PaymentSuccessPage() {
 		} catch (error) {
 			// Check if request was aborted
 			if (abortControllerRef.current?.signal.aborted) {
+				console.log("🛑 Request was aborted in catch block");
 				return;
 			}
 
-			console.error("Error validating payment success:", error);
+			console.error("💥 Error validating payment success:", error);
+			console.error("💥 Error details:", {
+				message: error instanceof Error ? error.message : "Unknown error",
+				stack: error instanceof Error ? error.stack : undefined,
+				fullError: error,
+			});
 			toast.error("Failed to validate payment. Please contact support.");
 			navigate("/app/dashboard");
 		} finally {
+			console.log("🏁 Finally block reached, setting isLoading to false");
 			setIsLoading(false);
 		}
 	};

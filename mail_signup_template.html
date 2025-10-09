@@ -178,10 +178,19 @@
             <div class="mail-content">
                 <div class="content">
                     <p>Hi {{ first_name }},</p>
-                    <p>Congratulations on taking the first step towards writing your Will. We&apos;ve set up your account now, so whenever you&apos;re ready just tap the button to log back in.</p>
-                    <p>
-                        <a href="{{ login_url }}" target="_blank" class="action-button">Log in to my account</a>
-                    </p>
+                    <p>Thank you for signing up with Legacy In Order! To complete your registration, please use the verification code below:</p>
+                    
+                    <table cellpadding="0" cellspacing="0" border="0" style="margin: 2rem 0;">
+                        <tr>
+                            <td style="background-color: #F5F5F5; padding: 1.5rem; border-radius: 0.5rem; border: 2px dashed #CCCCCC; text-align: center;">
+                                <p style="margin: 0 0 0.5rem 0; color: #545454; font-size: 0.875rem; font-weight: 500;">Your Verification Code</p>
+                                <p style="margin: 0; font-size: 2rem; font-weight: 700; letter-spacing: 0.5rem; color: #173C37; font-family: 'Courier New', monospace;">{{ otp_code }}</p>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <p>This code will expire in 10 minutes. If you didn&apos;t request this code, please ignore this email.</p>
+                    <p>Once verified, you can start creating your Will whenever you&apos;re ready.</p>
                 </div>
             </div>
             <div class="secondary-content">
