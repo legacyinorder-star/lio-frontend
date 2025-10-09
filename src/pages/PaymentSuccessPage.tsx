@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,6 @@ export default function PaymentSuccessPage() {
 	const [isLoading, setIsLoading] = useState(true);
 	const [isValid, setIsValid] = useState(false);
 	const [hasValidated, setHasValidated] = useState(false);
-	const abortControllerRef = useRef<AbortController | null>(null);
 
 	const willId = searchParams.get("willId");
 	const source = searchParams.get("source");
@@ -38,15 +37,6 @@ export default function PaymentSuccessPage() {
 
 		console.log("▶️ Calling validatePaymentSuccess...");
 		validatePaymentSuccess();
-
-		// Cleanup function to abort any ongoing requests
-		return () => {
-			console.log("🧹 Cleanup function called");
-			if (abortControllerRef.current) {
-				console.log("🛑 Aborting ongoing request");
-				abortControllerRef.current.abort();
-			}
-		};
 	}, [willId, hasValidated]);
 
 	const validatePaymentSuccess = async () => {
@@ -69,22 +59,12 @@ export default function PaymentSuccessPage() {
 			setIsLoading(true);
 			setHasValidated(true);
 
-			// Create new AbortController for this request
-			abortControllerRef.current = new AbortController();
-
 			console.log(`📡 Calling API: /wills/${willId}/payment-successful`);
 			const { error } = await apiClient(`/wills/${willId}/payment-successful`, {
 				method: "POST",
-				signal: abortControllerRef.current.signal,
 			});
 
 			console.log("📥 API response received:", { error });
-
-			// Check if request was aborted
-			if (abortControllerRef.current.signal.aborted) {
-				console.log("🛑 Request was aborted");
-				return;
-			}
 
 			if (error) {
 				// Handle 400 or other error responses
@@ -117,12 +97,6 @@ export default function PaymentSuccessPage() {
 				);
 			}
 		} catch (error) {
-			// Check if request was aborted
-			if (abortControllerRef.current?.signal.aborted) {
-				console.log("🛑 Request was aborted in catch block");
-				return;
-			}
-
 			console.error("💥 Error validating payment success:", error);
 			console.error("💥 Error details:", {
 				message: error instanceof Error ? error.message : "Unknown error",
