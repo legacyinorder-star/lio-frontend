@@ -12,6 +12,7 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { StepProps } from "../types/will.types";
 import { useWill } from "@/context/WillContext";
 import { useWillWizard } from "@/context/WillWizardContext";
@@ -26,19 +27,18 @@ const personalInfoSchema = z.object({
 	middleName: z.string().optional(),
 	lastName: z.string().min(2, "Last name must be at least 2 characters"),
 	dateOfBirth: z
-		.string()
-		.min(1, "Date of birth is required")
+		.date({
+			required_error: "Date of birth is required",
+			invalid_type_error: "Please select a valid date",
+		})
 		.refine((date) => {
-			if (!date) return false;
-			const birthDate = new Date(date);
 			const today = new Date();
-			const age = today.getFullYear() - birthDate.getFullYear();
-			const monthDiff = today.getMonth() - birthDate.getMonth();
+			const age = today.getFullYear() - date.getFullYear();
+			const monthDiff = today.getMonth() - date.getMonth();
 
 			// Adjust age if birthday hasn't occurred this year
 			const adjustedAge =
-				monthDiff < 0 ||
-				(monthDiff === 0 && today.getDate() < birthDate.getDate())
+				monthDiff < 0 || (monthDiff === 0 && today.getDate() < date.getDate())
 					? age - 1
 					: age;
 
@@ -89,13 +89,15 @@ export default function PersonalInfoStep({
 
 	// Determine the initial values for the form
 	const getInitialValues = () => {
-		// Priority: willOwnerData > activeWill > data prop > default 18-year-ago date
+		// Priority: willOwnerData > activeWill > data prop
 		if (willOwnerData) {
 			return {
 				firstName: willOwnerData.firstName || "",
 				middleName: willOwnerData.middleName || "",
 				lastName: willOwnerData.lastName || "",
-				dateOfBirth: willOwnerData.dateOfBirth || "",
+				dateOfBirth: willOwnerData.dateOfBirth
+					? new Date(willOwnerData.dateOfBirth)
+					: undefined,
 				address: willOwnerData.address || "",
 				city: willOwnerData.city || "",
 				postCode: willOwnerData.postCode || "",
@@ -108,7 +110,9 @@ export default function PersonalInfoStep({
 				firstName: activeWill.owner.firstName || "",
 				middleName: activeWill.owner.middleName || "",
 				lastName: activeWill.owner.lastName || "",
-				dateOfBirth: activeWill.owner.dateOfBirth || "",
+				dateOfBirth: activeWill.owner.dateOfBirth
+					? new Date(activeWill.owner.dateOfBirth)
+					: undefined,
 				address: activeWill.owner.address || "",
 				city: activeWill.owner.city || "",
 				postCode: activeWill.owner.postCode || "",
@@ -120,7 +124,7 @@ export default function PersonalInfoStep({
 			firstName: data.firstName || "",
 			middleName: data.middleName || "",
 			lastName: data.lastName || "",
-			dateOfBirth: data.dateOfBirth || "",
+			dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth) : undefined,
 			address: data.address?.address || "",
 			city: data.address?.city || "",
 			postCode: data.address?.postCode || "",
@@ -147,9 +151,11 @@ export default function PersonalInfoStep({
 			form.setValue("lastName", willOwnerData.lastName || "", {
 				shouldValidate: false,
 			});
-			form.setValue("dateOfBirth", willOwnerData.dateOfBirth || "", {
-				shouldValidate: false,
-			});
+			if (willOwnerData.dateOfBirth) {
+				form.setValue("dateOfBirth", new Date(willOwnerData.dateOfBirth), {
+					shouldValidate: false,
+				});
+			}
 			form.setValue("address", willOwnerData.address || "", {
 				shouldValidate: false,
 			});
@@ -182,13 +188,18 @@ export default function PersonalInfoStep({
 		console.log("🔧 PersonalInfoStep: Set isSubmitting to true");
 
 		try {
+			// Convert Date to ISO string for storage and API
+			const dateOfBirthString = formData.dateOfBirth
+				.toISOString()
+				.split("T")[0];
+
 			// Update the context with the form data
 			const updatedData = {
 				...data,
 				firstName: formData.firstName,
 				middleName: formData.middleName,
 				lastName: formData.lastName,
-				dateOfBirth: formData.dateOfBirth,
+				dateOfBirth: dateOfBirthString,
 				address: {
 					address: formData.address,
 					city: formData.city,
@@ -210,7 +221,7 @@ export default function PersonalInfoStep({
 					first_name: formData.firstName,
 					middle_name: formData.middleName,
 					last_name: formData.lastName,
-					date_of_birth: formData.dateOfBirth,
+					date_of_birth: dateOfBirthString,
 					address: formData.address,
 					city: formData.city,
 					state: null, // Submit null for state field
@@ -239,7 +250,7 @@ export default function PersonalInfoStep({
 					firstName: formData.firstName,
 					middleName: formData.middleName,
 					lastName: formData.lastName,
-					dateOfBirth: formData.dateOfBirth,
+					dateOfBirth: dateOfBirthString,
 					address: formData.address,
 					city: formData.city,
 					postCode: formData.postCode,
@@ -437,11 +448,12 @@ export default function PersonalInfoStep({
 												Date of Birth *
 											</FormLabel>
 											<FormControl>
-												<Input
-													type="date"
-													max={new Date().toISOString().split("T")[0]}
-													{...field}
-													className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+												<DatePicker
+													value={field.value}
+													onChange={field.onChange}
+													placeholder="Select your date of birth"
+													maxDate={new Date()}
+													className="focus:ring-2 focus:ring-primary focus:border-primary"
 												/>
 											</FormControl>
 											<FormMessage />
