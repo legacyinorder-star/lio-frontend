@@ -159,10 +159,7 @@ export default function FamilyInfoStep({
 		id?: string;
 		firstName: string;
 		lastName: string;
-	} | null>(spouseData || null);
-
-	// ✅ ADDED: Flag to track when we've just deleted a spouse
-	const [justDeletedSpouse, setJustDeletedSpouse] = useState(false);
+	} | null>(null);
 
 	// ✅ ADDED: Store spouse data for deletion to prevent it from being cleared
 	const [spouseToDelete, setSpouseToDelete] = useState<{
@@ -170,6 +167,9 @@ export default function FamilyInfoStep({
 		firstName: string;
 		lastName: string;
 	} | null>(null);
+
+	// ✅ ADDED: Loading state for spouse data
+	const [isLoadingSpouse, setIsLoadingSpouse] = useState(false);
 
 	// ✅ ADDED: Children state and functionality
 	const [hasChildren, setHasChildren] = useState(
@@ -208,6 +208,48 @@ export default function FamilyInfoStep({
 		},
 	});
 
+	// ✅ ADDED: Load spouse data from API
+	const loadExistingSpouse = useCallback(
+		async (willId: string) => {
+			setIsLoadingSpouse(true);
+			try {
+				console.log("Loading spouse data for will ID:", willId);
+				const { data, error } = await apiClient<{
+					id: string;
+					first_name: string;
+					last_name: string;
+					relationship_id: string;
+				}>(`/people/spouse/get-by-will/${willId}`);
+
+				if (error) {
+					// No spouse found - this is normal
+					console.log("No existing spouse found");
+					setLocalSpouseData(null);
+					return;
+				}
+
+				if (data && data.id) {
+					console.log("Found existing spouse:", data);
+					setLocalSpouseData({
+						id: data.id,
+						firstName: data.first_name,
+						lastName: data.last_name,
+					});
+					form.setValue("hasSpouse", true);
+				} else {
+					// Empty response
+					console.log("No spouse found (empty response)");
+					setLocalSpouseData(null);
+				}
+			} catch (error) {
+				console.error("Error loading existing spouse:", error);
+			} finally {
+				setIsLoadingSpouse(false);
+			}
+		},
+		[form]
+	);
+
 	const loadExistingPets = async (willId: string) => {
 		try {
 			const { data, error } = await apiClient<{ id: string }>(
@@ -215,14 +257,8 @@ export default function FamilyInfoStep({
 			);
 
 			if (error) {
-				// If 404, no pets exist - this is normal
-				if (error.includes("404")) {
-					console.log("No existing pets found");
-					setHasPets(false);
-					setInitialHasPets(false);
-					return;
-				}
-				console.error("Error loading existing pets:", error);
+				setHasPets(false);
+				setInitialHasPets(false);
 				return;
 			}
 
@@ -232,10 +268,10 @@ export default function FamilyInfoStep({
 				setHasPets(true);
 				setInitialHasPets(true);
 				setPetId(data.id);
-				console.log("Found existing pets, pet ID:", data.id);
+				console.log("User haspets, pet ID:", data.id);
 			} else {
 				// No pets found (empty object or no ID)
-				console.log("No existing pets found (empty object)");
+				console.log("No existing pets found");
 				setHasPets(false);
 				setInitialHasPets(false);
 			}
@@ -244,28 +280,10 @@ export default function FamilyInfoStep({
 		}
 	};
 
-	// ✅ UPDATED: Enhanced sync logic that respects deletion state
+	// ✅ UPDATED: Simplified sync logic - no longer relies on parent spouseData prop
 	useEffect(() => {
-		const hasSpouse = hasSpouseFromData || initialData?.hasSpouse || false;
-		form.setValue("hasSpouse", hasSpouse);
 		form.setValue("hasChildren", hasChildren);
-
-		// Only update local state if we haven't just deleted a spouse
-		// This prevents stale parent data from re-populating after deletion
-		if (spouseData && !justDeletedSpouse) {
-			setLocalSpouseData(spouseData);
-		}
-	}, [
-		willOwnerData?.maritalStatus,
-		spouseData?.id,
-		spouseData?.firstName,
-		spouseData?.lastName,
-		initialData?.hasSpouse,
-		initialData?.hasChildren,
-		hasSpouseFromData,
-		justDeletedSpouse,
-		hasChildren,
-	]);
+	}, [hasChildren, form]);
 
 	// ✅ ADDED: Effect to sync form state when localSpouseData changes
 	useEffect(() => {
@@ -276,6 +294,7 @@ export default function FamilyInfoStep({
 		localSpouseData?.id,
 		localSpouseData?.firstName,
 		localSpouseData?.lastName,
+		form,
 	]);
 
 	// ✅ ADDED: Update active will when children state changes
@@ -345,6 +364,9 @@ export default function FamilyInfoStep({
 
 	useEffect(() => {
 		if (willData?.id) {
+			// Load spouse data independently from API
+			loadExistingSpouse(willData.id);
+			// Load children from API
 			loadChildren(willData.id);
 			// Always check for existing pets to determine if user has pets
 			loadExistingPets(willData.id);
@@ -364,6 +386,7 @@ export default function FamilyInfoStep({
 		initialData?.children,
 		initialData?.hasChildren,
 		initialData?.hasPets,
+		loadExistingSpouse,
 	]);
 
 	// ✅ ADDED: Pet management function
@@ -438,17 +461,13 @@ export default function FamilyInfoStep({
 		});
 	};
 
-	// ✅ UPDATED: Enhanced spouse data handling with immediate local state update
+	// ✅ UPDATED: Enhanced spouse data handling - reload from API after save
 	const handleSpouseData = async (data: SpouseData) => {
 		setIsSubmitting(true);
 
 		try {
 			// Check if we're editing an existing spouse or creating a new one
-			const isEditing = !!(
-				localSpouseData &&
-				localSpouseData.id &&
-				localSpouseData.id !== "temp-id"
-			);
+			const isEditing = !!(localSpouseData && localSpouseData.id);
 
 			if (onSpouseDataSave) {
 				// For editing, pass the ID along with the data
@@ -469,19 +488,17 @@ export default function FamilyInfoStep({
 				return;
 			}
 
-			// ✅ IMMEDIATE UPDATE: Update local state to show spouse details right away
-			setLocalSpouseData({
-				id: isEditing ? localSpouseData!.id : "temp-id", // Use temp ID for new spouses
-				firstName: data.firstName,
-				lastName: data.lastName,
-			});
-
 			// Close dialog and show success message
 			setSpouseDialogOpen(false);
 			const action = isEditing ? "updated" : "saved";
 			toast.success(`Spouse information ${action} successfully`);
 
-			// Refresh data from parent
+			// ✅ RELOAD FROM API: Load the latest spouse data from the backend
+			if (willData?.id) {
+				await loadExistingSpouse(willData.id);
+			}
+
+			// Refresh data from parent (for other components that might need it)
 			refetch();
 		} catch (error) {
 			console.error("Error in spouse data submission:", error);
@@ -505,9 +522,6 @@ export default function FamilyInfoStep({
 		try {
 			await apiClient(`/people/${spouseToDelete.id}`, { method: "DELETE" });
 
-			// ✅ SET DELETION FLAG: Mark that we just deleted a spouse
-			setJustDeletedSpouse(true);
-
 			// Clear local state and form
 			setLocalSpouseData(null);
 			setSpouseToDelete(null); // Clear stored spouse data
@@ -517,11 +531,6 @@ export default function FamilyInfoStep({
 
 			// Refresh data from parent
 			refetch();
-
-			// ✅ RESET DELETION FLAG: After a delay to allow parent data to refresh
-			setTimeout(() => {
-				setJustDeletedSpouse(false);
-			}, 1000); // 1 second delay
 		} catch (error) {
 			console.error("Error deleting spouse:", error);
 			toast.error("Failed to delete spousal details. Please try again.");
@@ -717,13 +726,26 @@ export default function FamilyInfoStep({
 		setChildToDelete(null);
 	};
 
-	// Show loading state if will data is loading or if relationships/owner data are still loading
-	if (isLoadingWill || relationshipsLoading || isLoadingOwnerData) {
+	// Show loading state if will data is loading or if relationships/spouse/children data are still loading
+	if (
+		isLoadingWill ||
+		relationshipsLoading ||
+		isLoadingSpouse ||
+		isLoadingChildren
+	) {
 		return (
 			<div className="space-y-4">
 				<div className="flex justify-center py-8">
 					<LoadingSpinner
-						message={isLoadingWill ? "Loading will data..." : "Loading..."}
+						message={
+							isLoadingWill
+								? "Loading will data..."
+								: isLoadingSpouse
+								? "Loading spouse information..."
+								: isLoadingChildren
+								? "Loading children information..."
+								: "Loading..."
+						}
 					/>
 				</div>
 			</div>
