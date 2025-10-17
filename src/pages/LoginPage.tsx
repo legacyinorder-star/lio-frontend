@@ -102,8 +102,8 @@ export default function LoginPage() {
 					"Content-Type": "application/json",
 				},
 				body: JSON.stringify({
-					email: values.email,
-					password: values.password,
+					email: values.email.trim().toLowerCase(),
+					password: values.password.trim(),
 				}),
 				signal: controller.signal,
 			});

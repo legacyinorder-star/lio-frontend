@@ -66,8 +66,8 @@ export default function SignupPage() {
 				method: "POST",
 				authenticated: false, // Signup doesn't require authentication
 				body: JSON.stringify({
-					email: values.email,
-					password: values.password,
+					email: values.email.trim().toLowerCase(),
+					password: values.password.trim(),
 					first_name: values.firstName,
 					last_name: values.lastName,
 				}),
