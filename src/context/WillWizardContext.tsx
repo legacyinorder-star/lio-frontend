@@ -148,14 +148,9 @@ export function WillWizardProvider({ children }: { children: ReactNode }) {
 	const canAccessStep = useCallback(
 		(step: QuestionType): boolean => {
 			const stepIndex = STEP_ORDER.indexOf(step);
-			console.log(`🔍 Checking access for step: ${step} (index: ${stepIndex})`);
-			console.log(`📊 Current completed steps:`, completedSteps);
 
 			// Add null check for completedSteps to prevent runtime errors
 			if (!completedSteps) {
-				console.log(
-					`⚠️ completedSteps is undefined, allowing access to step: ${step}`
-				);
 				return true;
 			}
 
@@ -163,13 +158,9 @@ export function WillWizardProvider({ children }: { children: ReactNode }) {
 			for (let i = 0; i < stepIndex; i++) {
 				const prevStep = STEP_ORDER[i];
 				if (REQUIRED_STEPS.includes(prevStep) && !completedSteps[prevStep]) {
-					console.log(
-						`❌ Step ${step} blocked by incomplete required step: ${prevStep}`
-					);
 					return false;
 				}
 			}
-			console.log(`✅ Step ${step} is accessible`);
 			return true;
 		},
 		[completedSteps]

@@ -55,26 +55,6 @@ interface GuardianshipApiResponse {
 	};
 }
 
-// API response interface for pets endpoint
-interface PetApiResponse {
-	id: string;
-	created_at: string;
-	user_id: string;
-	will_id: string;
-	guardian_id: string;
-	person: {
-		id: string;
-		user_id: string;
-		will_id: string;
-		relationship_id: string;
-		first_name: string;
-		last_name: string;
-		is_minor: boolean;
-		created_at: string;
-		is_witness: boolean;
-	};
-}
-
 // API response interface for pet record creation
 interface PetRecordResponse {
 	id: string;
@@ -107,12 +87,14 @@ export default function GuardiansStep({
 		isPrimary: false,
 	});
 
-	// Pet Guardian selection state
+	// Pet Guardian selection state (from props)
 	const [guardianSelectDialogOpen, setGuardianSelectDialogOpen] =
 		useState(false);
-	const [petGuardianId, setPetGuardianId] = useState<string>("");
-	const [hasPetsFromAPI, setHasPetsFromAPI] = useState(false);
-	const [petIdFromAPI, setPetIdFromAPI] = useState<string>("");
+	const [petGuardianId, setPetGuardianId] = useState<string>(
+		data.petGuardianId || ""
+	);
+	const hasPetsFromProps = data.hasPets || false;
+	const petIdFromProps = data.petId || "";
 
 	// Delete confirmation state
 	const [deleteConfirmDialogOpen, setDeleteConfirmDialogOpen] = useState(false);
@@ -120,46 +102,15 @@ export default function GuardiansStep({
 		null
 	);
 
-	const loadPetData = async () => {
-		if (!activeWill?.id) return;
-
-		try {
-			const { data: petData, error } = await apiClient<PetApiResponse>(
-				`/pets/get-by-will/${activeWill.id}`,
-				{
-					method: "GET",
-				}
-			);
-
-			if (error) {
-				// If 404, no pet record exists - this is normal
-				if (error.includes("404")) {
-					console.log("No existing pet record found");
-					setHasPetsFromAPI(false);
-					return;
-				}
-				console.error("Error loading pet data:", error);
-				setHasPetsFromAPI(false);
-				return;
-			}
-
-			if (petData && petData.guardian_id) {
-				// Pet has a guardian assigned
-				setPetGuardianId(petData.guardian_id);
-				setHasPetsFromAPI(true);
-				setPetIdFromAPI(petData.id);
-				// Update form data with the existing pet guardian ID
-				onUpdate({ petGuardianId: petData.guardian_id });
-				console.log("Found existing pet guardian:", petData.guardian_id);
-			} else if (petData) {
-				// Pet record exists but no guardian assigned
-				setHasPetsFromAPI(true);
-				setPetIdFromAPI(petData.id);
-			}
-		} catch (error) {
-			console.error("Error loading pet data:", error);
-			setHasPetsFromAPI(false);
-		}
+	// Check if user has minor children
+	const hasMinorChildren = () => {
+		const children = data.children || [];
+		console.log("🔍 GuardiansStep - Checking for minor children:", {
+			children,
+			hasMinor: children.some((child) => child.isMinor),
+			dataKeys: Object.keys(data),
+		});
+		return children.some((child) => child.isMinor);
 	};
 
 	// Load guardians from API when component mounts
@@ -226,17 +177,6 @@ export default function GuardiansStep({
 			setPetGuardianId(data.petGuardianId);
 		}
 	}, [data.petGuardianId]);
-
-	useEffect(() => {
-		loadPetData();
-	}, [activeWill?.id]);
-
-	// Initialize petGuardianId from form data when component mounts (fallback)
-	useEffect(() => {
-		if (data.petGuardianId && !petGuardianId) {
-			setPetGuardianId(data.petGuardianId);
-		}
-	}, [data.petGuardianId, petGuardianId]);
 
 	// Update active will when guardians state changes
 	const updateActiveWillGuardians = (newGuardians: Guardian[]) => {
@@ -565,31 +505,47 @@ export default function GuardiansStep({
 
 	const areGuardiansValid = () => {
 		const currentGuardians = data.guardians || [];
-		const hasValidGuardians =
-			currentGuardians.some((g) => g.isPrimary) && currentGuardians.length >= 2;
 
-		// If user has pets, also check that they have a pet guardian
-		if (hasPetsFromAPI) {
-			return hasValidGuardians && petGuardianId !== "";
+		// If user has minor children, validate child guardians
+		if (hasMinorChildren()) {
+			const hasValidGuardians =
+				currentGuardians.some((g) => g.isPrimary) &&
+				currentGuardians.length >= 2;
+
+			// If user also has pets, check pet guardian
+			if (hasPetsFromProps) {
+				return hasValidGuardians && petGuardianId !== "";
+			}
+
+			return hasValidGuardians;
 		}
 
-		return hasValidGuardians;
+		// If no minor children but has pets, only validate pet guardian
+		if (hasPetsFromProps) {
+			return petGuardianId !== "";
+		}
+
+		// No validation needed if no children or pets (shouldn't reach this step)
+		return true;
 	};
 
 	const getValidationErrors = () => {
 		const currentGuardians = data.guardians || [];
 		const errors: string[] = [];
 
-		if (currentGuardians.length < 2) {
-			errors.push("You must appoint at least 2 guardians");
-		}
+		// Only validate child guardians if there are minor children
+		if (hasMinorChildren()) {
+			if (currentGuardians.length < 2) {
+				errors.push("You must appoint at least 2 guardians for your children");
+			}
 
-		if (!currentGuardians.some((g) => g.isPrimary)) {
-			errors.push("You must appoint 1 primary guardian");
+			if (!currentGuardians.some((g) => g.isPrimary)) {
+				errors.push("You must appoint 1 primary guardian for your children");
+			}
 		}
 
 		// If user has pets, check that they have a pet guardian
-		if (hasPetsFromAPI && !petGuardianId) {
+		if (hasPetsFromProps && !petGuardianId) {
 			errors.push("You must appoint a guardian for your pets");
 		}
 
@@ -599,16 +555,16 @@ export default function GuardiansStep({
 	// Handle Next button click - update pet guardian if selected
 	const handleNext = async () => {
 		// If user has pets and has selected a pet guardian, create or update the pet record
-		if (hasPetsFromAPI && petGuardianId && activeWill?.id) {
+		if (hasPetsFromProps && petGuardianId && activeWill?.id) {
 			try {
 				const requestBody = {
 					will_id: activeWill.id,
 					guardian_id: petGuardianId,
 				};
 
-				if (petIdFromAPI) {
+				if (petIdFromProps) {
 					// PATCH existing record
-					const { error } = await apiClient(`/pets/${petIdFromAPI}`, {
+					const { error } = await apiClient(`/pets/${petIdFromProps}`, {
 						method: "PATCH",
 						body: JSON.stringify(requestBody),
 					});
@@ -622,13 +578,10 @@ export default function GuardiansStep({
 					toast.success("Pet guardian updated successfully");
 				} else {
 					// POST new record
-					const { data: petRecord, error } = await apiClient<PetRecordResponse>(
-						"/pets",
-						{
-							method: "POST",
-							body: JSON.stringify(requestBody),
-						}
-					);
+					const { error } = await apiClient<PetRecordResponse>("/pets", {
+						method: "POST",
+						body: JSON.stringify(requestBody),
+					});
 
 					if (error) {
 						console.error("Error creating pet guardian record:", error);
@@ -637,10 +590,6 @@ export default function GuardiansStep({
 					}
 
 					toast.success("Pet guardian saved successfully");
-					// Store the new record ID for future updates
-					if (petRecord?.id) {
-						setPetIdFromAPI(petRecord.id);
-					}
 				}
 			} catch (error) {
 				console.error("Error saving pet guardian:", error);
@@ -658,278 +607,66 @@ export default function GuardiansStep({
 	const currentGuardians = data.guardians || [];
 	const validationErrors = getValidationErrors();
 
+	// Debug render
+	console.log("🎨 GuardiansStep rendering:", {
+		hasChildren: !!data.children,
+		childrenCount: data.children?.length,
+		hasMinorChildren: hasMinorChildren(),
+		hasPets: hasPetsFromProps,
+	});
+
 	return (
 		<div className="space-y-6">
 			<div className="text-xl sm:text-2xl lg:text-[2rem] font-medium text-black">
 				Guardians for Your Loved Ones
 			</div>
-			<div className="space-y-4 mb-[2.45rem]">
-				<div className="flex items-center gap-2">
-					<span
-						style={{
-							fontSize: "1rem",
-							color: "#000",
-							fontWeight: 400,
-							fontFamily: "TMT Limkin",
-						}}
-					>
-						In the case of your death, who would you like to appoint as
-						guardians for your children?
-					</span>
-				</div>
-				<div className="text-[#696868] text-[0.875rem] -mt-4">
-					Guardians are only needed if there are no parents with legal
-					responsibility still alive.
-				</div>
-				<div className="text-[#696868] text-[0.875rem] -mt-2">
-					You should pick two different people to be guardians. A primary
-					guardian and a backup guardian if, for whatever reason, the primary
-					guardian is unable to step in.
-				</div>
 
-				{/* Guardians Management Section */}
+			{/* Children Guardians Section - Only show if user has minor children */}
+			{hasMinorChildren() && (
 				<div className="space-y-4 mb-[2.45rem]">
-					{/* Guardians List - Only show when there are guardians */}
-					{currentGuardians.length > 0 && (
-						<div className="mb-6 space-y-4">
-							{currentGuardians.map((guardian) => (
-								<Card key={guardian.id}>
-									<CardContent className="p-4">
-										<div className="flex justify-between items-center">
-											<div>
-												<p className="font-medium">
-													{guardian.firstName} {guardian.lastName}
-													{guardian.isPrimary && (
-														<span className="ml-2 text-sm text-primary">
-															(Primary Guardian)
-														</span>
-													)}
-												</p>
-												<p className="text-sm text-muted-foreground">
-													{guardian.relationship}
-												</p>
-											</div>
-											<div className="flex space-x-2">
-												<Button
-													type="button"
-													variant="ghost"
-													size="icon"
-													onClick={() => handleEditGuardian(guardian)}
-													className="cursor-pointer"
-													disabled={isDeleting}
-												>
-													<Edit2 className="h-4 w-4" />
-												</Button>
-												<Button
-													type="button"
-													variant="ghost"
-													size="icon"
-													onClick={() => handleRemoveGuardian(guardian)}
-													className="cursor-pointer"
-													disabled={isDeleting}
-												>
-													{isDeleting ? (
-														<div className="h-4 w-4 animate-spin rounded-full border-t-2 border-b-2 border-black" />
-													) : (
-														<Trash2 className="h-4 w-4" />
-													)}
-												</Button>
-											</div>
-										</div>
-									</CardContent>
-								</Card>
-							))}
-						</div>
-					)}
-
-					{/* Add Guardian Button - Full width like Add Child */}
-					<Dialog
-						open={guardianDialogOpen}
-						onOpenChange={(open) => {
-							if (!isSubmitting) {
-								setGuardianDialogOpen(open);
-								if (!open) {
-									resetGuardianForm();
-								}
-							}
-						}}
-					>
-						<DialogTrigger asChild>
-							<Button
-								variant="outline"
-								onClick={resetGuardianForm}
-								className="w-full h-16 bg-white text-[#050505] rounded-[0.25rem] font-medium"
-								disabled={isLoadingGuardians}
-							>
-								<Plus className="mr-2 h-4 w-4" />
-								Add Guardian
-							</Button>
-						</DialogTrigger>
-						<DialogContent className="bg-white">
-							<DialogHeader>
-								<DialogTitle>
-									{editingGuardian ? "Edit Guardian" : "Add Guardian"}
-								</DialogTitle>
-							</DialogHeader>
-							<div className="space-y-4 py-4">
-								<div className="grid grid-cols-2 gap-4">
-									<div className="space-y-2">
-										<Label htmlFor="guardianFirstName">First Name</Label>
-										<Input
-											id="guardianFirstName"
-											value={guardianForm.firstName}
-											onChange={handleGuardianFormChange("firstName")}
-											placeholder="John"
-											disabled={isSubmitting}
-										/>
-									</div>
-									<div className="space-y-2">
-										<Label htmlFor="guardianLastName">Last Name</Label>
-										<Input
-											id="guardianLastName"
-											value={guardianForm.lastName}
-											onChange={handleGuardianFormChange("lastName")}
-											placeholder="Doe"
-											disabled={isSubmitting}
-										/>
-									</div>
-								</div>
-								<div className="space-y-2">
-									<RelationshipSelect
-										value={guardianForm.relationship}
-										onValueChange={(value) =>
-											setGuardianForm((prev) => ({
-												...prev,
-												relationship: value,
-											}))
-										}
-										label="Relationship"
-										required={true}
-										excludeRelationships={["spouse"]}
-										disabled={isSubmitting}
-									/>
-								</div>
-								<div className="flex items-center space-x-2">
-									<Checkbox
-										id="isPrimary"
-										checked={guardianForm.isPrimary}
-										onCheckedChange={(checked: boolean) =>
-											setGuardianForm((prev) => ({
-												...prev,
-												isPrimary: checked,
-											}))
-										}
-										disabled={isSubmitting}
-									/>
-									<Label htmlFor="isPrimary" className="text-sm">
-										Appoint as Primary Guardian
-									</Label>
-								</div>
-								<div className="flex justify-end space-x-2">
-									<Button
-										variant="outline"
-										onClick={() => {
-											setGuardianDialogOpen(false);
-											resetGuardianForm();
-										}}
-										className="cursor-pointer"
-										disabled={isSubmitting}
-									>
-										Cancel
-									</Button>
-									<Button
-										onClick={handleSaveGuardian}
-										className="cursor-pointer bg-primary hover:bg-primary/90 text-white"
-										disabled={isSubmitting}
-									>
-										{isSubmitting ? (
-											<>
-												<div className="h-4 w-4 animate-spin rounded-full border-t-2 border-b-2 border-black mr-2" />
-												{editingGuardian ? "Updating..." : "Saving..."}
-											</>
-										) : (
-											<>{editingGuardian ? "Update" : "Save"}</>
-										)}
-									</Button>
-								</div>
-							</div>
-						</DialogContent>
-					</Dialog>
-				</div>
-
-				{/* Validation Error Messages */}
-				{validationErrors.length > 0 && (
-					<div className="bg-red-50 border border-red-200 rounded-lg p-4 mt-4">
-						<div className="flex items-start">
-							<div className="flex-shrink-0">
-								<svg
-									className="h-5 w-5 text-red-400"
-									viewBox="0 0 20 20"
-									fill="currentColor"
-								>
-									<path
-										fillRule="evenodd"
-										d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-										clipRule="evenodd"
-									/>
-								</svg>
-							</div>
-							<div className="ml-3">
-								<h3 className="text-sm font-medium text-red-800">
-									Please Fix the Following Issues
-								</h3>
-								<div className="mt-2 text-sm text-red-700">
-									<ul className="space-y-1">
-										{validationErrors.map((error, index) => (
-											<li key={index} className="flex items-center">
-												<span className="mr-2">•</span>
-												{error}
-											</li>
-										))}
-									</ul>
-								</div>
-							</div>
-						</div>
+					<div className="flex items-center gap-2">
+						<span
+							style={{
+								fontSize: "1rem",
+								color: "#000",
+								fontWeight: 400,
+								fontFamily: "TMT Limkin",
+							}}
+						>
+							In the case of your death, who would you like to appoint as
+							guardians for your children?
+						</span>
 					</div>
-				)}
+					<div className="text-[#696868] text-[0.875rem] -mt-4">
+						Guardians are only needed if there are no parents with legal
+						responsibility still alive.
+					</div>
+					<div className="text-[#696868] text-[0.875rem] -mt-2">
+						You should pick two different people to be guardians. A primary
+						guardian and a backup guardian if, for whatever reason, the primary
+						guardian is unable to step in.
+					</div>
 
-				{/* Pet Guardian Section */}
-				{hasPetsFromAPI && (
+					{/* Guardians Management Section */}
 					<div className="space-y-4 mb-[2.45rem]">
-						<div className="text-xl sm:text-2xl lg:text-[2rem] font-medium text-black">
-							Pet Guardian
-						</div>
-						<div className="flex items-center gap-2">
-							<span
-								style={{
-									fontSize: "1rem",
-									color: "#000",
-									fontWeight: 400,
-									fontFamily: "TMT Limkin",
-								}}
-							>
-								Who would you like to appoint as guardian for your pets?
-							</span>
-						</div>
-						<div className="text-[#696868] text-[0.875rem] -mt-4">
-							This person will be responsible for taking care of your pets in
-							the event of your death.
-						</div>
-
-						{/* Pet Guardian Management Section */}
-						<div className="space-y-4 mb-[2.45rem]">
-							{/* Display Selected Pet Guardian */}
-							{petGuardianId && (
-								<div className="mb-6 space-y-4">
-									<Card>
+						{/* Guardians List - Only show when there are guardians */}
+						{currentGuardians.length > 0 && (
+							<div className="mb-6 space-y-4">
+								{currentGuardians.map((guardian) => (
+									<Card key={guardian.id}>
 										<CardContent className="p-4">
 											<div className="flex justify-between items-center">
 												<div>
 													<p className="font-medium">
-														{getGuardianName(petGuardianId)}
+														{guardian.firstName} {guardian.lastName}
+														{guardian.isPrimary && (
+															<span className="ml-2 text-sm text-primary">
+																(Primary Guardian)
+															</span>
+														)}
 													</p>
 													<p className="text-sm text-muted-foreground">
-														Pet Guardian
+														{guardian.relationship}
 													</p>
 												</div>
 												<div className="flex space-x-2">
@@ -937,7 +674,7 @@ export default function GuardiansStep({
 														type="button"
 														variant="ghost"
 														size="icon"
-														onClick={() => setGuardianSelectDialogOpen(true)}
+														onClick={() => handleEditGuardian(guardian)}
 														className="cursor-pointer"
 														disabled={isDeleting}
 													>
@@ -947,265 +684,488 @@ export default function GuardiansStep({
 														type="button"
 														variant="ghost"
 														size="icon"
-														onClick={() => {
-															setPetGuardianId("");
-															// Clear the pet guardian ID from form data
-															onUpdate({ petGuardianId: undefined });
-														}}
+														onClick={() => handleRemoveGuardian(guardian)}
 														className="cursor-pointer"
 														disabled={isDeleting}
 													>
-														<Trash2 className="h-4 w-4" />
+														{isDeleting ? (
+															<div className="h-4 w-4 animate-spin rounded-full border-t-2 border-b-2 border-black" />
+														) : (
+															<Trash2 className="h-4 w-4" />
+														)}
 													</Button>
 												</div>
 											</div>
 										</CardContent>
 									</Card>
-								</div>
-							)}
-
-							{/* Select Pet Guardian Button - Full width like Add Child */}
-							<Button
-								variant="outline"
-								onClick={() => setGuardianSelectDialogOpen(true)}
-								className="w-full h-16 bg-white text-[#050505] rounded-[0.25rem] font-medium"
-							>
-								<Plus className="mr-2 h-4 w-4" />
-								Select Pet Guardian
-							</Button>
-						</div>
-					</div>
-				)}
-
-				{/* Guardian Selection Modal */}
-				<Dialog
-					open={guardianSelectDialogOpen}
-					onOpenChange={setGuardianSelectDialogOpen}
-				>
-					<DialogContent className="bg-white max-w-2xl">
-						<DialogHeader>
-							<DialogTitle>Select Pet Guardian</DialogTitle>
-						</DialogHeader>
-						<div className="space-y-4 py-4">
-							<div className="text-sm text-muted-foreground">
-								Choose who will take care of your pets, or create a new
-								guardian.
+								))}
 							</div>
+						)}
 
-							{data.guardians && data.guardians.length > 0 ? (
-								<div className="space-y-2">
-									<Label>Available Guardians</Label>
-									<div className="space-y-2">
-										{data.guardians.map((guardian) => (
-											<div
-												key={guardian.id}
-												className={`p-3 border rounded-lg cursor-pointer transition-colors hover:bg-gray-50 ${
-													petGuardianId === guardian.id
-														? "border-primary bg-primary/5"
-														: "border-gray-200"
-												}`}
-												onClick={() => handleSelectGuardian(guardian.id)}
-											>
-												<div className="flex items-center justify-between">
-													<div>
-														<p className="font-medium">
-															{guardian.firstName} {guardian.lastName}
-														</p>
-														<p className="text-sm text-muted-foreground">
-															{guardian.relationship}
-														</p>
-													</div>
-													{petGuardianId === guardian.id && (
-														<div className="text-primary text-sm font-medium">
-															Selected
-														</div>
-													)}
-												</div>
-											</div>
-										))}
-									</div>
-								</div>
-							) : (
-								<div className="text-sm text-muted-foreground p-4 bg-gray-50 rounded-lg">
-									No guardians available. Create a new guardian to assign as
-									your pet guardian.
-								</div>
-							)}
-
-							<div className="border-t pt-4">
-								<Dialog
-									open={createGuardianDialogOpen}
-									onOpenChange={(open) => {
-										setCreateGuardianDialogOpen(open);
-										if (!open) {
-											resetGuardianForm();
-										}
-									}}
+						{/* Add Guardian Button - Full width like Add Child */}
+						<Dialog
+							open={guardianDialogOpen}
+							onOpenChange={(open) => {
+								if (!isSubmitting) {
+									setGuardianDialogOpen(open);
+									if (!open) {
+										resetGuardianForm();
+									}
+								}
+							}}
+						>
+							<DialogTrigger asChild>
+								<Button
+									variant="outline"
+									onClick={resetGuardianForm}
+									className="w-full h-16 bg-white text-[#050505] rounded-[0.25rem] font-medium"
+									disabled={isLoadingGuardians}
 								>
-									<DialogTrigger asChild>
+									<Plus className="mr-2 h-4 w-4" />
+									Add Guardian
+								</Button>
+							</DialogTrigger>
+							<DialogContent className="bg-white">
+								<DialogHeader>
+									<DialogTitle>
+										{editingGuardian ? "Edit Guardian" : "Add Guardian"}
+									</DialogTitle>
+								</DialogHeader>
+								<div className="space-y-4 py-4">
+									<div className="grid grid-cols-2 gap-4">
+										<div className="space-y-2">
+											<Label htmlFor="guardianFirstName">First Name</Label>
+											<Input
+												id="guardianFirstName"
+												value={guardianForm.firstName}
+												onChange={handleGuardianFormChange("firstName")}
+												placeholder="John"
+												disabled={isSubmitting}
+											/>
+										</div>
+										<div className="space-y-2">
+											<Label htmlFor="guardianLastName">Last Name</Label>
+											<Input
+												id="guardianLastName"
+												value={guardianForm.lastName}
+												onChange={handleGuardianFormChange("lastName")}
+												placeholder="Doe"
+												disabled={isSubmitting}
+											/>
+										</div>
+									</div>
+									<div className="space-y-2">
+										<RelationshipSelect
+											value={guardianForm.relationship}
+											onValueChange={(value) =>
+												setGuardianForm((prev) => ({
+													...prev,
+													relationship: value,
+												}))
+											}
+											label="Relationship"
+											required={true}
+											excludeRelationships={["spouse"]}
+											disabled={isSubmitting}
+										/>
+									</div>
+									<div className="flex items-center space-x-2">
+										<Checkbox
+											id="isPrimary"
+											checked={guardianForm.isPrimary}
+											onCheckedChange={(checked: boolean) =>
+												setGuardianForm((prev) => ({
+													...prev,
+													isPrimary: checked,
+												}))
+											}
+											disabled={isSubmitting}
+										/>
+										<Label htmlFor="isPrimary" className="text-sm">
+											Appoint as Primary Guardian
+										</Label>
+									</div>
+									<div className="flex justify-end space-x-2">
 										<Button
 											variant="outline"
-											className="cursor-pointer w-full"
-											onClick={resetGuardianForm}
+											onClick={() => {
+												setGuardianDialogOpen(false);
+												resetGuardianForm();
+											}}
+											className="cursor-pointer"
+											disabled={isSubmitting}
 										>
-											<Plus className="h-4 w-4 mr-2" />
-											Create New Guardian
+											Cancel
 										</Button>
-									</DialogTrigger>
-								</Dialog>
+										<Button
+											onClick={handleSaveGuardian}
+											className="cursor-pointer bg-primary hover:bg-primary/90 text-white"
+											disabled={isSubmitting}
+										>
+											{isSubmitting ? (
+												<>
+													<div className="h-4 w-4 animate-spin rounded-full border-t-2 border-b-2 border-black mr-2" />
+													{editingGuardian ? "Updating..." : "Saving..."}
+												</>
+											) : (
+												<>{editingGuardian ? "Update" : "Save"}</>
+											)}
+										</Button>
+									</div>
+								</div>
+							</DialogContent>
+						</Dialog>
+					</div>
+				</div>
+			)}
+
+			{/* Validation Error Messages */}
+			{validationErrors.length > 0 && (
+				<div className="bg-red-50 border border-red-200 rounded-lg p-4 mt-4">
+					<div className="flex items-start">
+						<div className="flex-shrink-0">
+							<svg
+								className="h-5 w-5 text-red-400"
+								viewBox="0 0 20 20"
+								fill="currentColor"
+							>
+								<path
+									fillRule="evenodd"
+									d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+									clipRule="evenodd"
+								/>
+							</svg>
+						</div>
+						<div className="ml-3">
+							<h3 className="text-sm font-medium text-red-800">
+								Please Fix the Following Issues
+							</h3>
+							<div className="mt-2 text-sm text-red-700">
+								<ul className="space-y-1">
+									{validationErrors.map((error, index) => (
+										<li key={index} className="flex items-center">
+											<span className="mr-2">•</span>
+											{error}
+										</li>
+									))}
+								</ul>
 							</div>
 						</div>
-						<div className="flex justify-end space-x-2">
-							<Button
-								variant="outline"
-								onClick={() => setGuardianSelectDialogOpen(false)}
-								className="cursor-pointer"
-							>
-								Cancel
-							</Button>
-							<Button
-								onClick={() => setGuardianSelectDialogOpen(false)}
-								disabled={!petGuardianId}
-								className="cursor-pointer bg-primary hover:bg-primary/90 text-white"
-							>
-								Confirm Selection
-							</Button>
-						</div>
-					</DialogContent>
-				</Dialog>
+					</div>
+				</div>
+			)}
 
-				{/* Create Guardian Modal */}
-				<Dialog
-					open={createGuardianDialogOpen}
-					onOpenChange={(open) => {
-						setCreateGuardianDialogOpen(open);
-						if (!open) {
-							resetGuardianForm();
-						}
-					}}
-				>
-					<DialogContent className="bg-white max-w-2xl">
-						<DialogHeader>
-							<DialogTitle>Create New Guardian</DialogTitle>
-						</DialogHeader>
-						<div className="space-y-4 py-4">
-							<div className="grid grid-cols-2 gap-4">
+			{/* Pet Guardian Section */}
+			{hasPetsFromProps && (
+				<div className="space-y-4 mb-[2.45rem]">
+					<div className="text-xl sm:text-2xl lg:text-[2rem] font-medium text-black">
+						Pet Guardian
+					</div>
+					<div className="flex items-center gap-2">
+						<span
+							style={{
+								fontSize: "1rem",
+								color: "#000",
+								fontWeight: 400,
+								fontFamily: "TMT Limkin",
+							}}
+						>
+							Who would you like to appoint as guardian for your pets?
+						</span>
+					</div>
+					<div className="text-[#696868] text-[0.875rem] -mt-4">
+						This person will be responsible for taking care of your pets in the
+						event of your death.
+					</div>
+
+					{/* Pet Guardian Management Section */}
+					<div className="space-y-4 mb-[2.45rem]">
+						{/* Display Selected Pet Guardian */}
+						{petGuardianId && (
+							<div className="mb-6 space-y-4">
+								<Card>
+									<CardContent className="p-4">
+										<div className="flex justify-between items-center">
+											<div>
+												<p className="font-medium">
+													{getGuardianName(petGuardianId)}
+												</p>
+												<p className="text-sm text-muted-foreground">
+													Pet Guardian
+												</p>
+											</div>
+											<div className="flex space-x-2">
+												<Button
+													type="button"
+													variant="ghost"
+													size="icon"
+													onClick={() => setGuardianSelectDialogOpen(true)}
+													className="cursor-pointer"
+													disabled={isDeleting}
+												>
+													<Edit2 className="h-4 w-4" />
+												</Button>
+												<Button
+													type="button"
+													variant="ghost"
+													size="icon"
+													onClick={() => {
+														setPetGuardianId("");
+														// Clear the pet guardian ID from form data
+														onUpdate({ petGuardianId: undefined });
+													}}
+													className="cursor-pointer"
+													disabled={isDeleting}
+												>
+													<Trash2 className="h-4 w-4" />
+												</Button>
+											</div>
+										</div>
+									</CardContent>
+								</Card>
+							</div>
+						)}
+
+						{/* Select Pet Guardian Button - Full width like Add Child */}
+						<Button
+							variant="outline"
+							onClick={() => setGuardianSelectDialogOpen(true)}
+							className="w-full h-16 bg-white text-[#050505] rounded-[0.25rem] font-medium"
+						>
+							<Plus className="mr-2 h-4 w-4" />
+							Select Pet Guardian
+						</Button>
+					</div>
+				</div>
+			)}
+
+			{/* Guardian Selection Modal */}
+			<Dialog
+				open={guardianSelectDialogOpen}
+				onOpenChange={setGuardianSelectDialogOpen}
+			>
+				<DialogContent className="bg-white max-w-2xl">
+					<DialogHeader>
+						<DialogTitle>Select Pet Guardian</DialogTitle>
+					</DialogHeader>
+					<div className="space-y-4 py-4">
+						<div className="text-sm text-muted-foreground">
+							Choose who will take care of your pets, or create a new guardian.
+						</div>
+
+						{data.guardians && data.guardians.length > 0 ? (
+							<div className="space-y-2">
+								<Label>Available Guardians</Label>
 								<div className="space-y-2">
-									<Label htmlFor="guardianFirstName">First Name</Label>
-									<Input
-										id="guardianFirstName"
-										value={guardianForm.firstName}
-										onChange={handleGuardianFormChange("firstName")}
-										placeholder="First name"
-										disabled={isSubmitting}
-									/>
+									{data.guardians.map((guardian) => (
+										<div
+											key={guardian.id}
+											className={`p-3 border rounded-lg cursor-pointer transition-colors hover:bg-gray-50 ${
+												petGuardianId === guardian.id
+													? "border-primary bg-primary/5"
+													: "border-gray-200"
+											}`}
+											onClick={() => handleSelectGuardian(guardian.id)}
+										>
+											<div className="flex items-center justify-between">
+												<div>
+													<p className="font-medium">
+														{guardian.firstName} {guardian.lastName}
+													</p>
+													<p className="text-sm text-muted-foreground">
+														{guardian.relationship}
+													</p>
+												</div>
+												{petGuardianId === guardian.id && (
+													<div className="text-primary text-sm font-medium">
+														Selected
+													</div>
+												)}
+											</div>
+										</div>
+									))}
 								</div>
-								<div className="space-y-2">
-									<Label htmlFor="guardianLastName">Last Name</Label>
-									<Input
-										id="guardianLastName"
-										value={guardianForm.lastName}
-										onChange={handleGuardianFormChange("lastName")}
-										placeholder="Last name"
-										disabled={isSubmitting}
-									/>
-								</div>
+							</div>
+						) : (
+							<div className="text-sm text-muted-foreground p-4 bg-gray-50 rounded-lg">
+								No guardians available. Create a new guardian to assign as your
+								pet guardian.
+							</div>
+						)}
+
+						<div className="border-t pt-4">
+							<Dialog
+								open={createGuardianDialogOpen}
+								onOpenChange={(open) => {
+									setCreateGuardianDialogOpen(open);
+									if (!open) {
+										resetGuardianForm();
+									}
+								}}
+							>
+								<DialogTrigger asChild>
+									<Button
+										variant="outline"
+										className="cursor-pointer w-full"
+										onClick={resetGuardianForm}
+									>
+										<Plus className="h-4 w-4 mr-2" />
+										Create New Guardian
+									</Button>
+								</DialogTrigger>
+							</Dialog>
+						</div>
+					</div>
+					<div className="flex justify-end space-x-2">
+						<Button
+							variant="outline"
+							onClick={() => setGuardianSelectDialogOpen(false)}
+							className="cursor-pointer"
+						>
+							Cancel
+						</Button>
+						<Button
+							onClick={() => setGuardianSelectDialogOpen(false)}
+							disabled={!petGuardianId}
+							className="cursor-pointer bg-primary hover:bg-primary/90 text-white"
+						>
+							Confirm Selection
+						</Button>
+					</div>
+				</DialogContent>
+			</Dialog>
+
+			{/* Create Guardian Modal */}
+			<Dialog
+				open={createGuardianDialogOpen}
+				onOpenChange={(open) => {
+					setCreateGuardianDialogOpen(open);
+					if (!open) {
+						resetGuardianForm();
+					}
+				}}
+			>
+				<DialogContent className="bg-white max-w-2xl">
+					<DialogHeader>
+						<DialogTitle>Create New Guardian</DialogTitle>
+					</DialogHeader>
+					<div className="space-y-4 py-4">
+						<div className="grid grid-cols-2 gap-4">
+							<div className="space-y-2">
+								<Label htmlFor="guardianFirstName">First Name</Label>
+								<Input
+									id="guardianFirstName"
+									value={guardianForm.firstName}
+									onChange={handleGuardianFormChange("firstName")}
+									placeholder="First name"
+									disabled={isSubmitting}
+								/>
 							</div>
 							<div className="space-y-2">
-								<Label htmlFor="guardianRelationship">Relationship</Label>
-								<RelationshipSelect
-									value={guardianForm.relationship}
-									onValueChange={(value) =>
-										setGuardianForm((prev) => ({
-											...prev,
-											relationship: value,
-										}))
-									}
-									placeholder="Select relationship"
+								<Label htmlFor="guardianLastName">Last Name</Label>
+								<Input
+									id="guardianLastName"
+									value={guardianForm.lastName}
+									onChange={handleGuardianFormChange("lastName")}
+									placeholder="Last name"
 									disabled={isSubmitting}
 								/>
 							</div>
 						</div>
-						<div className="flex justify-end space-x-2">
-							<Button
-								variant="outline"
-								onClick={() => {
-									setCreateGuardianDialogOpen(false);
-									resetGuardianForm();
-								}}
-								disabled={isSubmitting}
-								className="cursor-pointer"
-							>
-								Cancel
-							</Button>
-							<Button
-								onClick={handleSaveGuardian}
-								disabled={
-									isSubmitting ||
-									!guardianForm.firstName ||
-									!guardianForm.lastName ||
-									!guardianForm.relationship
+						<div className="space-y-2">
+							<Label htmlFor="guardianRelationship">Relationship</Label>
+							<RelationshipSelect
+								value={guardianForm.relationship}
+								onValueChange={(value) =>
+									setGuardianForm((prev) => ({
+										...prev,
+										relationship: value,
+									}))
 								}
-								className="cursor-pointer bg-primary hover:bg-primary/90 text-white"
-							>
-								{isSubmitting ? (
-									<>
-										<div className="h-4 w-4 animate-spin rounded-full border-t-2 border-b-2 border-black mr-2" />
-										Creating...
-									</>
-								) : (
-									"Create Guardian"
-								)}
-							</Button>
+								placeholder="Select relationship"
+								disabled={isSubmitting}
+							/>
 						</div>
-					</DialogContent>
-				</Dialog>
+					</div>
+					<div className="flex justify-end space-x-2">
+						<Button
+							variant="outline"
+							onClick={() => {
+								setCreateGuardianDialogOpen(false);
+								resetGuardianForm();
+							}}
+							disabled={isSubmitting}
+							className="cursor-pointer"
+						>
+							Cancel
+						</Button>
+						<Button
+							onClick={handleSaveGuardian}
+							disabled={
+								isSubmitting ||
+								!guardianForm.firstName ||
+								!guardianForm.lastName ||
+								!guardianForm.relationship
+							}
+							className="cursor-pointer bg-primary hover:bg-primary/90 text-white"
+						>
+							{isSubmitting ? (
+								<>
+									<div className="h-4 w-4 animate-spin rounded-full border-t-2 border-b-2 border-black mr-2" />
+									Creating...
+								</>
+							) : (
+								"Create Guardian"
+							)}
+						</Button>
+					</div>
+				</DialogContent>
+			</Dialog>
 
-				{/* Delete Confirmation Dialog */}
-				<Dialog
-					open={deleteConfirmDialogOpen}
-					onOpenChange={setDeleteConfirmDialogOpen}
-				>
-					<DialogContent className="bg-white max-w-2xl">
-						<DialogHeader>
-							<DialogTitle>Confirm Delete</DialogTitle>
-						</DialogHeader>
-						<div className="space-y-4 py-4">
-							<div className="text-sm text-muted-foreground">
-								Are you sure you want to remove{" "}
-								<strong>
-									{guardianToDelete?.firstName} {guardianToDelete?.lastName}
-								</strong>{" "}
-								as a guardian? This action cannot be undone.
-							</div>
+			{/* Delete Confirmation Dialog */}
+			<Dialog
+				open={deleteConfirmDialogOpen}
+				onOpenChange={setDeleteConfirmDialogOpen}
+			>
+				<DialogContent className="bg-white max-w-2xl">
+					<DialogHeader>
+						<DialogTitle>Confirm Delete</DialogTitle>
+					</DialogHeader>
+					<div className="space-y-4 py-4">
+						<div className="text-sm text-muted-foreground">
+							Are you sure you want to remove{" "}
+							<strong>
+								{guardianToDelete?.firstName} {guardianToDelete?.lastName}
+							</strong>{" "}
+							as a guardian? This action cannot be undone.
 						</div>
-						<div className="flex justify-end space-x-2">
-							<Button
-								variant="outline"
-								onClick={handleCancelDeleteGuardian}
-								disabled={isDeleting}
-								className="cursor-pointer"
-							>
-								Cancel
-							</Button>
-							<Button
-								onClick={handleConfirmDeleteGuardian}
-								disabled={isDeleting}
-								className="cursor-pointer bg-red-600 hover:bg-red-700 text-white"
-							>
-								{isDeleting ? (
-									<>
-										<div className="h-4 w-4 animate-spin rounded-full border-t-2 border-b-2 border-white mr-2" />
-										Deleting...
-									</>
-								) : (
-									"Delete Guardian"
-								)}
-							</Button>
-						</div>
-					</DialogContent>
-				</Dialog>
-			</div>
+					</div>
+					<div className="flex justify-end space-x-2">
+						<Button
+							variant="outline"
+							onClick={handleCancelDeleteGuardian}
+							disabled={isDeleting}
+							className="cursor-pointer"
+						>
+							Cancel
+						</Button>
+						<Button
+							onClick={handleConfirmDeleteGuardian}
+							disabled={isDeleting}
+							className="cursor-pointer bg-red-600 hover:bg-red-700 text-white"
+						>
+							{isDeleting ? (
+								<>
+									<div className="h-4 w-4 animate-spin rounded-full border-t-2 border-b-2 border-white mr-2" />
+									Deleting...
+								</>
+							) : (
+								"Delete Guardian"
+							)}
+						</Button>
+					</div>
+				</DialogContent>
+			</Dialog>
 
 			<div className="flex justify-between pt-4">
 				<Button variant="outline" onClick={onBack} className="cursor-pointer">

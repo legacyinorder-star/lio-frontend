@@ -353,13 +353,15 @@ export default function WillWizard() {
 				setWillWizardState(true, "familyInfo");
 				break;
 			case "familyInfo":
-				// Conditional navigation based on whether user has minor children
-				if (hasMinorChildren()) {
-					console.log("✅ User has minor children - navigating to guardians");
+				// Conditional navigation based on whether user has minor children or pets
+				if (hasMinorChildren() || formData.hasPets) {
+					console.log(
+						"✅ User has minor children or pets - navigating to guardians"
+					);
 					setWillWizardState(true, "guardians");
 				} else {
 					console.log(
-						"⏭️ No minor children - skipping guardians, going to residuary"
+						"⏭️ No minor children or pets - skipping guardians, going to residuary"
 					);
 					setWillWizardState(true, "residuary");
 				}
@@ -422,13 +424,17 @@ export default function WillWizard() {
 				setWillWizardState(true, "familyInfo");
 				break;
 			case "residuary":
-				// Conditional back navigation - if we have minor children, go back to guardians
+				// Conditional back navigation - if we have minor children or pets, go back to guardians
 				// otherwise go back to familyInfo
-				if (hasMinorChildren()) {
-					console.log("⬅️ Going back to guardians (has minor children)");
+				if (hasMinorChildren() || formData.hasPets) {
+					console.log(
+						"⬅️ Going back to guardians (has minor children or pets)"
+					);
 					setWillWizardState(true, "guardians");
 				} else {
-					console.log("⬅️ Going back to familyInfo (no minor children)");
+					console.log(
+						"⬅️ Going back to familyInfo (no minor children or pets)"
+					);
 					setWillWizardState(true, "familyInfo");
 				}
 				break;
