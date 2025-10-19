@@ -322,77 +322,75 @@ const styles = StyleSheet.create({
 	},
 	// Checklist styles
 	checklistPage: {
-		padding: 40,
+		padding: 30,
 		backgroundColor: "#fff",
 	},
 	checklistTitle: {
-		fontSize: 28,
+		fontSize: 20,
 		fontWeight: "bold",
-		marginBottom: 30,
+		marginBottom: 15,
 		textAlign: "center",
 		color: "#1f2937",
 	},
 	checklistSubtitle: {
-		fontSize: 16,
+		fontSize: 12,
 		color: "#6b7280",
-		marginBottom: 40,
+		marginBottom: 20,
 		textAlign: "center",
 	},
 	checklistSection: {
-		marginBottom: 30,
+		marginBottom: 15,
 	},
 	checklistSectionTitle: {
-		fontSize: 20,
+		fontSize: 14,
 		fontWeight: "bold",
-		marginBottom: 15,
+		marginBottom: 8,
 		color: "#374151",
-		borderBottom: "2px solid #e5e7eb",
-		paddingBottom: 8,
+		borderBottom: "1px solid #e5e7eb",
 	},
 	checklistItem: {
 		flexDirection: "row",
 		alignItems: "flex-start",
-		marginBottom: 15,
-		paddingLeft: 20,
+		marginBottom: 8,
+		paddingLeft: 15,
 	},
 	checklistParagraphText: {
-		fontSize: 14,
+		fontSize: 11,
 		color: "#374151",
 		flex: 1,
-		lineHeight: 1.8,
-		marginBottom: 25,
+		marginBottom: 20,
 	},
 	checklistCheckbox: {
-		width: 20,
-		height: 20,
-		border: "2px solid #d1d5db",
-		borderRadius: 4,
-		marginRight: 15,
-		marginTop: 2,
+		width: 14,
+		height: 14,
+		border: "1px solid #d1d5db",
+		borderRadius: 3,
+		marginRight: 10,
+		marginTop: 1,
 	},
 	checklistText: {
-		fontSize: 14,
+		fontSize: 11,
 		color: "#374151",
 		flex: 1,
-		lineHeight: 1.8,
-		marginBottom: 2,
+		lineHeight: 1.2,
+		marginBottom: 1,
 	},
 	checklistImportant: {
-		fontSize: 14,
+		fontSize: 11,
 		color: "#dc2626",
 		fontWeight: "bold",
-		marginTop: 20,
-		padding: 15,
+		marginTop: 12,
+		padding: 10,
 		backgroundColor: "#fef2f2",
 		border: "1px solid #fecaca",
-		borderRadius: 6,
+		borderRadius: 4,
 		textAlign: "center",
 	},
 	checklistNote: {
-		fontSize: 12,
+		fontSize: 10,
 		color: "#6b7280",
 		fontStyle: "italic",
-		marginTop: 15,
+		marginTop: 10,
 		textAlign: "center",
 	},
 	giftSection: {
@@ -835,7 +833,7 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 					</View>
 
 					<Text style={styles.checklistText}>
-						Completing your will is one of the most loving legacies you can
+						Completing your Will is one of the most loving legacies you can
 						leave. It spares your loved ones stress, uncertainty, and potential
 						disagreements. Inspire your friends and family to do the same by
 						sharing Legacy in Order with them.
@@ -1387,12 +1385,12 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 						will and approve it as a true reflection of my wishes.
 					</Text>
 				</View>
+			</Page>
 
-				{/* Witness Signatures Section */}
+			{/* Witness Signatures Page */}
+			<Page size="A4" style={styles.page} break>
 				<View style={styles.witnessSection}>
-					<Text style={styles.witnessTitle}>
-						{sections.witnesses}. Signatures and Witnesses
-					</Text>
+					<Text style={styles.witnessTitle}>Signatures and Witnesses</Text>
 					<Text style={styles.witnessText}>
 						<Text style={{ fontWeight: "bold" }}>SIGNATURE</Text>
 					</Text>
