@@ -112,7 +112,12 @@ export default function DashboardPage() {
 	};
 
 	const handleStartLetterOfWishes = () => {
-		navigate("/app/letter-of-wishes");
+		if (currentWill?.id) {
+			navigate(`/app/letter-of-wishes?willId=${currentWill.id}`);
+		} else {
+			// Fallback to the route without willId (will be handled by LetterWizard)
+			navigate("/app/letter-of-wishes");
+		}
 	};
 
 	const handleUploadSignedWill = () => {
@@ -194,7 +199,9 @@ export default function DashboardPage() {
 			title: "Letter of Wishes",
 			description:
 				"Share personal guidance for your loved ones that complements your formal Will.",
-			href: "/app/letter-of-wishes",
+			href: currentWill?.id
+				? `/app/letter-of-wishes?willId=${currentWill.id}`
+				: "/app/letter-of-wishes",
 			action: "Add a Letter of Wishes",
 			onClick: handleStartLetterOfWishes,
 			disabled: currentWill?.status !== "completed", // Only enable when Will is completed

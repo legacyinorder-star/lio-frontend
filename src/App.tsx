@@ -47,6 +47,7 @@ import { VaultPage } from "@/pages/VaultPage";
 import { FolderViewPage } from "@/pages/FolderViewPage";
 import DocumentsPage from "@/pages/DocumentsPage";
 import LetterOfWishesPage from "@/pages/LetterOfWishesPage";
+import LetterWizard from "@/components/letter-wizard/LetterWizard";
 import WillStatusGuard from "@/components/will-wizard/WillStatusGuard";
 
 function App() {
@@ -188,12 +189,12 @@ function App() {
 											/>
 											<Route
 												path="letter-of-wishes"
-												element={<LetterOfWishesPage />}
+												element={<LetterWizard />}
 											/>
 
 											<Route
 												path="letter-of-wishes/:step"
-												element={<LetterOfWishesPage />}
+												element={<LetterWizard />}
 											/>
 											<Route path="manage-profile" element={<ProfilePage />} />
 											<Route path="vault" element={<VaultPage />} />
