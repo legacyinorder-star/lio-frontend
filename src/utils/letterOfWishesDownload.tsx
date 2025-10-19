@@ -76,7 +76,9 @@ export const downloadLetterOfWishesPDF = async (
 				// If direct blob generation fails, try using buffer
 				console.log("🔄 Trying buffer method...");
 				const buffer = await pdfDoc.toBuffer();
-				const blob = new Blob([buffer], { type: "application/pdf" });
+				const blob = new Blob([buffer as unknown as BlobPart], {
+					type: "application/pdf",
+				});
 				const url = URL.createObjectURL(blob);
 				const link = document.createElement("a");
 				link.href = url;

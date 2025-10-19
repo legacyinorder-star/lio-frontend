@@ -701,7 +701,9 @@ export const uploadWillPDF = async (
 			try {
 				// If direct blob generation fails, try using buffer
 				const buffer = await pdfDoc.toBuffer();
-				const blob = new Blob([buffer], { type: "application/pdf" });
+				const blob = new Blob([buffer as unknown as BlobPart], {
+					type: "application/pdf",
+				});
 
 				console.log("✅ PDF buffer generated successfully, size:", blob.size);
 

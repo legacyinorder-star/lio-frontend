@@ -622,7 +622,9 @@ export const downloadWillPDF = async (willId: string): Promise<boolean> => {
 			try {
 				// If direct blob generation fails, try using buffer
 				const buffer = await pdfDoc.toBuffer();
-				const blob = new Blob([buffer], { type: "application/pdf" });
+				const blob = new Blob([buffer as unknown as BlobPart], {
+					type: "application/pdf",
+				});
 				const url = URL.createObjectURL(blob);
 				const link = document.createElement("a");
 				link.href = url;
