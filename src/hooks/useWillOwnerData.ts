@@ -113,7 +113,7 @@ export function useWillOwnerData(): UseWillOwnerDataReturn {
 					return;
 				}
 
-				if (ownerResponse) {
+				if (ownerResponse && ownerResponse.id) {
 					const transformedOwnerData: WillOwnerData = {
 						id: ownerResponse.id,
 						willId: ownerResponse.will_id,
