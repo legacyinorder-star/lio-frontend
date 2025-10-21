@@ -23,7 +23,8 @@ interface Guardian {
 	id: string;
 	firstName: string;
 	lastName: string;
-	relationship: string;
+	relationship: string; // Formatted relationship name for display
+	relationshipId: string; // Relationship ID for editing
 	isPrimary: boolean;
 	guardianshipId?: string; // Store the guardianship record ID for API operations
 }
@@ -161,6 +162,7 @@ export default function GuardiansStep({
 		firstName: "",
 		lastName: "",
 		relationship: "",
+		relationshipId: "",
 		isPrimary: false,
 	});
 
@@ -190,8 +192,9 @@ export default function GuardiansStep({
 				relationship:
 					getFormattedRelationshipNameById(guardian.person.relationship_id) ||
 					guardian.person.relationship_id,
+				relationshipId: guardian.person.relationship_id, // Store the ID for editing
 				isPrimary: guardian.is_primary,
-				guardianshipId: guardian.will_id, // Using will_id as guardianship ID for now
+				guardianshipId: guardian.guardian_id,
 			})) || [],
 		[willData?.guardians]
 	);
@@ -213,30 +216,30 @@ export default function GuardiansStep({
 	);
 
 	// Load will data from API when component mounts
-	useEffect(() => {
-		const loadWillData = async () => {
-			if (!willId) return;
+	const loadWillData = async () => {
+		if (!willId) return;
 
-			setLoading(true);
-			try {
-				const { data, error } = await apiClient<CompleteWillData>(
-					`/wills/${willId}/get-full-will`
-				);
-				if (error) {
-					console.error("Error loading will data:", error);
-					toast.error("Failed to load will data");
-					return;
-				}
-				setWillData(data);
-				console.log("Loaded will data:", data);
-			} catch (err) {
-				console.error("Error loading will data:", err);
+		setLoading(true);
+		try {
+			const { data, error } = await apiClient<CompleteWillData>(
+				`/wills/${willId}/get-full-will`
+			);
+			if (error) {
+				console.error("Error loading will data:", error);
 				toast.error("Failed to load will data");
-			} finally {
-				setLoading(false);
+				return;
 			}
-		};
+			setWillData(data);
+			console.log("Loaded will data:", data);
+		} catch (err) {
+			console.error("Error loading will data:", err);
+			toast.error("Failed to load will data");
+		} finally {
+			setLoading(false);
+		}
+	};
 
+	useEffect(() => {
 		loadWillData();
 	}, [willId]);
 
@@ -246,6 +249,31 @@ export default function GuardiansStep({
 			setPetGuardianId(petGuardianFromAPI.id);
 		}
 	}, [petGuardianFromAPI]);
+
+	// Update parent form data whenever willData changes
+	useEffect(() => {
+		if (willData?.guardians) {
+			console.log(
+				"🔄 GuardiansStep: willData.guardians changed, updating parent form data"
+			);
+			const refreshedGuardians = willData.guardians.map((guardian) => ({
+				id: guardian.person.id,
+				firstName: guardian.person.first_name,
+				lastName: guardian.person.last_name,
+				relationship:
+					getFormattedRelationshipNameById(guardian.person.relationship_id) ||
+					guardian.person.relationship_id,
+				relationshipId: guardian.person.relationship_id,
+				isPrimary: guardian.is_primary,
+				guardianshipId: guardian.guardian_id,
+			}));
+			console.log(
+				"🔄 GuardiansStep: Calling onUpdate with refreshed guardians:",
+				refreshedGuardians
+			);
+			onUpdate({ guardians: refreshedGuardians });
+		}
+	}, [willData?.guardians, onUpdate]);
 
 	// Update active will when guardians state changes
 	const updateActiveWillGuardians = (newGuardians: Guardian[]) => {
@@ -263,6 +291,7 @@ export default function GuardiansStep({
 			firstName: "",
 			lastName: "",
 			relationship: "",
+			relationshipId: "",
 			isPrimary: false,
 		});
 		setEditingGuardian(null);
@@ -299,13 +328,17 @@ export default function GuardiansStep({
 		if (
 			!guardianForm.firstName ||
 			!guardianForm.lastName ||
-			!guardianForm.relationship
+			!guardianForm.relationshipId
 		) {
 			toast.error("Please fill in all required fields");
 			return;
 		}
 
 		setIsSubmitting(true);
+
+		// Close modals immediately for better UX
+		setGuardianDialogOpen(false);
+		setCreateGuardianDialogOpen(false);
 
 		try {
 			if (editingGuardian) {
@@ -319,6 +352,7 @@ export default function GuardiansStep({
 						body: JSON.stringify({
 							first_name: guardianForm.firstName,
 							last_name: guardianForm.lastName,
+							relationship_id: guardianForm.relationshipId,
 						}),
 					}
 				);
@@ -374,6 +408,9 @@ export default function GuardiansStep({
 				updateActiveWillGuardians(updatedGuardians);
 				toast.success("Guardian updated successfully");
 
+				// Refresh data from API to show the updated guardian in the list
+				await loadWillData();
+
 				// Refresh beneficiary lists
 				await refetch();
 			} else {
@@ -389,7 +426,7 @@ export default function GuardiansStep({
 								will_id: activeWill.id,
 								first_name: guardianForm.firstName,
 								last_name: guardianForm.lastName,
-								relationship_id: guardianForm.relationship,
+								relationship_id: guardianForm.relationshipId,
 								is_minor: false, // Guardians are never minors
 							}),
 						});
@@ -403,7 +440,7 @@ export default function GuardiansStep({
 
 					// Then create the guardianship record
 					const { data: guardianshipData, error: guardianshipError } =
-						await apiClient("/guardianship", {
+						await apiClient<{ id: string }>("/guardianship", {
 							method: "POST",
 							body: JSON.stringify({
 								will_id: activeWill.id,
@@ -427,10 +464,10 @@ export default function GuardiansStep({
 						id: personData.id,
 						firstName: personData.first_name,
 						lastName: personData.last_name,
-						relationship:
-							getFormattedRelationshipNameById(guardianForm.relationship) ||
-							guardianForm.relationship,
+						relationship: guardianForm.relationship,
+						relationshipId: guardianForm.relationshipId,
 						isPrimary: guardianForm.isPrimary,
+						guardianshipId: guardianshipData.id, // Store the actual guardianship ID
 					};
 
 					const updatedGuardians = [...guardians, newGuardian];
@@ -457,6 +494,9 @@ export default function GuardiansStep({
 
 					toast.success("Guardian saved successfully");
 
+					// Refresh data from API to show the new guardian in the list
+					await loadWillData();
+
 					// Refresh beneficiary lists
 					await refetch();
 				} catch (error) {
@@ -477,10 +517,8 @@ export default function GuardiansStep({
 				}
 			}
 
-			// Reset form and close dialogs
+			// Reset form
 			resetGuardianForm();
-			setGuardianDialogOpen(false);
-			setCreateGuardianDialogOpen(false);
 		} catch (error) {
 			console.error("Error saving guardian:", error);
 			toast.error("An error occurred while saving guardian information");
@@ -490,7 +528,10 @@ export default function GuardiansStep({
 	};
 
 	const handleEditGuardian = (guardian: Guardian) => {
-		setGuardianForm(guardian);
+		setGuardianForm({
+			...guardian,
+			relationshipId: guardian.relationshipId, // Use the stored relationship ID
+		});
 		setEditingGuardian(guardian);
 		setGuardianDialogOpen(true);
 	};
@@ -551,6 +592,9 @@ export default function GuardiansStep({
 			}
 
 			toast.success("Guardian removed successfully");
+
+			// Refresh data from API to show the updated guardian list
+			await loadWillData();
 
 			// Refresh beneficiary lists
 			await refetch();
@@ -838,11 +882,13 @@ export default function GuardiansStep({
 									</div>
 									<div className="space-y-2">
 										<RelationshipSelect
-											value={guardianForm.relationship}
+											value={guardianForm.relationshipId}
 											onValueChange={(value) =>
 												setGuardianForm((prev) => ({
 													...prev,
-													relationship: value,
+													relationshipId: value,
+													relationship:
+														getFormattedRelationshipNameById(value) || value,
 												}))
 											}
 											label="Relationship"
@@ -1157,11 +1203,13 @@ export default function GuardiansStep({
 						<div className="space-y-2">
 							<Label htmlFor="guardianRelationship">Relationship</Label>
 							<RelationshipSelect
-								value={guardianForm.relationship}
+								value={guardianForm.relationshipId}
 								onValueChange={(value) =>
 									setGuardianForm((prev) => ({
 										...prev,
-										relationship: value,
+										relationshipId: value,
+										relationship:
+											getFormattedRelationshipNameById(value) || value,
 									}))
 								}
 								placeholder="Select relationship"
@@ -1187,7 +1235,7 @@ export default function GuardiansStep({
 								isSubmitting ||
 								!guardianForm.firstName ||
 								!guardianForm.lastName ||
-								!guardianForm.relationship
+								!guardianForm.relationshipId
 							}
 							className="cursor-pointer bg-primary hover:bg-primary/90 text-white"
 						>
