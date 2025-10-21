@@ -132,7 +132,11 @@ interface GuardiansStepProps {
 	onNext: () => void;
 	onBack: () => void;
 	onUpdate: (
-		updates: Partial<{ guardians: Guardian[]; petGuardianId?: string }>
+		updates: Partial<{
+			guardians: Guardian[];
+			petGuardianId?: string;
+			hasPets?: boolean;
+		}>
 	) => void;
 }
 
@@ -170,6 +174,7 @@ export default function GuardiansStep({
 	const [guardianSelectDialogOpen, setGuardianSelectDialogOpen] =
 		useState(false);
 	const [petGuardianId, setPetGuardianId] = useState<string>("");
+	const [hasSyncedPetData, setHasSyncedPetData] = useState(false);
 
 	// Delete confirmation state
 	const [deleteConfirmDialogOpen, setDeleteConfirmDialogOpen] = useState(false);
@@ -245,10 +250,18 @@ export default function GuardiansStep({
 
 	// Initialize pet guardian ID when API data loads
 	useEffect(() => {
-		if (petGuardianFromAPI) {
+		if (petGuardianFromAPI && !hasSyncedPetData) {
 			setPetGuardianId(petGuardianFromAPI.id);
+			// If there's a pet guardian in the API but hasPets is false, update parent
+			if (!hasPets) {
+				console.log(
+					"🐾 GuardiansStep: Pet guardian found in API, updating parent hasPets to true"
+				);
+				onUpdate({ hasPets: true, petGuardianId: petGuardianFromAPI.id });
+			}
+			setHasSyncedPetData(true);
 		}
-	}, [petGuardianFromAPI]);
+	}, [petGuardianFromAPI, hasPets, hasSyncedPetData, onUpdate]);
 
 	// Update parent form data whenever willData changes
 	useEffect(() => {
