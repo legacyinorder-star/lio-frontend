@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,7 +13,6 @@ import {
 	DialogTrigger,
 } from "@/components/ui/dialog";
 import { Plus, Edit2, Trash2, ArrowLeft, ArrowRight } from "lucide-react";
-import { StepProps } from "../types/will.types";
 import { toast } from "sonner";
 import { apiClient } from "@/utils/apiClient";
 import { useWill } from "@/context/WillContext";
@@ -35,14 +34,30 @@ interface ApiPersonResponse {
 	last_name: string;
 }
 
-// API response interface for guardianship endpoint
-interface GuardianshipApiResponse {
+// Complete Will Data interface from /wills/{will_id}/get-full-will API
+interface CompleteWillData {
 	id: string;
-	will_id: string;
 	created_at: string;
-	is_primary: boolean;
-	guardian_id: string;
-	person: {
+	user_id: string;
+	status: string;
+	last_updated_at: string;
+	payment_status: string;
+	owner: {
+		id: string;
+		will_id: string;
+		created_at: string;
+		first_name: string;
+		middle_name?: string;
+		last_name: string;
+		date_of_birth?: string;
+		marital_status: string;
+		address: string;
+		city: string;
+		state: string;
+		post_code: string;
+		country: string;
+	};
+	spouse?: {
 		id: string;
 		user_id: string;
 		will_id: string;
@@ -52,6 +67,52 @@ interface GuardianshipApiResponse {
 		is_minor: boolean;
 		created_at: string;
 		is_witness: boolean;
+	};
+	children: Array<{
+		id: string;
+		user_id: string;
+		will_id: string;
+		relationship_id: string;
+		first_name: string;
+		last_name: string;
+		is_minor: boolean;
+		created_at: string;
+		is_witness: boolean;
+	}>;
+	guardians: Array<{
+		will_id: string;
+		created_at: string;
+		is_primary: boolean;
+		guardian_id: string;
+		person: {
+			id: string;
+			user_id: string;
+			will_id: string;
+			relationship_id: string;
+			first_name: string;
+			last_name: string;
+			is_minor: boolean;
+			created_at: string;
+			is_witness: boolean;
+		};
+	}>;
+	pets_guardian?: {
+		id: string;
+		created_at: string;
+		user_id: string;
+		will_id: string;
+		guardian_id: string;
+		person: {
+			id: string;
+			user_id: string;
+			will_id: string;
+			relationship_id: string;
+			first_name: string;
+			last_name: string;
+			is_minor: boolean;
+			created_at: string;
+			is_witness: boolean;
+		};
 	};
 }
 
@@ -63,22 +124,38 @@ interface PetRecordResponse {
 	created_at: string;
 }
 
+// Updated props interface
+interface GuardiansStepProps {
+	willId: string;
+	hasPets: boolean;
+	onNext: () => void;
+	onBack: () => void;
+	onUpdate: (
+		updates: Partial<{ guardians: Guardian[]; petGuardianId?: string }>
+	) => void;
+}
+
 export default function GuardiansStep({
-	data,
+	willId,
+	hasPets,
 	onUpdate,
 	onNext,
 	onBack,
-}: StepProps) {
+}: GuardiansStepProps) {
 	const { activeWill, setActiveWill } = useWill();
 	const { refetch } = useWillData();
+
+	// State for will data from API
+	const [willData, setWillData] = useState<CompleteWillData | null>(null);
+	const [loading, setLoading] = useState(true);
+
+	// UI state
 	const [guardianDialogOpen, setGuardianDialogOpen] = useState(false);
 	const [createGuardianDialogOpen, setCreateGuardianDialogOpen] =
 		useState(false);
 	const [editingGuardian, setEditingGuardian] = useState<Guardian | null>(null);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [isDeleting, setIsDeleting] = useState(false);
-	const [isLoadingGuardians, setIsLoadingGuardians] = useState(false);
-	const [hasLoadedGuardians, setHasLoadedGuardians] = useState(false);
 	const [guardianForm, setGuardianForm] = useState<Guardian>({
 		id: "",
 		firstName: "",
@@ -87,14 +164,10 @@ export default function GuardiansStep({
 		isPrimary: false,
 	});
 
-	// Pet Guardian selection state (from props)
+	// Pet Guardian selection state
 	const [guardianSelectDialogOpen, setGuardianSelectDialogOpen] =
 		useState(false);
-	const [petGuardianId, setPetGuardianId] = useState<string>(
-		data.petGuardianId || ""
-	);
-	const hasPetsFromProps = data.hasPets || false;
-	const petIdFromProps = data.petId || "";
+	const [petGuardianId, setPetGuardianId] = useState<string>("");
 
 	// Delete confirmation state
 	const [deleteConfirmDialogOpen, setDeleteConfirmDialogOpen] = useState(false);
@@ -102,81 +175,77 @@ export default function GuardiansStep({
 		null
 	);
 
-	// Check if user has minor children
-	const hasMinorChildren = () => {
-		const children = data.children || [];
-		console.log("🔍 GuardiansStep - Checking for minor children:", {
-			children,
-			hasMinor: children.some((child) => child.isMinor),
-			dataKeys: Object.keys(data),
-		});
-		return children.some((child) => child.isMinor);
-	};
+	// Derive state from API data
+	const hasMinorChildren = useMemo(
+		() => willData?.children?.some((child) => child.is_minor) || false,
+		[willData?.children]
+	);
 
-	// Load guardians from API when component mounts
-	const loadGuardians = async () => {
-		if (!activeWill?.id || hasLoadedGuardians) return;
+	const guardians = useMemo(
+		() =>
+			willData?.guardians?.map((guardian) => ({
+				id: guardian.person.id,
+				firstName: guardian.person.first_name,
+				lastName: guardian.person.last_name,
+				relationship:
+					getFormattedRelationshipNameById(guardian.person.relationship_id) ||
+					guardian.person.relationship_id,
+				isPrimary: guardian.is_primary,
+				guardianshipId: guardian.will_id, // Using will_id as guardianship ID for now
+			})) || [],
+		[willData?.guardians]
+	);
 
-		setIsLoadingGuardians(true);
-		try {
-			const { data: apiData, error } = await apiClient<
-				GuardianshipApiResponse[]
-			>(`/guardianship/get-by-will/${activeWill.id}`, {
-				method: "GET",
-			});
-
-			if (error) {
-				// If 404, no guardians exist - this is normal
-				if (error.includes("404")) {
-					console.log("No existing guardians found");
-					setHasLoadedGuardians(true);
-					return;
-				}
-				toast.error("Failed to load guardians");
-				return;
-			}
-
-			if (apiData && apiData.length > 0) {
-				// Filter out guardianships with missing person data
-				const loadedGuardians: Guardian[] = apiData
-					.filter((guardianship) => guardianship.person)
-					.map((guardianship) => ({
-						id: guardianship.person.id,
-						firstName: guardianship.person.first_name,
-						lastName: guardianship.person.last_name,
+	const petGuardianFromAPI = useMemo(
+		() =>
+			willData?.pets_guardian?.person
+				? {
+						id: willData.pets_guardian.person.id,
+						firstName: willData.pets_guardian.person.first_name,
+						lastName: willData.pets_guardian.person.last_name,
 						relationship:
 							getFormattedRelationshipNameById(
-								guardianship.person.relationship_id
-							) || guardianship.person.relationship_id,
-						isPrimary: guardianship.is_primary,
-						guardianshipId: guardianship.id, // Store guardianship record ID
-					}));
+								willData.pets_guardian.person.relationship_id
+							) || willData.pets_guardian.person.relationship_id,
+				  }
+				: null,
+		[willData?.pets_guardian]
+	);
 
-				onUpdate({ guardians: loadedGuardians });
-				updateActiveWillGuardians(loadedGuardians);
-				console.log("Loaded guardians:", loadedGuardians);
+	// Load will data from API when component mounts
+	useEffect(() => {
+		const loadWillData = async () => {
+			if (!willId) return;
+
+			setLoading(true);
+			try {
+				const { data, error } = await apiClient<CompleteWillData>(
+					`/wills/${willId}/get-full-will`
+				);
+				if (error) {
+					console.error("Error loading will data:", error);
+					toast.error("Failed to load will data");
+					return;
+				}
+				setWillData(data);
+				console.log("Loaded will data:", data);
+			} catch (err) {
+				console.error("Error loading will data:", err);
+				toast.error("Failed to load will data");
+			} finally {
+				setLoading(false);
 			}
+		};
 
-			setHasLoadedGuardians(true);
-		} catch (err) {
-			console.error("Error loading guardians:", err);
-			toast.error("Failed to load guardians");
-		} finally {
-			setIsLoadingGuardians(false);
-		}
-	};
+		loadWillData();
+	}, [willId]);
 
-	// Load guardians when component mounts or activeWill changes
+	// Initialize pet guardian ID when API data loads
 	useEffect(() => {
-		loadGuardians();
-	}, [activeWill?.id]);
-
-	// Initialize petGuardianId from form data when component mounts
-	useEffect(() => {
-		if (data.petGuardianId) {
-			setPetGuardianId(data.petGuardianId);
+		if (petGuardianFromAPI) {
+			setPetGuardianId(petGuardianFromAPI.id);
 		}
-	}, [data.petGuardianId]);
+	}, [petGuardianFromAPI]);
 
 	// Update active will when guardians state changes
 	const updateActiveWillGuardians = (newGuardians: Guardian[]) => {
@@ -215,7 +284,7 @@ export default function GuardiansStep({
 	};
 
 	const getGuardianName = (guardianId: string) => {
-		const guardian = data.guardians?.find((g) => g.id === guardianId);
+		const guardian = guardians.find((g) => g.id === guardianId);
 		return guardian
 			? `${guardian.firstName} ${guardian.lastName}`
 			: "Unknown Guardian";
@@ -278,8 +347,7 @@ export default function GuardiansStep({
 				}
 
 				// Update local state
-				const currentGuardians = data.guardians || [];
-				const updatedGuardians = currentGuardians.map((g) =>
+				const updatedGuardians = guardians.map((g) =>
 					g.id === editingGuardian.id
 						? {
 								...g,
@@ -365,8 +433,7 @@ export default function GuardiansStep({
 						isPrimary: guardianForm.isPrimary,
 					};
 
-					const currentGuardians = data.guardians || [];
-					const updatedGuardians = [...currentGuardians, newGuardian];
+					const updatedGuardians = [...guardians, newGuardian];
 
 					// If this is a primary guardian, ensure no other primary exists
 					if (guardianForm.isPrimary) {
@@ -471,8 +538,7 @@ export default function GuardiansStep({
 			}
 
 			// Update local state
-			const currentGuardians = data.guardians || [];
-			const updatedGuardians = currentGuardians.filter(
+			const updatedGuardians = guardians.filter(
 				(g) => g.id !== guardianToDelete.id
 			);
 			onUpdate({ guardians: updatedGuardians });
@@ -504,16 +570,13 @@ export default function GuardiansStep({
 	};
 
 	const areGuardiansValid = () => {
-		const currentGuardians = data.guardians || [];
-
 		// If user has minor children, validate child guardians
-		if (hasMinorChildren()) {
+		if (hasMinorChildren) {
 			const hasValidGuardians =
-				currentGuardians.some((g) => g.isPrimary) &&
-				currentGuardians.length >= 2;
+				guardians.some((g) => g.isPrimary) && guardians.length >= 2;
 
 			// If user also has pets, check pet guardian
-			if (hasPetsFromProps) {
+			if (hasPets) {
 				return hasValidGuardians && petGuardianId !== "";
 			}
 
@@ -521,7 +584,7 @@ export default function GuardiansStep({
 		}
 
 		// If no minor children but has pets, only validate pet guardian
-		if (hasPetsFromProps) {
+		if (hasPets) {
 			return petGuardianId !== "";
 		}
 
@@ -530,22 +593,21 @@ export default function GuardiansStep({
 	};
 
 	const getValidationErrors = () => {
-		const currentGuardians = data.guardians || [];
 		const errors: string[] = [];
 
 		// Only validate child guardians if there are minor children
-		if (hasMinorChildren()) {
-			if (currentGuardians.length < 2) {
+		if (hasMinorChildren) {
+			if (guardians.length < 2) {
 				errors.push("You must appoint at least 2 guardians for your children");
 			}
 
-			if (!currentGuardians.some((g) => g.isPrimary)) {
+			if (!guardians.some((g) => g.isPrimary)) {
 				errors.push("You must appoint 1 primary guardian for your children");
 			}
 		}
 
 		// If user has pets, check that they have a pet guardian
-		if (hasPetsFromProps && !petGuardianId) {
+		if (hasPets && !petGuardianId) {
 			errors.push("You must appoint a guardian for your pets");
 		}
 
@@ -555,19 +617,22 @@ export default function GuardiansStep({
 	// Handle Next button click - update pet guardian if selected
 	const handleNext = async () => {
 		// If user has pets and has selected a pet guardian, create or update the pet record
-		if (hasPetsFromProps && petGuardianId && activeWill?.id) {
+		if (hasPets && petGuardianId && willId) {
 			try {
 				const requestBody = {
-					will_id: activeWill.id,
+					will_id: willId,
 					guardian_id: petGuardianId,
 				};
 
-				if (petIdFromProps) {
+				if (willData?.pets_guardian?.id) {
 					// PATCH existing record
-					const { error } = await apiClient(`/pets/${petIdFromProps}`, {
-						method: "PATCH",
-						body: JSON.stringify(requestBody),
-					});
+					const { error } = await apiClient(
+						`/pets/${willData.pets_guardian.id}`,
+						{
+							method: "PATCH",
+							body: JSON.stringify(requestBody),
+						}
+					);
 
 					if (error) {
 						console.error("Error updating pet guardian:", error);
@@ -604,15 +669,32 @@ export default function GuardiansStep({
 		await onNext();
 	};
 
-	const currentGuardians = data.guardians || [];
 	const validationErrors = getValidationErrors();
+
+	// Show loading state
+	if (loading) {
+		return (
+			<div className="space-y-6">
+				<div className="text-xl sm:text-2xl lg:text-[2rem] font-medium text-black">
+					Guardians for Your Loved Ones
+				</div>
+				<div className="flex items-center justify-center min-h-[400px]">
+					<div className="text-center">
+						<div className="h-8 w-8 animate-spin rounded-full border-t-2 border-b-2 border-primary mx-auto mb-4"></div>
+						<p className="text-muted-foreground">Loading guardians data...</p>
+					</div>
+				</div>
+			</div>
+		);
+	}
 
 	// Debug render
 	console.log("🎨 GuardiansStep rendering:", {
-		hasChildren: !!data.children,
-		childrenCount: data.children?.length,
-		hasMinorChildren: hasMinorChildren(),
-		hasPets: hasPetsFromProps,
+		hasChildren: !!willData?.children,
+		childrenCount: willData?.children?.length,
+		hasMinorChildren,
+		hasPets,
+		guardians: guardians.length,
 	});
 
 	return (
@@ -622,7 +704,7 @@ export default function GuardiansStep({
 			</div>
 
 			{/* Children Guardians Section - Only show if user has minor children */}
-			{hasMinorChildren() && (
+			{hasMinorChildren && (
 				<div className="space-y-4 mb-[2.45rem]">
 					<div className="flex items-center gap-2">
 						<span
@@ -650,9 +732,9 @@ export default function GuardiansStep({
 					{/* Guardians Management Section */}
 					<div className="space-y-4 mb-[2.45rem]">
 						{/* Guardians List - Only show when there are guardians */}
-						{currentGuardians.length > 0 && (
+						{guardians.length > 0 && (
 							<div className="mb-6 space-y-4">
-								{currentGuardians.map((guardian) => (
+								{guardians.map((guardian) => (
 									<Card key={guardian.id}>
 										<CardContent className="p-4">
 											<div className="flex justify-between items-center">
@@ -719,7 +801,7 @@ export default function GuardiansStep({
 									variant="outline"
 									onClick={resetGuardianForm}
 									className="w-full h-16 bg-white text-[#050505] rounded-[0.25rem] font-medium"
-									disabled={isLoadingGuardians}
+									disabled={loading}
 								>
 									<Plus className="mr-2 h-4 w-4" />
 									Add Guardian
@@ -856,7 +938,7 @@ export default function GuardiansStep({
 			)}
 
 			{/* Pet Guardian Section */}
-			{hasPetsFromProps && (
+			{hasPets && (
 				<div className="space-y-4 mb-[2.45rem]">
 					<div className="text-xl sm:text-2xl lg:text-[2rem] font-medium text-black">
 						Pet Guardian
@@ -953,11 +1035,11 @@ export default function GuardiansStep({
 							Choose who will take care of your pets, or create a new guardian.
 						</div>
 
-						{data.guardians && data.guardians.length > 0 ? (
+						{guardians && guardians.length > 0 ? (
 							<div className="space-y-2">
 								<Label>Available Guardians</Label>
 								<div className="space-y-2">
-									{data.guardians.map((guardian) => (
+									{guardians.map((guardian) => (
 										<div
 											key={guardian.id}
 											className={`p-3 border rounded-lg cursor-pointer transition-colors hover:bg-gray-50 ${

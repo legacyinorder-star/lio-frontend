@@ -354,6 +354,11 @@ export default function WillWizard() {
 				break;
 			case "familyInfo":
 				// Conditional navigation based on whether user has minor children or pets
+				console.log("🔍 WillWizard familyInfo navigation:", {
+					formDataHasPets: formData.hasPets,
+					hasMinorChildren: hasMinorChildren(),
+					fullFormData: formData,
+				});
 				if (hasMinorChildren() || formData.hasPets) {
 					console.log(
 						"✅ User has minor children or pets - navigating to guardians"
@@ -480,16 +485,27 @@ export default function WillWizard() {
 			case "familyInfo":
 				return (
 					<FamilyInfoStep
-						{...commonProps}
+						onNext={handleNext}
+						onBack={handleBack}
+						onUpdate={handleFormUpdate}
 						willOwnerData={willOwnerData}
 						spouseData={spouseData}
 						onSpouseDataSave={handleSpouseDataSave}
 						isLoadingOwnerData={_isLoadingOwnerData}
+						initialData={formData}
 					/>
 				);
 
 			case "guardians":
-				return <GuardiansStep {...commonProps} />;
+				return (
+					<GuardiansStep
+						willId={activeWill?.id || ""}
+						hasPets={formData.hasPets || false}
+						onNext={handleNext}
+						onBack={handleBack}
+						onUpdate={handleFormUpdate}
+					/>
+				);
 
 			case "hasAssets":
 				return <AssetsStep {...commonProps} />;

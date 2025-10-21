@@ -40,18 +40,22 @@ import { mapWillDataFromAPI } from "@/utils/dataTransform";
 const familyInfoSchema = z.object({
 	hasSpouse: z.boolean(),
 	hasChildren: z.boolean(),
+	hasPets: z.boolean(),
 });
 
 interface FamilyInfoStepProps {
-	onNext: (data: {
-		hasSpouse: boolean;
-		spouse?: SpouseData;
-		hasChildren: boolean;
-		children?: Child[];
-		hasPets: boolean;
-		petId?: string;
-	}) => void;
+	onNext: () => void;
 	onBack: () => void;
+	onUpdate: (
+		data: Partial<{
+			hasSpouse: boolean;
+			spouse?: SpouseData;
+			hasChildren: boolean;
+			children?: Child[];
+			hasPets: boolean;
+			petId?: string;
+		}>
+	) => void;
 	initialData?: {
 		hasSpouse: boolean;
 		spouse?: SpouseData;
@@ -96,6 +100,7 @@ interface ChildApiResponse {
 export default function FamilyInfoStep({
 	onNext,
 	onBack,
+	onUpdate,
 	initialData,
 	willOwnerData,
 	spouseData,
@@ -179,12 +184,9 @@ export default function FamilyInfoStep({
 		initialData?.children ?? []
 	);
 
-	// ✅ ADDED: Pets state (simple yes/no)
-	const [hasPets, setHasPets] = useState(initialData?.hasPets ?? false);
+	// ✅ SIMPLIFIED: Pets state (simple yes/no)
+	const [hasPets, setHasPets] = useState(false);
 	const [petId, setPetId] = useState<string | null>(null);
-	const [initialHasPets, setInitialHasPets] = useState(
-		initialData?.hasPets ?? false
-	);
 	const [childDialogOpen, setChildDialogOpen] = useState(false);
 	const [editingChild, setEditingChild] = useState<Child | null>(null);
 	const [childForm, setChildForm] = useState<Omit<Child, "id">>({
@@ -205,6 +207,7 @@ export default function FamilyInfoStep({
 		defaultValues: {
 			hasSpouse: hasSpouseFromData || initialData?.hasSpouse || false,
 			hasChildren: initialData?.hasChildren || false,
+			hasPets: initialData?.hasPets || false,
 		},
 	});
 
@@ -247,7 +250,7 @@ export default function FamilyInfoStep({
 				setIsLoadingSpouse(false);
 			}
 		},
-		[form]
+		[] // Remove form dependency to prevent unnecessary re-creation
 	);
 
 	const loadExistingPets = async (willId: string) => {
@@ -256,27 +259,21 @@ export default function FamilyInfoStep({
 				`/pets/get-by-will/${willId}`
 			);
 
-			if (error) {
+			if (error || !data || !data.id) {
+				// No pets found or error - set to false
 				setHasPets(false);
-				setInitialHasPets(false);
+				setPetId(null);
 				return;
 			}
 
-			if (data && data !== null && data.id) {
-				console.log(data);
-				// User has pets
-				setHasPets(true);
-				setInitialHasPets(true);
-				setPetId(data.id);
-				console.log("User haspets, pet ID:", data.id);
-			} else {
-				// No pets found (empty object or no ID)
-				console.log("No existing pets found");
-				setHasPets(false);
-				setInitialHasPets(false);
-			}
+			// User has pets - set to true
+			setHasPets(true);
+			setPetId(data.id);
 		} catch (error) {
 			console.error("Error loading existing pets:", error);
+			// On error, default to false
+			setHasPets(false);
+			setPetId(null);
 		}
 	};
 
@@ -284,6 +281,11 @@ export default function FamilyInfoStep({
 	useEffect(() => {
 		form.setValue("hasChildren", hasChildren);
 	}, [hasChildren, form]);
+
+	// ✅ ADDED: Sync hasPets state with form
+	useEffect(() => {
+		form.setValue("hasPets", hasPets);
+	}, [hasPets, form]);
 
 	// ✅ ADDED: Effect to sync form state when localSpouseData changes
 	useEffect(() => {
@@ -359,37 +361,41 @@ export default function FamilyInfoStep({
 				setIsLoadingChildren(false);
 			}
 		},
-		[form, initialData, updateActiveWillChildren]
+		[] // Remove dependencies to prevent unnecessary re-creation
 	);
 
+	// Track if we've already loaded data to prevent unnecessary re-loading
+	const [hasLoadedData, setHasLoadedData] = useState(false);
+
 	useEffect(() => {
-		if (willData?.id) {
+		if (willData?.id && !hasLoadedData) {
 			// Load spouse data independently from API
 			loadExistingSpouse(willData.id);
 			// Load children from API
 			loadChildren(willData.id);
-			// Always check for existing pets to determine if user has pets
+			// Load pets data from API
 			loadExistingPets(willData.id);
+			setHasLoadedData(true);
 		} else if (initialData?.children && initialData.children.length > 0) {
 			setChildren(initialData.children);
 			setHasChildren(initialData.hasChildren);
 			form.setValue("hasChildren", initialData.hasChildren);
 		}
 
-		// Only use initialData for pets if we don't have will data (fallback)
+		// Fallback: Use initialData for pets if we don't have will data
 		if (!willData?.id && initialData?.hasPets !== undefined) {
 			setHasPets(initialData.hasPets);
-			setInitialHasPets(initialData.hasPets);
 		}
 	}, [
 		willData?.id,
 		initialData?.children,
 		initialData?.hasChildren,
 		initialData?.hasPets,
-		loadExistingSpouse,
+		hasLoadedData,
+		// Remove function dependencies to prevent unnecessary re-runs
 	]);
 
-	// ✅ ADDED: Pet management function
+	// ✅ SIMPLIFIED: Pet management function
 	const handlePetsChange = async () => {
 		if (!willData?.id) {
 			toast.error(
@@ -399,21 +405,8 @@ export default function FamilyInfoStep({
 		}
 
 		try {
-			// If user had pets initially and now doesn't want pets
-			if (initialHasPets && !hasPets && petId) {
-				// Send DELETE request to remove pets
-				const { error } = await apiClient(`/pets/${petId}`, {
-					method: "DELETE",
-				});
-
-				if (error) {
-					console.error("Error deleting pets:", error);
-					toast.error("Failed to remove pets. Please try again.");
-					return;
-				}
-			}
-			// If user didn't have pets initially and now wants pets
-			else if (!initialHasPets && hasPets) {
+			// If user wants pets but doesn't have a pet record yet
+			if (hasPets && !petId) {
 				// Send POST request to create pets record
 				const petData = {
 					will_id: willData.id,
@@ -435,7 +428,22 @@ export default function FamilyInfoStep({
 					setPetId(data.id);
 				}
 			}
-			// If status remains the same, no API calls needed
+			// If user doesn't want pets but has a pet record
+			else if (!hasPets && petId) {
+				// Send DELETE request to remove pets
+				const { error } = await apiClient(`/pets/${petId}`, {
+					method: "DELETE",
+				});
+
+				if (error) {
+					console.error("Error deleting pets:", error);
+					toast.error("Failed to remove pets. Please try again.");
+					return;
+				}
+
+				setPetId(null);
+			}
+			// If status matches existing record, no API calls needed
 		} catch (error) {
 			console.error("Error managing pets:", error);
 			toast.error("An error occurred while managing pets. Please try again.");
@@ -446,7 +454,14 @@ export default function FamilyInfoStep({
 		// Handle pets changes before proceeding
 		await handlePetsChange();
 
-		await onNext({
+		console.log("🔍 FamilyInfoStep handleSubmit:", {
+			formValues: values,
+			localHasPets: hasPets,
+			petId: petId,
+		});
+
+		// Update the form data first
+		onUpdate({
 			hasSpouse: values.hasSpouse,
 			spouse: localSpouseData
 				? {
@@ -456,9 +471,12 @@ export default function FamilyInfoStep({
 				: undefined,
 			hasChildren: values.hasChildren,
 			children: children,
-			hasPets: hasPets,
-			petId: petId || undefined, // Convert null to undefined for type compatibility
+			hasPets: values.hasPets, // Use form value instead of local state
+			petId: petId || undefined,
 		});
+
+		// Then proceed to next step
+		await onNext();
 	};
 
 	// ✅ UPDATED: Enhanced spouse data handling - reload from API after save
@@ -527,6 +545,10 @@ export default function FamilyInfoStep({
 			setSpouseToDelete(null); // Clear stored spouse data
 			form.setValue("hasSpouse", false);
 			setShowDeleteConfirm(false);
+
+			// Immediately update parent form data
+			onUpdate({ hasSpouse: false, spouse: undefined });
+
 			toast.success("Spousal details deleted successfully.");
 
 			// Refresh data from parent
@@ -825,6 +847,8 @@ export default function FamilyInfoStep({
 											} else {
 												// If no existing data, just clear the form
 												form.setValue("hasSpouse", false);
+												// Immediately update parent form data
+												onUpdate({ hasSpouse: false, spouse: undefined });
 											}
 										}
 									}}
@@ -846,6 +870,8 @@ export default function FamilyInfoStep({
 										if (checked) {
 											// If "Yes" is being selected
 											form.setValue("hasSpouse", true);
+											// Immediately update parent form data
+											onUpdate({ hasSpouse: true });
 											if (!localSpouseData) setSpouseDialogOpen(true);
 										}
 									}}
@@ -926,6 +952,8 @@ export default function FamilyInfoStep({
 											setHasChildren(false);
 											form.setValue("hasChildren", false);
 											setChildren([]);
+											// Immediately update parent form data
+											onUpdate({ hasChildren: false, children: [] });
 										}
 									}}
 									disabled={isSubmitting}
@@ -946,6 +974,8 @@ export default function FamilyInfoStep({
 										if (checked) {
 											setHasChildren(true);
 											form.setValue("hasChildren", true);
+											// Immediately update parent form data
+											onUpdate({ hasChildren: true });
 										}
 									}}
 									disabled={isSubmitting}
@@ -1135,10 +1165,13 @@ export default function FamilyInfoStep({
 								<div className="flex items-center space-x-2">
 									<Checkbox
 										id="petsNo"
-										checked={hasPets === false}
+										checked={!form.watch("hasPets")}
 										onCheckedChange={(checked) => {
 											if (checked) {
+												form.setValue("hasPets", false);
 												setHasPets(false);
+												// Immediately update parent form data
+												onUpdate({ hasPets: false });
 											}
 										}}
 									/>
@@ -1149,10 +1182,13 @@ export default function FamilyInfoStep({
 								<div className="flex items-center space-x-2">
 									<Checkbox
 										id="petsYes"
-										checked={hasPets === true}
+										checked={form.watch("hasPets")}
 										onCheckedChange={(checked) => {
 											if (checked) {
+												form.setValue("hasPets", true);
 												setHasPets(true);
+												// Immediately update parent form data
+												onUpdate({ hasPets: true });
 											}
 										}}
 									/>
