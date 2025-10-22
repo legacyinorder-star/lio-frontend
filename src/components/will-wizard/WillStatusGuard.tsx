@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { apiClient } from "@/utils/apiClient";
 import { mapWillDataFromAPI } from "@/utils/dataTransform";
-import { type WillData } from "@/context/WillContext";
+import { type WillData, useWill } from "@/context/WillContext";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,6 +34,7 @@ export default function WillStatusGuard({
 }: WillStatusGuardProps) {
 	const navigate = useNavigate();
 	const location = useLocation();
+	const { setActiveWill } = useWill();
 	const [willData, setWillData] = useState<WillData | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 	const [accessDenied, setAccessDenied] = useState(false);
@@ -55,6 +56,8 @@ export default function WillStatusGuard({
 
 				if (!willInfo) {
 					// No will exists, allow access for creation
+					// ✅ CRITICAL FIX: Clear activeWill for new will creation
+					setActiveWill(null);
 					setAccessDenied(false);
 					setIsLoading(false);
 					return;
@@ -62,6 +65,9 @@ export default function WillStatusGuard({
 
 				const transformedWill = mapWillDataFromAPI(willInfo);
 				setWillData(transformedWill);
+
+				// ✅ CRITICAL FIX: Set the will data in WillContext so WillWizard can access it
+				setActiveWill(transformedWill);
 
 				// Check if current status allows editing
 				const isAllowed = allowedStatuses.includes(transformedWill.status);
@@ -80,6 +86,8 @@ export default function WillStatusGuard({
 				}
 			} catch (error) {
 				console.error("Error checking will access:", error);
+				// ✅ CRITICAL FIX: Clear activeWill on error
+				setActiveWill(null);
 				toast.error("Failed to verify will access");
 				navigate(redirectTo);
 			} finally {
@@ -88,7 +96,7 @@ export default function WillStatusGuard({
 		};
 
 		checkWillAccess();
-	}, [location.pathname, allowedStatuses, navigate, redirectTo]);
+	}, [location.pathname, allowedStatuses, navigate, redirectTo, setActiveWill]);
 
 	if (isLoading) {
 		return (

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useWill } from "@/context/WillContext";
+import { useAuth } from "@/hooks/useAuth";
 import { apiClient } from "@/utils/apiClient";
 import { toast } from "sonner";
 
@@ -10,11 +11,15 @@ interface DisclaimerState {
 	hasShown: boolean;
 }
 
-const DISCLAIMER_STORAGE_KEY = "legacy_in_order_disclaimer_accepted";
-const DISCLAIMER_DATE_KEY = "legacy_in_order_disclaimer_date";
+// ✅ FIXED: Make storage keys user-specific
+const getDisclaimerStorageKey = (userId: string) =>
+	`legacy_in_order_disclaimer_accepted_${userId}`;
+const getDisclaimerDateKey = (userId: string) =>
+	`legacy_in_order_disclaimer_date_${userId}`;
 
 export function useDisclaimer() {
 	const { activeWill, setActiveWill } = useWill();
+	const { user } = useAuth();
 	const [state, setState] = useState<DisclaimerState>({
 		isAccepted: false,
 		isLoading: false,
@@ -24,8 +29,19 @@ export function useDisclaimer() {
 
 	// Check if disclaimer has been accepted (from localStorage or will data)
 	const checkDisclaimerStatus = useCallback(() => {
-		// First check localStorage for temporary acceptance
-		const localAccepted = localStorage.getItem(DISCLAIMER_STORAGE_KEY);
+		// ✅ FIXED: Only check localStorage if user is authenticated
+		if (!user?.id) {
+			setState((prev) => ({
+				...prev,
+				isAccepted: false,
+				hasShown: false,
+			}));
+			return false;
+		}
+
+		// ✅ FIXED: Use user-specific storage keys
+		const userStorageKey = getDisclaimerStorageKey(user.id);
+		const localAccepted = localStorage.getItem(userStorageKey);
 
 		// Then check will data
 		const willAccepted = activeWill?.agreed_disclaimer === true;
@@ -40,7 +56,7 @@ export function useDisclaimer() {
 		}));
 
 		return isAccepted;
-	}, [activeWill?.agreed_disclaimer]);
+	}, [activeWill?.agreed_disclaimer, user?.id]);
 
 	// Accept disclaimer and save to appropriate location
 	const acceptDisclaimer = useCallback(async () => {
@@ -49,9 +65,15 @@ export function useDisclaimer() {
 		try {
 			const acceptanceDate = new Date().toISOString();
 
-			// Always save to localStorage as backup
-			localStorage.setItem(DISCLAIMER_STORAGE_KEY, "true");
-			localStorage.setItem(DISCLAIMER_DATE_KEY, acceptanceDate);
+			// ✅ FIXED: Only save to localStorage if user is authenticated
+			if (user?.id) {
+				const userStorageKey = getDisclaimerStorageKey(user.id);
+				const userDateKey = getDisclaimerDateKey(user.id);
+
+				// Always save to localStorage as backup
+				localStorage.setItem(userStorageKey, "true");
+				localStorage.setItem(userDateKey, acceptanceDate);
+			}
 
 			// If we have an active will, also save to backend
 			if (activeWill?.id) {
@@ -102,7 +124,7 @@ export function useDisclaimer() {
 			toast.error("Failed to save disclaimer acceptance. Please try again.");
 			return false;
 		}
-	}, [activeWill, setActiveWill]);
+	}, [activeWill, setActiveWill, user?.id]);
 
 	// Decline disclaimer
 	const declineDisclaimer = useCallback(() => {
@@ -125,14 +147,21 @@ export function useDisclaimer() {
 
 	// Clear disclaimer acceptance (for testing or admin purposes)
 	const clearDisclaimer = useCallback(() => {
-		localStorage.removeItem(DISCLAIMER_STORAGE_KEY);
-		localStorage.removeItem(DISCLAIMER_DATE_KEY);
+		// ✅ FIXED: Only clear user-specific storage if user is authenticated
+		if (user?.id) {
+			const userStorageKey = getDisclaimerStorageKey(user.id);
+			const userDateKey = getDisclaimerDateKey(user.id);
+
+			localStorage.removeItem(userStorageKey);
+			localStorage.removeItem(userDateKey);
+		}
+
 		setState((prev) => ({
 			...prev,
 			isAccepted: false,
 			hasShown: false,
 		}));
-	}, []);
+	}, [user?.id]);
 
 	// Check status when activeWill changes
 	useEffect(() => {
