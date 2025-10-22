@@ -35,10 +35,9 @@ export default function WillDisclaimerDialog({
 	return (
 		<Dialog
 			open={open}
-			onOpenChange={(isOpen) => {
-				if (!isOpen) {
-					onDecline();
-				}
+			onOpenChange={() => {
+				// Prevent closing the dialog without explicit action
+				// Users must click Accept or Decline buttons
 			}}
 		>
 			<DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-8">
@@ -93,8 +92,8 @@ export default function WillDisclaimerDialog({
 										<strong>We do not give personalised legal advice</strong>
 									</p>
 									<p className="text-sm text-muted-foreground leading-relaxed mt-1">
-										Legacy in Order is not a law firm, and does offer tailored
-										legal, tax, or financial advice.
+										Legacy in Order is not a law firm, and does NOT offer
+										tailored legal, tax, or financial advice.
 									</p>
 								</div>
 							</div>
@@ -143,7 +142,7 @@ export default function WillDisclaimerDialog({
 											• Business ownership, trusts, or advanced tax planning
 										</li>
 										<li>• Caring for a dependant with disabilities</li>
-										<li>• Removing a spouse or dependant from your will</li>
+										<li>• Removing a spouse or dependant from your Will</li>
 									</ul>
 								</div>
 							</div>
