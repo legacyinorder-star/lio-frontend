@@ -19,8 +19,6 @@ import { useWillWizard } from "@/context/WillWizardContext";
 import { apiClient } from "@/utils/apiClient";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
-import WillDisclaimerDialog from "../WillDisclaimerDialog";
-import { useNavigate } from "react-router-dom";
 
 const personalInfoSchema = z.object({
 	firstName: z.string().min(2, "First name must be at least 2 characters"),
@@ -74,18 +72,6 @@ export default function PersonalInfoStep({
 	const { activeWill, setActiveWill } = useWill();
 	const { setActiveWillId } = useWillWizard();
 	const [isSubmitting, setIsSubmitting] = useState(false);
-	const [showDisclaimer, setShowDisclaimer] = useState(false);
-	const navigate = useNavigate();
-
-	// Auto-show disclaimer if user hasn't agreed to it yet
-	useEffect(() => {
-		const hasNotAgreedToDisclaimer =
-			activeWill?.agreed_disclaimer === false ||
-			activeWill?.agreed_disclaimer === null;
-		if (hasNotAgreedToDisclaimer && !showDisclaimer) {
-			setShowDisclaimer(true);
-		}
-	}, [activeWill?.agreed_disclaimer]);
 
 	// Determine the initial values for the form
 	const getInitialValues = () => {
@@ -178,6 +164,7 @@ export default function PersonalInfoStep({
 			`🔧 PersonalInfoStep: onSubmit called [${submissionId}] - isSubmitting:`,
 			isSubmitting
 		);
+
 		if (isSubmitting) {
 			console.log(
 				"🔧 PersonalInfoStep: Already submitting, ignoring duplicate call"
@@ -305,247 +292,187 @@ export default function PersonalInfoStep({
 		}
 	};
 
-	// Handle disclaimer acceptance
-	const handleDisclaimerAccept = async () => {
-		if (!activeWill?.id) {
-			// For new wills, just close the disclaimer
-			setShowDisclaimer(false);
-			toast.success(
-				"Disclaimer accepted. You can now proceed with creating your will."
-			);
-			return;
-		}
-
-		try {
-			// Update the will with disclaimer agreement
-			const { error } = await apiClient(
-				`/wills/${activeWill.id}/accept-disclaimer`,
-				{
-					method: "POST",
-				}
-			);
-
-			if (error) {
-				console.error("Error updating disclaimer agreement:", error);
-				toast.error("Failed to save disclaimer agreement. Please try again.");
-				return;
-			}
-
-			// Update the active will context
-			if (setActiveWill && activeWill) {
-				setActiveWill({
-					...activeWill,
-					agreed_disclaimer: true,
-					agreed_disclaimer_date: new Date().toISOString(),
-				});
-			}
-
-			setShowDisclaimer(false);
-			toast.success(
-				"Disclaimer accepted. You can now proceed with creating your will."
-			);
-		} catch (error) {
-			console.error("Error in disclaimer acceptance:", error);
-			toast.error(
-				"An error occurred while saving disclaimer agreement. Please try again."
-			);
-		}
-	};
-
 	return (
-		<>
-			<WillDisclaimerDialog
-				open={showDisclaimer}
-				onDecline={() => {
-					setShowDisclaimer(false);
-					toast.error(
-						"Disclaimer declined. You cannot proceed with creating your will."
-					);
-					navigate("/app/dashboard");
-				}}
-				onAccept={handleDisclaimerAccept}
-			/>
+		<div className="space-y-6">
+			<div className="text-xl sm:text-2xl lg:text-[2rem] font-medium text-black">
+				Personal Information
+			</div>
+			<div className="text-[#696868] text-[0.875rem] -mt-4">
+				Let's start with your basic information and address details.
+			</div>
 
-			<div className="space-y-6">
-				<div className="text-xl sm:text-2xl lg:text-[2rem] font-medium text-black">
-					Personal Information
-				</div>
-				<div className="text-[#696868] text-[0.875rem] -mt-4">
-					Let's start with your basic information and address details.
-				</div>
+			<Form {...form}>
+				<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+					{/* Personal Information Section */}
+					<div className="space-y-4 mb-[2.45rem]">
+						<div className="space-y-4 mt-[-0.5rem]">
+							<FormField
+								control={form.control}
+								name="firstName"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel className="text-sm font-medium text-gray-700">
+											First Name *
+										</FormLabel>
+										<FormControl>
+											<Input
+												placeholder="Enter your first name"
+												{...field}
+												className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary "
+											/>
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
 
-				<Form {...form}>
-					<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-						{/* Personal Information Section */}
-						<div className="space-y-4 mb-[2.45rem]">
-							<div className="space-y-4 mt-[-0.5rem]">
-								<FormField
-									control={form.control}
-									name="firstName"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel className="text-sm font-medium text-gray-700">
-												First Name *
-											</FormLabel>
-											<FormControl>
-												<Input
-													placeholder="Enter your first name"
-													{...field}
-													className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary "
-												/>
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
+							<FormField
+								control={form.control}
+								name="middleName"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel className="text-sm font-medium text-gray-700">
+											Middle Name
+										</FormLabel>
+										<FormControl>
+											<Input
+												placeholder="Enter your middle name"
+												{...field}
+												className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary "
+											/>
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
 
-								<FormField
-									control={form.control}
-									name="middleName"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel className="text-sm font-medium text-gray-700">
-												Middle Name
-											</FormLabel>
-											<FormControl>
-												<Input
-													placeholder="Enter your middle name"
-													{...field}
-													className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary "
-												/>
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
+							<FormField
+								control={form.control}
+								name="lastName"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel className="text-sm font-medium text-gray-700">
+											Last Name *
+										</FormLabel>
+										<FormControl>
+											<Input
+												placeholder="Enter your last name"
+												{...field}
+												className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary"
+											/>
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
 
-								<FormField
-									control={form.control}
-									name="lastName"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel className="text-sm font-medium text-gray-700">
-												Last Name *
-											</FormLabel>
-											<FormControl>
-												<Input
-													placeholder="Enter your last name"
-													{...field}
-													className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary"
-												/>
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
+							<FormField
+								control={form.control}
+								name="dateOfBirth"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel className="text-sm font-medium text-gray-700">
+											Date of Birth *
+										</FormLabel>
+										<FormControl>
+											<DatePicker
+												value={field.value}
+												onChange={field.onChange}
+												placeholder="Select your date of birth"
+												maxDate={new Date()}
+												className="focus:ring-2 focus:ring-primary focus:border-primary"
+											/>
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
 
-								<FormField
-									control={form.control}
-									name="dateOfBirth"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel className="text-sm font-medium text-gray-700">
-												Date of Birth *
-											</FormLabel>
-											<FormControl>
-												<DatePicker
-													value={field.value}
-													onChange={field.onChange}
-													placeholder="Select your date of birth"
-													maxDate={new Date()}
-													className="focus:ring-2 focus:ring-primary focus:border-primary"
-												/>
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
+							<FormField
+								control={form.control}
+								name="address"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel className="text-sm font-medium text-gray-700">
+											Street Address *
+										</FormLabel>
+										<FormControl>
+											<Input
+												placeholder="Enter your street address"
+												{...field}
+												className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary "
+											/>
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
 
-								<FormField
-									control={form.control}
-									name="address"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel className="text-sm font-medium text-gray-700">
-												Street Address *
-											</FormLabel>
-											<FormControl>
-												<Input
-													placeholder="Enter your street address"
-													{...field}
-													className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary "
-												/>
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
+							<FormField
+								control={form.control}
+								name="city"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel className="text-sm font-medium text-gray-700">
+											City *
+										</FormLabel>
+										<FormControl>
+											<Input
+												placeholder="Enter your city"
+												{...field}
+												className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary "
+											/>
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
 
-								<FormField
-									control={form.control}
-									name="city"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel className="text-sm font-medium text-gray-700">
-												City *
-											</FormLabel>
-											<FormControl>
-												<Input
-													placeholder="Enter your city"
-													{...field}
-													className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary "
-												/>
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
+							<FormField
+								control={form.control}
+								name="postCode"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel className="text-sm font-medium text-gray-700">
+											Postcode *
+										</FormLabel>
+										<FormControl>
+											<Input
+												placeholder="Enter postcode"
+												{...field}
+												className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary "
+											/>
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
 
-								<FormField
-									control={form.control}
-									name="postCode"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel className="text-sm font-medium text-gray-700">
-												Postcode *
-											</FormLabel>
-											<FormControl>
-												<Input
-													placeholder="Enter postcode"
-													{...field}
-													className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary "
-												/>
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-
-								<FormField
-									control={form.control}
-									name="country"
-									render={({ field: _field }) => (
-										<FormItem>
-											<FormLabel className="text-sm font-medium text-gray-700">
-												Country *
-											</FormLabel>
-											<FormControl>
-												<Input
-													value="United Kingdom"
-													disabled
-													className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary bg-gray-50"
-												/>
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-							</div>
+							<FormField
+								control={form.control}
+								name="country"
+								render={({ field: _field }) => (
+									<FormItem>
+										<FormLabel className="text-sm font-medium text-gray-700">
+											Country *
+										</FormLabel>
+										<FormControl>
+											<Input
+												value="United Kingdom"
+												disabled
+												className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary bg-gray-50"
+											/>
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
 						</div>
+					</div>
 
-						{/* Navigation buttons */}
-						<div className="flex justify-end pt-6">
-							{/* <Button
+					{/* Navigation buttons */}
+					<div className="flex justify-end pt-6">
+						{/* <Button
 								type="submit"
 								disabled={isSubmitting}
 								className="w-full h-16 bg-white text-[#050505] rounded-[0.25rem] font-medium border border-gray-300 hover:bg-gray-50 transition-colors"
@@ -561,26 +488,25 @@ export default function PersonalInfoStep({
 									</>
 								)}
 							</Button> */}
-							<Button
-								type="submit"
-								disabled={isSubmitting}
-								className="cursor-pointer bg-primary hover:bg-primary/90 text-white"
-							>
-								{isSubmitting ? (
-									<>
-										<div className="h-4 w-4 animate-spin rounded-full border-t-2 border-b-2 border-black mr-2" />
-										Saving...
-									</>
-								) : (
-									<>
-										Next <ArrowRight className="ml-2 h-4 w-4" />
-									</>
-								)}
-							</Button>
-						</div>
-					</form>
-				</Form>
-			</div>
-		</>
+						<Button
+							type="submit"
+							disabled={isSubmitting}
+							className="cursor-pointer bg-primary hover:bg-primary/90 text-white"
+						>
+							{isSubmitting ? (
+								<>
+									<div className="h-4 w-4 animate-spin rounded-full border-t-2 border-b-2 border-black mr-2" />
+									Saving...
+								</>
+							) : (
+								<>
+									Next <ArrowRight className="ml-2 h-4 w-4" />
+								</>
+							)}
+						</Button>
+					</div>
+				</form>
+			</Form>
+		</div>
 	);
 }

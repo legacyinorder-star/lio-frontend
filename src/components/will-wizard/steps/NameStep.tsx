@@ -1,3 +1,5 @@
+// Check if this is still in use and delete if not
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -17,8 +19,6 @@ import { useWill } from "@/context/WillContext";
 import { apiClient } from "@/utils/apiClient";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
-import WillDisclaimerDialog from "../WillDisclaimerDialog";
-import { useNavigate } from "react-router-dom";
 
 const nameSchema = z.object({
 	firstName: z.string().min(2, "First name must be at least 2 characters"),
@@ -52,16 +52,6 @@ export default function NameStep({
 }: NameStepProps) {
 	const { activeWill, setActiveWill } = useWill();
 	const [isSubmitting, setIsSubmitting] = useState(false);
-	const [showDisclaimer, setShowDisclaimer] = useState(false);
-	const navigate = useNavigate();
-
-	// Auto-show disclaimer for new wills when component mounts
-	useEffect(() => {
-		const isNewWill = !activeWill?.id;
-		if (isNewWill && !showDisclaimer) {
-			setShowDisclaimer(true);
-		}
-	}, [activeWill?.id]);
 
 	// Determine the initial values for the form
 	const getInitialValues = () => {
@@ -160,11 +150,6 @@ export default function NameStep({
 	]);
 
 	const handleFormSubmit = async (values: NameData) => {
-		// Check if disclaimer is still showing
-		if (showDisclaimer) {
-			return;
-		}
-
 		// Proceed with existing submission logic
 		await handleSubmit(values);
 	};
@@ -265,24 +250,6 @@ export default function NameStep({
 		}
 	};
 
-	const handleDisclaimerAccept = async () => {
-		console.log(
-			"Disclaimer accepted - closing dialog and proceeding with form"
-		);
-		setShowDisclaimer(false);
-
-		// Get current form data and proceed with submission
-		// const currentFormData = form.getValues();
-		//await handleSubmit(currentFormData);
-	};
-
-	const handleDisclaimerDecline = () => {
-		setShowDisclaimer(false);
-		// Optionally redirect to dashboard or show a message
-		toast.info("Will creation cancelled. You can start again anytime.");
-		navigate("/app/dashboard");
-	};
-
 	return (
 		<>
 			<div className="space-y-6 w-full max-w-4xl mx-auto">
@@ -344,17 +311,12 @@ export default function NameStep({
 							<Button
 								type="submit"
 								className="cursor-pointer bg-primary hover:bg-primary/90 text-white"
-								disabled={!isValid || isSubmitting || showDisclaimer}
+								disabled={!isValid || isSubmitting}
 							>
 								{isSubmitting ? (
 									<>
 										<div className="h-4 w-4 animate-spin rounded-full border-t-2 border-b-2 border-black mr-2" />
 										Saving...
-									</>
-								) : showDisclaimer ? (
-									<>
-										Please Accept Disclaimer{" "}
-										<ArrowRight className="ml-2 h-4 w-4" />
 									</>
 								) : (
 									<>
@@ -366,13 +328,6 @@ export default function NameStep({
 					</form>
 				</Form>
 			</div>
-
-			{/* Disclaimer Dialog - Rendered outside Form context */}
-			<WillDisclaimerDialog
-				open={showDisclaimer}
-				onAccept={handleDisclaimerAccept}
-				onDecline={handleDisclaimerDecline}
-			/>
 		</>
 	);
 }
