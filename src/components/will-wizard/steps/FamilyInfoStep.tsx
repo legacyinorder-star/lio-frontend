@@ -10,6 +10,7 @@ import { ArrowLeft, ArrowRight, Edit2, User, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useRelationships } from "@/hooks/useRelationships";
 import { useWillData } from "@/hooks/useWillData";
+import { useSpouseManagement } from "@/hooks/useSpouseManagement";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import {
 	Dialog,
@@ -71,7 +72,6 @@ interface FamilyInfoStepProps {
 		firstName: string;
 		lastName: string;
 	} | null;
-	onSpouseDataSave?: (data: SpouseData) => Promise<boolean>;
 	isLoadingOwnerData?: boolean;
 }
 
@@ -104,7 +104,6 @@ export default function FamilyInfoStep({
 	initialData,
 	willOwnerData,
 	spouseData,
-	onSpouseDataSave,
 	isLoadingOwnerData,
 }: FamilyInfoStepProps) {
 	const { activeWill, setActiveWill } = useWill();
@@ -115,6 +114,14 @@ export default function FamilyInfoStep({
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 	const [deleteLoading, setDeleteLoading] = useState(false);
 	const { refetch } = useWillData();
+
+	// ✅ Use the new spouse management hook
+	const {
+		saveSpouseData,
+		spouseData: _hookSpouseData,
+		willOwnerData: _hookWillOwnerData,
+		isLoading: _spouseLoading,
+	} = useSpouseManagement();
 
 	// ✅ ADDED: State for managing will data independently
 	const [willData, setWillData] = useState<{ id: string } | null>(null);
@@ -479,7 +486,7 @@ export default function FamilyInfoStep({
 		await onNext();
 	};
 
-	// ✅ UPDATED: Enhanced spouse data handling - reload from API after save
+	// ✅ UPDATED: Use the spouse management hook
 	const handleSpouseData = async (data: SpouseData) => {
 		setIsSubmitting(true);
 
@@ -487,22 +494,15 @@ export default function FamilyInfoStep({
 			// Check if we're editing an existing spouse or creating a new one
 			const isEditing = !!(localSpouseData && localSpouseData.id);
 
-			if (onSpouseDataSave) {
-				// For editing, pass the ID along with the data
-				const dataToSave = isEditing
-					? { ...data, id: localSpouseData!.id }
-					: data;
+			// Use the hook's saveSpouseData function
+			const dataToSave = isEditing
+				? { ...data, id: localSpouseData!.id }
+				: data;
 
-				const success = await onSpouseDataSave(dataToSave);
+			const success = await saveSpouseData(dataToSave);
 
-				if (!success) {
-					toast.error("Failed to save spouse information. Please try again.");
-					return;
-				}
-			} else {
-				toast.error(
-					"Unable to save spouse information. Please refresh and try again."
-				);
+			if (!success) {
+				toast.error("Failed to save spouse information. Please try again.");
 				return;
 			}
 

@@ -11,9 +11,6 @@ import { BookOpen, X } from "lucide-react";
 
 import { useWillOwnerData } from "@/hooks/useWillOwnerData";
 import { useWillData } from "@/hooks/useWillData";
-import { toast } from "sonner";
-import { apiClient } from "@/utils/apiClient";
-import { PersonResponse } from "./types/will.types";
 
 // Import step components
 import PersonalInfoStep from "./steps/PersonalInfoStep";
@@ -30,7 +27,7 @@ export default function WillWizard() {
 	const navigate = useNavigate();
 	const { step: urlStep } = useParams<{ step: string }>();
 	const [showKnowledgeBase, setShowKnowledgeBase] = useState(false);
-	const { activeWill, setActiveWill } = useWill();
+	const { activeWill } = useWill();
 	const { currentStep, setWillWizardState, markStepComplete, setActiveWillId } =
 		useWillWizard();
 
@@ -83,7 +80,6 @@ export default function WillWizard() {
 		spouseData,
 		isLoading: _isLoadingOwnerData,
 		loadWillOwnerData,
-		saveWillOwnerData,
 	} = useWillOwnerData();
 
 	// Get the current question from the URL or default to personalInfo
@@ -101,7 +97,6 @@ export default function WillWizard() {
 	const {
 		allBeneficiaries: _allBeneficiaries,
 		isLoading: _isLoadingBeneficiaries,
-		refetch,
 	} = useWillData(needsBeneficiaryData);
 
 	// Load will owner data when activeWill changes
@@ -177,142 +172,6 @@ export default function WillWizard() {
 			relationships: relationships.map((r) => ({ id: r.id, name: r.name })),
 		});
 	}, [relationships, relationshipsLoading, relationshipsError]);
-
-	// Handle spouse data saving
-	// This function ensures that after saving spouse data, the latest willOwnerData and spouseData
-	// are re-fetched and passed down to SpouseStep, keeping the UI in sync with the backend.
-	const handleSpouseDataSave = async (data: {
-		firstName: string;
-		lastName: string;
-	}): Promise<boolean> => {
-		if (!activeWill?.id || !willOwnerData?.id) {
-			toast.error(
-				"Will information not found. Please start from the beginning."
-			);
-			return false;
-		}
-
-		// Check if relationships are loaded
-		if (!relationships || relationships.length === 0) {
-			toast.error(
-				"Relationships are still loading. Please wait a moment and try again."
-			);
-			return false;
-		}
-
-		try {
-			// Debug: Log all available relationships
-			console.log("Available relationships:", relationships);
-			console.log("Looking for spouse relationship...");
-
-			// Find the spouse relationship ID - try multiple possible names
-			const spouseRelationship = relationships.find((rel) => {
-				const name = rel.name.toLowerCase();
-				return (
-					name === "spouse" ||
-					name === "husband" ||
-					name === "wife" ||
-					name === "partner" ||
-					name === "civil partner" ||
-					name === "spouse/partner"
-				);
-			});
-
-			console.log("Found spouse relationship:", spouseRelationship);
-
-			if (!spouseRelationship) {
-				console.error(
-					"Spouse relationship not found. Available relationships:",
-					relationships.map((r) => ({ id: r.id, name: r.name }))
-				);
-				toast.error("Spouse relationship type not found. Please try again.");
-				return false;
-			}
-
-			// Check if we're editing an existing spouse or creating a new one
-			const isEditing = !!spouseData?.id;
-			console.log("isEditing", isEditing);
-			console.log("spouseData", spouseData);
-
-			if (isEditing && spouseData) {
-				// Update existing spouse record
-				const updateData = {
-					first_name: data.firstName,
-					last_name: data.lastName,
-				};
-
-				const { error: updateError } = await apiClient<PersonResponse>(
-					`/people/${spouseData.id}`,
-					{
-						method: "PATCH",
-						body: JSON.stringify(updateData),
-					}
-				);
-
-				if (updateError) {
-					console.error("Error updating spouse record:", updateError);
-					return false;
-				}
-
-				// Update activeWill context with updated spouse information
-				if (activeWill) {
-					setActiveWill({
-						...activeWill,
-						spouse: {
-							id: spouseData.id,
-							firstName: data.firstName,
-							lastName: data.lastName,
-						},
-					});
-				}
-			} else {
-				// Step 1: Update marital status to "married" (only for new spouses)
-				const success = await saveWillOwnerData({ maritalStatus: "married" });
-				if (!success) {
-					return false;
-				}
-
-				// Step 2: Create new spouse record
-				const spouseRequestData = {
-					first_name: data.firstName,
-					last_name: data.lastName,
-					relationship_id: spouseRelationship.id,
-					will_id: activeWill.id,
-				};
-
-				const { data: personResponse, error: personError } =
-					await apiClient<PersonResponse>("/people", {
-						method: "POST",
-						body: JSON.stringify(spouseRequestData),
-					});
-
-				if (personError) {
-					console.error("Error creating spouse record:", personError);
-					return false;
-				}
-
-				// Update activeWill with new spouse information
-				if (activeWill && personResponse) {
-					setActiveWill({
-						...activeWill,
-						spouse: {
-							id: personResponse.id,
-							firstName: data.firstName,
-							lastName: data.lastName,
-						},
-					});
-				}
-			}
-
-			// After saving, always reload the latest will owner data (which includes spouse)
-			await loadWillOwnerData(activeWill.id); // This will update willOwnerData and spouseData in the parent
-			await refetch();
-			return true;
-		} catch (error) {
-			console.error("Error in handleSpouseDataSave:", error);
-			return false;
-		}
-	};
 
 	// Handle form updates
 	const handleFormUpdate = useCallback((data: Partial<WillFormData>) => {
@@ -491,7 +350,6 @@ export default function WillWizard() {
 						onUpdate={handleFormUpdate}
 						willOwnerData={willOwnerData}
 						spouseData={spouseData}
-						onSpouseDataSave={handleSpouseDataSave}
 						isLoadingOwnerData={_isLoadingOwnerData}
 						initialData={formData}
 					/>
