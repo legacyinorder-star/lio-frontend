@@ -118,8 +118,8 @@ export default function ResiduaryStep({
 			if (data) {
 				console.log("Loaded residuary data:", data);
 
-				// Set distribution type
-				setIsEqualDistribution(data.distribution_type === "equal");
+				// Set distribution type - default to equal unless explicitly set to manual
+				setIsEqualDistribution(data.distribution_type !== "manual");
 
 				// Process beneficiaries from API response
 				const processedBeneficiaries: ResiduaryBeneficiary[] = [];
