@@ -861,7 +861,7 @@ export default function GiftsStep({ onNext, onBack }: GiftsStepProps) {
 					<div className="space-y-4 py-4">
 						{/* Gift Type Selector */}
 						<div className="space-y-4">
-							<Label>Gift Type</Label>
+							<Label>Gift Type *</Label>
 							<div className="grid grid-cols-3 gap-2 min-w-0">
 								{GIFT_TYPES.map((type) => (
 									<GiftTypePill
@@ -881,13 +881,13 @@ export default function GiftsStep({ onNext, onBack }: GiftsStepProps) {
 
 						{/* Description */}
 						<div className="space-y-2">
-							<Label htmlFor="giftDescription">Description</Label>
+							<Label htmlFor="giftDescription">Description *</Label>
 							<textarea
 								id="giftDescription"
 								value={giftForm.description}
 								onChange={handleGiftFormChange("description")}
 								placeholder="Describe the gift, its location and any details that may be relevant"
-								className="w-full min-h-[100px] p-2 border rounded-md"
+								className="w-full min-h-[100px] p-2 border border-input rounded-md"
 							/>
 						</div>
 
@@ -961,7 +961,7 @@ export default function GiftsStep({ onNext, onBack }: GiftsStepProps) {
 						{/* Beneficiary Selection */}
 						<div className="space-y-2">
 							<div className="flex justify-between items-center">
-								<Label>Beneficiary</Label>
+								<Label>Beneficiary *</Label>
 								<Button
 									type="button"
 									variant="outline"

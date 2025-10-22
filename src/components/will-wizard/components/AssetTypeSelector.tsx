@@ -98,7 +98,7 @@ export function AssetTypeSelector({
 }: AssetTypeSelectorProps) {
 	return (
 		<div className={`space-y-4 ${className}`}>
-			<Label>Asset Type</Label>
+			<Label>Asset Type *</Label>
 			<div className="grid grid-cols-2 md:grid-cols-3 gap-2 min-w-0">
 				{ASSET_TYPES.map((type) => (
 					<AssetTypePill

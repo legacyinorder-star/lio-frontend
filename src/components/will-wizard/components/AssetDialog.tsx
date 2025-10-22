@@ -345,13 +345,13 @@ export function AssetDialog({
 						className="mb-4"
 					/>
 					<div className="space-y-2">
-						<Label htmlFor="assetDescription">Description</Label>
+						<Label htmlFor="assetDescription">Description *</Label>
 						<textarea
 							id="assetDescription"
 							value={assetForm.description}
 							onChange={handleAssetFormChange("description")}
 							placeholder="Describe the asset, its location and any details that may be relevant to its distribution"
-							className="w-full min-h-[100px] p-2 border rounded-md"
+							className="w-full min-h-[100px] p-2 border border-input rounded-md"
 						/>
 					</div>
 					{/* Checkbox for beneficiaries */}
