@@ -836,7 +836,7 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 						Completing your Will is one of the most loving legacies you can
 						leave. It spares your loved ones stress, uncertainty, and potential
 						disagreements. Inspire your friends and family to do the same by
-						sharing Legacy in Order with them.
+						sharing Legacy In Order with them.
 					</Text>
 				</View>
 			</Page>

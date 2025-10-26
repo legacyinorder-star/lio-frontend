@@ -565,7 +565,7 @@ export default function ExecutorStep({
 			// If removing Legacy In Order, update checkbox state
 			if (
 				executorToDelete.type === "corporate" &&
-				executorToDelete.name === "Legacy In Order"
+				executorToDelete.name?.toLowerCase().includes("legacy in order")
 			) {
 				setUseLegacyInOrder(false);
 			}
@@ -584,7 +584,7 @@ export default function ExecutorStep({
 		if (
 			executorToDelete &&
 			executorToDelete.type === "corporate" &&
-			executorToDelete.name === "Legacy In Order"
+			executorToDelete.name?.toLowerCase().includes("legacy in order")
 		) {
 			setUseLegacyInOrder(true);
 		}
@@ -599,7 +599,8 @@ export default function ExecutorStep({
 			// Check if Legacy In Order is already added
 			const existingLegacyExecutor = executors.find(
 				(executor) =>
-					executor.type === "corporate" && executor.name === "Legacy In Order"
+					executor.type === "corporate" &&
+					executor.name?.toLowerCase().includes("legacy in order")
 			);
 
 			if (existingLegacyExecutor) {
@@ -617,8 +618,7 @@ export default function ExecutorStep({
 				// Create corporate executor record using normal flow
 				const corporateExecutorPayload = {
 					will_id: activeWill.id,
-					name: "Legacy In Order",
-					rc_number: "RC123456", // Replace with actual RC number
+					name: "Legacy In Order Executor Network",
 				};
 
 				const { data: corporateExecutorData, error: corporateExecutorError } =
@@ -665,8 +665,7 @@ export default function ExecutorStep({
 				const newExecutor: Executor = {
 					id: executorData.id,
 					type: "corporate",
-					name: "Legacy In Order",
-					rc_number: "RC123456", // Replace with actual RC number
+					name: "Legacy In Order Executor Network",
 					corporateExecutorId: corporateExecutorData.id,
 					isPrimary: true,
 				};
@@ -684,7 +683,8 @@ export default function ExecutorStep({
 			// Find Legacy In Order executor and trigger removal confirmation
 			const legacyExecutor = executors.find(
 				(executor) =>
-					executor.type === "corporate" && executor.name === "Legacy In Order"
+					executor.type === "corporate" &&
+					executor.name?.toLowerCase().includes("legacy in order")
 			);
 
 			if (legacyExecutor) {
@@ -703,7 +703,8 @@ export default function ExecutorStep({
 	useEffect(() => {
 		const hasLegacyInOrder = executors.some(
 			(executor) =>
-				executor.type === "corporate" && executor.name === "Legacy In Order"
+				executor.type === "corporate" &&
+				executor.name?.toLowerCase().includes("legacy in order")
 		);
 		setUseLegacyInOrder(hasLegacyInOrder);
 	}, [executors]);
@@ -1029,7 +1030,9 @@ export default function ExecutorStep({
 										<div className="flex space-x-2">
 											{/* Conditionally render edit button */}
 											{executor.type === "corporate" &&
-											executor.name === "Legacy In Order" ? (
+											executor.name
+												?.toLowerCase()
+												.includes("legacy in order") ? (
 												// Show a disabled/non-clickable placeholder for Legacy In Order
 												" "
 											) : (
