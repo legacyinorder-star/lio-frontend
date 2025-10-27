@@ -250,7 +250,7 @@ export class LetterOfWishesService {
 			// First, check if a Letter of Wishes already exists
 			const existing = await this.getByWillId(willId);
 
-			if (existing) {
+			if (existing && existing.id) {
 				console.log("📋 Using existing Letter of Wishes");
 				return existing;
 			}

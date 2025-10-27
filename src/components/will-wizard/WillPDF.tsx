@@ -975,9 +975,11 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 								{sections.executors}.1.1.
 							</Text>{" "}
 							I request, without imposing any binding obligation, that they
-							appoint a professional executor through{" "}
-							<Text style={{ fontWeight: "bold" }}>Legacy In Order</Text> (or
-							any successor firm or incorporated practice carrying on its
+							appoint a professional executor through the{" "}
+							<Text style={{ fontWeight: "bold" }}>
+								Legacy In Order Executor Network
+							</Text>{" "}
+							(or any successor firm or incorporated practice carrying on its
 							business at the date of my death) to administer my Estate.
 						</Text>
 					)}
@@ -1290,14 +1292,14 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 
 						<Text style={styles.guardianText}>
 							<Text style={{ fontWeight: "bold" }}>{sections.pets}.1.</Text> I
-							give my pet(s) to{" "}
+							appoint{" "}
 							<Text style={{ fontWeight: "bold" }}>
 								{data.petsGuardian?.fullName}
 								{data.petsGuardian?.relationship
 									? ` (my ${data.petsGuardian.relationship.toLowerCase()})`
 									: ""}
-							</Text>
-							.
+							</Text>{" "}
+							as the guardian of my pet(s).
 						</Text>
 
 						<Text style={styles.guardianText}>

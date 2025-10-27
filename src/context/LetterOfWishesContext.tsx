@@ -122,6 +122,20 @@ export function LetterOfWishesProvider({ children }: { children: ReactNode }) {
 			"letterId:",
 			letterId
 		);
+
+		if (!willId) {
+			console.error("❌ Cannot initialize Letter of Wishes without a willId");
+			return;
+		}
+
+		// If no letterId is provided, log a warning but still create the letter data
+		// The LetterWizard will handle fetching/creating the letter on the backend
+		if (!letterId) {
+			console.warn(
+				"⚠️ No letterId provided, letter will be created on backend when data is first saved"
+			);
+		}
+
 		setLetterData({
 			id: letterId,
 			willId,
@@ -152,7 +166,15 @@ export function LetterOfWishesProvider({ children }: { children: ReactNode }) {
 			notesToLovedOnes: "",
 			available_to_download: false,
 		});
-		console.log("Letter data initialized successfully with ID:", letterId);
+
+		if (letterId) {
+			console.log("✅ Letter data initialized successfully with ID:", letterId);
+		} else {
+			console.log(
+				"✅ Letter data initialized (ID will be created on first save)"
+			);
+		}
+
 		setCurrentStep("personalFamily");
 	};
 

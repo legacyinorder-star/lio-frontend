@@ -283,7 +283,7 @@ const FuneralEndOfLifeStep = forwardRef<FuneralEndOfLifeStepHandle>(
 			try {
 				let updatedInstructions: FuneralInstructions;
 
-				if (funeralInstructions) {
+				if (funeralInstructions && funeralInstructions.id) {
 					// Update existing funeral instructions
 					const updateData: UpdateFuneralInstructionsRequest = {
 						location: burialLocation.trim() || null,

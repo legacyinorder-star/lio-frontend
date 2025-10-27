@@ -1,5 +1,20 @@
 import "@testing-library/jest-dom";
 
+// Mock import.meta
+(globalThis as any).import = {
+	meta: {
+		env: {
+			VITE_ENV: "test",
+			VITE_API_URL: "http://localhost:3000",
+		},
+	},
+};
+
+// Mock TextEncoder and TextDecoder for Node.js environment
+import { TextEncoder, TextDecoder } from "util";
+global.TextEncoder = TextEncoder;
+global.TextDecoder = TextDecoder as any;
+
 // Mock window.matchMedia
 Object.defineProperty(window, "matchMedia", {
 	writable: true,

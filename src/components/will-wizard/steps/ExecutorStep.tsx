@@ -596,6 +596,13 @@ export default function ExecutorStep({
 	// Handle Legacy In Order checkbox change
 	const handleLegacyInOrderChange = async (checked: boolean) => {
 		if (checked) {
+			// Check if we're at the maximum of 4 executors
+			if (executors.length >= 4) {
+				toast.error("Maximum 4 executors allowed");
+				setUseLegacyInOrder(false);
+				return;
+			}
+
 			// Check if Legacy In Order is already added
 			const existingLegacyExecutor = executors.find(
 				(executor) =>
@@ -745,6 +752,12 @@ export default function ExecutorStep({
 
 		if (!selected || !activeWill?.id) {
 			toast.error("Failed to add executor");
+			return;
+		}
+
+		// Check if we're at the maximum of 4 executors
+		if (executors.length >= 4) {
+			toast.error("Maximum 4 executors allowed");
 			return;
 		}
 
@@ -902,9 +915,18 @@ export default function ExecutorStep({
 
 			{/* Executor Selection Dropdown - Full Width */}
 			<div className="space-y-4">
-				<div className="text-lg font-medium">Select Executor</div>
-				<div className="text-[#696868] text-[0.875rem] -mt-4">
-					Choose from existing people in your will or add a new executor.
+				<div className="flex items-center justify-between">
+					<div>
+						<div className="text-lg font-medium">Select Executor</div>
+						<div className="text-[#696868] text-[0.875rem] -mt-1">
+							Choose from existing people in your Will or add a new executor.
+						</div>
+					</div>
+					{executors.length > 0 && (
+						<div className="text-sm text-gray-500">
+							{executors.length} / 4 executors
+						</div>
+					)}
 				</div>
 
 				<div className="w-full">
@@ -937,9 +959,11 @@ export default function ExecutorStep({
 								role="combobox"
 								aria-expanded={isPersonDropdownOpen}
 								className="w-full justify-between"
-								disabled={isSubmitting}
+								disabled={isSubmitting || executors.length >= 4}
 							>
-								{isSubmitting
+								{executors.length >= 4
+									? "Maximum 4 executors allowed"
+									: isSubmitting
 									? "Adding executor..."
 									: searchQuery || "Search and select from existing people..."}
 								<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -1012,18 +1036,24 @@ export default function ExecutorStep({
 												<div>
 													<p className="font-medium">
 														{executor.name}
-														<span className="ml-2 text-sm text-muted-foreground">
-															(Corporate Executor)
-														</span>
+														{!executor.name
+															?.toLowerCase()
+															.includes("legacy in order") && (
+															<span className="ml-2 text-sm text-muted-foreground">
+																(Corporate Executor)
+															</span>
+														)}
 														{executor.isPrimary && (
 															<span className="ml-2 text-sm text-primary">
 																(Primary Executor)
 															</span>
 														)}
 													</p>
-													<p className="text-sm text-muted-foreground">
-														RC Number: {executor.rc_number}
-													</p>
+													{executor.rc_number && (
+														<p className="text-sm text-muted-foreground">
+															RC Number: {executor.rc_number}
+														</p>
+													)}
 												</div>
 											)}
 										</div>
@@ -1064,178 +1094,188 @@ export default function ExecutorStep({
 				)}
 
 				{/* Add New Executor Button - Full width like Add Guardian */}
-				<Dialog open={executorDialogOpen} onOpenChange={setExecutorDialogOpen}>
-					<DialogTrigger asChild>
-						<Button
-							variant="outline"
-							onClick={() => {
-								setExecutorForm({
-									id: "",
-									type: "individual",
-									firstName: "",
-									lastName: "",
-									relationshipId: "",
-									name: "",
-									rc_number: "",
-									personId: "",
-									corporateExecutorId: "",
-									isPrimary: false,
-								});
-								setEditingExecutor(null);
-							}}
-							className="w-full h-16 bg-white text-[#050505] rounded-[0.25rem] font-medium"
-						>
-							<Plus className="mr-2 h-4 w-4" />
-							Add New Executor
-						</Button>
-					</DialogTrigger>
-					<DialogContent className="bg-white max-w-2xl">
-						<DialogHeader>
-							<DialogTitle>
-								{editingExecutor ? "Edit Executor" : "Add Executor"}
-							</DialogTitle>
-							<DialogDescription>
-								Add an executor who will be responsible for carrying out the
-								terms of your will. You can appoint either an individual or a
-								corporate executor.
-							</DialogDescription>
-						</DialogHeader>
-						<div className="space-y-4 py-4">
-							<div className="flex space-x-4 mb-4">
-								<Button
-									variant={
-										executorForm.type === "individual" ? "default" : "outline"
-									}
-									onClick={() =>
-										setExecutorForm((prev) => ({
-											...prev,
-											type: "individual",
-										}))
-									}
-									className={`cursor-pointer ${
-										executorForm.type === "individual"
-											? "bg-primary text-white"
-											: ""
-									}`}
-								>
-									Individual Executor
-								</Button>
-								<Button
-									variant={
-										executorForm.type === "corporate" ? "default" : "outline"
-									}
-									onClick={() =>
-										setExecutorForm((prev) => ({
-											...prev,
-											type: "corporate",
-										}))
-									}
-									className={`cursor-pointer ${
-										executorForm.type === "corporate"
-											? "bg-primary text-white"
-											: ""
-									}`}
-								>
-									Corporate Executor
-								</Button>
-							</div>
+				{executors.length >= 4 ? (
+					<div className="w-full h-16 bg-gray-100 text-gray-500 rounded-[0.25rem] font-medium flex items-center justify-center">
+						<Plus className="mr-2 h-4 w-4" />
+						Maximum 4 executors allowed
+					</div>
+				) : (
+					<Dialog
+						open={executorDialogOpen}
+						onOpenChange={setExecutorDialogOpen}
+					>
+						<DialogTrigger asChild>
+							<Button
+								variant="outline"
+								onClick={() => {
+									setExecutorForm({
+										id: "",
+										type: "individual",
+										firstName: "",
+										lastName: "",
+										relationshipId: "",
+										name: "",
+										rc_number: "",
+										personId: "",
+										corporateExecutorId: "",
+										isPrimary: false,
+									});
+									setEditingExecutor(null);
+								}}
+								className="w-full h-16 bg-white text-[#050505] rounded-[0.25rem] font-medium"
+							>
+								<Plus className="mr-2 h-4 w-4" />
+								Add New Executor
+							</Button>
+						</DialogTrigger>
+						<DialogContent className="bg-white max-w-2xl">
+							<DialogHeader>
+								<DialogTitle>
+									{editingExecutor ? "Edit Executor" : "Add Executor"}
+								</DialogTitle>
+								<DialogDescription>
+									Add an executor who will be responsible for carrying out the
+									terms of your Will. You can appoint either an individual or a
+									corporate executor.
+								</DialogDescription>
+							</DialogHeader>
+							<div className="space-y-4 py-4">
+								<div className="flex space-x-4 mb-4">
+									<Button
+										variant={
+											executorForm.type === "individual" ? "default" : "outline"
+										}
+										onClick={() =>
+											setExecutorForm((prev) => ({
+												...prev,
+												type: "individual",
+											}))
+										}
+										className={`cursor-pointer ${
+											executorForm.type === "individual"
+												? "bg-primary text-white"
+												: ""
+										}`}
+									>
+										Individual Executor
+									</Button>
+									<Button
+										variant={
+											executorForm.type === "corporate" ? "default" : "outline"
+										}
+										onClick={() =>
+											setExecutorForm((prev) => ({
+												...prev,
+												type: "corporate",
+											}))
+										}
+										className={`cursor-pointer ${
+											executorForm.type === "corporate"
+												? "bg-primary text-white"
+												: ""
+										}`}
+									>
+										Corporate Executor
+									</Button>
+								</div>
 
-							{executorForm.type === "individual" ? (
-								<>
-									<div className="grid grid-cols-2 gap-4">
+								{executorForm.type === "individual" ? (
+									<>
+										<div className="grid grid-cols-2 gap-4">
+											<div className="space-y-2">
+												<Label htmlFor="executorFirstName">First Name</Label>
+												<Input
+													id="executorFirstName"
+													value={executorForm.firstName}
+													onChange={handleExecutorFormChange("firstName")}
+													placeholder="John"
+												/>
+											</div>
+											<div className="space-y-2">
+												<Label htmlFor="executorLastName">Last Name</Label>
+												<Input
+													id="executorLastName"
+													value={executorForm.lastName}
+													onChange={handleExecutorFormChange("lastName")}
+													placeholder="Doe"
+												/>
+											</div>
+										</div>
 										<div className="space-y-2">
-											<Label htmlFor="executorFirstName">First Name</Label>
+											<RelationshipSelect
+												value={executorForm.relationshipId}
+												label="Relationship"
+												onValueChange={(value) =>
+													setExecutorForm((prev) => ({
+														...prev,
+														relationshipId: value,
+													}))
+												}
+												required={true}
+											/>
+										</div>
+									</>
+								) : (
+									<>
+										<div className="space-y-2">
+											<Label htmlFor="companyName">Company Name</Label>
 											<Input
-												id="executorFirstName"
-												value={executorForm.firstName}
-												onChange={handleExecutorFormChange("firstName")}
-												placeholder="John"
+												id="companyName"
+												value={executorForm.name}
+												onChange={handleExecutorFormChange("name")}
+												placeholder="Enter company name"
 											/>
 										</div>
 										<div className="space-y-2">
-											<Label htmlFor="executorLastName">Last Name</Label>
+											<Label htmlFor="registrationNumber">
+												Registration Number
+											</Label>
 											<Input
-												id="executorLastName"
-												value={executorForm.lastName}
-												onChange={handleExecutorFormChange("lastName")}
-												placeholder="Doe"
+												id="registrationNumber"
+												value={executorForm.rc_number}
+												onChange={handleExecutorFormChange("rc_number")}
+												placeholder="Enter company registration number"
 											/>
 										</div>
-									</div>
-									<div className="space-y-2">
-										<RelationshipSelect
-											value={executorForm.relationshipId}
-											label="Relationship"
-											onValueChange={(value) =>
-												setExecutorForm((prev) => ({
-													...prev,
-													relationshipId: value,
-												}))
-											}
-											required={true}
-										/>
-									</div>
-								</>
-							) : (
-								<>
-									<div className="space-y-2">
-										<Label htmlFor="companyName">Company Name</Label>
-										<Input
-											id="companyName"
-											value={executorForm.name}
-											onChange={handleExecutorFormChange("name")}
-											placeholder="Enter company name"
-										/>
-									</div>
-									<div className="space-y-2">
-										<Label htmlFor="registrationNumber">
-											Registration Number
-										</Label>
-										<Input
-											id="registrationNumber"
-											value={executorForm.rc_number}
-											onChange={handleExecutorFormChange("rc_number")}
-											placeholder="Enter company registration number"
-										/>
-									</div>
-								</>
-							)}
+									</>
+								)}
 
-							<div className="flex items-center space-x-2">
-								<Checkbox
-									id="isPrimaryExecutor"
-									checked={executorForm.isPrimary}
-									onCheckedChange={(checked: boolean) =>
-										setExecutorForm((prev) => ({
-											...prev,
-											isPrimary: checked,
-										}))
-									}
-								/>
-								<Label htmlFor="isPrimaryExecutor" className="text-sm">
-									Appoint as Primary Executor
-								</Label>
+								<div className="flex items-center space-x-2">
+									<Checkbox
+										id="isPrimaryExecutor"
+										checked={executorForm.isPrimary}
+										onCheckedChange={(checked: boolean) =>
+											setExecutorForm((prev) => ({
+												...prev,
+												isPrimary: checked,
+											}))
+										}
+									/>
+									<Label htmlFor="isPrimaryExecutor" className="text-sm">
+										Appoint as Primary Executor
+									</Label>
+								</div>
+								<div className="flex justify-end space-x-2">
+									<Button
+										variant="outline"
+										onClick={() => setExecutorDialogOpen(false)}
+										disabled={isSubmitting}
+										className="cursor-pointer"
+									>
+										Cancel
+									</Button>
+									<Button
+										onClick={handleSaveExecutor}
+										disabled={!isFormValid() || isSubmitting}
+										className="cursor-pointer bg-primary hover:bg-primary/90 text-white"
+									>
+										{isSubmitting ? "Saving..." : "Save"}
+									</Button>
+								</div>
 							</div>
-							<div className="flex justify-end space-x-2">
-								<Button
-									variant="outline"
-									onClick={() => setExecutorDialogOpen(false)}
-									disabled={isSubmitting}
-									className="cursor-pointer"
-								>
-									Cancel
-								</Button>
-								<Button
-									onClick={handleSaveExecutor}
-									disabled={!isFormValid() || isSubmitting}
-									className="cursor-pointer bg-primary hover:bg-primary/90 text-white"
-								>
-									{isSubmitting ? "Saving..." : "Save"}
-								</Button>
-							</div>
-						</div>
-					</DialogContent>
-				</Dialog>
+						</DialogContent>
+					</Dialog>
+				)}
 			</div>
 
 			{/* Validation Messages */}
