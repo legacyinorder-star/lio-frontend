@@ -48,6 +48,7 @@ interface GooglePopupResult {
 	token: string;
 	name?: string;
 	email?: string;
+	is_created?: boolean;
 }
 
 export const startGoogleOAuthPopup = async (): Promise<GooglePopupResult> => {
@@ -108,7 +109,7 @@ export const startGoogleOAuthPopup = async (): Promise<GooglePopupResult> => {
 			if (event.origin !== window.location.origin) return;
 			if (!event.data || event.data.type !== POPUP_MESSAGE_TYPE) return;
 
-			const { token, name, email, error } = event.data;
+			const { token, name, email, is_created, error } = event.data;
 			if (error) {
 				cleanup();
 				console.error("Google sign-in failed:", error);
@@ -123,7 +124,7 @@ export const startGoogleOAuthPopup = async (): Promise<GooglePopupResult> => {
 			}
 
 			cleanup();
-			resolve({ token, name, email });
+			resolve({ token, name, email, is_created });
 		};
 
 		window.addEventListener("message", handleMessage);

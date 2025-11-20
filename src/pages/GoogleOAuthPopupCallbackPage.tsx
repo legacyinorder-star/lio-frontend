@@ -72,6 +72,7 @@ const GoogleOAuthPopupCallbackPage = () => {
 					token: string;
 					name?: string;
 					email?: string;
+					is_created?: boolean;
 					message?: string;
 				}>(`/oauth/google/continue?${params.toString()}`, {
 					authenticated: false,
@@ -92,6 +93,7 @@ const GoogleOAuthPopupCallbackPage = () => {
 					token: response.data.token,
 					name: response.data.name,
 					email: response.data.email,
+					is_created: response.data.is_created,
 				});
 
 				if (!delivered) {

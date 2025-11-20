@@ -255,9 +255,13 @@ export default function LoginPage() {
 
 		setIsGoogleLoading(true);
 		try {
-			const { token, name, email } = await startGoogleOAuthPopup();
+			const { token, name, email, is_created } = await startGoogleOAuthPopup();
 			await handleGoogleSuccess(token, name, email);
-			toast.success("Signed in with Google");
+			if (is_created) {
+				toast.success("Account created and signed in with Google!");
+			} else {
+				toast.success("Signed in with Google");
+			}
 		} catch (error) {
 			console.error("Google sign-in failed:", error);
 			toast.error(

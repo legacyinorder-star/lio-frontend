@@ -111,7 +111,7 @@ export default function SignupPage() {
 	const handleGoogleSignUp = async () => {
 		setIsGoogleLoading(true);
 		try {
-			const { token, name, email } = await startGoogleOAuthPopup();
+			const { token, name, email, is_created } = await startGoogleOAuthPopup();
 			setAuthToken(token);
 
 			const headers = addDataSourceHeader({
@@ -143,7 +143,11 @@ export default function SignupPage() {
 			};
 
 			setUser(userData);
-			toast.success("Account created with Google!");
+			if (is_created) {
+				toast.success("Account created with Google!");
+			} else {
+				toast.success("Signed in with Google");
+			}
 			navigate("/app/dashboard");
 		} catch (error) {
 			console.error("Google sign-up failed:", error);
