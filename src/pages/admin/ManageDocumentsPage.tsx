@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { API_CONFIG, getApiUrl } from "@/config/api";
+import { addDataSourceHeader } from "@/utils/apiClient";
 import { useAuth } from "@/hooks/useAuth";
 import {
 	Search,
@@ -68,12 +69,14 @@ export default function ManageDocumentsPage() {
 
 	const fetchDocuments = async () => {
 		try {
+			const headers = addDataSourceHeader({
+				Authorization: `Bearer ${user?.token}`,
+			});
+
 			const response = await fetch(
 				getApiUrl(API_CONFIG.endpoints.admin.documents),
 				{
-					headers: {
-						Authorization: `Bearer ${user?.token}`,
-					},
+					headers,
 				}
 			);
 
@@ -104,13 +107,15 @@ export default function ManageDocumentsPage() {
 		if (!confirm("Are you sure you want to delete this document?")) return;
 
 		try {
+			const headers = addDataSourceHeader({
+				Authorization: `Bearer ${user?.token}`,
+			});
+
 			const response = await fetch(
 				`${getApiUrl(API_CONFIG.endpoints.admin.documents)}/${documentId}`,
 				{
 					method: "DELETE",
-					headers: {
-						Authorization: `Bearer ${user?.token}`,
-					},
+					headers,
 				}
 			);
 

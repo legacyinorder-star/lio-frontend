@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { getApiUrl } from "@/config/api";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { addDataSourceHeader } from "@/utils/apiClient";
 import {
 	Shield,
 	User,
@@ -42,10 +43,12 @@ export default function UserDetailPage() {
 	const fetchUserDetails = async () => {
 		setIsLoading(true);
 		try {
+			const headers = addDataSourceHeader({
+				Authorization: `Bearer ${currentUser?.token}`,
+			});
+
 			const response = await fetch(getApiUrl(`/user/${userId}`), {
-				headers: {
-					Authorization: `Bearer ${currentUser?.token}`,
-				},
+				headers,
 			});
 
 			if (!response.ok) {
@@ -67,12 +70,14 @@ export default function UserDetailPage() {
 		if (!user) return;
 
 		try {
+			const headers = addDataSourceHeader({
+				"Content-Type": "application/json",
+				Authorization: `Bearer ${currentUser?.token}`,
+			});
+
 			const response = await fetch(getApiUrl(`/admin/users/${userId}/status`), {
 				method: "PATCH",
-				headers: {
-					"Content-Type": "application/json",
-					Authorization: `Bearer ${currentUser?.token}`,
-				},
+				headers,
 			});
 
 			if (!response.ok) {

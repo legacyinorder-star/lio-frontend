@@ -3,10 +3,28 @@ import { getAuthToken, isTokenExpired } from "./auth";
 import { toast } from "sonner";
 import { handleAuthError, AUTH_ERROR_CODES } from "./authErrorHandler";
 
+/**
+ * Adds X-Data-Source header to headers for non-production environments
+ * This can be used with direct fetch calls that bypass apiClient
+ */
+export const addDataSourceHeader = (
+	headers: Headers | Record<string, string> | HeadersInit
+): Headers => {
+	const env = import.meta.env.VITE_ENV;
+	const headerObj = headers instanceof Headers ? headers : new Headers(headers);
+
+	if (env && env !== "prod" && env !== "production") {
+		headerObj.set("X-Data-Source", "dev");
+	}
+
+	return headerObj;
+};
+
 interface ApiOptions extends RequestInit {
 	authenticated?: boolean;
 	retryCount?: number;
 	skipRateLimit?: boolean;
+	baseUrlOverride?: string;
 }
 
 interface ApiResponse<T> {
@@ -22,21 +40,18 @@ export async function apiClient<T = unknown>(
 	endpoint: string,
 	options: ApiOptions = {}
 ): Promise<ApiResponse<T>> {
-	const { authenticated = true, ...fetchOptions } = options;
+	const { authenticated = true, baseUrlOverride, ...fetchOptions } = options;
 
 	// Prepare headers
-	const headers = new Headers(fetchOptions.headers);
+	const baseHeaders = new Headers(fetchOptions.headers);
 
 	// Don't set Content-Type for FormData - let the browser set it with boundary
 	if (!(fetchOptions.body instanceof FormData)) {
-		headers.set("Content-Type", "application/json");
+		baseHeaders.set("Content-Type", "application/json");
 	}
 
 	// Add X-Data-Source header for non-production environments
-	const env = import.meta.env.VITE_ENV;
-	if (env && env !== "prod") {
-		headers.set("X-Data-Source", "dev");
-	}
+	const headers = addDataSourceHeader(baseHeaders);
 
 	// Add authentication token if required
 	if (authenticated) {
@@ -65,7 +80,17 @@ export async function apiClient<T = unknown>(
 		}
 	}
 
-	const url = getApiUrl(endpoint);
+	const resolveUrl = () => {
+		if (baseUrlOverride) {
+			if (endpoint.startsWith("http")) {
+				return endpoint;
+			}
+			return `${baseUrlOverride}${endpoint}`;
+		}
+		return getApiUrl(endpoint);
+	};
+
+	const url = resolveUrl();
 
 	// Debug logging for FormData requests
 	if (fetchOptions.body instanceof FormData) {

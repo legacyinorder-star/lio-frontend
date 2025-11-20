@@ -30,6 +30,7 @@ import PowerOfAttorneyPage from "@/pages/PowerOfAttorneyPage";
 import PricingPage from "@/pages/PricingPage";
 import PrivacyPolicyPage from "@/pages/PrivacyPolicyPage";
 import TermsConditionsPage from "@/pages/TermsConditionsPage";
+import GoogleOAuthPopupCallbackPage from "@/pages/GoogleOAuthPopupCallbackPage";
 import { WillProvider } from "@/context/WillContext";
 import { RelationshipsProvider } from "@/context/RelationshipsContext";
 import { DataLoadingProvider } from "@/context/DataLoadingContext";
@@ -113,6 +114,14 @@ function App() {
 											element={
 												<PublicRoute>
 													<LetterOfWishesPage />
+												</PublicRoute>
+											}
+										/>
+										<Route
+											path="/auth/callback/google"
+											element={
+												<PublicRoute>
+													<GoogleOAuthPopupCallbackPage />
 												</PublicRoute>
 											}
 										/>

@@ -40,7 +40,7 @@ export default function HomePage() {
 							<div className="space-y-8 flex flex-col justify-center py-12 px-8 md:px-10 lg:px-12">
 								<div className="space-y-4 pt-12">
 									<h1 className="text-4xl md:text-5xl lg:text-6xl font-semibold leading-tight text-[#173C37]">
-										Your Will, made simple.
+										Your Will, Made Simple.
 									</h1>
 									<p className="text-[1rem] font-normal leading-relaxed text-[#173C37]">
 										Create your legally valid Will online in minutes.

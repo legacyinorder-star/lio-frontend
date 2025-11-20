@@ -11,6 +11,7 @@ import {
 import { getApiUrl } from "@/config/api";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { addDataSourceHeader } from "@/utils/apiClient";
 import {
 	Search,
 	Shield,
@@ -55,10 +56,12 @@ export default function ManageUsersPage() {
 	const fetchUsers = async () => {
 		setIsLoading(true);
 		try {
+			const headers = addDataSourceHeader({
+				Authorization: `Bearer ${user?.token}`,
+			});
+
 			const response = await fetch(getApiUrl("/user"), {
-				headers: {
-					Authorization: `Bearer ${user?.token}`,
-				},
+				headers,
 			});
 
 			if (!response.ok) {
@@ -78,12 +81,14 @@ export default function ManageUsersPage() {
 
 	const toggleUserStatus = async (userId: string, currentStatus: boolean) => {
 		try {
+			const headers = addDataSourceHeader({
+				"Content-Type": "application/json",
+				Authorization: `Bearer ${user?.token}`,
+			});
+
 			const response = await fetch(getApiUrl(`/admin/users/${userId}/status`), {
 				method: "PATCH",
-				headers: {
-					"Content-Type": "application/json",
-					Authorization: `Bearer ${user?.token}`,
-				},
+				headers,
 			});
 
 			if (!response.ok) {

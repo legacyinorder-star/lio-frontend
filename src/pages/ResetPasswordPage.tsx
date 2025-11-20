@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { API_CONFIG, getApiUrl } from "@/config/api";
 import { useAuth } from "@/hooks/useAuth";
 import { AuthPageHeader } from "@/components/auth/auth-page-header";
+import { addDataSourceHeader } from "@/utils/apiClient";
 
 const formSchema = z
 	.object({
@@ -65,13 +66,15 @@ export default function ResetPasswordPage() {
 		// Verify the token
 		const verifyToken = async () => {
 			try {
+				const headers = addDataSourceHeader({
+					"Content-Type": "application/json",
+				});
+
 				const response = await fetch(
 					getApiUrl("/password_reset_tokens/verify"),
 					{
 						method: "POST",
-						headers: {
-							"Content-Type": "application/json",
-						},
+						headers,
 						body: JSON.stringify({ token }),
 					}
 				);
@@ -108,13 +111,15 @@ export default function ResetPasswordPage() {
 
 		setIsLoading(true);
 		try {
+			const headers = addDataSourceHeader({
+				"Content-Type": "application/json",
+			});
+
 			const response = await fetch(
 				getApiUrl(API_CONFIG.endpoints.auth.resetPassword),
 				{
 					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-					},
+					headers,
 					body: JSON.stringify({
 						token,
 						new_password: values.password,

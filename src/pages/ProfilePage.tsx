@@ -23,6 +23,7 @@ import {
 import { toast } from "sonner";
 import { getApiUrl } from "@/config/api";
 import { useAuth } from "@/hooks/useAuth";
+import { addDataSourceHeader } from "@/utils/apiClient";
 
 const formSchema = z.object({
 	first_name: z.string().min(2, "First name must be at least 2 characters"),
@@ -53,12 +54,14 @@ export default function ProfilePage() {
 
 		setIsLoading(true);
 		try {
+			const headers = addDataSourceHeader({
+				"Content-Type": "application/json",
+				Authorization: `Bearer ${user.token}`,
+			});
+
 			const response = await fetch(getApiUrl(`/user/${user.id}`), {
 				method: "PATCH",
-				headers: {
-					"Content-Type": "application/json",
-					Authorization: `Bearer ${user.token}`,
-				},
+				headers,
 				body: JSON.stringify({
 					first_name: values.first_name,
 					last_name: values.last_name,
@@ -72,10 +75,12 @@ export default function ProfilePage() {
 			}
 
 			// After successful update, fetch the latest user details
+			const userHeaders = addDataSourceHeader({
+				Authorization: `Bearer ${user.token}`,
+			});
+
 			const userResponse = await fetch(getApiUrl("/auth/me"), {
-				headers: {
-					Authorization: `Bearer ${user.token}`,
-				},
+				headers: userHeaders,
 			});
 
 			if (!userResponse.ok) {
