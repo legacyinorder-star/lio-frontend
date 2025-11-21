@@ -16,6 +16,7 @@ import {
 } from "@/utils/auth";
 import { toast } from "sonner";
 import { getApiUrl, API_CONFIG } from "@/config/api";
+import { addDataSourceHeader } from "@/utils/apiClient";
 
 interface User {
 	id: string;
@@ -185,11 +186,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		}
 
 		try {
+			const headers = addDataSourceHeader({
+				Authorization: `Bearer ${token}`,
+				"Content-Type": "application/json",
+			});
+
 			const response = await fetch(getApiUrl(API_CONFIG.endpoints.auth.me), {
-				headers: {
-					Authorization: `Bearer ${token}`,
-					"Content-Type": "application/json",
-				},
+				headers,
 			});
 
 			if (response.ok) {

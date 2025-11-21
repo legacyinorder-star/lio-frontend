@@ -19,6 +19,7 @@ import { API_CONFIG, getApiUrl } from "@/config/api";
 import { useAuth } from "@/hooks/useAuth";
 import { UserDetails, setAuthToken, setUserDetails } from "@/utils/auth";
 import { AuthPageHeader } from "@/components/auth/auth-page-header";
+import { addDataSourceHeader } from "@/utils/apiClient";
 
 const formSchema = z.object({
 	otp: z.string().length(6, "OTP must be 6 digits"),
@@ -55,11 +56,13 @@ export default function OTPVerificationPage() {
 				"{one_time_password_id}",
 				otpId
 			);
+			const headers = addDataSourceHeader({
+				"Content-Type": "application/json",
+			});
+
 			const response = await fetch(getApiUrl(verifyUrl), {
 				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
+				headers,
 				body: JSON.stringify({
 					otp_code: values.otp,
 				}),
@@ -101,12 +104,14 @@ export default function OTPVerificationPage() {
 			setAuthToken(data.authToken);
 
 			// Fetch user details
+			const userHeaders = addDataSourceHeader({
+				Authorization: `Bearer ${data.authToken}`,
+			});
+
 			const userResponse = await fetch(
 				getApiUrl(API_CONFIG.endpoints.auth.me),
 				{
-					headers: {
-						Authorization: `Bearer ${data.authToken}`,
-					},
+					headers: userHeaders,
 				}
 			);
 
@@ -172,11 +177,13 @@ export default function OTPVerificationPage() {
 				"{one_time_password_id}",
 				otpId
 			);
+			const resendHeaders = addDataSourceHeader({
+				"Content-Type": "application/json",
+			});
+
 			const response = await fetch(getApiUrl(resendUrl), {
 				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
+				headers: resendHeaders,
 			});
 
 			const data = await response.json();

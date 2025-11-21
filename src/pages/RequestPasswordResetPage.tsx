@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { API_CONFIG, getApiUrl } from "@/config/api";
 import { useAuth } from "@/hooks/useAuth";
 import { AuthPageHeader } from "@/components/auth/auth-page-header";
+import { addDataSourceHeader } from "@/utils/apiClient";
 
 const formSchema = z.object({
 	email: z.string().email("Invalid email address"),
@@ -50,13 +51,15 @@ export default function RequestPasswordResetPage() {
 	async function onSubmit(values: z.infer<typeof formSchema>) {
 		setIsLoading(true);
 		try {
+			const headers = addDataSourceHeader({
+				"Content-Type": "application/json",
+			});
+
 			const response = await fetch(
 				getApiUrl(API_CONFIG.endpoints.auth.requestPasswordReset),
 				{
 					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-					},
+					headers,
 					body: JSON.stringify({
 						email: values.email,
 					}),
