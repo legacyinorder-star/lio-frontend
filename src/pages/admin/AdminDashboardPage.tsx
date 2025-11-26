@@ -6,30 +6,23 @@ import { DataTable } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import {
-	Users,
-	DollarSign,
-	Clock,
-	ShoppingCart,
-	Plus,
-	ChevronDown,
-	FileText,
-} from "lucide-react";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Users, Clock, FileText, CheckCircle, Shield } from "lucide-react";
+import { toast } from "sonner";
+import { apiClient } from "@/utils/apiClient";
+import { getApiUrl } from "@/config/api";
+import { addDataSourceHeader } from "@/utils/apiClient";
+import { useAuth } from "@/hooks/useAuth";
 
-// Define types
+// Define types - matching ManageUsersPage
 interface User {
-	id: number;
-	name: string;
+	id: string;
 	email: string;
-	createdAt: string;
-	status: string;
+	first_name: string;
+	last_name: string;
+	role?: string;
+	created_at: string;
+	last_login_at?: string;
+	is_active: boolean;
 }
 
 interface Order {
@@ -46,46 +39,24 @@ interface DataTableRow {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	getValue: (key: string) => any; // Using any here is necessary for compatibility
 	getIsSelected: () => boolean;
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	original: any; // Full row data from TanStack Table
 }
 
-// Mock data
-const recentUsers: User[] = [
-	{
-		id: 1,
-		name: "John Doe",
-		email: "john@example.com",
-		createdAt: "2023-08-10",
-		status: "active",
-	},
-	{
-		id: 2,
-		name: "Jane Smith",
-		email: "jane@example.com",
-		createdAt: "2023-08-09",
-		status: "active",
-	},
-	{
-		id: 3,
-		name: "Bob Johnson",
-		email: "bob@example.com",
-		createdAt: "2023-08-08",
-		status: "inactive",
-	},
-	{
-		id: 4,
-		name: "Sarah Williams",
-		email: "sarah@example.com",
-		createdAt: "2023-08-07",
-		status: "active",
-	},
-	{
-		id: 5,
-		name: "Mike Brown",
-		email: "mike@example.com",
-		createdAt: "2023-08-06",
-		status: "pending",
-	},
-];
+// Helper function to format dates (matching ManageUsersPage)
+const formatDate = (dateString?: string) => {
+	if (!dateString) return "Never";
+	return new Date(dateString).toLocaleDateString("en-US", {
+		year: "numeric",
+		month: "short",
+		day: "numeric",
+	});
+};
+
+// Helper function to get user role (matching ManageUsersPage)
+const getUserRole = (user: User): string => {
+	return user.role || "user";
+};
 
 const recentOrders: Order[] = [
 	{
@@ -130,32 +101,76 @@ const recentOrders: Order[] = [
 	},
 ];
 
-// Chart data
-const userGrowthData = [
-	{ label: "Jan", value: 78 },
-	{ label: "Feb", value: 85 },
-	{ label: "Mar", value: 102 },
-	{ label: "Apr", value: 95 },
-	{ label: "May", value: 110 },
-	{ label: "Jun", value: 135 },
-	{ label: "Jul", value: 126 },
-	{ label: "Aug", value: 152 },
-];
+// Helper function to convert period (YYYYMM) to month name
+const periodToMonthName = (period: number): string => {
+	const monthNumber = period % 100; // Get last two digits
+	const monthNames = [
+		"January",
+		"February",
+		"March",
+		"April",
+		"May",
+		"June",
+		"July",
+		"August",
+		"September",
+		"October",
+		"November",
+		"December",
+	];
+	return monthNames[monthNumber - 1] || "Unknown";
+};
 
-const documentCreationData = [
-	{ label: "Will", value: 45, color: "#0D4705" },
-	{ label: "Power of Attorney", value: 35, color: "#0D4705" },
-	{ label: "Trust", value: 28, color: "#0D4705" },
-	{ label: "Living Will", value: 18, color: "#0D4705" },
-	{ label: "Estate Plan", value: 24, color: "#0D4705" },
-];
+// Helper function to convert status to title case
+const toTitleCase = (str: string): string => {
+	return str
+		.toLowerCase()
+		.split(" ")
+		.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+		.join(" ");
+};
 
-const revenueSourceData = [
-	{ label: "Will Creation", value: 45, color: "#4f46e5" },
-	{ label: "Power of Attorney", value: 25, color: "#8b5cf6" },
-	{ label: "Estate Planning", value: 20, color: "#ec4899" },
-	{ label: "Trust Documents", value: 10, color: "#f43f5e" },
-];
+// Color mapping for will statuses
+const getStatusColor = (status: string): string => {
+	const colorMap: Record<string, string> = {
+		"not started": "#9ca3af", // gray
+		"in progress": "#3b82f6", // blue
+		draft: "#8b5cf6", // purple
+		submitted: "#f59e0b", // amber
+		"under review": "#f97316", // orange
+		completed: "#10b981", // green
+		rejected: "#ef4444", // red
+		cancelled: "#6b7280", // gray
+	};
+	return colorMap[status.toLowerCase()] || "#6366f1"; // default indigo
+};
+
+interface AdminStatsResponse {
+	users?: {
+		total?: number;
+		by_role?: Record<string, number>;
+	};
+	wills?: {
+		total?: number;
+		completed?: number;
+		others?: number;
+	};
+}
+
+interface UserCountByMonthResponse {
+	period: number;
+	count: number;
+}
+
+interface WillStatusCountResponse {
+	status: string;
+	count: number;
+}
+
+interface WillTypeCountResponse {
+	type: string;
+	count: number;
+}
 
 // Table columns - using type-only imports to avoid TS error with the full module
 type ColumnDef<_TData> = {
@@ -166,35 +181,75 @@ type ColumnDef<_TData> = {
 
 const userColumns: ColumnDef<User>[] = [
 	{
-		accessorKey: "name",
+		accessorKey: "first_name",
 		header: "Name",
+		cell: ({ row }) => {
+			const user = row.original;
+			return `${user.first_name} ${user.last_name}`;
+		},
 	},
 	{
 		accessorKey: "email",
 		header: "Email",
 	},
 	{
-		accessorKey: "createdAt",
-		header: "Joined",
+		accessorKey: "role",
+		header: "Role",
+		cell: ({ row }) => {
+			const role = getUserRole(row.original);
+			return (
+				<span
+					className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+						role === "admin"
+							? "bg-purple-100 text-purple-800"
+							: "bg-gray-100 text-gray-800"
+					}`}
+				>
+					{role === "admin" ? (
+						<Shield className="mr-1 h-3 w-3" />
+					) : (
+						<Users className="mr-1 h-3 w-3" />
+					)}
+					{role.charAt(0).toUpperCase() + role.slice(1)}
+				</span>
+			);
+		},
 	},
 	{
-		accessorKey: "status",
+		accessorKey: "is_active",
 		header: "Status",
 		cell: ({ row }) => {
-			const status = row.getValue("status") as string;
+			const isActive = row.getValue("is_active") as boolean;
 			return (
-				<Badge
-					className={
-						status === "active"
-							? "bg-green-500"
-							: status === "inactive"
-							? "bg-gray-500"
-							: "bg-yellow-500"
-					}
+				<span
+					className={`inline-flex items-center px-2.5 py-0.5 rounded-[6px] text-xs font-medium ${
+						isActive
+							? "bg-[#E5FC99] text-[#3F7F03]"
+							: "bg-[#FFCACA] text-[#FF0000]"
+					}`}
 				>
-					{status}
-				</Badge>
+					<span
+						className={`mr-1.5 h-1.5 w-1.5 rounded-full ${
+							isActive ? "bg-[#3F7F03]" : "bg-[#FF0000]"
+						}`}
+					/>
+					{isActive ? "Active" : "Inactive"}
+				</span>
 			);
+		},
+	},
+	{
+		accessorKey: "created_at",
+		header: "Created",
+		cell: ({ row }) => {
+			return formatDate(row.getValue("created_at"));
+		},
+	},
+	{
+		accessorKey: "last_login_at",
+		header: "Last Login",
+		cell: ({ row }) => {
+			return formatDate(row.getValue("last_login_at"));
 		},
 	},
 ];
@@ -252,27 +307,154 @@ const orderColumns: ColumnDef<Order>[] = [
 
 export default function AdminDashboardPage() {
 	const navigate = useNavigate();
+	const { user: authUser } = useAuth();
 	const [isLoading, setIsLoading] = useState(true);
-	const [timeRange, setTimeRange] = useState("Last 7 Days");
+	const [isLoadingUsers, setIsLoadingUsers] = useState(false);
 	const [stats, setStats] = useState({
 		totalUsers: 0,
-		totalOrders: 0,
-		pendingOrders: 0,
-		revenue: 0,
+		totalWills: 0,
+		activeWills: 0,
+		completedWills: 0,
 	});
+	const [userGrowthData, setUserGrowthData] = useState<
+		Array<{ label: string; value: number }>
+	>([]);
+	const [willDistributionData, setWillDistributionData] = useState<
+		Array<{ label: string; value: number; color: string }>
+	>([]);
+	const [willTypesData, setWillTypesData] = useState<
+		Array<{ label: string; value: number }>
+	>([]);
+	const [users, setUsers] = useState<User[]>([]);
 
 	useEffect(() => {
-		// Simulate loading data
-		setTimeout(() => {
-			setStats({
-				totalUsers: 1456,
-				totalOrders: 832,
-				pendingOrders: 52,
-				revenue: 187654.32,
-			});
-			setIsLoading(false);
-		}, 1000);
+		const fetchStats = async () => {
+			try {
+				const [
+					statsResponse,
+					userGrowthResponse,
+					willStatusResponse,
+					willTypesResponse,
+				] = await Promise.all([
+					apiClient<AdminStatsResponse>("/admin/stats/users-wills-count"),
+					apiClient<UserCountByMonthResponse[]>(
+						"/admin/stats/user-count-by-month"
+					),
+					apiClient<WillStatusCountResponse[]>("/admin/stats/wills-by-status"),
+					apiClient<WillTypeCountResponse[]>("/admin/stats/wills-by-type"),
+				]);
+
+				// Handle stats data
+				if (statsResponse.error || !statsResponse.data) {
+					throw new Error(statsResponse.error || "Failed to load stats");
+				}
+
+				const usersData = statsResponse.data.users || {};
+				const willsData = statsResponse.data.wills || {};
+
+				setStats({
+					totalUsers: usersData.total || 0,
+					totalWills: willsData.total || 0,
+					activeWills: willsData.others || 0,
+					completedWills: willsData.completed || 0,
+				});
+
+				// Handle user growth data
+				if (userGrowthResponse.error || !userGrowthResponse.data) {
+					console.error(
+						"Error fetching user growth data:",
+						userGrowthResponse.error
+					);
+					setUserGrowthData([]);
+				} else {
+					// Sort by period in descending order and transform to chart format
+					const sortedData = [...userGrowthResponse.data]
+						.sort((a, b) => b.period - a.period)
+						.map((item) => ({
+							label: periodToMonthName(item.period),
+							value: item.count,
+						}));
+
+					setUserGrowthData(sortedData);
+				}
+
+				// Handle will distribution data
+				if (willStatusResponse.error || !willStatusResponse.data) {
+					console.error(
+						"Error fetching will distribution data:",
+						willStatusResponse.error
+					);
+					setWillDistributionData([]);
+				} else {
+					// Transform to pie chart format with title case labels and colors
+					const distributionData = willStatusResponse.data.map((item) => ({
+						label: toTitleCase(item.status),
+						value: item.count,
+						color: getStatusColor(item.status),
+					}));
+
+					setWillDistributionData(distributionData);
+				}
+
+				// Handle will types data
+				if (willTypesResponse.error || !willTypesResponse.data) {
+					console.error(
+						"Error fetching will types data:",
+						willTypesResponse.error
+					);
+					setWillTypesData([]);
+				} else {
+					// Transform to chart format, handling empty type as "Not Set"
+					const typesData = willTypesResponse.data.map((item) => ({
+						label: item.type === "" ? "Not Set" : item.type.toUpperCase(),
+						value: item.count,
+					}));
+
+					setWillTypesData(typesData);
+				}
+			} catch (err) {
+				console.error("Error fetching admin stats:", err);
+				toast.error("Unable to load latest stats");
+			} finally {
+				setIsLoading(false);
+			}
+		};
+
+		fetchStats();
 	}, []);
+
+	// Fetch users for User Management tab
+	useEffect(() => {
+		const fetchUsers = async () => {
+			if (!authUser?.token) return;
+
+			setIsLoadingUsers(true);
+			try {
+				const headers = addDataSourceHeader({
+					Authorization: `Bearer ${authUser.token}`,
+				});
+
+				const response = await fetch(getApiUrl("/user"), {
+					headers,
+				});
+
+				if (!response.ok) {
+					throw new Error("Failed to fetch users");
+				}
+
+				const data = await response.json();
+				setUsers(data || []);
+			} catch (error) {
+				console.error("Error fetching users:", error);
+				toast.error("Failed to load users");
+				setUsers([]);
+			} finally {
+				setIsLoadingUsers(false);
+			}
+		};
+
+		fetchUsers();
+	}, [authUser?.token]);
 
 	if (isLoading) {
 		return (
@@ -286,47 +468,13 @@ export default function AdminDashboardPage() {
 		<div className="space-y-6">
 			<div className="flex justify-between items-center">
 				<h2 className="text-3xl font-medium tracking-tight">Admin Dashboard</h2>
-				<div className="flex gap-3">
-					<DropdownMenu>
-						<DropdownMenuTrigger asChild>
-							<Button
-								variant="outline"
-								className="flex items-center gap-2 rounded-[4px]"
-							>
-								{timeRange}
-								<ChevronDown className="h-4 w-4" />
-							</Button>
-						</DropdownMenuTrigger>
-						<DropdownMenuContent align="end">
-							<DropdownMenuItem onClick={() => setTimeRange("Last 7 Days")}>
-								Last 7 Days
-							</DropdownMenuItem>
-							<DropdownMenuItem onClick={() => setTimeRange("Last 30 Days")}>
-								Last 30 Days
-							</DropdownMenuItem>
-							<DropdownMenuItem onClick={() => setTimeRange("Last 90 Days")}>
-								Last 90 Days
-							</DropdownMenuItem>
-							<DropdownMenuItem onClick={() => setTimeRange("This Year")}>
-								This Year
-							</DropdownMenuItem>
-							<DropdownMenuItem onClick={() => setTimeRange("Custom Range")}>
-								Custom Range
-							</DropdownMenuItem>
-						</DropdownMenuContent>
-					</DropdownMenu>
-					<Button className="flex items-center gap-2 rounded-[4px] bg-[#C6F91F] hover:bg-[#C6F91F]/90 text-black">
-						<Plus className="h-4 w-4" />
-						Generate Report
-					</Button>
-				</div>
 			</div>
 
 			{/* Quick Actions */}
 			<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
 				<Card
 					className="shadow-md border-[#F2F2F2] cursor-pointer hover:shadow-lg transition-shadow"
-					onClick={() => navigate("/app/admin/users")}
+					onClick={() => navigate("/admin/users")}
 				>
 					<CardContent className="p-6">
 						<div className="flex items-center space-x-4">
@@ -342,7 +490,7 @@ export default function AdminDashboardPage() {
 				</Card>
 				<Card
 					className="shadow-md border-[#F2F2F2] cursor-pointer hover:shadow-lg transition-shadow"
-					onClick={() => navigate("/app/admin/documents")}
+					onClick={() => navigate("/admin/wills-under-review")}
 				>
 					<CardContent className="p-6">
 						<div className="flex items-center space-x-4">
@@ -350,9 +498,9 @@ export default function AdminDashboardPage() {
 								<FileText className="w-6 h-6 text-purple-600" />
 							</div>
 							<div>
-								<h3 className="font-semibold text-lg">Manage Documents</h3>
+								<h3 className="font-semibold text-lg">Review Wills</h3>
 								<p className="text-sm text-muted-foreground">
-									Document management
+									Wills under review
 								</p>
 							</div>
 						</div>
@@ -366,28 +514,24 @@ export default function AdminDashboardPage() {
 					title="Total Users"
 					value={stats.totalUsers.toLocaleString()}
 					icon={<Users className="h-4 w-4" />}
-					trend={12.5}
 					className="shadow-md border-[#F2F2F2]"
 				/>
 				<CardMetric
-					title="Total Orders"
-					value={stats.totalOrders.toLocaleString()}
-					icon={<ShoppingCart className="h-4 w-4" />}
-					trend={8.2}
+					title="Total Wills"
+					value={stats.totalWills.toLocaleString()}
+					icon={<FileText className="h-4 w-4" />}
 					className="shadow-md border-[#F2F2F2]"
 				/>
 				<CardMetric
-					title="Pending Orders"
-					value={stats.pendingOrders.toLocaleString()}
+					title="Wills In Progress"
+					value={stats.activeWills.toLocaleString()}
 					icon={<Clock className="h-4 w-4" />}
-					trend={-4.5}
 					className="shadow-md border-[#F2F2F2]"
 				/>
 				<CardMetric
-					title="Total Revenue"
-					value={`$${stats.revenue.toLocaleString()}`}
-					icon={<DollarSign className="h-4 w-4" />}
-					trend={15.3}
+					title="Completed Wills"
+					value={stats.completedWills.toLocaleString()}
+					icon={<CheckCircle className="h-4 w-4" />}
 					className="shadow-md border-[#F2F2F2]"
 				/>
 			</div>
@@ -448,10 +592,10 @@ export default function AdminDashboardPage() {
 						</Card>
 						<Card className="lg:col-span-3 shadow-md border-[#F2F2F2]">
 							<CardHeader>
-								<CardTitle>Revenue Sources</CardTitle>
+								<CardTitle>Will Distribution</CardTitle>
 							</CardHeader>
 							<CardContent>
-								<PieChart title="" data={revenueSourceData} height={300} />
+								<PieChart title="" data={willDistributionData} height={300} />
 							</CardContent>
 						</Card>
 					</div>
@@ -459,57 +603,65 @@ export default function AdminDashboardPage() {
 					<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
 						<Card className="lg:col-span-3 shadow-md border-[#F2F2F2]">
 							<CardHeader>
-								<CardTitle>Document Types Created</CardTitle>
+								<CardTitle>Will Types Created</CardTitle>
 							</CardHeader>
 							<CardContent className="pt-6">
 								<div className="h-[300px] relative">
-									{/* Graph lines */}
-									<div className="absolute inset-0 flex flex-col justify-between">
-										{[100, 75, 50, 25, 0].map((percent, index) => (
-											<div key={index} className="relative w-full">
-												<div className="absolute inset-x-0 border-t border-[#F2F2F2]" />
-												<div className="absolute -left-8 text-xs text-muted-foreground">
-													{Math.round(
-														(Math.max(
-															...documentCreationData.map((d) => d.value)
-														) *
-															percent) /
-															100
-													)}
-												</div>
+									{willTypesData.length > 0 ? (
+										<>
+											{/* Graph lines */}
+											<div className="absolute inset-0 flex flex-col justify-between">
+												{[100, 75, 50, 25, 0].map((percent, index) => (
+													<div key={index} className="relative w-full">
+														<div className="absolute inset-x-0 border-t border-[#F2F2F2]" />
+														<div className="absolute -left-8 text-xs text-muted-foreground">
+															{Math.round(
+																(Math.max(
+																	...willTypesData.map((d) => d.value)
+																) *
+																	percent) /
+																	100
+															)}
+														</div>
+													</div>
+												))}
 											</div>
-										))}
-									</div>
-									{/* Bars */}
-									<div className="absolute inset-0 flex items-end justify-between gap-8 px-8 pb-8">
-										{documentCreationData.map((item, index) => (
-											<div
-												key={index}
-												className="flex flex-col items-center flex-1 h-full"
-											>
-												<div className="flex-1 w-full flex items-end">
+											{/* Bars */}
+											<div className="absolute inset-0 flex items-end justify-between gap-8 px-8 pb-8">
+												{willTypesData.map((item, index) => (
 													<div
-														className="w-2 mx-auto rounded-[4px] bg-[#0D4705]"
-														style={{
-															height: `${
-																(item.value /
-																	Math.max(
-																		...documentCreationData.map((d) => d.value)
-																	)) *
-																100
-															}%`,
-														}}
-													/>
-												</div>
-												<div className="mt-2 text-sm font-medium text-center">
-													{item.label}
-												</div>
-												<div className="text-sm text-muted-foreground">
-													{item.value}
-												</div>
+														key={index}
+														className="flex flex-col items-center flex-1 h-full"
+													>
+														<div className="flex-1 w-full flex items-end">
+															<div
+																className="w-2 mx-auto rounded-[4px] bg-[#0D4705]"
+																style={{
+																	height: `${
+																		(item.value /
+																			Math.max(
+																				...willTypesData.map((d) => d.value)
+																			)) *
+																		100
+																	}%`,
+																}}
+															/>
+														</div>
+														<div className="mt-2 text-sm font-medium text-center">
+															{item.label}
+														</div>
+														<div className="text-sm text-muted-foreground">
+															{item.value}
+														</div>
+													</div>
+												))}
 											</div>
-										))}
-									</div>
+										</>
+									) : (
+										<div className="flex items-center justify-center h-full text-muted-foreground">
+											No data available
+										</div>
+									)}
 								</div>
 							</CardContent>
 						</Card>
@@ -530,7 +682,17 @@ export default function AdminDashboardPage() {
 							<CardTitle>User Management</CardTitle>
 						</CardHeader>
 						<CardContent>
-							<DataTable columns={userColumns} data={recentUsers} />
+							{isLoadingUsers ? (
+								<div className="flex items-center justify-center p-8">
+									<div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+								</div>
+							) : users.length === 0 ? (
+								<div className="text-center p-8 text-muted-foreground">
+									No users found
+								</div>
+							) : (
+								<DataTable columns={userColumns} data={users} />
+							)}
 						</CardContent>
 					</Card>
 				</TabsContent>
