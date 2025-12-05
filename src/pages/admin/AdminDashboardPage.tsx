@@ -12,6 +12,7 @@ import { apiClient } from "@/utils/apiClient";
 import { getApiUrl } from "@/config/api";
 import { addDataSourceHeader } from "@/utils/apiClient";
 import { useAuth } from "@/hooks/useAuth";
+import { toTitleCase } from "@/utils/format";
 
 // Define types - matching ManageUsersPage
 interface User {
@@ -119,15 +120,6 @@ const periodToMonthName = (period: number): string => {
 		"December",
 	];
 	return monthNames[monthNumber - 1] || "Unknown";
-};
-
-// Helper function to convert status to title case
-const toTitleCase = (str: string): string => {
-	return str
-		.toLowerCase()
-		.split(" ")
-		.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-		.join(" ");
 };
 
 // Color mapping for will statuses

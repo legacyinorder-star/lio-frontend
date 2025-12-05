@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Lock, CheckCircle, Clock, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
+import { toTitleCase } from "@/utils/format";
 
 interface WillStatusGuardProps {
 	children: React.ReactNode;
@@ -170,7 +171,7 @@ export default function WillStatusGuard({
 							) && (
 								<>
 									<p>This will cannot be edited in its current state.</p>
-									<p>Status: {willData.status}</p>
+									<p>Status: {toTitleCase(willData.status)}</p>
 								</>
 							)}
 						</div>

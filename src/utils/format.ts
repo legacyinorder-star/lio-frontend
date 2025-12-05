@@ -20,3 +20,12 @@ export function formatDate(dateString: string): string {
 		day: "numeric",
 	});
 }
+
+// Helper function to convert status to title case
+export function toTitleCase(str: string): string {
+	return str
+		.toLowerCase()
+		.split(" ")
+		.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+		.join(" ");
+}
