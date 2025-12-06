@@ -89,7 +89,7 @@ export default function SpouseDialog({
 
 	return (
 		<Dialog open={open} onOpenChange={isSubmitting ? undefined : onOpenChange}>
-			<DialogContent className="sm:max-w-[425px] bg-white">
+			<DialogContent className="bg-white">
 				<DialogHeader>
 					<DialogTitle>
 						{isEditing ? "Edit Partner Details" : "Add Partner Details"}

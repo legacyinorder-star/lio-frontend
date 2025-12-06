@@ -872,7 +872,7 @@ export default function FamilyInfoStep({
 											form.setValue("hasSpouse", true);
 											// Immediately update parent form data
 											onUpdate({ hasSpouse: true });
-											if (!localSpouseData) setSpouseDialogOpen(true);
+											// Don't open dialog automatically - show Add Spouse button instead
 										}
 									}}
 									disabled={isSubmitting}
@@ -886,6 +886,22 @@ export default function FamilyInfoStep({
 								</Label>
 							</div>
 						</div>
+
+						{/* ✅ ADDED: Show Add Spouse button when Yes is selected but no spouse data exists */}
+						{form.watch("hasSpouse") && !localSpouseData && (
+							<div className="mt-4">
+								<Button
+									type="button"
+									variant="outline"
+									onClick={() => setSpouseDialogOpen(true)}
+									className="w-full h-16 bg-white text-[#050505] rounded-[0.25rem] font-medium cursor-pointer"
+									disabled={isSubmitting}
+								>
+									<Plus className="mr-2 h-4 w-4" />
+									Add Spouse
+								</Button>
+							</div>
+						)}
 
 						{/* ✅ UPDATED: Show spouse details from local state */}
 						{form.watch("hasSpouse") && localSpouseData && (
