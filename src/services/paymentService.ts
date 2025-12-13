@@ -157,10 +157,10 @@ export class PaymentService {
 		const baseUrl = window.location.origin;
 		const successUrl =
 			request.successUrl ||
-			`${baseUrl}/app/payment/success?willId=${request.willId}`;
+			`${baseUrl}/app/payment/success?willId=${request.willId}&sessionId={CHECKOUT_SESSION_ID}`;
 		const cancelUrl =
 			request.cancelUrl ||
-			`${baseUrl}/app/payment/cancel?willId=${request.willId}`;
+			`${baseUrl}/app/payment/cancel?willId=${request.willId}&sessionId={CHECKOUT_SESSION_ID}`;
 
 		const requestBody = {
 			will_id: request.willId,

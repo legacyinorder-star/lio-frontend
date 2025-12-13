@@ -15,6 +15,7 @@ export default function PaymentSuccessPage() {
 	const [hasValidated, setHasValidated] = useState(false);
 
 	const willId = searchParams.get("willId");
+	const sessionId = searchParams.get("sessionId");
 	const source = searchParams.get("source");
 	const isLetterOfWishes = source === "letter-of-wishes";
 
@@ -60,9 +61,12 @@ export default function PaymentSuccessPage() {
 			setHasValidated(true);
 
 			console.log(`📡 Calling API: /wills/${willId}/payment-successful`);
-			const { error } = await apiClient(`/wills/${willId}/payment-successful`, {
-				method: "POST",
-			});
+			const { error } = await apiClient(
+				`/wills/${willId}/payment-successful?sessionId=${sessionId}`,
+				{
+					method: "POST",
+				}
+			);
 
 			console.log("📥 API response received:", { error });
 
