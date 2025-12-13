@@ -149,12 +149,6 @@ export async function apiClient<T = unknown>(
 					error: "Authentication required",
 					status: 401,
 				};
-			} else if (response.status === 403) {
-				handleAuthError(AUTH_ERROR_CODES.FORBIDDEN);
-			} else if (response.status >= 500) {
-				handleAuthError(AUTH_ERROR_CODES.SERVER_ERROR);
-			} else if (response.status >= 400) {
-				toast.error(message);
 			}
 			return {
 				data: null,
