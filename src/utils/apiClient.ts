@@ -1,6 +1,5 @@
 import { getApiUrl } from "@/config/api";
 import { getAuthToken, isTokenExpired } from "./auth";
-import { toast } from "sonner";
 import { handleAuthError, AUTH_ERROR_CODES } from "./authErrorHandler";
 
 /**
