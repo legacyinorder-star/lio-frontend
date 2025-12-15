@@ -284,7 +284,9 @@ export function DashboardLayout() {
 													<>
 														<Edit className="mr-1 sm:mr-2 h-4 w-4" />
 														<span className="hidden sm:inline">
-															Continue Will
+															{activeWill.status === "not started"
+																? "Create Will"
+																: "Continue Will"}
 														</span>
 														<span className="sm:hidden">Continue</span>
 													</>

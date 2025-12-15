@@ -126,7 +126,7 @@ export default function DashboardPage() {
 
 	// Determine button text and action based on will status and current step
 	const getWillButtonInfo = () => {
-		if (!currentWill) {
+		if (!currentWill || currentWill.status === "not started") {
 			return {
 				text: "Start your Will",
 				action: handleStartNewWill,
@@ -314,7 +314,7 @@ export default function DashboardPage() {
 							: "Your Will"}
 					</h3>
 					<p className="text-black font-normal text-sm mb-4">
-						{!currentWill
+						{!currentWill || currentWill.status === "not started"
 							? "Get started with your Will"
 							: currentWill.status === "completed"
 							? "Your Will is complete! Consider adding a letter of wishes to provide personal guidance for your loved ones."

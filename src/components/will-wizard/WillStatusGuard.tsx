@@ -30,7 +30,7 @@ interface WillStatusGuardProps {
  */
 export default function WillStatusGuard({
 	children,
-	allowedStatuses = ["in progress", "rejected", "draft"],
+	allowedStatuses = ["not started", "in progress", "rejected", "draft"],
 	redirectTo = "/app/dashboard",
 }: WillStatusGuardProps) {
 	const navigate = useNavigate();
