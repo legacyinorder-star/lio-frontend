@@ -50,6 +50,7 @@ export interface BasePerson {
 export interface Child extends BasePerson {
 	id: string;
 	isMinor: boolean;
+	relationship_id?: string;
 }
 
 export interface Witness extends BasePerson {

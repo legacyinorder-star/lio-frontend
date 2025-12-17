@@ -340,6 +340,7 @@ export default function FamilyInfoStep({
 						firstName: child.first_name,
 						lastName: child.last_name,
 						isMinor: child.is_minor,
+						relationship_id: child.relationship_id,
 					}));
 
 					setChildren(transformedChildren);
@@ -604,6 +605,7 @@ export default function FamilyInfoStep({
 					first_name: childForm.firstName,
 					last_name: childForm.lastName,
 					is_minor: childForm.isMinor,
+					relationship_id: editingChild.relationship_id,
 				};
 
 				const { error: updateError } = await apiClient<PersonResponse>(
