@@ -89,8 +89,7 @@ const styles = StyleSheet.create({
 		fontSize: 14,
 	},
 	scopeSection: {
-		marginTop: 40,
-		marginBottom: 20,
+		marginTop: 20,
 	},
 	scopeTitle: {
 		fontSize: 24,
@@ -104,8 +103,7 @@ const styles = StyleSheet.create({
 		marginBottom: 15,
 	},
 	funeralSection: {
-		marginTop: 30,
-		marginBottom: 20,
+		marginTop: 20,
 	},
 	funeralTitle: {
 		fontSize: 24,
@@ -119,8 +117,7 @@ const styles = StyleSheet.create({
 		marginBottom: 15,
 	},
 	executorSection: {
-		marginTop: 30,
-		marginBottom: 20,
+		marginTop: 20,
 	},
 	executorTitle: {
 		fontSize: 24,
@@ -142,8 +139,7 @@ const styles = StyleSheet.create({
 		paddingLeft: 20,
 	},
 	distributionSection: {
-		marginTop: 30,
-		marginBottom: 20,
+		marginTop: 20,
 	},
 	distributionTitle: {
 		fontSize: 24,
@@ -166,8 +162,7 @@ const styles = StyleSheet.create({
 		paddingLeft: 20,
 	},
 	guardianSection: {
-		marginTop: 30,
-		marginBottom: 20,
+		marginTop: 20,
 	},
 	guardianTitle: {
 		fontSize: 24,
@@ -190,8 +185,7 @@ const styles = StyleSheet.create({
 	},
 
 	witnessSection: {
-		marginTop: 40,
-		marginBottom: 20,
+		marginTop: 20,
 	},
 	witnessTitle: {
 		fontSize: 24,
@@ -228,8 +222,7 @@ const styles = StyleSheet.create({
 		marginBottom: 5,
 	},
 	finalDeclarationSection: {
-		marginTop: 30,
-		marginBottom: 20,
+		marginTop: 20,
 	},
 	finalDeclarationTitle: {
 		fontSize: 24,
@@ -255,8 +248,7 @@ const styles = StyleSheet.create({
 		paddingLeft: 20,
 	},
 	appendixSection: {
-		marginTop: 40,
-		marginBottom: 20,
+		marginTop: 20,
 	},
 	appendixTitle: {
 		fontSize: 24,
@@ -394,8 +386,7 @@ const styles = StyleSheet.create({
 		textAlign: "center",
 	},
 	giftSection: {
-		marginTop: 30,
-		marginBottom: 20,
+		marginTop: 20,
 	},
 	giftTitle: {
 		fontSize: 24,
@@ -1354,7 +1345,10 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 						not affect the interpretation of this Will.
 					</Text>
 				</View>
+			</Page>
 
+			{/* Final Declaration Page */}
+			<Page size="A4" style={styles.page} break>
 				{/* Final Declaration Section */}
 				<View style={styles.finalDeclarationSection}>
 					<Text style={styles.finalDeclarationTitle}>
