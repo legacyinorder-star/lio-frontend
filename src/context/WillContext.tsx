@@ -168,6 +168,7 @@ export interface WillData {
 		firstName: string;
 		lastName: string;
 		relationship: string;
+		relationshipId?: string;
 		isPrimary: boolean;
 	}>;
 	// Arrays

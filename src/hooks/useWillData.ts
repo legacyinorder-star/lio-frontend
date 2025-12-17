@@ -121,6 +121,7 @@ export function useWillData(shouldLoad: boolean = true) {
 							firstName: guardian.firstName,
 							lastName: guardian.lastName,
 							relationship: guardian.relationship || "Guardian",
+							relationshipId: guardian.relationshipId,
 							type: "person",
 						});
 					}
