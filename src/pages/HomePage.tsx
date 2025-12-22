@@ -348,70 +348,8 @@ export default function HomePage() {
 					</div>
 				</section>
 
-				{/* Testimonials Section */}
-				<section className="w-full bg-[#EDF6F0] pt-12 pb-24 rounded-b-[3rem]">
-					<div className="w-full max-w-[2000px] mx-auto px-4 md:px-6 lg:px-8">
-						<div className="relative flex flex-col items-center justify-center">
-							<h1 className="text-[3rem] font-semibold text-center text-[#173C37]">
-								Services we offer
-							</h1>
-
-							{/* Product Boxes */}
-							<div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12 w-full max-w-7xl">
-								{/* Box 1 - Wills */}
-								<div className="relative rounded-[0.5rem] overflow-hidden shadow-lg">
-									<img
-										src="/images/product_1.jpg"
-										alt="Wills"
-										className="w-full h-80 object-cover"
-									/>
-									<div className="absolute bottom-0 left-0 right-0 h-3/10 bg-gradient-to-t from-[#173C37] via-[#173C37]/80 to-transparent flex items-end">
-										<div className="p-4">
-											<h3 className="text-white text-xl font-semibold">
-												Wills
-											</h3>
-										</div>
-									</div>
-								</div>
-
-								{/* Box 2 - Power of Attorney */}
-								<div className="relative rounded-[0.5rem] overflow-hidden shadow-lg">
-									<img
-										src="/images/product_2.jpg"
-										alt="Power of Attorney"
-										className="w-full h-80 object-cover"
-									/>
-									<div className="absolute bottom-0 left-0 right-0 h-3/10 bg-gradient-to-t from-[#173C37] via-[#173C37]/80 to-transparent flex items-end">
-										<div className="p-4">
-											<h3 className="text-white text-xl font-semibold">
-												Power of Attorney
-											</h3>
-										</div>
-									</div>
-								</div>
-
-								{/* Box 3 - Legacy Vault */}
-								<div className="relative rounded-[0.5rem] overflow-hidden shadow-lg">
-									<img
-										src="/images/product_3.jpg"
-										alt="Legacy Vault"
-										className="w-full h-80 object-cover"
-									/>
-									<div className="absolute bottom-0 left-0 right-0 h-3/10 bg-gradient-to-t from-[#173C37] via-[#173C37]/80 to-transparent flex items-end">
-										<div className="p-4">
-											<h3 className="text-white text-xl font-semibold">
-												Legacy Vault
-											</h3>
-										</div>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-				</section>
-
 				{/* Life is Easier Section */}
-				<section className="w-full bg-white py-12 mb-12">
+				<section className="w-full bg-[#FAFAF5] py-12">
 					<div className="w-full max-w-[2000px] mx-auto px-4 md:px-6 lg:px-8">
 						<h2 className="text-[3rem] font-semibold text-center text-[#173C37] mb-16">
 							Life is easier with LegacyInOrder
