@@ -625,7 +625,7 @@ export default function DocumentsPage() {
 								<Button
 									onClick={willButtonInfo.action || undefined}
 									disabled={willButtonInfo.action === null}
-									className="w-full text-sm font-medium text-[#173C37] bg-[#EDEDED] rounded-[0.25rem] disabled:opacity-50 disabled:cursor-not-allowed"
+									className="w-full bg-primary hover:bg-primary/90 text-white disabled:opacity-50 disabled:cursor-not-allowed"
 								>
 									{willButtonInfo.text}
 								</Button>
@@ -730,7 +730,7 @@ export default function DocumentsPage() {
 									<Button
 										onClick={letterButtonInfo.action || undefined}
 										disabled={letterButtonInfo.action === null}
-										className="w-full text-sm font-medium text-[#173C37] bg-[#EDEDED] rounded-[0.25rem] disabled:opacity-50 disabled:cursor-not-allowed"
+										className="w-full bg-primary hover:bg-primary/90 text-white disabled:opacity-50 disabled:cursor-not-allowed"
 									>
 										{letterButtonInfo.text}
 									</Button>
