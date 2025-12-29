@@ -20,6 +20,7 @@ import { useWillWizard } from "@/context/WillWizardContext";
 import { apiClient } from "@/utils/apiClient";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
+import { useAuth } from "@/hooks/useAuth";
 
 const personalInfoSchema = z.object({
 	firstName: z.string().min(2, "First name must be at least 2 characters"),
@@ -72,16 +73,18 @@ export default function PersonalInfoStep({
 }: PersonalInfoStepProps) {
 	const { activeWill, setActiveWill } = useWill();
 	const { setActiveWillId } = useWillWizard();
+	const { user } = useAuth();
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	// Determine the initial values for the form
 	const getInitialValues = () => {
 		// Priority: willOwnerData > activeWill > data prop
+		// Use logged-in user's names as fallback if willOwnerData is empty or names are missing
 		if (willOwnerData) {
 			return {
-				firstName: willOwnerData.firstName || "",
+				firstName: willOwnerData.firstName || user?.first_name || "",
 				middleName: willOwnerData.middleName || "",
-				lastName: willOwnerData.lastName || "",
+				lastName: willOwnerData.lastName || user?.last_name || "",
 				dateOfBirth: willOwnerData.dateOfBirth
 					? new Date(willOwnerData.dateOfBirth)
 					: undefined,
@@ -94,9 +97,9 @@ export default function PersonalInfoStep({
 
 		if (activeWill?.owner) {
 			return {
-				firstName: activeWill.owner.firstName || "",
+				firstName: activeWill.owner.firstName || user?.first_name || "",
 				middleName: activeWill.owner.middleName || "",
-				lastName: activeWill.owner.lastName || "",
+				lastName: activeWill.owner.lastName || user?.last_name || "",
 				dateOfBirth: activeWill.owner.dateOfBirth
 					? new Date(activeWill.owner.dateOfBirth)
 					: undefined,
@@ -108,9 +111,9 @@ export default function PersonalInfoStep({
 		}
 
 		return {
-			firstName: data.firstName || "",
+			firstName: data.firstName || user?.first_name || "",
 			middleName: data.middleName || "",
-			lastName: data.lastName || "",
+			lastName: data.lastName || user?.last_name || "",
 			dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth) : undefined,
 			address: data.address?.address || "",
 			city: data.address?.city || "",
@@ -129,15 +132,23 @@ export default function PersonalInfoStep({
 	// Pre-fill form when willOwnerData changes
 	useEffect(() => {
 		if (willOwnerData) {
-			form.setValue("firstName", willOwnerData.firstName || "", {
-				shouldValidate: false,
-			});
+			form.setValue(
+				"firstName",
+				willOwnerData.firstName || user?.first_name || "",
+				{
+					shouldValidate: false,
+				}
+			);
 			form.setValue("middleName", willOwnerData.middleName || "", {
 				shouldValidate: false,
 			});
-			form.setValue("lastName", willOwnerData.lastName || "", {
-				shouldValidate: false,
-			});
+			form.setValue(
+				"lastName",
+				willOwnerData.lastName || user?.last_name || "",
+				{
+					shouldValidate: false,
+				}
+			);
 			if (willOwnerData.dateOfBirth) {
 				form.setValue("dateOfBirth", new Date(willOwnerData.dateOfBirth), {
 					shouldValidate: false,
@@ -157,7 +168,7 @@ export default function PersonalInfoStep({
 			});
 			form.trigger();
 		}
-	}, [willOwnerData, form]);
+	}, [willOwnerData, form, user]);
 
 	const onSubmit = async (formData: PersonalInfoData) => {
 		const submissionId = Math.random().toString(36).substr(2, 9);
