@@ -199,12 +199,12 @@ const styles = StyleSheet.create({
 		marginBottom: 15,
 	},
 	witnessSignature: {
-		marginTop: 40,
+		marginTop: 20,
 		marginBottom: 10,
 	},
 	witnessName: {
 		fontSize: 14,
-		marginBottom: 5,
+		marginBottom: 10,
 	},
 	witnessAddress: {
 		fontSize: 12,
@@ -214,12 +214,13 @@ const styles = StyleSheet.create({
 	witnessDate: {
 		fontSize: 12,
 		color: "#666666",
-		marginTop: 20,
+		marginTop: 10,
 	},
-	signatureLine: {
-		borderBottom: "1px solid #000000",
-		width: "60%",
-		marginBottom: 5,
+	signatureBox: {
+		border: "1px dotted #000000",
+		width: "80%",
+		height: 80,
+		marginBottom: 25,
 	},
 	finalDeclarationSection: {
 		marginTop: 20,
@@ -1401,7 +1402,7 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 
 					{/* Testator Signature */}
 					<View style={styles.witnessSignature}>
-						<View style={styles.signatureLine} />
+						<View style={styles.signatureBox} />
 						<Text style={styles.witnessName}>
 							Signed by{" "}
 							<Text style={{ fontWeight: "bold" }}>
@@ -1412,12 +1413,12 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 						<Text style={styles.witnessDate}>Date: _________________</Text>
 					</View>
 
-					{/* Witness Signatures - Always show at least 2 witness signature lines */}
+					{/* Witness Signatures - Always show at least 2 witness signature boxes */}
 					{data.witnesses && data.witnesses.length > 0 ? (
 						// Show existing witnesses if available
 						data.witnesses.map((witness, index) => (
 							<View key={index} style={styles.witnessSignature}>
-								<View style={styles.signatureLine} />
+								<View style={styles.signatureBox} />
 								<Text style={styles.witnessName}>
 									<Text style={{ fontWeight: "bold" }}>{witness.fullName}</Text>{" "}
 									(Witness)
@@ -1427,12 +1428,15 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 							</View>
 						))
 					) : (
-						// Show empty signature lines for manual completion
+						// Show empty signature boxes for manual completion
 						<>
 							<View style={styles.witnessSignature}>
-								<View style={styles.signatureLine} />
+								<View style={styles.signatureBox} />
 								<Text style={styles.witnessName}>
-									Witness 1 Name: _________________ (Witness)
+									Witness Name: _________________
+								</Text>
+								<Text style={styles.witnessName}>
+									Occupation: _________________
 								</Text>
 								<Text style={styles.witnessAddress}>
 									Address: _________________________________________
@@ -1440,9 +1444,12 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 								<Text style={styles.witnessDate}>Date: _________________</Text>
 							</View>
 							<View style={styles.witnessSignature}>
-								<View style={styles.signatureLine} />
+								<View style={styles.signatureBox} />
 								<Text style={styles.witnessName}>
-									Witness 2 Name: _________________ (Witness)
+									Witness Name: _________________
+								</Text>
+								<Text style={styles.witnessName}>
+									Occupation: _________________
 								</Text>
 								<Text style={styles.witnessAddress}>
 									Address: _________________________________________
