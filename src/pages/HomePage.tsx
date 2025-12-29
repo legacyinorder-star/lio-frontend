@@ -13,6 +13,14 @@ export default function HomePage() {
 		"/images/header1.jpg",
 		"/images/product_1.jpg",
 		"/images/LIO_new_img.jpg",
+		"/images/pixs/pix1.jpeg",
+		"/images/pixs/pix2.jpeg",
+		"/images/pixs/pix3.jpeg",
+		"/images/pixs/pix4.jpeg",
+		"/images/pixs/pix5.jpeg",
+		"/images/pixs/pix6.jpeg",
+		"/images/pixs/pix9.jpeg",
+		"/images/pixs/pix10.jpeg",
 	];
 
 	const [currentImageIndex, setCurrentImageIndex] = useState(0);
