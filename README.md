@@ -143,5 +143,11 @@ VITE_API_BASE_URL=<backend-api-url>
 VITE_ENV=<environment-name>
 VITE_STRIPE_WILL_PRICE_ID=<stripe-will-price-id>
 VITE_GOOGLE_REDIRECT_URI=<https://your-domain.com/auth/callback/google>
+VITE_IDEAL_POSTCODES_API_KEY=<ideal-postcodes-api-key>
 ```
+
+**Note on Ideal Postcodes:**
+- The `VITE_IDEAL_POSTCODES_API_KEY` is required for UK address autocomplete functionality
+- If not set, users can still manually enter addresses
+- Get your API key from: https://ideal-postcodes.co.uk/
 

@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
+import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 import { StepProps } from "../types/will.types";
 import { useWill } from "@/context/WillContext";
 import { useWillWizard } from "@/context/WillWizardContext";
@@ -397,10 +398,34 @@ export default function PersonalInfoStep({
 											Street Address *
 										</FormLabel>
 										<FormControl>
-											<Input
-												placeholder="Enter your street address"
-												{...field}
-												className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary "
+											<AddressAutocomplete
+												searchInputId="address-search-input"
+												placeholder="Start typing your address or postcode"
+												className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary"
+												value={field.value}
+												onChange={field.onChange}
+												onAddressSelect={(address) => {
+													// Combine address lines
+													const fullAddress = [
+														address.line_1,
+														address.line_2,
+														address.line_3,
+													]
+														.filter(Boolean)
+														.join(", ");
+
+													// Update form fields
+													form.setValue("address", fullAddress, {
+														shouldValidate: true,
+													});
+													form.setValue("city", address.post_town, {
+														shouldValidate: true,
+													});
+													form.setValue("postCode", address.postcode, {
+														shouldValidate: true,
+													});
+													field.onChange(fullAddress);
+												}}
 											/>
 										</FormControl>
 										<FormMessage />
