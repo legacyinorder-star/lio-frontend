@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
 		marginBottom: 15,
 	},
 	witnessSignature: {
-		marginTop: 20,
+		marginTop: 5,
 		marginBottom: 10,
 	},
 	witnessName: {
@@ -209,18 +209,18 @@ const styles = StyleSheet.create({
 	witnessAddress: {
 		fontSize: 12,
 		color: "#666666",
-		marginBottom: 20,
+		marginBottom: 15,
 	},
 	witnessDate: {
 		fontSize: 12,
 		color: "#666666",
-		marginTop: 10,
+		marginBottom: 10,
 	},
 	signatureBox: {
 		border: "1px dotted #000000",
-		width: "80%",
-		height: 80,
-		marginBottom: 25,
+		width: "100%",
+		height: 60,
+		marginBottom: 15,
 	},
 	finalDeclarationSection: {
 		marginTop: 20,
@@ -1435,7 +1435,7 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 								<Text style={styles.witnessName}>
 									Witness Name: _________________
 								</Text>
-								<Text style={styles.witnessName}>
+								<Text style={styles.witnessAddress}>
 									Occupation: _________________
 								</Text>
 								<Text style={styles.witnessAddress}>
@@ -1448,7 +1448,7 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 								<Text style={styles.witnessName}>
 									Witness Name: _________________
 								</Text>
-								<Text style={styles.witnessName}>
+								<Text style={styles.witnessAddress}>
 									Occupation: _________________
 								</Text>
 								<Text style={styles.witnessAddress}>
