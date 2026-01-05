@@ -54,6 +54,7 @@ export default function HomePage() {
 		"/images/pixs/pix10.jpeg",
 		"/images/header1.jpg",
 		"/images/product_1.jpg",
+		"/images/pixs/pix15.jpeg",
 		"/images/LIO_new_img.jpg",
 		"/images/pixs/pix1.jpeg",
 		"/images/pixs/pix2.jpeg",
