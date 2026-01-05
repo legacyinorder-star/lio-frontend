@@ -11,6 +11,7 @@ import { apiClient } from "@/utils/apiClient";
 import { MessagesSquare } from "lucide-react";
 import Navbar from "@/components/ui/navbar";
 import Footer from "@/components/ui/footer";
+import { useSEO } from "@/utils/useSEO";
 
 const contactFormSchema = z.object({
 	name: z.string().min(2, "Name must be at least 2 characters"),
@@ -22,6 +23,23 @@ const contactFormSchema = z.object({
 type ContactFormData = z.infer<typeof contactFormSchema>;
 
 export default function ContactUsPage() {
+	// SEO meta tags
+	const baseUrl = window.location.origin;
+	useSEO({
+		title:
+			"Contact Legacy In Order – Get Support for Your Online Will & Estate Plan",
+		description:
+			"Have questions about writing a will or letter of wishes? Contact Legacy In Order's support team for help with your online estate planning journey.",
+		keywords:
+			"contact Legacy In Order, support for online will, ask about wills and LPA, schedule a call for will writing",
+		ogTitle:
+			"Contact Legacy In Order – Get Support for Your Online Will & Estate Plan",
+		ogDescription:
+			"Have questions about writing a will or letter of wishes? Contact Legacy In Order's support team for help with your online estate planning journey.",
+		ogUrl: `${baseUrl}/contact-us`,
+		canonicalUrl: `${baseUrl}/contact-us`,
+	});
+
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	const {
@@ -69,10 +87,11 @@ export default function ContactUsPage() {
 							{/* Left Side - Heading and Subtitle */}
 							<div className="flex flex-col pt-24 pl-32">
 								<h1 className="font-semibold text-[#173C37] mb-4">
-									Get in touch
+									Contact Our Estate Planning Experts
 								</h1>
 								<p className="text-1rem font-normal text-[#173C37]">
-									Need help? Got a question? We're here to help you.
+									Need help with your online will, letter of wishes or lasting
+									power of attorney? We're here to assist you.
 								</p>
 							</div>
 

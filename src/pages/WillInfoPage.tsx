@@ -3,8 +3,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/ui/navbar";
 import Footer from "@/components/ui/footer";
+import { useSEO } from "@/utils/useSEO";
 
 export default function WillInfoPage() {
+	// SEO meta tags and structured data
+	const baseUrl = window.location.origin;
+	useSEO({
+		title: "Write a Will Online | England & Wales | Legacy In Order",
+		description:
+			"Write a legally binding will online with expert-reviewed templates. Simple, secure will writing for England and Wales.",
+		keywords:
+			"write a will online, online will UK, will writing service, legally binding will, make a will England and Wales",
+		ogTitle: "Write a Will Online | England & Wales | Legacy In Order",
+		ogDescription:
+			"Write a legally binding will online with expert-reviewed templates. Simple, secure will writing for England and Wales.",
+		ogUrl: `${baseUrl}/will-information`,
+		canonicalUrl: `${baseUrl}/will-information`,
+	});
 	const features = [
 		"Legally valid, customisable Will",
 		"Complimentary Letter of Wishes",
@@ -27,12 +42,13 @@ export default function WillInfoPage() {
 							<div className="space-y-8 flex flex-col justify-center py-12 px-8 md:px-10 lg:px-12">
 								<div className="space-y-4 pt-12">
 									<h1 className="text-[4rem] font-semibold leading-tight text-[#173C37]">
-										Write a Will that's tailored to you.
+										Write a Will Online for England and Wales
 									</h1>
 									<p className="text-[1rem] font-normal leading-relaxed text-[#173C37]">
-										LegacyInOrder simplifies and secures your most important
-										personal and legal documents, giving you full control and
-										peace of mind.
+										Create a legally binding single or mirror will online in as
+										little as 15 minutes. Our expert-reviewed service meets UK
+										legal requirements and gives you full control over who
+										inherits your estate.
 									</p>
 								</div>
 
@@ -41,7 +57,7 @@ export default function WillInfoPage() {
 										variant="default"
 										className="bg-[#173C37] text-white hover:bg-[#173C37]/90 font-semibold rounded px-[0.625rem] py-[1.4375rem] text-lg"
 									>
-										<Link to="/login">Get Started</Link>
+										<Link to="/login">Start Your Online Will</Link>
 									</Button>
 								</div>
 							</div>
@@ -51,7 +67,7 @@ export default function WillInfoPage() {
 								<div className="relative w-full h-full overflow-hidden shadow-2xl flex">
 									<img
 										src="/images/poa_1.jpg"
-										alt="Legacy Planning"
+										alt="Woman reviewing estate planning documents online"
 										className="w-full h-full object-cover"
 									/>
 								</div>
@@ -64,14 +80,14 @@ export default function WillInfoPage() {
 				<section className="w-full bg-white py-12">
 					<div className="w-full max-w-[2000px] mx-auto px-4 md:px-6 lg:px-8">
 						<h2 className="text-[3rem] md:text-4xl font-semibold text-center text-[#173C37] pt-4 mb-18">
-							Why you need a Will
+							Why Writing a Will Matters
 						</h2>
 						<div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
 							{/* Card 1 */}
 							<div className="flex items-center bg-white rounded-[0.5rem] border border-mint-light p-6 max-w-md">
 								<img
 									src="/svgs/wills_page/need_1.svg"
-									alt="State Decides Icon"
+									alt="Control who inherits your property and assets"
 									className="w-16 h-16 mr-4 flex-shrink-0"
 								/>
 								<div>
@@ -84,7 +100,7 @@ export default function WillInfoPage() {
 							<div className="flex items-center bg-white rounded-[0.5rem] border border-mint-light p-6 max-w-md">
 								<img
 									src="/svgs/wills_page/need_2.svg"
-									alt="No Guardianship Choice Icon"
+									alt="Appoint guardians for your children"
 									className="w-16 h-16 mr-4 flex-shrink-0"
 								/>
 								<div>
@@ -97,7 +113,7 @@ export default function WillInfoPage() {
 							<div className="flex items-center bg-white rounded-[0.5rem] border border-mint-light p-6 max-w-md">
 								<img
 									src="/svgs/wills_page/need_3.svg"
-									alt="Delays & Costs Icon"
+									alt="Leave specific bequests or charitable donations"
 									className="w-16 h-16 mr-4 flex-shrink-0"
 								/>
 								<div>
@@ -112,7 +128,7 @@ export default function WillInfoPage() {
 							<div className="flex items-center bg-white rounded-[0.5rem] border border-mint-light p-6 max-w-md">
 								<img
 									src="/svgs/wills_page/need_4.svg"
-									alt="No Executor Control Icon"
+									alt="Reduce stress and probate delays for loved ones"
 									className="w-16 h-16 mr-4 flex-shrink-0"
 								/>
 								<div>
@@ -125,7 +141,7 @@ export default function WillInfoPage() {
 							<div className="flex items-center bg-white rounded-[0.5rem] border border-mint-light p-6 max-w-md">
 								<img
 									src="/svgs/wills_page/need_5.svg"
-									alt="Family Disputes Icon"
+									alt="Prevent family disputes and legal complications"
 									className="w-16 h-16 mr-4 flex-shrink-0"
 								/>
 								<div>
@@ -149,11 +165,12 @@ export default function WillInfoPage() {
 				>
 					<div className="w-full max-w-[2000px] mx-auto px-4 md:px-6 lg:px-8">
 						<div className="mx-auto flex max-w-full flex-col items-center space-y-4 text-center">
-							<h1 className="text-3xl font-semibold tracking-tight sm:text-4xl md:text-5xl mb-2">
-								How it works
-							</h1>
+							<h2 className="text-3xl font-semibold tracking-tight sm:text-4xl md:text-5xl mb-2">
+								How to Make a Will Online in 15 Minutes
+							</h2>
 							<p className="text-lg text-muted-foreground mb-6">
-								Create your legal document in as little as 15 minutes
+								Create your legally binding will online in as little as 15
+								minutes
 							</p>
 						</div>
 
@@ -239,13 +256,7 @@ export default function WillInfoPage() {
 								variant="default"
 								className="text-white bg-[#173C37] rounded border border-[#173C37] font-semibold px-8 py-6 hover:bg-[#173C37]/90"
 							>
-								Write my Will
-							</Button>
-							<Button
-								variant="outline"
-								className="text-[#173C37] border border-[#173C37] font-semibold rounded hover:bg-[#173C37] hover:text-white px-8 py-6"
-							>
-								Explore the Vault
+								<Link to="/login">Write My Will in 15 Minutes</Link>
 							</Button>
 						</div>
 					</div>
@@ -255,7 +266,7 @@ export default function WillInfoPage() {
 				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
 					<div className="text-center mb-12">
 						<h2 className="text-3xl font-bold text-gray-900">
-							Simple, Transparent Pricing
+							What Is Included in Our Online Will Service
 						</h2>
 					</div>
 					<div className="grid grid-cols-1 md:grid-cols-1 gap-6 w-full max-w-lg mx-auto">
@@ -291,7 +302,7 @@ export default function WillInfoPage() {
 								</ul>
 								<Link to="/login">
 									<Button className="w-full bg-[#173C37] hover:bg-[#173C37]/90 text-white mt-8">
-										Get Started
+										Create My Will Online
 									</Button>
 								</Link>
 							</CardContent>
@@ -304,7 +315,7 @@ export default function WillInfoPage() {
 					<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 						<div className="text-center mb-12">
 							<h2 className="text-[3rem] font-semibold text-[#173C37]">
-								Secure Vault Storage
+								Secure Storage for Your Will
 							</h2>
 						</div>
 						<div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -320,7 +331,7 @@ export default function WillInfoPage() {
 							>
 								<img
 									src="/images/box_vault.png"
-									alt="Secure Vault"
+									alt="Waterproof and fire-resistant physical storage box for wills"
 									className="w-48 h-48 object-contain mb-6"
 								/>
 								<h3 className="text-xl font-semibold text-black mb-3 text-center">
@@ -350,7 +361,7 @@ export default function WillInfoPage() {
 							>
 								<img
 									src="/images/weather-cloud.png"
-									alt="Weather Cloud"
+									alt="Secure digital storage for wills and estate documents"
 									className="w-48 h-48 object-contain mb-6"
 								/>
 								<h3 className="text-xl font-semibold text-black mb-3 text-center">

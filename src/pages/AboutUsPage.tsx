@@ -1,8 +1,26 @@
 import Navbar from "@/components/ui/navbar";
 import Footer from "@/components/ui/footer";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
+import { useSEO } from "@/utils/useSEO";
 
 export default function AboutUsPage() {
+	// SEO meta tags
+	const baseUrl = window.location.origin;
+	useSEO({
+		title:
+			"About Legacy In Order – Simplifying Estate Planning in England & Wales",
+		description:
+			"Learn how Legacy In Order simplifies will writing and estate planning through intuitive design, secure technology and expert guidance. Our mission is to help everyone plan their future with confidence.",
+		keywords:
+			"estate planning platform UK, online estate planning, digital wills UK, legacy planning",
+		ogTitle:
+			"About Legacy In Order – Simplifying Estate Planning in England & Wales",
+		ogDescription:
+			"Learn how Legacy In Order simplifies will writing and estate planning through intuitive design, secure technology and expert guidance.",
+		ogUrl: `${baseUrl}/about-us`,
+		canonicalUrl: `${baseUrl}/about-us`,
+	});
 	return (
 		<div className="flex min-h-screen w-full flex-col">
 			<Navbar />
@@ -13,28 +31,33 @@ export default function AboutUsPage() {
 						<div className="text-center space-y-8">
 							<div className="space-y-6">
 								<h1 className="text-[3rem] font-semibold leading-tight text-[#173C37]">
-									Your future, organised by LegacyInOrder
+									About Legacy In Order
 								</h1>
 								<p className="text-[1rem] font-normal leading-relaxed text-[#173C37] max-w-3xl mx-auto">
-									LegacyInOrder simplifies and secures your most important
-									personal and legal documents, giving you full control and
-									peace of mind.
-								</p>
-
-								<p className="text-[1rem] font-normal leading-relaxed text-[#173C37] max-w-3xl mx-auto">
-									With everything organised and easily accessible, you can focus
-									on what truly matters: your future and the people you care
-									about.
+									We are a legal-tech company dedicated to simplifying estate
+									planning. Our online estate planning platform helps people
+									across England and Wales create legally valid wills, letters
+									of wishes and lasting powers of attorney with ease.
 								</p>
 							</div>
 
 							<div className="flex flex-col sm:flex-row gap-4 justify-center">
-								<Button
-									variant="default"
-									className="text-white bg-[#173C37] rounded border border-[#173C37] font-semibold px-8 py-6 hover:bg-[#173C37]/90"
-								>
-									Write my Will
-								</Button>
+								<Link to="/will-information">
+									<Button
+										variant="default"
+										className="text-white bg-[#173C37] rounded border border-[#173C37] font-semibold px-8 py-6 hover:bg-[#173C37]/90"
+									>
+										Write My Will
+									</Button>
+								</Link>
+								<Link to="/letter-of-wishes">
+									<Button
+										variant="outline"
+										className="text-[#173C37] border border-[#173C37] font-semibold rounded hover:bg-[#173C37] hover:text-white px-8 py-6"
+									>
+										Create a Letter of Wishes
+									</Button>
+								</Link>
 								{/* <Button
 									variant="outline"
 									className="text-[#173C37] border border-[#173C37] font-semibold rounded hover:bg-[#173C37] hover:text-white px-8 py-6"
@@ -59,7 +82,7 @@ export default function AboutUsPage() {
 									OUR MISSION
 								</p>
 								<h2 className="text-[2.5rem] font-semibold text-[#173C37] leading-tight">
-									Making end-of-life planning easier
+									Our Mission – Making End-of-Life Planning Easy
 								</h2>
 								<div className="space-y-4 text-[#173C37] leading-relaxed text-[1rem] font-normal">
 									<p>
@@ -75,7 +98,7 @@ export default function AboutUsPage() {
 							<div className="flex justify-center lg:justify-end">
 								<img
 									src="/images/about/father.png"
-									alt="Father with family planning for the future"
+									alt="Family creating an estate plan together"
 									className="w-auto h-[21rem] rounded-[0.75rem] shadow-lg"
 								/>
 							</div>
@@ -96,7 +119,7 @@ export default function AboutUsPage() {
 							<div className="flex justify-center lg:justify-start order-2 lg:order-1">
 								<img
 									src="/images/about/daughter.png"
-									alt="Family planning together"
+									alt="Estate planning for families in England and Wales"
 									className="w-auto h-[21rem] rounded-[0.75rem] shadow-lg"
 								/>
 							</div>
@@ -110,14 +133,16 @@ export default function AboutUsPage() {
 									WHO WE'RE HERE FOR
 								</p>
 								<h2 className="text-[2.5rem] font-semibold text-[#173C37] leading-tight">
-									We're committed to everybody.
+									Who We Serve
 								</h2>
 								<div className="space-y-4 text-[#173C37] leading-relaxed text-[1rem] font-normal">
 									<p>
 										Whether you're just starting your career, raising a family,
-										or planning retirement, Legacy In Order is built for you. We
-										believe future-planning tools should be as common—and
-										stress-free—as online banking or digital calendars.
+										or planning retirement, Legacy In Order is built for you.
+										Estate planning should be as common and stress-free as
+										online banking or digital calendars. Our services are
+										tailored to people in England and Wales, and we intend to
+										expand to Scotland and Northern Ireland in the future.
 									</p>
 								</div>
 							</div>
@@ -132,9 +157,9 @@ export default function AboutUsPage() {
 				>
 					<div className="w-full max-w-[2000px] mx-auto px-4 md:px-6 lg:px-8">
 						<div className="mx-auto flex max-w-full flex-col items-center space-y-4 text-center">
-							<h1 className="text-3xl font-semibold tracking-tight sm:text-4xl md:text-5xl mb-2">
-								The bigger picture
-							</h1>
+							<h2 className="text-3xl font-semibold tracking-tight sm:text-4xl md:text-5xl mb-2">
+								Our Vision for the Future
+							</h2>
 							<p className="text-[1rem] text-[#173C37] my-6 max-w-3xl">
 								By helping individuals take control of their futures, we
 								contribute to a broader culture of planning, protection, and
