@@ -51,6 +51,7 @@ export default function HomePage() {
 
 	// Carousel images
 	const carouselImages = [
+		"/images/pixs/pix10.jpeg",
 		"/images/header1.jpg",
 		"/images/product_1.jpg",
 		"/images/LIO_new_img.jpg",
@@ -64,7 +65,6 @@ export default function HomePage() {
 		"/images/pixs/pix13.jpeg",
 		"/images/pixs/pix6.jpeg",
 		"/images/pixs/pix9.jpeg",
-		"/images/pixs/pix10.jpeg",
 	];
 
 	const [currentImageIndex, setCurrentImageIndex] = useState(0);
