@@ -28,9 +28,7 @@ export function OptimizedImage({
 	return (
 		<picture>
 			{/* WebP source with fallback */}
-			{!webpError && (
-				<source srcSet={webpPath} type="image/webp" />
-			)}
+			{!webpError && <source srcSet={webpPath} type="image/webp" />}
 			<img
 				src={src}
 				alt={alt}
@@ -49,4 +47,3 @@ export function OptimizedImage({
 		</picture>
 	);
 }
-
