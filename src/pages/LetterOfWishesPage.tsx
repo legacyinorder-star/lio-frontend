@@ -74,6 +74,8 @@ export default function LetterOfWishesPage() {
 										src="/images/LIO_new_img.jpg"
 										alt="Family creating a letter of wishes together"
 										className="w-full h-full object-cover"
+										loading="eager"
+										decoding="async"
 									/>
 								</div>
 							</div>
@@ -109,8 +111,10 @@ export default function LetterOfWishesPage() {
 								<div className="flex-shrink-0 mr-6">
 									<img
 										src="/svgs/without_4.svg"
-										alt="Personal guidance for family and executors"
+										alt="Personal guidance for letter of wishes"
 										className="w-12 h-12"
+										loading="lazy"
+										decoding="async"
 									/>
 								</div>
 								<div className="flex-1">
@@ -133,8 +137,10 @@ export default function LetterOfWishesPage() {
 								<div className="flex-shrink-0 mr-6">
 									<img
 										src="/svgs/heartbreak.svg"
-										alt="Emotional support for loved ones through letter of wishes"
+										alt="Emotional support through letter of wishes"
 										className="w-12 h-12"
+										loading="lazy"
+										decoding="async"
 									/>
 								</div>
 								<div className="flex-1">
@@ -157,8 +163,10 @@ export default function LetterOfWishesPage() {
 								<div className="flex-shrink-0 mr-6">
 									<img
 										src="/svgs/without_3.svg"
-										alt="Digital assets list for estate planning"
+										alt="Digital assets and personal wishes in letter of wishes"
 										className="w-12 h-12"
+										loading="lazy"
+										decoding="async"
 									/>
 								</div>
 								<div className="flex-1">
@@ -252,6 +260,8 @@ export default function LetterOfWishesPage() {
 												src="/svgs/wills_page/dot.svg"
 												alt="Feature marker"
 												className="h-4 w-4 mt-0.5 mr-2 flex-shrink-0"
+												loading="lazy"
+												decoding="async"
 											/>
 											<span className="text-[0.75rem] font-normal text-black">
 												{feature}

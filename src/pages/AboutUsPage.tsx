@@ -100,6 +100,8 @@ export default function AboutUsPage() {
 									src="/images/about/father.png"
 									alt="Family creating an estate plan together"
 									className="w-auto h-[21rem] rounded-[0.75rem] shadow-lg"
+									loading="lazy"
+									decoding="async"
 								/>
 							</div>
 						</div>
@@ -121,6 +123,8 @@ export default function AboutUsPage() {
 									src="/images/about/daughter.png"
 									alt="Estate planning for families in England and Wales"
 									className="w-auto h-[21rem] rounded-[0.75rem] shadow-lg"
+									loading="lazy"
+									decoding="async"
 								/>
 							</div>
 
@@ -174,8 +178,10 @@ export default function AboutUsPage() {
 								<div className="w-16 h-16 flex items-left justify-left mb-6">
 									<img
 										src="/svgs/family.svg"
-										alt="Family Icon"
+										alt="Preserving legacies worldwide"
 										className="w-16 h-16"
+										loading="lazy"
+										decoding="async"
 									/>
 								</div>
 								<p className="text-white text-[1.5rem] font-[500]">

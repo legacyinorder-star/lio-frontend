@@ -69,6 +69,8 @@ export default function WillInfoPage() {
 										src="/images/poa_1.jpg"
 										alt="Woman reviewing estate planning documents online"
 										className="w-full h-full object-cover"
+										loading="eager"
+										decoding="async"
 									/>
 								</div>
 							</div>
@@ -89,6 +91,8 @@ export default function WillInfoPage() {
 									src="/svgs/wills_page/need_1.svg"
 									alt="Control who inherits your property and assets"
 									className="w-16 h-16 mr-4 flex-shrink-0"
+									loading="lazy"
+									decoding="async"
 								/>
 								<div>
 									<p className="text-[#173C37] text-base font-medium">
@@ -102,6 +106,8 @@ export default function WillInfoPage() {
 									src="/svgs/wills_page/need_2.svg"
 									alt="Appoint guardians for your children"
 									className="w-16 h-16 mr-4 flex-shrink-0"
+									loading="lazy"
+									decoding="async"
 								/>
 								<div>
 									<p className="text-[#173C37] text-base font-medium">
@@ -115,6 +121,8 @@ export default function WillInfoPage() {
 									src="/svgs/wills_page/need_3.svg"
 									alt="Leave specific bequests or charitable donations"
 									className="w-16 h-16 mr-4 flex-shrink-0"
+									loading="lazy"
+									decoding="async"
 								/>
 								<div>
 									<p className="text-[#173C37] text-base font-medium">
@@ -130,6 +138,8 @@ export default function WillInfoPage() {
 									src="/svgs/wills_page/need_4.svg"
 									alt="Reduce stress and probate delays for loved ones"
 									className="w-16 h-16 mr-4 flex-shrink-0"
+									loading="lazy"
+									decoding="async"
 								/>
 								<div>
 									<p className="text-[#173C37] text-base font-medium">
@@ -143,6 +153,8 @@ export default function WillInfoPage() {
 									src="/svgs/wills_page/need_5.svg"
 									alt="Prevent family disputes and legal complications"
 									className="w-16 h-16 mr-4 flex-shrink-0"
+									loading="lazy"
+									decoding="async"
 								/>
 								<div>
 									<p className="text-[#173C37] text-base font-medium">
@@ -180,8 +192,10 @@ export default function WillInfoPage() {
 								<div className="w-12 h-12 flex items-center justify-center mb-6">
 									<img
 										src="/svgs/answer_1.svg"
-										alt="Answer Questions Icon"
+										alt="Answer questions for your online will"
 										className="w-12 h-12"
+										loading="lazy"
+										decoding="async"
 									/>
 								</div>
 								<p className="text-sm text-gray-500 mb-2">Step 1</p>
@@ -199,8 +213,10 @@ export default function WillInfoPage() {
 								<div className="w-12 h-12 flex items-center justify-center mb-6">
 									<img
 										src="/svgs/answer_2.svg"
-										alt="Generate Document Icon"
+										alt="Generate your legally binding will"
 										className="w-12 h-12"
+										loading="lazy"
+										decoding="async"
 									/>
 								</div>
 								<p className="text-sm text-gray-500 mb-2">Step 2</p>
@@ -218,8 +234,10 @@ export default function WillInfoPage() {
 								<div className="w-12 h-12 flex items-center justify-center mb-6">
 									<img
 										src="/svgs/answer_3.svg"
-										alt="Review & Verify Icon"
+										alt="Sign and register your online will"
 										className="w-12 h-12"
+										loading="lazy"
+										decoding="async"
 									/>
 								</div>
 								<p className="text-sm text-gray-500 mb-2">Step 3</p>
@@ -237,8 +255,10 @@ export default function WillInfoPage() {
 								<div className="w-12 h-12 flex items-center justify-center mb-6">
 									<img
 										src="/svgs/answer_4.svg"
-										alt="Secure Storage Icon"
+										alt="Secure storage for your will"
 										className="w-12 h-12"
+										loading="lazy"
+										decoding="async"
 									/>
 								</div>
 								<p className="text-sm text-gray-500 mb-2">Step 4</p>
@@ -293,6 +313,8 @@ export default function WillInfoPage() {
 												src="/svgs/wills_page/dot.svg"
 												alt="Feature marker"
 												className="h-5 w-5 mt-0.5 mr-3 flex-shrink-0"
+												loading="lazy"
+												decoding="async"
 											/>
 											<span className="text-[0.8rem] font-normal text-black">
 												{feature}
@@ -331,8 +353,10 @@ export default function WillInfoPage() {
 							>
 								<img
 									src="/images/box_vault.png"
-									alt="Waterproof and fire-resistant physical storage box for wills"
+									alt="Physical secure vault box for documents"
 									className="w-48 h-48 object-contain mb-6"
+									loading="lazy"
+									decoding="async"
 								/>
 								<h3 className="text-xl font-semibold text-black mb-3 text-center">
 									Home Vault Box
@@ -361,8 +385,10 @@ export default function WillInfoPage() {
 							>
 								<img
 									src="/images/weather-cloud.png"
-									alt="Secure digital storage for wills and estate documents"
+									alt="Digital secure vault for online will storage"
 									className="w-48 h-48 object-contain mb-6"
+									loading="lazy"
+									decoding="async"
 								/>
 								<h3 className="text-xl font-semibold text-black mb-3 text-center">
 									Digital Vault

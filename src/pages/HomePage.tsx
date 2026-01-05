@@ -126,6 +126,8 @@ export default function HomePage() {
 													? "Family creating an online will together"
 													: ""
 											}
+											loading={index === 0 ? "eager" : "lazy"}
+											decoding="async"
 											className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
 												index === currentImageIndex
 													? "opacity-100"
@@ -166,8 +168,10 @@ export default function HomePage() {
 								<div className="w-16 h-16 flex items-center justify-center mb-6">
 									<img
 										src="/svgs/answer_1.svg"
-										alt="Answer Questions Icon"
+										alt="Answer questions for online will"
 										className="w-16 h-16"
+										loading="lazy"
+										decoding="async"
 									/>
 								</div>
 								<h3 className="text-xl font-semibold mb-4 text-[#173C37]">
@@ -184,8 +188,10 @@ export default function HomePage() {
 								<div className="w-16 h-16 flex items-center justify-center mb-6">
 									<img
 										src="/svgs/answer_2.svg"
-										alt="Generate Document Icon"
+										alt="Generate legally valid will document"
 										className="w-16 h-16"
+										loading="lazy"
+										decoding="async"
 									/>
 								</div>
 								<h3 className="text-xl font-semibold mb-4 text-[#173C37]">
@@ -202,8 +208,10 @@ export default function HomePage() {
 								<div className="w-16 h-16 flex items-center justify-center mb-6">
 									<img
 										src="/svgs/answer_3.svg"
-										alt="Review & Verify Icon"
+										alt="Sign and register your will"
 										className="w-16 h-16"
+										loading="lazy"
+										decoding="async"
 									/>
 								</div>
 								<h3 className="text-xl font-semibold mb-4 text-[#173C37]">
@@ -220,8 +228,10 @@ export default function HomePage() {
 								<div className="w-16 h-16 flex items-center justify-center mb-6">
 									<img
 										src="/svgs/answer_4.svg"
-										alt="Secure Storage Icon"
+										alt="Secure storage for estate planning documents"
 										className="w-16 h-16"
+										loading="lazy"
+										decoding="async"
 									/>
 								</div>
 								<h3 className="text-xl font-semibold mb-4 text-[#173C37]">
@@ -270,6 +280,8 @@ export default function HomePage() {
 									src="/svgs/without_1.svg"
 									alt="The law decides who inherits your assets without a will"
 									className="w-16 h-16 mr-4 flex-shrink-0"
+									loading="lazy"
+									decoding="async"
 								/>
 								<div>
 									<h3 className="text-[1.25rem] font-semibold text-[#173C37] mb-2">
@@ -291,6 +303,8 @@ export default function HomePage() {
 									src="/svgs/without_2.svg"
 									alt="Unmarried partners have no automatic inheritance rights"
 									className="w-16 h-16 mr-4 flex-shrink-0"
+									loading="lazy"
+									decoding="async"
 								/>
 								<div>
 									<h3 className="text-lg font-semibold text-[#173C37] mb-2">
@@ -312,6 +326,8 @@ export default function HomePage() {
 									src="/svgs/without_3.svg"
 									alt="Probate delays and legal costs increase without a will"
 									className="w-16 h-16 mr-4 flex-shrink-0"
+									loading="lazy"
+									decoding="async"
 								/>
 								<div>
 									<h3 className="text-lg font-semibold text-[#173C37] mb-2">
@@ -337,6 +353,8 @@ export default function HomePage() {
 									src="/svgs/without_4.svg"
 									alt="Minor children may not be fully protected without a will"
 									className="w-16 h-16 mr-4 flex-shrink-0"
+									loading="lazy"
+									decoding="async"
 								/>
 								<div>
 									<h3 className="text-lg font-semibold text-[#173C37] mb-2">
@@ -358,6 +376,8 @@ export default function HomePage() {
 									src="/svgs/without_5.svg"
 									alt="Family disputes and legal battles can result without a will"
 									className="w-16 h-16 mr-4 flex-shrink-0"
+									loading="lazy"
+									decoding="async"
 								/>
 								<div>
 									<h3 className="text-lg font-semibold text-[#173C37] mb-2">
@@ -420,6 +440,8 @@ export default function HomePage() {
 									src="/svgs/easier_1.svg"
 									alt="Experienced legal team reviewing online wills"
 									className="w-16 h-16 mb-4"
+									loading="lazy"
+									decoding="async"
 								/>
 								<h3 className="text-[1.5rem] font-semibold text-[#173C37] mb-2">
 									An Experienced Legal Team
@@ -436,6 +458,8 @@ export default function HomePage() {
 									src="/svgs/easier_2.svg"
 									alt="Secure digital storage for wills and estate documents"
 									className="w-16 h-16 mb-4"
+									loading="lazy"
+									decoding="async"
 								/>
 								<h3 className="text-[1.5rem] font-semibold text-[#173C37] mb-2">
 									Secure Storage and Accessibility
@@ -453,6 +477,8 @@ export default function HomePage() {
 									src="/svgs/easier_3.svg"
 									alt="Professionally reviewed will documents"
 									className="w-16 h-16 mb-4"
+									loading="lazy"
+									decoding="async"
 								/>
 								<h3 className="text-[1.5rem] font-semibold text-[#173C37] mb-2">
 									Professionally Reviewed Documents
@@ -469,6 +495,8 @@ export default function HomePage() {
 									src="/svgs/easier_4.svg"
 									alt="Affordable online will writing service"
 									className="w-16 h-16 mb-4"
+									loading="lazy"
+									decoding="async"
 								/>
 								<h3 className="text-[1.5rem] font-semibold text-[#173C37] mb-2">
 									Clear, Affordable, and Transparent
@@ -515,8 +543,10 @@ export default function HomePage() {
 									<div className="flex items-center gap-3 mt-auto">
 										<img
 											src="/avatars/user1.png"
-											alt="Sarah J."
+											alt="Sarah J. reviewing her online will"
 											className="w-10 h-10 rounded-full"
+											loading="lazy"
+											decoding="async"
 										/>
 										<div>
 											<h4 className="font-semibold text-gray-900 text-sm">
@@ -549,8 +579,10 @@ export default function HomePage() {
 									<div className="flex items-center gap-3 mt-auto">
 										<img
 											src="/avatars/user2.png"
-											alt="Michael C."
+											alt="Michael C. securing his estate documents"
 											className="w-10 h-10 rounded-full"
+											loading="lazy"
+											decoding="async"
 										/>
 										<div>
 											<h4 className="font-semibold text-gray-900 text-sm">
@@ -583,8 +615,10 @@ export default function HomePage() {
 									<div className="flex items-center gap-3 mt-auto">
 										<img
 											src="/avatars/user3.png"
-											alt="Priyanka R."
+											alt="Priyanka R. using online will writing service"
 											className="w-10 h-10 rounded-full"
+											loading="lazy"
+											decoding="async"
 										/>
 										<div>
 											<h4 className="font-semibold text-gray-900 text-sm">
@@ -619,8 +653,10 @@ export default function HomePage() {
 									<div className="flex items-center gap-3 mt-auto">
 										<img
 											src="/avatars/user4.png"
-											alt="Christina T."
+											alt="Christina T. recommending online will service"
 											className="w-10 h-10 rounded-full"
+											loading="lazy"
+											decoding="async"
 										/>
 										<div>
 											<h4 className="font-semibold text-gray-900 text-sm">
