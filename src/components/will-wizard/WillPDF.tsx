@@ -1,6 +1,54 @@
 import React from "react";
-import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
+import {
+	Document,
+	Page,
+	Text,
+	View,
+	StyleSheet,
+	Image,
+	Font,
+} from "@react-pdf/renderer";
 import { getFormattedRelationshipNameById } from "../../utils/relationships";
+
+// Register DM Sans font from local files
+// Using static font files as react-pdf has better support for static fonts
+Font.register({
+	family: "DM Sans",
+	src: "/fonts/DM_Sans/static/DMSans-Regular.ttf",
+	fontWeight: "normal",
+});
+
+Font.register({
+	family: "DM Sans",
+	src: "/fonts/DM_Sans/static/DMSans-Medium.ttf",
+	fontWeight: 500,
+});
+
+Font.register({
+	family: "DM Sans",
+	src: "/fonts/DM_Sans/static/DMSans-SemiBold.ttf",
+	fontWeight: 600,
+});
+
+Font.register({
+	family: "DM Sans",
+	src: "/fonts/DM_Sans/static/DMSans-Bold.ttf",
+	fontWeight: "bold",
+});
+
+Font.register({
+	family: "DM Sans",
+	src: "/fonts/DM_Sans/static/DMSans-Italic.ttf",
+	fontWeight: "normal",
+	fontStyle: "italic",
+});
+
+Font.register({
+	family: "DM Sans",
+	src: "/fonts/DM_Sans/static/DMSans-BoldItalic.ttf",
+	fontWeight: "bold",
+	fontStyle: "italic",
+});
 
 // Create styles
 const styles = StyleSheet.create({
@@ -8,7 +56,7 @@ const styles = StyleSheet.create({
 		flexDirection: "column",
 		backgroundColor: "#ffffff",
 		padding: 40,
-		fontFamily: "Helvetica",
+		fontFamily: "DM Sans",
 		fontSize: 14,
 	},
 	centeredTitle: {
@@ -316,7 +364,58 @@ const styles = StyleSheet.create({
 	// Checklist styles
 	checklistPage: {
 		padding: 30,
+		paddingTop: 0,
+		paddingRight: 0,
+		paddingLeft: 30,
 		backgroundColor: "#fff",
+		position: "relative",
+		fontFamily: "DM Sans",
+	},
+	checklistHeader: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "flex-start",
+		marginBottom: 30,
+		marginTop: 0,
+		marginLeft: -30,
+		marginRight: 0,
+		paddingLeft: 30,
+		paddingRight: 0,
+		paddingTop: 0,
+		position: "relative",
+	},
+	checklistHeaderLeft: {
+		flex: 1,
+		paddingRight: 20,
+		zIndex: 1,
+	},
+	checklistLogo: {
+		width: 200,
+		height: "auto",
+		marginTop: 30,
+	},
+	checklistHeaderTitle: {
+		fontSize: 32,
+		fontWeight: "bold",
+		color: "#239485",
+		marginTop: 20,
+		maxWidth: "70%",
+		fontFamily: "DM Sans",
+	},
+	checklistHeaderRight: {
+		position: "absolute",
+		right: 0,
+		top: -15,
+		width: 150,
+		height: 200,
+		zIndex: 0,
+		margin: 0,
+		padding: 0,
+	},
+	checklistHeaderImage: {
+		width: "100%",
+		height: "100%",
+		objectFit: "contain",
 	},
 	checklistTitle: {
 		fontSize: 20,
@@ -668,15 +767,24 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 		<Document>
 			{/* Checklist Page - First Page */}
 			<Page size="A4" style={styles.checklistPage}>
-				<Text style={styles.checklistTitle}>
-					Legacy in Order – Final Checklist for Making Your Will Legally Valid
-				</Text>
-
-				<Text style={styles.checklistSubtitle}>
-					Congratulations!!! You've taken a huge step toward protecting your
-					assets and getting your Legacy In Order. Now let's get it signed and
-					store it safely.
-				</Text>
+				{/* Header Section */}
+				<View style={styles.checklistHeader}>
+					<View style={styles.checklistHeaderLeft}>
+						<Image
+							src="/logos/Logo_Colored2.png"
+							style={styles.checklistLogo}
+						/>
+						<Text style={styles.checklistHeaderTitle}>
+							You've nearly finished your Will.
+						</Text>
+					</View>
+					<View style={styles.checklistHeaderRight}>
+						<Image
+							src="/pdf/green_ticks.png"
+							style={styles.checklistHeaderImage}
+						/>
+					</View>
+				</View>
 
 				{/* Step 1 - Review Your Will */}
 				<View style={styles.checklistSection}>
