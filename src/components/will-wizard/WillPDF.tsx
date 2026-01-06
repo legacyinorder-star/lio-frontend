@@ -433,39 +433,48 @@ const styles = StyleSheet.create({
 	checklistSection: {
 		marginBottom: 15,
 	},
+	checklistStepHeader: {
+		flexDirection: "row",
+		alignItems: "center",
+		marginBottom: 10,
+		gap: 10,
+	},
+	checklistNumberCircle: {
+		width: 24,
+		height: 24,
+		borderRadius: 12,
+		backgroundColor: "#239485",
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "center",
+	},
+	checklistNumberText: {
+		color: "#ffffff",
+		fontSize: 12,
+		fontWeight: "bold",
+		textAlign: "center",
+	},
 	checklistSectionTitle: {
 		fontSize: 14,
 		fontWeight: "bold",
-		marginBottom: 8,
-		color: "#374151",
-		borderBottom: "1px solid #e5e7eb",
+		color: "#239485",
+		flex: 1,
 	},
 	checklistItem: {
 		flexDirection: "row",
-		alignItems: "flex-start",
 		marginBottom: 8,
-		paddingLeft: 15,
-	},
-	checklistParagraphText: {
-		fontSize: 11,
-		color: "#374151",
-		flex: 1,
-		marginBottom: 20,
-	},
-	checklistCheckbox: {
-		width: 14,
-		height: 14,
-		border: "1px solid #d1d5db",
-		borderRadius: 3,
-		marginRight: 10,
-		marginTop: 1,
 	},
 	checklistText: {
-		fontSize: 11,
-		color: "#374151",
+		fontSize: 12,
+		color: "#1f2937",
 		flex: 1,
-		lineHeight: 1.2,
-		marginBottom: 1,
+		textAlign: "justify",
+	},
+	checklistParagraphText: {
+		fontSize: 12,
+		color: "#1f2937",
+		marginBottom: 8,
+		marginTop: 4,
 	},
 	checklistImportant: {
 		fontSize: 11,
@@ -788,39 +797,37 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 
 				{/* Step 1 - Review Your Will */}
 				<View style={styles.checklistSection}>
-					<View style={styles.checklistItem}>
-						<View style={styles.checklistCheckbox} />
+					<View style={styles.checklistStepHeader}>
+						<View style={styles.checklistNumberCircle}>
+							<Text style={styles.checklistNumberText}>1</Text>
+						</View>
 						<Text style={styles.checklistSectionTitle}>
-							Step 1 - Review Your Will Carefully
+							Review Your Will Carefully
 						</Text>
 					</View>
 
 					<Text style={styles.checklistParagraphText}>Before you sign:</Text>
 
-					<View style={styles.checklistItem}>
-						<View style={styles.checklistCheckbox} />
-						<Text style={styles.checklistText}>
-							Read your Will from start to finish. Check that every name, date,
-							and instruction is accurate. If anything is unclear or you want to
-							make changes update before printing and signing.
-						</Text>
-					</View>
+					<Text style={styles.checklistText}>
+						Read your Will from start to finish. Check that every name, date,
+						and instruction is accurate. If anything is unclear or you want to
+						make changes update before printing and signing.
+					</Text>
 
-					<View style={styles.checklistItem}>
-						<View style={styles.checklistCheckbox} />
-						<Text style={styles.checklistText}>
-							Print your Will on plain paper. Keep the pages together and staple
-							them securely in the top left corner.
-						</Text>
-					</View>
+					<Text style={styles.checklistText}>
+						Print your Will on plain paper. Keep the pages together and staple
+						them securely in the top left corner.
+					</Text>
 				</View>
 
 				{/* Step 2 - Choose Witnesses */}
 				<View style={styles.checklistSection}>
-					<View style={styles.checklistItem}>
-						<View style={styles.checklistCheckbox} />
+					<View style={styles.checklistStepHeader}>
+						<View style={styles.checklistNumberCircle}>
+							<Text style={styles.checklistNumberText}>2</Text>
+						</View>
 						<Text style={styles.checklistSectionTitle}>
-							Step 2 - Choose the Right Witnesses
+							Choose the Right Witnesses
 						</Text>
 					</View>
 
@@ -828,69 +835,53 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 						You must sign your Will in front of two independent witnesses.
 					</Text>
 
-					<View style={styles.checklistItem}>
-						<View style={styles.checklistCheckbox} />
-						<Text style={styles.checklistText}>
-							They must be aged 18 or over and mentally competent.
-						</Text>
-					</View>
+					<Text style={styles.checklistText}>
+						They must be aged 18 or over and mentally competent.
+					</Text>
 
-					<View style={styles.checklistItem}>
-						<View style={styles.checklistCheckbox} />
-						<Text style={styles.checklistText}>
-							They cannot be a beneficiary named in your Will or be married to,
-							or in a partnership with, any beneficiary.
-						</Text>
-					</View>
+					<Text style={styles.checklistText}>
+						They cannot be a beneficiary named in your Will or be married to, or
+						in a partnership with, any beneficiary.
+					</Text>
 				</View>
 
 				{/* Step 3 - Signing Your Will */}
 				<View style={styles.checklistSection}>
-					<View style={styles.checklistItem}>
-						<View style={styles.checklistCheckbox} />
-						<Text style={styles.checklistSectionTitle}>
-							Step 3 - Signing Your Will
-						</Text>
+					<View style={styles.checklistStepHeader}>
+						<View style={styles.checklistNumberCircle}>
+							<Text style={styles.checklistNumberText}>3</Text>
+						</View>
+						<Text style={styles.checklistSectionTitle}>Signing Your Will</Text>
 					</View>
 
-					<View style={styles.checklistItem}>
-						<View style={styles.checklistCheckbox} />
-						<Text style={styles.checklistText}>
-							Arrange for both witnesses to be present at the same time.
-						</Text>
-					</View>
+					<Text style={styles.checklistText}>
+						Arrange for both witnesses to be present at the same time.
+					</Text>
 
-					<View style={styles.checklistItem}>
-						<View style={styles.checklistCheckbox} />
-						<Text style={styles.checklistText}>
-							Using a pen, you sign first, with both witnesses watching. You
-							cannot sign a will electronically.
-						</Text>
-					</View>
+					<Text style={styles.checklistText}>
+						Using a pen, you sign first, with both witnesses watching. You
+						cannot sign a will electronically.
+					</Text>
 
-					<View style={styles.checklistItem}>
-						<View style={styles.checklistCheckbox} />
-						<Text style={styles.checklistText}>
-							Each witness must then, write their full name in capital letters,
-							Write their address. Sign in the space provided.
-						</Text>
-					</View>
+					<Text style={styles.checklistText}>
+						Each witness must then, write their full name in capital letters,
+						Write their address. Sign in the space provided.
+					</Text>
 
-					<View style={styles.checklistItem}>
-						<View style={styles.checklistCheckbox} />
-						<Text style={styles.checklistText}>
-							If there's a mistake, start again if possible. If not, all parties
-							should initial the correction.
-						</Text>
-					</View>
+					<Text style={styles.checklistText}>
+						If there's a mistake, start again if possible. If not, all parties
+						should initial the correction.
+					</Text>
 				</View>
 
 				{/* Step 4 - Store and Register */}
 				<View style={styles.checklistSection}>
-					<View style={styles.checklistItem}>
-						<View style={styles.checklistCheckbox} />
+					<View style={styles.checklistStepHeader}>
+						<View style={styles.checklistNumberCircle}>
+							<Text style={styles.checklistNumberText}>4</Text>
+						</View>
 						<Text style={styles.checklistSectionTitle}>
-							Step 4 - Store and Register Your Will
+							Store and Register Your Will
 						</Text>
 					</View>
 
@@ -898,38 +889,29 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 						Once signed and witnessed, your Will is legally valid.
 					</Text>
 
-					<View style={styles.checklistItem}>
-						<View style={styles.checklistCheckbox} />
-						<Text style={styles.checklistText}>
-							Store the original in a safe but accessible place.
-						</Text>
-					</View>
+					<Text style={styles.checklistText}>
+						Store the original in a safe but accessible place.
+					</Text>
 
-					<View style={styles.checklistItem}>
-						<View style={styles.checklistCheckbox} />
-						<Text style={styles.checklistText}>
-							Tell your Executor and at least one trusted person where it's
-							stored and how to access it.
-						</Text>
-					</View>
+					<Text style={styles.checklistText}>
+						Tell your Executor and at least one trusted person where it's stored
+						and how to access it.
+					</Text>
 
-					<View style={styles.checklistItem}>
-						<View style={styles.checklistCheckbox} />
-						<Text style={styles.checklistText}>
-							Consider registering your Will with a recognised will registry. If
-							you make a new Will, destroy the old one and update the registry
-							immediately.
-						</Text>
-					</View>
+					<Text style={styles.checklistText}>
+						Consider registering your Will with a recognised will registry. If
+						you make a new Will, destroy the old one and update the registry
+						immediately.
+					</Text>
 				</View>
 
 				{/* Step 5 - Inspire Others */}
 				<View style={styles.checklistSection}>
-					<View style={styles.checklistItem}>
-						<View style={styles.checklistCheckbox} />
-						<Text style={styles.checklistSectionTitle}>
-							Step 5 - Inspire Others
-						</Text>
+					<View style={styles.checklistStepHeader}>
+						<View style={styles.checklistNumberCircle}>
+							<Text style={styles.checklistNumberText}>5</Text>
+						</View>
+						<Text style={styles.checklistSectionTitle}>Inspire Others</Text>
 					</View>
 
 					<Text style={styles.checklistText}>
