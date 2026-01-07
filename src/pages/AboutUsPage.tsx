@@ -1,6 +1,7 @@
 import Navbar from "@/components/ui/navbar";
 import Footer from "@/components/ui/footer";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 export default function AboutUsPage() {
 	return (
@@ -33,7 +34,7 @@ export default function AboutUsPage() {
 									variant="default"
 									className="text-white bg-[#173C37] rounded border border-[#173C37] font-semibold px-8 py-6 hover:bg-[#173C37]/90"
 								>
-									Write my Will
+									<Link to="/signup">Write my Will</Link>
 								</Button>
 								{/* <Button
 									variant="outline"

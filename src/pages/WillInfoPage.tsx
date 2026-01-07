@@ -239,7 +239,7 @@ export default function WillInfoPage() {
 								variant="default"
 								className="text-white bg-[#173C37] rounded border border-[#173C37] font-semibold px-8 py-6 hover:bg-[#173C37]/90"
 							>
-								Write my Will
+								<Link to="/signup">Write my Will</Link>
 							</Button>
 							<Button
 								variant="outline"
@@ -289,7 +289,7 @@ export default function WillInfoPage() {
 										</li>
 									))}
 								</ul>
-								<Link to="/login">
+								<Link to="/signup">
 									<Button className="w-full bg-[#173C37] hover:bg-[#173C37]/90 text-white mt-8">
 										Get Started
 									</Button>
