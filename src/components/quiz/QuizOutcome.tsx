@@ -15,6 +15,8 @@ import {
 import { QuizOutcome as OutcomeType } from "./WillSuitabilityQuiz";
 import { AuthPageHeader } from "@/components/auth/auth-page-header";
 import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import confetti from "canvas-confetti";
 
 interface QuizOutcomeProps {
 	outcome: OutcomeType;
@@ -32,6 +34,47 @@ export default function QuizOutcome({
 	onRestart,
 }: QuizOutcomeProps) {
 	const navigate = useNavigate();
+
+	// Helper function for confetti
+	const randomInRange = (min: number, max: number) => {
+		return Math.random() * (max - min) + min;
+	};
+
+	// Trigger confetti when GREEN outcome is shown - loops continuously
+	useEffect(() => {
+		if (outcome === "GREEN") {
+			const defaults = { startVelocity: 30, spread: 270, ticks: 60, zIndex: 0 };
+			const particleCount = 30;
+			const duration = 8000; // 8 seconds
+			const startTime = Date.now();
+
+			const interval = setInterval(() => {
+				const elapsed = Date.now() - startTime;
+
+				if (elapsed >= duration) {
+					clearInterval(interval);
+					return;
+				}
+
+				// Launch from the left
+				confetti({
+					...defaults,
+					particleCount,
+					origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+				});
+				// Launch from the right
+				confetti({
+					...defaults,
+					particleCount,
+					origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+				});
+			}, 250);
+
+			// Cleanup on unmount or when outcome changes
+			return () => clearInterval(interval);
+		}
+	}, [outcome]);
+
 	const getOutcomeContent = () => {
 		switch (outcome) {
 			case "GREEN":
