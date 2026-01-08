@@ -40,12 +40,13 @@ export default function QuizOutcome({
 					iconColor: "text-green-600",
 					bgColor: "bg-green-50",
 					borderColor: "border-green-200",
-					title: "Suitable for an online Will",
+					title: "Great news!",
+					subtitle: "You can create your online Will",
 					message:
 						"Based on your answers, an online Will is a suitable and legally sound option for you.",
 					cta: {
 						primary: {
-							text: "Create your Will",
+							text: "Create your online Will",
 							action: onContinue,
 							icon: FileText,
 							note: "You can complete it in as little as 15 minutes and update it later if circumstances change.",
@@ -59,6 +60,7 @@ export default function QuizOutcome({
 					bgColor: "bg-amber-50",
 					borderColor: "border-amber-200",
 					title: "Proceed with caution",
+					subtitle: undefined,
 					message:
 						"You can proceed with an online Will. Some parts of your situation may benefit from additional consideration, and we'll guide you as you go.",
 					cta: {
@@ -92,11 +94,12 @@ export default function QuizOutcome({
 						bgColor: "bg-blue-50",
 						borderColor: "border-blue-200",
 						title: "Age Requirement",
+						subtitle: undefined,
 						message:
 							"You must be 18 years or older to create a Will in England and Wales. If you are under 18, please wait until you reach the age of 18 before creating a Will.",
 						cta: {
 							primary: {
-								text: "Go to Home",
+								text: "Go to Home Page",
 								action: () => navigate("/"),
 								icon: Home,
 							},
@@ -109,6 +112,7 @@ export default function QuizOutcome({
 					bgColor: "bg-blue-50",
 					borderColor: "border-blue-200",
 					title: "Partner lawyer recommended",
+					subtitle: undefined,
 					message:
 						"Your situation involves additional complexity and may benefit from personalised legal advice. We recommend speaking with one of our trusted partner lawyers before finalising your Will.",
 					cta: {
@@ -147,6 +151,11 @@ export default function QuizOutcome({
 							<CardTitle className="text-2xl text-[#173C37] font-medium">
 								{content.title}
 							</CardTitle>
+							{content.subtitle && (
+								<CardTitle className="text-lg text-[#173C37] font-semibold">
+									{content.subtitle}
+								</CardTitle>
+							)}
 						</CardHeader>
 						<CardContent className="space-y-6">
 							<p className="text-base text-[#545454] text-center leading-relaxed">

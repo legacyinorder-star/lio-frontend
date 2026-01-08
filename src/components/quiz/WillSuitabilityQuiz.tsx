@@ -15,9 +15,7 @@ export interface QuizAnswers {
 	ageAndCapacity: string | null;
 	jurisdiction: string | null;
 	jointOwnership: string | null;
-	assetsOutsideUK: string | null;
 	businessInterests: string | null;
-	higherRiskWishes: string[];
 }
 
 interface WillSuitabilityQuizProps {
@@ -33,7 +31,7 @@ const QUESTIONS = [
 		type: "single",
 		options: [
 			{ value: "yes", label: "Yes" },
-			{ value: "no", label: "No / Not sure" },
+			{ value: "no", label: "No" },
 		],
 	},
 	{
@@ -63,6 +61,23 @@ const QUESTIONS = [
 			{ value: "yes", label: "Yes" },
 			{ value: "no", label: "No" },
 		],
+		infoPanel: {
+			showOn: ["no"],
+			title: "Important to know",
+			content: (
+				<>
+					<p>
+						You can still use Legacy in Order to create a Will for your assets
+						in England and Wales. Assets located abroad are usually dealt with
+						under a separate Will made in that country.
+					</p>
+					<p className="mt-2">
+						It is important that multiple Wills are carefully structured so they
+						work together and do not accidentally cancel each other out.
+					</p>
+				</>
+			),
+		},
 	},
 	{
 		id: "jointOwnership",
@@ -78,32 +93,41 @@ const QUESTIONS = [
 		infoPanel: {
 			showOn: ["notSure"],
 			title: "Important to know",
-			content:
-				"If you are unsure how an asset is owned, you can still include it in your Will. Jointly owned assets usually pass automatically to the surviving owner, regardless of what your Will says. If the asset is owned as tenants in common, your share will pass according to your Will. This is very common and nothing to worry about. You can still continue with your online Will.",
+			content: (
+				<>
+					<p>
+						If you are unsure how an asset is owned, you can still include it in
+						your Will.
+					</p>
+					<p className="mt-2">
+						Jointly owned assets usually pass automatically to the surviving
+						owner, regardless of what your Will says. If the asset is owned as
+						"tenants in common", your share will pass according to your Will.
+					</p>
+					<p className="mt-2">
+						This is very common and nothing to worry about. You can still
+						continue with your online Will.
+					</p>
+				</>
+			),
 		},
 		infoPanelMain: {
 			showOn: ["yes"],
 			title: "Important to know",
-			content:
-				"If an asset is owned jointly, it usually passes automatically to the surviving owner, regardless of what your Will says. If the asset is owned as tenants in common, your share will pass according to your Will. This is very common and nothing to worry about. You can still continue with your online Will.",
-		},
-	},
-	{
-		id: "assetsOutsideUK",
-		title: "Assets outside England & Wales",
-		question: "Do you own assets outside England or Wales?",
-		subtitle: "(for example, overseas property or foreign bank accounts)",
-		type: "single",
-		options: [
-			{ value: "yes", label: "Yes" },
-			{ value: "no", label: "No" },
-		],
-		infoPanel: {
-			showOn: ["yes"],
-			title: "Important to know",
-			content:
-				"You can still use Legacy in Order to create a Will for your assets in England and Wales. Assets located abroad are usually dealt with under a separate Will made in that country. It's important that multiple Wills are carefully structured so they work together in harmony and do not cancel each other out. If you'd like advice on setting this up correctly, we can refer you to one of our partner lawyers.",
-			hasButtons: true,
+			content: (
+				<>
+					<p>
+						If an asset is owned jointly, it usually passes automatically to the
+						surviving owner, regardless of what your Will says. If the asset is
+						owned as "tenants in common", your share will pass according to your
+						Will.
+					</p>
+					<p className="mt-2">
+						This is very common and nothing to worry about. You can still
+						continue with your online Will.
+					</p>
+				</>
+			),
 		},
 	},
 	{
@@ -118,41 +142,40 @@ const QUESTIONS = [
 			{
 				value: "valueOnly",
 				label:
-					"Yes – but I only want my beneficiaries to receive the value of my interest",
+					"Yes – but I only want my beneficiaries to receive the value of my shares",
 			},
 			{
 				value: "inheritOrTakeOver",
 				label:
 					"Yes – and I want my beneficiaries to inherit or take over the business",
-				hasInfoIcon: true,
 			},
 			{ value: "notSure", label: "Not sure" },
 		],
 		infoPanel: {
 			showOn: ["valueOnly", "notSure"],
 			title: "Information",
-			content:
-				"Business agreements often take priority over a Will. Your Will can usually deal with any value you're entitled to.",
+			content: (
+				<>
+					<p>
+						Business agreements often take priority over a Will. Your Will can
+						only deal with the shares you are entitled to.
+					</p>
+				</>
+			),
 		},
 		infoPanelMain: {
 			showOn: ["inheritOrTakeOver"],
 			title: "Information",
-			content:
-				"Business interests often have separate agreements that decide what happens on death. If you want someone to take over or inherit a business, extra planning is usually needed.",
+			content: (
+				<>
+					<p>
+						Business interests often have separate agreements that decide what
+						happens on death. If you want someone to take over or inherit a
+						business, extra planning is usually needed.
+					</p>
+				</>
+			),
 		},
-	},
-	{
-		id: "higherRiskWishes",
-		title: "Higher risk wishes",
-		question: "Do you intend to do any of the following?",
-		subtitle: "(select any that apply)",
-		type: "multi",
-		options: [
-			{ value: "excludeSpouse", label: "Exclude a spouse or civil partner" },
-			{ value: "excludeChild", label: "Exclude a child or dependant" },
-			{ value: "complexTrusts", label: "Create complex trusts" },
-			{ value: "none", label: "None of the above" },
-		],
 	},
 ];
 
@@ -165,9 +188,7 @@ export default function WillSuitabilityQuiz({
 		ageAndCapacity: null,
 		jurisdiction: null,
 		jointOwnership: null,
-		assetsOutsideUK: null,
 		businessInterests: null,
-		higherRiskWishes: [],
 	});
 	const [showInfoPanel, setShowInfoPanel] = useState(false);
 	const [showInfoPanelMain, setShowInfoPanelMain] = useState(false);
@@ -320,15 +341,9 @@ export default function WillSuitabilityQuiz({
 		if (answers.ageAndCapacity === "no") return "REFERRAL";
 		if (answers.jurisdiction === "no") return "REFERRAL";
 		if (answers.businessInterests === "inheritOrTakeOver") return "REFERRAL";
-		if (
-			answers.higherRiskWishes.some((wish) => wish !== "none" && wish !== "")
-		) {
-			return "REFERRAL";
-		}
 
 		// AMBER conditions
 		if (answers.familyStructure.includes("blended")) return "AMBER";
-		if (answers.assetsOutsideUK === "yes") return "AMBER";
 
 		// GREEN - suitable for online Will
 		return "GREEN";
@@ -461,9 +476,9 @@ export default function WillSuitabilityQuiz({
 										<strong className="text-[#173C37] font-semibold block">
 											{currentQuestion.infoPanelMain.title}
 										</strong>
-										<p className="text-sm text-[#545454] mt-2">
+										<div className="text-sm text-[#545454] mt-2">
 											{currentQuestion.infoPanelMain.content}
-										</p>
+										</div>
 									</AlertDescription>
 								</Alert>
 							)}
@@ -476,9 +491,9 @@ export default function WillSuitabilityQuiz({
 										<strong className="text-[#173C37] font-semibold block">
 											{currentQuestion.infoPanel.title}
 										</strong>
-										<p className="text-sm text-[#545454] mt-2">
+										<div className="text-sm text-[#545454] mt-2">
 											{currentQuestion.infoPanel.content}
-										</p>
+										</div>
 										{currentQuestion.infoPanel.hasButtons && (
 											<div className="flex flex-col sm:flex-row gap-3 mt-4">
 												<Button
@@ -515,32 +530,31 @@ export default function WillSuitabilityQuiz({
 							)}
 
 							{/* Navigation Buttons */}
-							{!(showInfoPanel && currentQuestion.infoPanel?.hasButtons) &&
-								!showInfoPanelMain && (
-									<div className="flex justify-end items-center pt-4 border-t border-[#CCCCCC]">
-										<div className="flex gap-3">
-											{!isFirstQuestion && (
-												<Button
-													variant="outline"
-													onClick={handlePrevious}
-													className="border-[#CCCCCC] text-[#173C37] hover:bg-[#EFF8F5]"
-												>
-													Previous
-												</Button>
-											)}
+							{!(showInfoPanel && currentQuestion.infoPanel?.hasButtons) && (
+								<div className="flex justify-end items-center pt-4 border-t border-[#CCCCCC]">
+									<div className="flex gap-3">
+										{!isFirstQuestion && (
 											<Button
-												onClick={handleNext}
-												disabled={!canProceed()}
-												className={cn(
-													"bg-[#173C37] text-white hover:bg-[#173C37]/90 focus:ring-2 focus:ring-primary focus:border-primary",
-													!canProceed() && "opacity-50 cursor-not-allowed"
-												)}
+												variant="outline"
+												onClick={handlePrevious}
+												className="border-[#CCCCCC] text-[#173C37] hover:bg-[#EFF8F5]"
 											>
-												{isLastQuestion ? "Complete Quiz" : "Next"}
+												Previous
 											</Button>
-										</div>
+										)}
+										<Button
+											onClick={handleNext}
+											disabled={!canProceed()}
+											className={cn(
+												"bg-[#173C37] text-white hover:bg-[#173C37]/90 focus:ring-2 focus:ring-primary focus:border-primary",
+												!canProceed() && "opacity-50 cursor-not-allowed"
+											)}
+										>
+											{isLastQuestion ? "Complete Quiz" : "Next"}
+										</Button>
 									</div>
-								)}
+								</div>
+							)}
 						</CardContent>
 					</Card>
 				</div>
