@@ -455,14 +455,15 @@ export default function WillSuitabilityQuiz({
 										/>
 										<span className="flex-1 text-sm text-[#173C37] leading-relaxed flex items-center gap-2">
 											{option.label}
-											{"hasInfoIcon" in option && option.hasInfoIcon && (
-												<span
-													className="text-[#239485] font-semibold text-base"
-													title="More information available"
-												>
-													ⓘ
-												</span>
-											)}
+											{"hasInfoIcon" in option &&
+												(option as { hasInfoIcon?: boolean }).hasInfoIcon && (
+													<span
+														className="text-[#239485] font-semibold text-base"
+														title="More information available"
+													>
+														ⓘ
+													</span>
+												)}
 										</span>
 									</label>
 								))}
@@ -494,43 +495,51 @@ export default function WillSuitabilityQuiz({
 										<div className="text-sm text-[#545454] mt-2">
 											{currentQuestion.infoPanel.content}
 										</div>
-										{currentQuestion.infoPanel.hasButtons && (
-											<div className="flex flex-col sm:flex-row gap-3 mt-4">
-												<Button
-													onClick={() => {
-														if (isLastQuestion) {
-															const outcome = calculateOutcome(answers);
-															onComplete(outcome, answers);
-														} else {
-															handleNext();
-														}
-													}}
-													className="bg-[#173C37] text-white hover:bg-[#173C37]/90 focus:ring-2 focus:ring-primary focus:border-primary"
-												>
-													Continue with my UK Will
-												</Button>
-												<Button
-													variant="outline"
-													className="border-[#CCCCCC] text-[#173C37] hover:bg-[#EFF8F5]"
-													asChild
-												>
-													<Link
-														to="/schedule"
-														className="flex items-center gap-2"
-														aria-label="Schedule a call with the team"
+										{"hasButtons" in currentQuestion.infoPanel &&
+											(currentQuestion.infoPanel as { hasButtons?: boolean })
+												.hasButtons && (
+												<div className="flex flex-col sm:flex-row gap-3 mt-4">
+													<Button
+														onClick={() => {
+															if (isLastQuestion) {
+																const outcome = calculateOutcome(answers);
+																onComplete(outcome, answers);
+															} else {
+																handleNext();
+															}
+														}}
+														className="bg-[#173C37] text-white hover:bg-[#173C37]/90 focus:ring-2 focus:ring-primary focus:border-primary"
 													>
-														<PhoneCall className="h-4 w-4" />
-														Schedule a call
-													</Link>
-												</Button>
-											</div>
-										)}
+														Continue with my UK Will
+													</Button>
+													<Button
+														variant="outline"
+														className="border-[#CCCCCC] text-[#173C37] hover:bg-[#EFF8F5]"
+														asChild
+													>
+														<Link
+															to="/schedule"
+															className="flex items-center gap-2"
+															aria-label="Schedule a call with the team"
+														>
+															<PhoneCall className="h-4 w-4" />
+															Schedule a call
+														</Link>
+													</Button>
+												</div>
+											)}
 									</AlertDescription>
 								</Alert>
 							)}
 
 							{/* Navigation Buttons */}
-							{!(showInfoPanel && currentQuestion.infoPanel?.hasButtons) && (
+							{!(
+								showInfoPanel &&
+								currentQuestion.infoPanel &&
+								"hasButtons" in currentQuestion.infoPanel &&
+								(currentQuestion.infoPanel as { hasButtons?: boolean })
+									.hasButtons
+							) && (
 								<div className="flex justify-end items-center pt-4 border-t border-[#CCCCCC]">
 									<div className="flex gap-3">
 										{!isFirstQuestion && (
