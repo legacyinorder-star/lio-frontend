@@ -67,7 +67,7 @@ export default function HomePage() {
 										variant="default"
 										className="bg-[#173C37] text-white hover:bg-[#173C37]/90 font-semibold rounded p-[1.5rem] text-lg"
 									>
-										<Link to={user ? "/dashboard" : "/login"}>
+										<Link to={user ? "/dashboard" : "/signup"}>
 											Write my Will
 										</Link>
 									</Button>
@@ -194,7 +194,7 @@ export default function HomePage() {
 								variant="default"
 								className="text-white bg-[#173C37] rounded border border-[#173C37] font-semibold px-8 py-6 hover:bg-[#173C37]/90"
 							>
-								<Link to={user ? "/dashboard" : "/login"}>Write my Will</Link>
+								<Link to={user ? "/dashboard" : "/signup"}>Write my Will</Link>
 							</Button>
 							{/* <Button
 								variant="outline"
@@ -353,7 +353,7 @@ export default function HomePage() {
 								variant="default"
 								className="bg-[#173C37] text-white hover:bg-[#173C37]/90 font-semibold rounded px-[1.625rem] py-[2.4375rem] text-lg"
 							>
-								<Link to="/login">Get Your LegacyInOrder</Link>
+								<Link to="/signup">Get Your LegacyInOrder</Link>
 							</Button>
 						</div>
 					</div>

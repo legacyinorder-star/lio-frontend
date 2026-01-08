@@ -22,6 +22,11 @@ import { startGoogleOAuthPopup } from "@/utils/googlePopupAuth";
 import { setAuthToken, setUserDetails, UserDetails } from "@/utils/auth";
 import { useAuth } from "@/hooks/useAuth";
 import { API_CONFIG, getApiUrl } from "@/config/api";
+import WillSuitabilityQuiz, {
+	QuizOutcome,
+	QuizAnswers,
+} from "@/components/quiz/WillSuitabilityQuiz";
+import QuizOutcomeComponent from "@/components/quiz/QuizOutcome";
 
 interface SignupResponse {
 	otp_id: string;
@@ -53,6 +58,9 @@ export default function SignupPage() {
 	const [showPassword, setShowPassword] = useState(false);
 	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 	const { setUser } = useAuth();
+	const [showQuiz, setShowQuiz] = useState(true);
+	const [quizOutcome, setQuizOutcome] = useState<QuizOutcome | null>(null);
+	const [quizAnswers, setQuizAnswers] = useState<QuizAnswers | null>(null);
 
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
@@ -66,6 +74,20 @@ export default function SignupPage() {
 	});
 
 	async function onSubmit(values: z.infer<typeof formSchema>) {
+		// If quiz hasn't been completed, show it first
+		if (showQuiz) {
+			toast.info("Please complete the suitability quiz first");
+			return;
+		}
+
+		// Block signup if REFERRAL outcome
+		if (quizOutcome === "REFERRAL") {
+			toast.error(
+				"Please speak with a partner lawyer before creating an account. Click 'Speak to a partner lawyer' to get started."
+			);
+			return;
+		}
+
 		setIsLoading(true);
 		try {
 			const { data, error } = await apiClient<SignupResponse>("/auth/signup", {
@@ -108,7 +130,50 @@ export default function SignupPage() {
 		}
 	}
 
+	const handleQuizComplete = (outcome: QuizOutcome, answers: QuizAnswers) => {
+		setQuizOutcome(outcome);
+		setQuizAnswers(answers);
+		setShowQuiz(false);
+	};
+
+	const handleContinueToSignup = () => {
+		// Only allow continuing to signup if not REFERRAL
+		if (quizOutcome === "REFERRAL") {
+			return;
+		}
+		// Clear quiz state to show signup form
+		setShowQuiz(false);
+		setQuizOutcome(null);
+		setQuizAnswers(null);
+	};
+
+	const handleContactLawyer = () => {
+		// Navigate to contact page for lawyer referral
+		navigate("/contact-us?referral=lawyer");
+	};
+
+	const handleRestartQuiz = () => {
+		// Reset quiz state to show quiz again
+		setShowQuiz(true);
+		setQuizOutcome(null);
+		setQuizAnswers(null);
+	};
+
 	const handleGoogleSignUp = async () => {
+		// If quiz hasn't been completed, show it first
+		if (showQuiz) {
+			toast.info("Please complete the suitability quiz first");
+			return;
+		}
+
+		// Block signup if REFERRAL outcome
+		if (quizOutcome === "REFERRAL") {
+			toast.error(
+				"Please speak with a partner lawyer before creating an account. Click 'Speak to a partner lawyer' to get started."
+			);
+			return;
+		}
+
 		setIsGoogleLoading(true);
 		try {
 			const { token, name, email, is_created } = await startGoogleOAuthPopup();
@@ -161,6 +226,26 @@ export default function SignupPage() {
 		}
 	};
 
+	// Show quiz first
+	if (showQuiz) {
+		return <WillSuitabilityQuiz onComplete={handleQuizComplete} />;
+	}
+
+	// Show outcome if quiz was completed
+	if (quizOutcome) {
+		const isAgeRestriction = quizAnswers?.ageAndCapacity === "no";
+		return (
+			<QuizOutcomeComponent
+				outcome={quizOutcome}
+				onContinue={handleContinueToSignup}
+				onContactLawyer={handleContactLawyer}
+				isAgeRestriction={isAgeRestriction}
+				onRestart={handleRestartQuiz}
+			/>
+		);
+	}
+
+	// Show signup form
 	return (
 		<div className="min-h-screen flex flex-col">
 			<AuthPageHeader />
