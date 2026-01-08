@@ -431,12 +431,14 @@ const styles = StyleSheet.create({
 		textAlign: "center",
 	},
 	checklistSection: {
-		marginBottom: 15,
+		marginBottom: 25,
+		marginTop: 5,
 	},
 	checklistStepHeader: {
 		flexDirection: "row",
 		alignItems: "center",
-		marginBottom: 10,
+		marginBottom: 12,
+		marginTop: 0,
 		gap: 10,
 	},
 	checklistNumberCircle: {
@@ -456,9 +458,11 @@ const styles = StyleSheet.create({
 	},
 	checklistSectionTitle: {
 		fontSize: 14,
-		fontWeight: "bold",
+		fontWeight: 600,
 		color: "#239485",
 		flex: 1,
+		marginBottom: 0,
+		marginTop: 0,
 	},
 	checklistItem: {
 		flexDirection: "row",
@@ -469,12 +473,20 @@ const styles = StyleSheet.create({
 		color: "#1f2937",
 		flex: 1,
 		textAlign: "justify",
+		marginBottom: 12,
+		marginTop: 0,
+		lineHeight: 1.8,
+		paddingLeft: 30,
+		paddingRight: 30,
 	},
 	checklistParagraphText: {
 		fontSize: 12,
 		color: "#1f2937",
-		marginBottom: 8,
-		marginTop: 4,
+		marginBottom: 14,
+		marginTop: 0,
+		lineHeight: 1.8,
+		paddingLeft: 30,
+		paddingRight: 30,
 	},
 	checklistImportant: {
 		fontSize: 11,
@@ -516,6 +528,55 @@ const styles = StyleSheet.create({
 		fontSize: 14,
 		marginBottom: 10,
 		paddingLeft: 20,
+	},
+	// Footer styles
+	footer: {
+		position: "absolute",
+		bottom: 0,
+		left: 0,
+		right: 0,
+		backgroundColor: "#239485",
+		paddingTop: 12,
+		paddingBottom: 12,
+		paddingLeft: 8,
+		paddingRight: 8,
+		marginTop: 10,
+		height: 40,
+		flexDirection: "row",
+		justifyContent: "flex-end",
+		alignItems: "center",
+	},
+	footerText: {
+		color: "#ffffff",
+		fontSize: 10,
+		textAlign: "right",
+		paddingRight: 20,
+	},
+	// Main content header styles
+	mainContentHeader: {
+		position: "absolute",
+		top: 0,
+		left: 0,
+		right: 0,
+		paddingTop: 20,
+		paddingLeft: 20,
+		paddingRight: 20,
+	},
+	mainContentHeaderLogo: {
+		width: 120,
+		height: "auto",
+		marginBottom: 15,
+		alignSelf: "flex-start",
+	},
+	mainContentHeaderLine: {
+		width: "100%",
+		height: 1,
+		backgroundColor: "#000000",
+	},
+	mainContentHeaderLineWithLogo: {
+		width: "100%",
+		height: 2,
+		backgroundColor: "#000000",
 	},
 });
 
@@ -772,6 +833,65 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 		return elements;
 	};
 
+	// Track the first main content page (first page with header/footer)
+	// This will be set on the first header render
+	let firstMainContentPage: number | null = null;
+
+	// Header for first main content page (with logo and taller line)
+	const renderHeaderFirstPage = () => (
+		<View style={styles.mainContentHeader} fixed>
+			<Text
+				render={({ pageNumber }) => {
+					// Set the first main content page on first render
+					if (firstMainContentPage === null) {
+						firstMainContentPage = pageNumber;
+					}
+					return "";
+				}}
+			/>
+			<View style={{ width: "100%" }}>
+				<Image
+					src="/logos/Logo_BlackandWhite.png"
+					style={styles.mainContentHeaderLogo}
+				/>
+				<View style={styles.mainContentHeaderLineWithLogo} />
+			</View>
+		</View>
+	);
+
+	// Header for subsequent main content pages (line only)
+	const renderHeaderSubsequentPages = () => (
+		<View style={styles.mainContentHeader} fixed>
+			<View style={{ width: "100%" }}>
+				<View style={styles.mainContentHeaderLine} />
+			</View>
+		</View>
+	);
+
+	// Reusable footer component
+	const renderFooter = () => (
+		<View style={styles.footer} fixed>
+			<Text
+				style={styles.footerText}
+				render={({ pageNumber, totalPages }) => {
+					// Only show footer on main content pages (pages >= firstMainContentPage)
+					if (
+						firstMainContentPage === null ||
+						pageNumber < firstMainContentPage
+					) {
+						return null;
+					}
+
+					// Calculate page numbers starting from 1 for the first main content page
+					const willPageNumber = pageNumber - firstMainContentPage + 1;
+					const willTotalPages = totalPages - firstMainContentPage + 1;
+
+					return `Page ${willPageNumber} of ${willTotalPages}`;
+				}}
+			/>
+		</View>
+	);
+
 	return (
 		<Document>
 			{/* Checklist Page - First Page */}
@@ -925,6 +1045,7 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 
 			{/* Main Will Content - Second Page */}
 			<Page size="A4" style={styles.page}>
+				{renderHeaderFirstPage()}
 				<View style={styles.centeredTitle}>
 					<View style={styles.titleContainer}>
 						<Text style={styles.willTitle}>THE</Text>
@@ -1436,10 +1557,13 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 						not affect the interpretation of this Will.
 					</Text>
 				</View>
+
+				{renderFooter()}
 			</Page>
 
 			{/* Final Declaration Page */}
 			<Page size="A4" style={styles.page} break>
+				{renderHeaderSubsequentPages()}
 				{/* Final Declaration Section */}
 				<View style={styles.finalDeclarationSection}>
 					<Text style={styles.finalDeclarationTitle}>
@@ -1472,10 +1596,13 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 						will and approve it as a true reflection of my wishes.
 					</Text>
 				</View>
+
+				{renderFooter()}
 			</Page>
 
 			{/* Witness Signatures Page */}
 			<Page size="A4" style={styles.page} break>
+				{renderHeaderSubsequentPages()}
 				<View style={styles.witnessSection}>
 					<Text style={styles.witnessTitle}>Signatures and Witnesses</Text>
 					<Text style={styles.witnessText}>
@@ -1555,10 +1682,13 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 						presence of the testator and each other on the date shown above.
 					</Text>
 				</View>
+
+				{renderFooter()}
 			</Page>
 
 			{data.assets && data.assets.length > 0 && (
 				<Page style={styles.appendixPage} break>
+					{renderHeaderSubsequentPages()}
 					<View style={styles.appendixSection}>
 						<Text style={styles.appendixTitle}>Appendix</Text>
 						<Text style={styles.appendixIntro}>
@@ -1601,6 +1731,8 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 							</Text>
 						)}
 					</View>
+
+					{renderFooter()}
 				</Page>
 			)}
 		</Document>
