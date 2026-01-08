@@ -130,7 +130,7 @@ export default function Navbar() {
 							)
 						)}
 						<a
-							href="https://calendly.com/" // TODO: Replace with actual scheduling link
+							href="https://calendly.com/legacyinorder/new-meeting"
 							target="_blank"
 							rel="noopener noreferrer"
 						>

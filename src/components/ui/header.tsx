@@ -62,7 +62,7 @@ export function Header() {
 							Sign In
 						</Link>
 						<Link
-							to="/schedule"
+							to="https://calendly.com/legacyinorder/new-meeting"
 							className="flex items-center justify-center h-[41px] w-[150px] bg-transparent border border-white rounded-lg text-white"
 						>
 							Schedule a Call
@@ -85,7 +85,7 @@ export function Header() {
 						</p>
 						<div className="mt-8 flex gap-4">
 							<Link
-								to="/get-started"
+								to="/signup"
 								className="flex items-center justify-center h-12 px-8 bg-white border border-[#3E4029] rounded-lg text-[#3E4029] font-semibold hover:bg-[#f8f8f8] transition-colors w-fit"
 							>
 								<img
@@ -96,7 +96,7 @@ export function Header() {
 								Write your Will
 							</Link>
 							<Link
-								to="/get-started"
+								to="/signup"
 								className="flex items-center justify-center h-12 px-8 bg-white border border-[#3E4029] rounded-lg text-[#3E4029] font-semibold hover:bg-[#f8f8f8] transition-colors w-fit"
 							>
 								<img
