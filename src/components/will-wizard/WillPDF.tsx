@@ -389,8 +389,8 @@ const styles = StyleSheet.create({
 	},
 	// Checklist styles
 	checklistPage: {
-		padding: 30,
-		paddingTop: 0,
+		paddingBottom: 0,
+		paddingTop: 10,
 		paddingRight: 0,
 		paddingLeft: 30,
 		backgroundColor: "#fff",
@@ -401,7 +401,7 @@ const styles = StyleSheet.create({
 		flexDirection: "row",
 		justifyContent: "space-between",
 		alignItems: "flex-start",
-		marginBottom: 30,
+		marginBottom: 10,
 		marginTop: 0,
 		marginLeft: -30,
 		marginRight: 0,
@@ -416,39 +416,32 @@ const styles = StyleSheet.create({
 		zIndex: 1,
 	},
 	checklistLogo: {
-		width: 200,
+		width: 100,
 		height: "auto",
-		marginTop: 30,
+		marginTop: 25,
 	},
 	checklistHeaderTitle: {
-		fontSize: 32,
+		fontSize: 18,
 		fontWeight: "bold",
 		color: "#239485",
-		marginTop: 20,
-		maxWidth: "70%",
+		marginTop: 10,
 		fontFamily: "DM Sans",
 	},
 	checklistHeaderRight: {
 		position: "absolute",
 		right: 0,
 		top: -15,
-		width: 150,
-		height: 200,
+		width: 100,
+		height: 150,
 		zIndex: 0,
 		margin: 0,
 		padding: 0,
 	},
 	checklistHeaderImage: {
+		paddingTop: -10,
 		width: "100%",
 		height: "100%",
 		objectFit: "contain",
-	},
-	checklistTitle: {
-		fontSize: 20,
-		fontWeight: "bold",
-		marginBottom: 15,
-		textAlign: "center",
-		color: "#1f2937",
 	},
 	checklistSubtitle: {
 		fontSize: 12,
@@ -457,13 +450,12 @@ const styles = StyleSheet.create({
 		textAlign: "center",
 	},
 	checklistSection: {
-		marginBottom: 25,
-		marginTop: 5,
+		marginBottom: 0,
 	},
 	checklistStepHeader: {
 		flexDirection: "row",
 		alignItems: "center",
-		marginBottom: 12,
+		marginBottom: 4,
 		marginTop: 0,
 		gap: 10,
 	},
@@ -483,7 +475,7 @@ const styles = StyleSheet.create({
 		textAlign: "center",
 	},
 	checklistSectionTitle: {
-		fontSize: 14,
+		fontSize: 12,
 		fontWeight: 600,
 		color: "#239485",
 		flex: 1,
@@ -494,24 +486,47 @@ const styles = StyleSheet.create({
 		flexDirection: "row",
 		marginBottom: 8,
 	},
+	checklistList: {
+		marginBottom: 10,
+		marginTop: 0,
+		paddingLeft: 35,
+		paddingRight: 30,
+	},
+	checklistListFinal: {
+		marginBottom: 0,
+		marginTop: 0,
+		paddingLeft: 35,
+		paddingRight: 30,
+	},
+	checklistListItem: {
+		flexDirection: "row",
+		marginBottom: 4,
+		alignItems: "flex-start",
+	},
+	checklistBullet: {
+		width: 12,
+		height: 12,
+		border: "1.5px solid #239485",
+		borderRadius: 2,
+		backgroundColor: "transparent",
+		marginRight: 10,
+		marginTop: 0,
+	},
 	checklistText: {
-		fontSize: 12,
+		fontSize: 11,
 		color: "#1f2937",
 		flex: 1,
 		textAlign: "justify",
-		marginBottom: 12,
+		lineHeight: 2,
 		marginTop: 0,
-		lineHeight: 1.8,
-		paddingLeft: 30,
-		paddingRight: 30,
 	},
 	checklistParagraphText: {
-		fontSize: 12,
+		fontSize: 11,
 		color: "#1f2937",
-		marginBottom: 14,
+		marginBottom: 4,
 		marginTop: 0,
-		lineHeight: 1.8,
-		paddingLeft: 30,
+		lineHeight: 2,
+		paddingLeft: 35,
 		paddingRight: 30,
 	},
 	checklistImportant: {
@@ -954,16 +969,23 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 
 					<Text style={styles.checklistParagraphText}>Before you sign:</Text>
 
-					<Text style={styles.checklistText}>
-						Read your Will from start to finish. Check that every name, date,
-						and instruction is accurate. If anything is unclear or you want to
-						make changes update before printing and signing.
-					</Text>
-
-					<Text style={styles.checklistText}>
-						Print your Will on plain paper. Keep the pages together and staple
-						them securely in the top left corner.
-					</Text>
+					<View style={styles.checklistList}>
+						<View style={styles.checklistListItem} wrap={false}>
+							<View style={styles.checklistBullet} />
+							<Text style={styles.checklistText}>
+								Read your Will from start to finish. Check that every name,
+								date, and instruction is accurate. If anything is unclear or you
+								want to make changes update before printing and signing.
+							</Text>
+						</View>
+						<View style={styles.checklistListItem} wrap={false}>
+							<View style={styles.checklistBullet} />
+							<Text style={styles.checklistText}>
+								Print your Will on plain paper. Keep the pages together and
+								staple them securely in the top left corner.
+							</Text>
+						</View>
+					</View>
 				</View>
 
 				{/* Step 2 - Choose Witnesses */}
@@ -981,14 +1003,21 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 						You must sign your Will in front of two independent witnesses.
 					</Text>
 
-					<Text style={styles.checklistText}>
-						They must be aged 18 or over and mentally competent.
-					</Text>
-
-					<Text style={styles.checklistText}>
-						They cannot be a beneficiary named in your Will or be married to, or
-						in a partnership with, any beneficiary.
-					</Text>
+					<View style={styles.checklistList}>
+						<View style={styles.checklistListItem} wrap={false}>
+							<View style={styles.checklistBullet} />
+							<Text style={styles.checklistText}>
+								They must be aged 18 or over and mentally competent.
+							</Text>
+						</View>
+						<View style={styles.checklistListItem} wrap={false}>
+							<View style={styles.checklistBullet} />
+							<Text style={styles.checklistText}>
+								They cannot be a beneficiary named in your Will or be married
+								to, or in a partnership with, any beneficiary.
+							</Text>
+						</View>
+					</View>
 				</View>
 
 				{/* Step 3 - Signing Your Will */}
@@ -1000,24 +1029,35 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 						<Text style={styles.checklistSectionTitle}>Signing Your Will</Text>
 					</View>
 
-					<Text style={styles.checklistText}>
-						Arrange for both witnesses to be present at the same time.
-					</Text>
-
-					<Text style={styles.checklistText}>
-						Using a pen, you sign first, with both witnesses watching. You
-						cannot sign a will electronically.
-					</Text>
-
-					<Text style={styles.checklistText}>
-						Each witness must then, write their full name in capital letters,
-						Write their address. Sign in the space provided.
-					</Text>
-
-					<Text style={styles.checklistText}>
-						If there's a mistake, start again if possible. If not, all parties
-						should initial the correction.
-					</Text>
+					<View style={styles.checklistList}>
+						<View style={styles.checklistListItem} wrap={false}>
+							<View style={styles.checklistBullet} />
+							<Text style={styles.checklistText}>
+								Arrange for both witnesses to be present at the same time.
+							</Text>
+						</View>
+						<View style={styles.checklistListItem} wrap={false}>
+							<View style={styles.checklistBullet} />
+							<Text style={styles.checklistText}>
+								Using a pen, you sign first, with both witnesses watching. You
+								cannot sign a will electronically.
+							</Text>
+						</View>
+						<View style={styles.checklistListItem} wrap={false}>
+							<View style={styles.checklistBullet} />
+							<Text style={styles.checklistText}>
+								Each witness must write their full name, address, occupation and
+								then sign in the space provided.
+							</Text>
+						</View>
+						<View style={styles.checklistListItem} wrap={false}>
+							<View style={styles.checklistBullet} />
+							<Text style={styles.checklistText}>
+								If there's a mistake, start again if possible. If not, all
+								parties should initial the correction.
+							</Text>
+						</View>
+					</View>
 				</View>
 
 				{/* Step 4 - Store and Register */}
@@ -1035,20 +1075,29 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 						Once signed and witnessed, your Will is legally valid.
 					</Text>
 
-					<Text style={styles.checklistText}>
-						Store the original in a safe but accessible place.
-					</Text>
-
-					<Text style={styles.checklistText}>
-						Tell your Executor and at least one trusted person where it's stored
-						and how to access it.
-					</Text>
-
-					<Text style={styles.checklistText}>
-						Consider registering your Will with a recognised will registry. If
-						you make a new Will, destroy the old one and update the registry
-						immediately.
-					</Text>
+					<View style={styles.checklistList}>
+						<View style={styles.checklistListItem} wrap={false}>
+							<View style={styles.checklistBullet} />
+							<Text style={styles.checklistText}>
+								Store the original in a safe but accessible place.
+							</Text>
+						</View>
+						<View style={styles.checklistListItem} wrap={false}>
+							<View style={styles.checklistBullet} />
+							<Text style={styles.checklistText}>
+								Tell your Executor and at least one trusted person where it's
+								stored and how to access it.
+							</Text>
+						</View>
+						<View style={styles.checklistListItem} wrap={false}>
+							<View style={styles.checklistBullet} />
+							<Text style={styles.checklistText}>
+								Consider registering your Will with a recognised will registry.
+								If you make a new Will, destroy the old one and update the
+								registry immediately.
+							</Text>
+						</View>
+					</View>
 				</View>
 
 				{/* Step 5 - Inspire Others */}
@@ -1060,12 +1109,21 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 						<Text style={styles.checklistSectionTitle}>Inspire Others</Text>
 					</View>
 
-					<Text style={styles.checklistText}>
-						Completing your Will is one of the most loving legacies you can
-						leave. It spares your loved ones stress, uncertainty, and potential
-						disagreements. Inspire your friends and family to do the same by
-						sharing Legacy In Order with them.
-					</Text>
+					<View style={styles.checklistListFinal}>
+						<View style={styles.checklistListItem} wrap={false}>
+							<View style={styles.checklistBullet} />
+							<Text style={styles.checklistText}>
+								Completing your Will is one of the most loving legacies you can
+								leave. It spares your loved ones stress and uncertainty. Inspire
+								your friends and family to do the same by sharing Legacy In
+								Order (
+								<Text style={{ color: "#239485", fontWeight: "semibold" }}>
+									https://www.legacyinorder.com
+								</Text>
+								) with them.
+							</Text>
+						</View>
+					</View>
 				</View>
 			</Page>
 
