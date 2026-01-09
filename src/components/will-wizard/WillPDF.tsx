@@ -58,7 +58,29 @@ const styles = StyleSheet.create({
 		padding: 40,
 		fontFamily: "DM Sans",
 		fontSize: 14,
+		paddingTop: 60,
+		paddingBottom: 30,
 	},
+	// Page style for first main content page (with logo header)
+	pageWithHeader: {
+		flexDirection: "column",
+		backgroundColor: "#ffffff",
+		padding: 40,
+		paddingTop: 80, // Space after header with logo
+		paddingBottom: 60, // Space before footer
+		fontFamily: "DM Sans",
+		fontSize: 14,
+	},
+	// Page style for subsequent main content pages (line only header)
+	// pageWithHeaderOnly: {
+	// 	flexDirection: "column",
+	// 	backgroundColor: "#ffffff",
+	// 	padding: 40,
+	// 	paddingTop: 35, // Space after header line
+	// 	paddingBottom: 60, // Space before footer
+	// 	fontFamily: "DM Sans",
+	// 	fontSize: 14,
+	// },
 	centeredTitle: {
 		flex: 1,
 		justifyContent: "center",
@@ -246,12 +268,16 @@ const styles = StyleSheet.create({
 		fontSize: 14,
 		marginBottom: 15,
 	},
+	witnessText2: {
+		textAlign: "justify",
+		fontSize: 14,
+	},
 	witnessSignature: {
 		marginTop: 5,
 		marginBottom: 10,
 	},
 	witnessName: {
-		fontSize: 14,
+		fontSize: 12,
 		marginBottom: 10,
 	},
 	witnessAddress: {
@@ -267,7 +293,7 @@ const styles = StyleSheet.create({
 	signatureBox: {
 		border: "1px dotted #000000",
 		width: "100%",
-		height: 60,
+		height: 50,
 		marginBottom: 15,
 	},
 	finalDeclarationSection: {
@@ -860,13 +886,13 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 	);
 
 	// Header for subsequent main content pages (line only)
-	const renderHeaderSubsequentPages = () => (
-		<View style={styles.mainContentHeader} fixed>
-			<View style={{ width: "100%" }}>
-				<View style={styles.mainContentHeaderLine} />
-			</View>
-		</View>
-	);
+	// const renderHeaderSubsequentPages = () => (
+	// 	<View style={styles.mainContentHeader} fixed>
+	// 		<View style={{ width: "100%" }}>
+	// 			<View style={styles.mainContentHeaderLine} />
+	// 		</View>
+	// 	</View>
+	// );
 
 	// Reusable footer component
 	const renderFooter = () => (
@@ -1044,7 +1070,7 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 			</Page>
 
 			{/* Main Will Content - Second Page */}
-			<Page size="A4" style={styles.page}>
+			<Page size="A4" style={styles.pageWithHeader}>
 				{renderHeaderFirstPage()}
 				<View style={styles.centeredTitle}>
 					<View style={styles.titleContainer}>
@@ -1562,8 +1588,8 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 			</Page>
 
 			{/* Final Declaration Page */}
-			<Page size="A4" style={styles.page} break>
-				{renderHeaderSubsequentPages()}
+			<Page size="A4" style={styles.pageWithHeader} break>
+				{renderHeaderFirstPage()}
 				{/* Final Declaration Section */}
 				<View style={styles.finalDeclarationSection}>
 					<Text style={styles.finalDeclarationTitle}>
@@ -1601,13 +1627,13 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 			</Page>
 
 			{/* Witness Signatures Page */}
-			<Page size="A4" style={styles.page} break>
-				{renderHeaderSubsequentPages()}
+			<Page size="A4" style={styles.pageWithHeader} break>
+				{renderHeaderFirstPage()}
 				<View style={styles.witnessSection}>
 					<Text style={styles.witnessTitle}>Signatures and Witnesses</Text>
-					<Text style={styles.witnessText}>
+					{/* <Text style={styles.witnessText}>
 						<Text style={{ fontWeight: "bold" }}>SIGNATURE</Text>
-					</Text>
+					</Text> */}
 					<Text style={styles.witnessText}>
 						<Text style={{ fontWeight: "bold" }}>{sections.witnesses}.1.</Text>{" "}
 						I,{" "}
@@ -1676,7 +1702,7 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 						</>
 					)}
 
-					<Text style={styles.witnessText}>
+					<Text style={styles.witnessText2}>
 						<Text style={{ fontWeight: "bold" }}>{sections.witnesses}.2.</Text>{" "}
 						Signed by the testator in our presence and then by us in the
 						presence of the testator and each other on the date shown above.
@@ -1687,8 +1713,8 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 			</Page>
 
 			{data.assets && data.assets.length > 0 && (
-				<Page style={styles.appendixPage} break>
-					{renderHeaderSubsequentPages()}
+				<Page style={[styles.appendixPage, styles.pageWithHeader]} break>
+					{renderHeaderFirstPage()}
 					<View style={styles.appendixSection}>
 						<Text style={styles.appendixTitle}>Appendix</Text>
 						<Text style={styles.appendixIntro}>
