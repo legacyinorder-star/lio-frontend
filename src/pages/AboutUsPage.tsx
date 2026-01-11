@@ -50,14 +50,6 @@ export default function AboutUsPage() {
 										Write My Will
 									</Button>
 								</Link>
-								<Link to="/letter-of-wishes">
-									<Button
-										variant="outline"
-										className="text-[#173C37] border border-[#173C37] font-semibold rounded hover:bg-[#173C37] hover:text-white px-8 py-6"
-									>
-										Create a Letter of Wishes
-									</Button>
-								</Link>
 								{/* <Button
 									variant="outline"
 									className="text-[#173C37] border border-[#173C37] font-semibold rounded hover:bg-[#173C37] hover:text-white px-8 py-6"
@@ -82,7 +74,7 @@ export default function AboutUsPage() {
 									OUR MISSION
 								</p>
 								<h2 className="text-[2.5rem] font-semibold text-[#173C37] leading-tight">
-									Our Mission – Making End-of-Life Planning Easy
+									Making End-of-Life Planning Easy
 								</h2>
 								<div className="space-y-4 text-[#173C37] leading-relaxed text-[1rem] font-normal">
 									<p>
@@ -145,8 +137,8 @@ export default function AboutUsPage() {
 										or planning retirement, Legacy In Order is built for you.
 										Estate planning should be as common and stress-free as
 										online banking or digital calendars. Our services are
-										tailored to people in England and Wales, and we intend to
-										expand to Scotland and Northern Ireland in the future.
+										thoughtfully designed for individuals and families in
+										England and Wales.
 									</p>
 								</div>
 							</div>
@@ -213,9 +205,9 @@ export default function AboutUsPage() {
 								</p>
 								<div className="mt-auto">
 									<h4 className="font-semibold text-gray-900 text-sm">
-										Michael Thompson
+										Ola Balogun
 									</h4>
-									<p className="text-gray-600 text-xs">Financial Advisor</p>
+									<p className="text-gray-600 text-xs">Financial Analyst</p>
 								</div>
 							</div>
 
@@ -242,7 +234,7 @@ export default function AboutUsPage() {
 								</p>
 								<div className="mt-auto">
 									<h4 className="font-semibold text-gray-900 text-sm">
-										Jennifer Martinez
+										Katherine Jones
 									</h4>
 									<p className="text-gray-600 text-xs">Marketing Director</p>
 								</div>
@@ -271,7 +263,7 @@ export default function AboutUsPage() {
 								</p>
 								<div className="mt-auto">
 									<h4 className="font-semibold text-gray-900 text-sm">
-										Robert Chen
+										Sandra Appiah
 									</h4>
 									<p className="text-gray-600 text-xs">Small Business Owner</p>
 								</div>

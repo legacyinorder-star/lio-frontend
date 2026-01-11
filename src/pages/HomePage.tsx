@@ -93,7 +93,7 @@ export default function HomePage() {
 							<div className="space-y-8 flex flex-col justify-center py-12 px-8 md:px-10 lg:px-12">
 								<div className="space-y-4 pt-12">
 									<h1 className="text-4xl md:text-5xl lg:text-6xl font-semibold leading-tight text-[#173C37]">
-										Online Will Writing Made Simple (England and Wales)
+										Your Will, Made Simple.
 									</h1>
 									<p className="text-[1rem] font-normal leading-relaxed text-[#173C37]">
 										Create a legally valid will online in under 15 minutes with
@@ -138,8 +138,9 @@ export default function HomePage() {
 									))}
 									<div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-8 z-10">
 										<p className="text-white text-xl md:text-2xl font-normal leading-relaxed">
-											Let us help you create a legacy. Start the conversation
-											today and take the first step toward peace of mind.
+											Create your legacy with confidence. Start your online Will
+											today and take the first step toward peace of mind for you
+											and your loved ones.
 										</p>
 									</div>
 								</div>
@@ -159,7 +160,7 @@ export default function HomePage() {
 								How Our Online Will Writing Service Works
 							</h2>
 							<p className="text-lg text-muted-foreground mb-6">
-								Create your legally valid will online in as little as 15 minutes
+								Create your legally valid Will online in as little as 15 minutes
 							</p>
 						</div>
 
@@ -199,8 +200,8 @@ export default function HomePage() {
 									2. Generate your document
 								</h3>
 								<p className="text-gray-600">
-									Based on your answers, we create secure, legally valid
-									documents like Wills or Power of Attorney.
+									Based on your answers, we will create a secure, legally valid
+									Will.
 								</p>
 							</div>
 
@@ -216,11 +217,11 @@ export default function HomePage() {
 									/>
 								</div>
 								<h3 className="text-xl font-semibold mb-4 text-[#173C37]">
-									3. Sign & Register
+									3. Sign & Witness
 								</h3>
 								<p className="text-gray-600">
-									Store your documents in your private vault . Revisit, edit, or
-									share with loved ones anytime.
+									Print your Will and sign it in front of two witnesses to make
+									it legally valid.
 								</p>
 							</div>
 
@@ -239,8 +240,8 @@ export default function HomePage() {
 									4. Store Securely
 								</h3>
 								<p className="text-gray-600">
-									Make changes on your schedule, from any device, whether you're
-									at your desk or on the move.
+									Store your Will securely, with a physical copy and a secure
+									digital version.
 								</p>
 							</div>
 						</div>
@@ -409,12 +410,12 @@ export default function HomePage() {
 
 						<div className="mt-4 text-center max-w-4xl mx-auto">
 							<h2 className="text-[1.5rem] md:text-4xl lg:text-5xl font-semibold text-black mb-6">
-								The Good News – Create Your Will Online Today
+								The Good News
 							</h2>
 							<p className="text-lg md:text-xl text-gray-700 mb-8 leading-relaxed">
-								Creating a will with Legacy In Order is simple, secure, and
-								affordable. Our online will writing service lets you draft, sign
-								and store your will from home in as little as 15 minutes. Start
+								Creating your Will with Legacy In Order is simple, secure, and
+								affordable. Our online Will writing service lets you draft, sign
+								and store your Will from home in as little as 15 minutes. Start
 								today and give your family peace of mind.
 							</p>
 							<Button
@@ -485,7 +486,7 @@ export default function HomePage() {
 									Professionally Reviewed Documents
 								</h3>
 								<p className="text-[1rem] text-[#173C37] leading-relaxed">
-									Every template is designed and checked against best practice
+									Every Will is designed and checked against best practice
 									standards, so you can be confident your documents are
 									accurate, reliable, and legally sound.
 								</p>
@@ -521,7 +522,7 @@ export default function HomePage() {
 							</h2>
 
 							{/* Review Cards */}
-							<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-12">
+							<div className="flex flex-row justify-center gap-8 mt-12">
 								{/* Card 1 */}
 								<div className="bg-white rounded-lg p-6 shadow-lg text-left flex flex-col h-full">
 									<div className="flex gap-1 mb-4">
@@ -573,9 +574,9 @@ export default function HomePage() {
 										))}
 									</div>
 									<p className="text-gray-700 text-sm mb-4 leading-relaxed flex-grow">
-										The security features give me peace of mind. I can update my
-										documents anytime and know they're protected with
-										enterprise-grade encryption.
+										No hidden fees or expensive consultations. Just a
+										straightforward, affordable way to protect my family. Highly
+										recommend!
 									</p>
 									<div className="flex items-center gap-3 mt-auto">
 										<img
@@ -615,15 +616,19 @@ export default function HomePage() {
 									</p>
 									<div className="flex items-center gap-3 mt-auto">
 										<img
-											src="/avatars/user3.png"
-											alt="Priyanka R. using online will writing service"
+											src="/avatars/user9.png"
+											alt="Ijeoma O. using online will writing service"
 											className="w-10 h-10 rounded-full"
+											style={{
+												objectFit: "cover",
+												objectPosition: "top left",
+											}}
 											loading="lazy"
 											decoding="async"
 										/>
 										<div>
 											<h4 className="font-semibold text-gray-900 text-sm">
-												Priyanka R.
+												Ijeoma O.
 											</h4>
 											<p className="text-gray-600 text-xs">
 												Healthcare Professional
@@ -633,7 +638,7 @@ export default function HomePage() {
 								</div>
 
 								{/* Card 4 */}
-								<div className="bg-white rounded-lg p-6 shadow-lg text-left flex flex-col h-full">
+								{/* <div className="bg-white rounded-lg p-6 shadow-lg text-left flex flex-col h-full">
 									<div className="flex gap-1 mb-4">
 										{[...Array(5)].map((_, i) => (
 											<svg
@@ -666,7 +671,7 @@ export default function HomePage() {
 											<p className="text-gray-600 text-xs">Retired Teacher</p>
 										</div>
 									</div>
-								</div>
+								</div> */}
 							</div>
 						</div>
 					</div>
@@ -718,8 +723,8 @@ export default function HomePage() {
 									className="hidden px-[35px] py-[35px] bg-white"
 								>
 									<p className="text-[1rem] font-normal text-[#545454] font-['DM_Sans']">
-										You can create legally binding Wills and letters of wishes
-										with our{" "}
+										Currently, you can create legally binding Wills and letters
+										of wishes with our{" "}
 										<Link
 											to="/will-information"
 											className="text-[#239485] underline hover:text-[#173C37]"
@@ -727,7 +732,8 @@ export default function HomePage() {
 											online will writing service
 										</Link>
 										. Our platform guides you through each document creation
-										process with clear, step-by-step instructions.
+										process with clear, step-by-step instructions, ensuring your
+										documents are suitable for England and Wales.
 									</p>
 								</div>
 							</div>
@@ -774,8 +780,14 @@ export default function HomePage() {
 										We use enterprise-grade encryption to protect your data. All
 										documents are stored securely and can only be accessed by
 										you. We never share your information with third parties
-										without your explicit consent. Our privacy policy explains
-										how we handle your data.
+										without your explicit consent. Our{" "}
+										<Link
+											to="/privacy-policy"
+											className="text-[#239485] underline hover:text-[#173C37]"
+										>
+											privacy policy
+										</Link>{" "}
+										explains how we handle your data.
 									</p>
 								</div>
 							</div>

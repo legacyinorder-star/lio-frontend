@@ -46,13 +46,13 @@ export default function LetterOfWishesPage() {
 							<div className="space-y-8 flex flex-col justify-center py-12 px-8 md:px-10 lg:px-12">
 								<div className="space-y-4 pt-12">
 									<h1 className="text-[4rem] font-semibold leading-tight text-[#173C37]">
-										Letter of Wishes UK: Guide Your Loved Ones Clearly
+										Letter of Wishes: Guide Your Loved Ones Clearly
 									</h1>
 									<p className="text-[1rem] font-normal leading-relaxed text-[#173C37]">
-										Complement your will with a personal letter of wishes.
+										Complement your Will with a personal letter of wishes.
 										Provide guidance on funeral preferences, personal messages
 										and digital assets so your family knows exactly what you
-										want. Available as a free add-on when you create your will
+										want. Available as a free add-on when you create your Will
 										with us.
 									</p>
 								</div>
@@ -100,7 +100,7 @@ export default function LetterOfWishesPage() {
 							</p>
 							<p className="text-lg font-[500] text-muted-foreground mb-6 max-w-4xl">
 								It is complimentary and automatically included when you purchase
-								a will with us. Create your Will first to unlock access to your
+								a Will with us. Create your Will first to unlock access to your
 								free Letter of Wishes.
 							</p>
 						</div>
@@ -171,10 +171,10 @@ export default function LetterOfWishesPage() {
 								</div>
 								<div className="flex-1">
 									<h3 className="text-[1.25rem] font-semibold mb-4 mt-0 pt-0 text-[#173C37]">
-										Assets List
+										Asset List
 									</h3>
 									<div className="text-secondary text-[1rem]">
-										<p>Maintain an up-to-date list of your assets:</p>
+										<p>Maintain an up-to-date registry of your assets:</p>
 										<ul className="list-disc list-inside">
 											<li>Provide a detailed list of digital assets</li>
 											<li>Instructions on access to digital assets</li>
@@ -229,10 +229,10 @@ export default function LetterOfWishesPage() {
 						</h2>
 						<p className="text-[1rem] font-medium text-black mb-16 leading-relaxed max-w-4xl mx-auto">
 							When you purchase a Will with Legacy In Order, your Letter of
-							Wishes is included at no extra cost. Create your Will first, and
-							you'll automatically have access to create your complimentary
-							Letter of Wishes. It is our way of helping you provide complete
-							guidance to your loved ones.
+							Wishes is included at no extra cost. Create your Will, and you'll
+							automatically have access to create your complimentary Letter of
+							Wishes. It is our way of helping you provide complete guidance to
+							your loved ones.
 						</p>
 					</div>
 					<div className="grid grid-cols-1 md:grid-cols-1 gap-6 w-full max-w-lg mx-auto">
@@ -249,7 +249,6 @@ export default function LetterOfWishesPage() {
 								</div>
 								<p className="text-sm font-normal text-black mt-1">
 									Included free when you purchase a Will with Legacy In Order.
-									Not available as a standalone service.
 								</p>
 							</CardHeader>
 							<CardContent className="space-y-3 flex-1 flex flex-col p-4">

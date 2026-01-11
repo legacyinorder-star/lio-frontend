@@ -45,10 +45,10 @@ export default function WillInfoPage() {
 										Write a Will Online for England and Wales
 									</h1>
 									<p className="text-[1rem] font-normal leading-relaxed text-[#173C37]">
-										Create a legally binding single or mirror will online in as
-										little as 15 minutes. Our expert-reviewed service meets UK
-										legal requirements and gives you full control over who
-										inherits your estate.
+										Create a legally binding Will online in as little as 15
+										minutes. Our expert-reviewed service meets UK legal
+										requirements and gives you full control over who inherits
+										your estate.
 									</p>
 								</div>
 
@@ -224,8 +224,8 @@ export default function WillInfoPage() {
 									Generate your document
 								</h3>
 								<p className="text-gray-600">
-									Based on your answers, we create secure, legally valid
-									documents like Wills or Power of Attorney.
+									Based on your answers, we will create a secure, legally valid
+									Will.
 								</p>
 							</div>
 
@@ -242,11 +242,11 @@ export default function WillInfoPage() {
 								</div>
 								<p className="text-sm text-gray-500 mb-2">Step 3</p>
 								<h3 className="text-xl font-semibold mb-4 text-[#173C37]">
-									Sign & Register
+									Sign & Witness
 								</h3>
 								<p className="text-gray-600">
-									Store your documents in your private vault . Revisit, edit, or
-									share with loved ones anytime.
+									Print your Will and sign it in front of two witnesses to make
+									it legally valid.
 								</p>
 							</div>
 
@@ -266,8 +266,8 @@ export default function WillInfoPage() {
 									Store Securely
 								</h3>
 								<p className="text-gray-600">
-									Make changes on your schedule, from any device, whether you're
-									at your desk or on the move.
+									Store your Will securely, with a physical copy and a secure
+									digital version.
 								</p>
 							</div>
 						</div>
