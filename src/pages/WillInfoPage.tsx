@@ -276,7 +276,13 @@ export default function WillInfoPage() {
 								variant="default"
 								className="text-white bg-[#173C37] rounded border border-[#173C37] font-semibold px-8 py-6 hover:bg-[#173C37]/90"
 							>
-								<Link to="/login">Write My Will in 15 Minutes</Link>
+								<Link to="/signup">Write my Will</Link>
+							</Button>
+							<Button
+								variant="outline"
+								className="text-[#173C37] border border-[#173C37] font-semibold rounded hover:bg-[#173C37] hover:text-white px-8 py-6"
+							>
+								Explore the Vault
 							</Button>
 						</div>
 					</div>
@@ -322,7 +328,7 @@ export default function WillInfoPage() {
 										</li>
 									))}
 								</ul>
-								<Link to="/login">
+								<Link to="/signup">
 									<Button className="w-full bg-[#173C37] hover:bg-[#173C37]/90 text-white mt-8">
 										Create My Will Online
 									</Button>

@@ -1,6 +1,54 @@
 import React from "react";
-import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
+import {
+	Document,
+	Page,
+	Text,
+	View,
+	StyleSheet,
+	Image,
+	Font,
+} from "@react-pdf/renderer";
 import { getFormattedRelationshipNameById } from "../../utils/relationships";
+
+// Register DM Sans font from local files
+// Using static font files as react-pdf has better support for static fonts
+Font.register({
+	family: "DM Sans",
+	src: "/fonts/DM_Sans/static/DMSans-Regular.ttf",
+	fontWeight: "normal",
+});
+
+Font.register({
+	family: "DM Sans",
+	src: "/fonts/DM_Sans/static/DMSans-Medium.ttf",
+	fontWeight: 500,
+});
+
+Font.register({
+	family: "DM Sans",
+	src: "/fonts/DM_Sans/static/DMSans-SemiBold.ttf",
+	fontWeight: 600,
+});
+
+Font.register({
+	family: "DM Sans",
+	src: "/fonts/DM_Sans/static/DMSans-Bold.ttf",
+	fontWeight: "bold",
+});
+
+Font.register({
+	family: "DM Sans",
+	src: "/fonts/DM_Sans/static/DMSans-Italic.ttf",
+	fontWeight: "normal",
+	fontStyle: "italic",
+});
+
+Font.register({
+	family: "DM Sans",
+	src: "/fonts/DM_Sans/static/DMSans-BoldItalic.ttf",
+	fontWeight: "bold",
+	fontStyle: "italic",
+});
 
 // Create styles
 const styles = StyleSheet.create({
@@ -8,9 +56,31 @@ const styles = StyleSheet.create({
 		flexDirection: "column",
 		backgroundColor: "#ffffff",
 		padding: 40,
-		fontFamily: "Helvetica",
+		fontFamily: "DM Sans",
+		fontSize: 14,
+		paddingTop: 60,
+		paddingBottom: 30,
+	},
+	// Page style for first main content page (with logo header)
+	pageWithHeader: {
+		flexDirection: "column",
+		backgroundColor: "#ffffff",
+		padding: 40,
+		paddingTop: 80, // Space after header with logo
+		paddingBottom: 60, // Space before footer
+		fontFamily: "DM Sans",
 		fontSize: 14,
 	},
+	// Page style for subsequent main content pages (line only header)
+	// pageWithHeaderOnly: {
+	// 	flexDirection: "column",
+	// 	backgroundColor: "#ffffff",
+	// 	padding: 40,
+	// 	paddingTop: 35, // Space after header line
+	// 	paddingBottom: 60, // Space before footer
+	// 	fontFamily: "DM Sans",
+	// 	fontSize: 14,
+	// },
 	centeredTitle: {
 		flex: 1,
 		justifyContent: "center",
@@ -198,12 +268,16 @@ const styles = StyleSheet.create({
 		fontSize: 14,
 		marginBottom: 15,
 	},
+	witnessText2: {
+		textAlign: "justify",
+		fontSize: 14,
+	},
 	witnessSignature: {
 		marginTop: 5,
 		marginBottom: 10,
 	},
 	witnessName: {
-		fontSize: 14,
+		fontSize: 12,
 		marginBottom: 10,
 	},
 	witnessAddress: {
@@ -219,7 +293,7 @@ const styles = StyleSheet.create({
 	signatureBox: {
 		border: "1px dotted #000000",
 		width: "100%",
-		height: 60,
+		height: 50,
 		marginBottom: 15,
 	},
 	finalDeclarationSection: {
@@ -315,15 +389,59 @@ const styles = StyleSheet.create({
 	},
 	// Checklist styles
 	checklistPage: {
-		padding: 30,
+		paddingBottom: 0,
+		paddingTop: 10,
+		paddingRight: 0,
+		paddingLeft: 30,
 		backgroundColor: "#fff",
+		position: "relative",
+		fontFamily: "DM Sans",
 	},
-	checklistTitle: {
-		fontSize: 20,
+	checklistHeader: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "flex-start",
+		marginBottom: 10,
+		marginTop: 0,
+		marginLeft: -30,
+		marginRight: 0,
+		paddingLeft: 30,
+		paddingRight: 0,
+		paddingTop: 0,
+		position: "relative",
+	},
+	checklistHeaderLeft: {
+		flex: 1,
+		paddingRight: 20,
+		zIndex: 1,
+	},
+	checklistLogo: {
+		width: 100,
+		height: "auto",
+		marginTop: 25,
+	},
+	checklistHeaderTitle: {
+		fontSize: 18,
 		fontWeight: "bold",
-		marginBottom: 15,
-		textAlign: "center",
-		color: "#1f2937",
+		color: "#239485",
+		marginTop: 10,
+		fontFamily: "DM Sans",
+	},
+	checklistHeaderRight: {
+		position: "absolute",
+		right: 0,
+		top: -15,
+		width: 100,
+		height: 150,
+		zIndex: 0,
+		margin: 0,
+		padding: 0,
+	},
+	checklistHeaderImage: {
+		paddingTop: -10,
+		width: "100%",
+		height: "100%",
+		objectFit: "contain",
 	},
 	checklistSubtitle: {
 		fontSize: 12,
@@ -332,41 +450,84 @@ const styles = StyleSheet.create({
 		textAlign: "center",
 	},
 	checklistSection: {
-		marginBottom: 15,
+		marginBottom: 0,
+	},
+	checklistStepHeader: {
+		flexDirection: "row",
+		alignItems: "center",
+		marginBottom: 4,
+		marginTop: 0,
+		gap: 10,
+	},
+	checklistNumberCircle: {
+		width: 24,
+		height: 24,
+		borderRadius: 12,
+		backgroundColor: "#239485",
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "center",
+	},
+	checklistNumberText: {
+		color: "#ffffff",
+		fontSize: 12,
+		fontWeight: "bold",
+		textAlign: "center",
 	},
 	checklistSectionTitle: {
-		fontSize: 14,
-		fontWeight: "bold",
-		marginBottom: 8,
-		color: "#374151",
-		borderBottom: "1px solid #e5e7eb",
+		fontSize: 12,
+		fontWeight: 600,
+		color: "#239485",
+		flex: 1,
+		marginBottom: 0,
+		marginTop: 0,
 	},
 	checklistItem: {
 		flexDirection: "row",
-		alignItems: "flex-start",
 		marginBottom: 8,
-		paddingLeft: 15,
 	},
-	checklistParagraphText: {
-		fontSize: 11,
-		color: "#374151",
-		flex: 1,
-		marginBottom: 20,
+	checklistList: {
+		marginBottom: 10,
+		marginTop: 0,
+		paddingLeft: 35,
+		paddingRight: 30,
 	},
-	checklistCheckbox: {
-		width: 14,
-		height: 14,
-		border: "1px solid #d1d5db",
-		borderRadius: 3,
+	checklistListFinal: {
+		marginBottom: 0,
+		marginTop: 0,
+		paddingLeft: 35,
+		paddingRight: 30,
+	},
+	checklistListItem: {
+		flexDirection: "row",
+		marginBottom: 4,
+		alignItems: "flex-start",
+	},
+	checklistBullet: {
+		width: 12,
+		height: 12,
+		border: "1.5px solid #239485",
+		borderRadius: 2,
+		backgroundColor: "transparent",
 		marginRight: 10,
-		marginTop: 1,
+		marginTop: 0,
 	},
 	checklistText: {
 		fontSize: 11,
-		color: "#374151",
+		color: "#1f2937",
 		flex: 1,
-		lineHeight: 1.2,
-		marginBottom: 1,
+		textAlign: "justify",
+		lineHeight: 2,
+		marginTop: 0,
+	},
+	checklistParagraphText: {
+		fontSize: 11,
+		color: "#1f2937",
+		marginBottom: 4,
+		marginTop: 0,
+		lineHeight: 2,
+		paddingLeft: 35,
+		paddingRight: 30,
 	},
 	checklistImportant: {
 		fontSize: 11,
@@ -408,6 +569,55 @@ const styles = StyleSheet.create({
 		fontSize: 14,
 		marginBottom: 10,
 		paddingLeft: 20,
+	},
+	// Footer styles
+	footer: {
+		position: "absolute",
+		bottom: 0,
+		left: 0,
+		right: 0,
+		backgroundColor: "#239485",
+		paddingTop: 12,
+		paddingBottom: 12,
+		paddingLeft: 8,
+		paddingRight: 8,
+		marginTop: 10,
+		height: 40,
+		flexDirection: "row",
+		justifyContent: "flex-end",
+		alignItems: "center",
+	},
+	footerText: {
+		color: "#ffffff",
+		fontSize: 10,
+		textAlign: "right",
+		paddingRight: 20,
+	},
+	// Main content header styles
+	mainContentHeader: {
+		position: "absolute",
+		top: 0,
+		left: 0,
+		right: 0,
+		paddingTop: 20,
+		paddingLeft: 20,
+		paddingRight: 20,
+	},
+	mainContentHeaderLogo: {
+		width: 120,
+		height: "auto",
+		marginBottom: 15,
+		alignSelf: "flex-start",
+	},
+	mainContentHeaderLine: {
+		width: "100%",
+		height: 1,
+		backgroundColor: "#000000",
+	},
+	mainContentHeaderLineWithLogo: {
+		width: "100%",
+		height: 2,
+		backgroundColor: "#000000",
 	},
 });
 
@@ -664,55 +874,128 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 		return elements;
 	};
 
+	// Track the first main content page (first page with header/footer)
+	// This will be set on the first header render
+	let firstMainContentPage: number | null = null;
+
+	// Header for first main content page (with logo and taller line)
+	const renderHeaderFirstPage = () => (
+		<View style={styles.mainContentHeader} fixed>
+			<Text
+				render={({ pageNumber }) => {
+					// Set the first main content page on first render
+					if (firstMainContentPage === null) {
+						firstMainContentPage = pageNumber;
+					}
+					return "";
+				}}
+			/>
+			<View style={{ width: "100%" }}>
+				<Image
+					src="/logos/Logo_BlackandWhite.png"
+					style={styles.mainContentHeaderLogo}
+				/>
+				<View style={styles.mainContentHeaderLineWithLogo} />
+			</View>
+		</View>
+	);
+
+	// Header for subsequent main content pages (line only)
+	// const renderHeaderSubsequentPages = () => (
+	// 	<View style={styles.mainContentHeader} fixed>
+	// 		<View style={{ width: "100%" }}>
+	// 			<View style={styles.mainContentHeaderLine} />
+	// 		</View>
+	// 	</View>
+	// );
+
+	// Reusable footer component
+	const renderFooter = () => (
+		<View style={styles.footer} fixed>
+			<Text
+				style={styles.footerText}
+				render={({ pageNumber, totalPages }) => {
+					// Only show footer on main content pages (pages >= firstMainContentPage)
+					if (
+						firstMainContentPage === null ||
+						pageNumber < firstMainContentPage
+					) {
+						return null;
+					}
+
+					// Calculate page numbers starting from 1 for the first main content page
+					const willPageNumber = pageNumber - firstMainContentPage + 1;
+					const willTotalPages = totalPages - firstMainContentPage + 1;
+
+					return `Page ${willPageNumber} of ${willTotalPages}`;
+				}}
+			/>
+		</View>
+	);
+
 	return (
 		<Document>
 			{/* Checklist Page - First Page */}
 			<Page size="A4" style={styles.checklistPage}>
-				<Text style={styles.checklistTitle}>
-					Legacy in Order – Final Checklist for Making Your Will Legally Valid
-				</Text>
-
-				<Text style={styles.checklistSubtitle}>
-					Congratulations!!! You've taken a huge step toward protecting your
-					assets and getting your Legacy In Order. Now let's get it signed and
-					store it safely.
-				</Text>
+				{/* Header Section */}
+				<View style={styles.checklistHeader}>
+					<View style={styles.checklistHeaderLeft}>
+						<Image
+							src="/logos/Logo_Colored2.png"
+							style={styles.checklistLogo}
+						/>
+						<Text style={styles.checklistHeaderTitle}>
+							You've nearly finished your Will.
+						</Text>
+					</View>
+					<View style={styles.checklistHeaderRight}>
+						<Image
+							src="/pdf/green_ticks.png"
+							style={styles.checklistHeaderImage}
+						/>
+					</View>
+				</View>
 
 				{/* Step 1 - Review Your Will */}
 				<View style={styles.checklistSection}>
-					<View style={styles.checklistItem}>
-						<View style={styles.checklistCheckbox} />
+					<View style={styles.checklistStepHeader}>
+						<View style={styles.checklistNumberCircle}>
+							<Text style={styles.checklistNumberText}>1</Text>
+						</View>
 						<Text style={styles.checklistSectionTitle}>
-							Step 1 - Review Your Will Carefully
+							Review Your Will Carefully
 						</Text>
 					</View>
 
 					<Text style={styles.checklistParagraphText}>Before you sign:</Text>
 
-					<View style={styles.checklistItem}>
-						<View style={styles.checklistCheckbox} />
-						<Text style={styles.checklistText}>
-							Read your Will from start to finish. Check that every name, date,
-							and instruction is accurate. If anything is unclear or you want to
-							make changes update before printing and signing.
-						</Text>
-					</View>
-
-					<View style={styles.checklistItem}>
-						<View style={styles.checklistCheckbox} />
-						<Text style={styles.checklistText}>
-							Print your Will on plain paper. Keep the pages together and staple
-							them securely in the top left corner.
-						</Text>
+					<View style={styles.checklistList}>
+						<View style={styles.checklistListItem} wrap={false}>
+							<View style={styles.checklistBullet} />
+							<Text style={styles.checklistText}>
+								Read your Will from start to finish. Check that every name,
+								date, and instruction is accurate. If anything is unclear or you
+								want to make changes update before printing and signing.
+							</Text>
+						</View>
+						<View style={styles.checklistListItem} wrap={false}>
+							<View style={styles.checklistBullet} />
+							<Text style={styles.checklistText}>
+								Print your Will on plain paper. Keep the pages together and
+								staple them securely in the top left corner.
+							</Text>
+						</View>
 					</View>
 				</View>
 
 				{/* Step 2 - Choose Witnesses */}
 				<View style={styles.checklistSection}>
-					<View style={styles.checklistItem}>
-						<View style={styles.checklistCheckbox} />
+					<View style={styles.checklistStepHeader}>
+						<View style={styles.checklistNumberCircle}>
+							<Text style={styles.checklistNumberText}>2</Text>
+						</View>
 						<Text style={styles.checklistSectionTitle}>
-							Step 2 - Choose the Right Witnesses
+							Choose the Right Witnesses
 						</Text>
 					</View>
 
@@ -720,69 +1003,71 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 						You must sign your Will in front of two independent witnesses.
 					</Text>
 
-					<View style={styles.checklistItem}>
-						<View style={styles.checklistCheckbox} />
-						<Text style={styles.checklistText}>
-							They must be aged 18 or over and mentally competent.
-						</Text>
-					</View>
-
-					<View style={styles.checklistItem}>
-						<View style={styles.checklistCheckbox} />
-						<Text style={styles.checklistText}>
-							They cannot be a beneficiary named in your Will or be married to,
-							or in a partnership with, any beneficiary.
-						</Text>
+					<View style={styles.checklistList}>
+						<View style={styles.checklistListItem} wrap={false}>
+							<View style={styles.checklistBullet} />
+							<Text style={styles.checklistText}>
+								They must be aged 18 or over and mentally competent.
+							</Text>
+						</View>
+						<View style={styles.checklistListItem} wrap={false}>
+							<View style={styles.checklistBullet} />
+							<Text style={styles.checklistText}>
+								They cannot be a beneficiary named in your Will or be married
+								to, or in a partnership with, any beneficiary.
+							</Text>
+						</View>
 					</View>
 				</View>
 
 				{/* Step 3 - Signing Your Will */}
 				<View style={styles.checklistSection}>
-					<View style={styles.checklistItem}>
-						<View style={styles.checklistCheckbox} />
-						<Text style={styles.checklistSectionTitle}>
-							Step 3 - Signing Your Will
-						</Text>
+					<View style={styles.checklistStepHeader}>
+						<View style={styles.checklistNumberCircle}>
+							<Text style={styles.checklistNumberText}>3</Text>
+						</View>
+						<Text style={styles.checklistSectionTitle}>Signing Your Will</Text>
 					</View>
 
-					<View style={styles.checklistItem}>
-						<View style={styles.checklistCheckbox} />
-						<Text style={styles.checklistText}>
-							Arrange for both witnesses to be present at the same time.
-						</Text>
-					</View>
-
-					<View style={styles.checklistItem}>
-						<View style={styles.checklistCheckbox} />
-						<Text style={styles.checklistText}>
-							Using a pen, you sign first, with both witnesses watching. You
-							cannot sign a will electronically.
-						</Text>
-					</View>
-
-					<View style={styles.checklistItem}>
-						<View style={styles.checklistCheckbox} />
-						<Text style={styles.checklistText}>
-							Each witness must then, write their full name in capital letters,
-							Write their address. Sign in the space provided.
-						</Text>
-					</View>
-
-					<View style={styles.checklistItem}>
-						<View style={styles.checklistCheckbox} />
-						<Text style={styles.checklistText}>
-							If there's a mistake, start again if possible. If not, all parties
-							should initial the correction.
-						</Text>
+					<View style={styles.checklistList}>
+						<View style={styles.checklistListItem} wrap={false}>
+							<View style={styles.checklistBullet} />
+							<Text style={styles.checklistText}>
+								Arrange for both witnesses to be present at the same time.
+							</Text>
+						</View>
+						<View style={styles.checklistListItem} wrap={false}>
+							<View style={styles.checklistBullet} />
+							<Text style={styles.checklistText}>
+								Using a pen, you sign first, with both witnesses watching. You
+								cannot sign a will electronically.
+							</Text>
+						</View>
+						<View style={styles.checklistListItem} wrap={false}>
+							<View style={styles.checklistBullet} />
+							<Text style={styles.checklistText}>
+								Each witness must write their full name, address, occupation and
+								then sign in the space provided.
+							</Text>
+						</View>
+						<View style={styles.checklistListItem} wrap={false}>
+							<View style={styles.checklistBullet} />
+							<Text style={styles.checklistText}>
+								If there's a mistake, start again if possible. If not, all
+								parties should initial the correction.
+							</Text>
+						</View>
 					</View>
 				</View>
 
 				{/* Step 4 - Store and Register */}
 				<View style={styles.checklistSection}>
-					<View style={styles.checklistItem}>
-						<View style={styles.checklistCheckbox} />
+					<View style={styles.checklistStepHeader}>
+						<View style={styles.checklistNumberCircle}>
+							<Text style={styles.checklistNumberText}>4</Text>
+						</View>
 						<Text style={styles.checklistSectionTitle}>
-							Step 4 - Store and Register Your Will
+							Store and Register Your Will
 						</Text>
 					</View>
 
@@ -790,51 +1075,61 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 						Once signed and witnessed, your Will is legally valid.
 					</Text>
 
-					<View style={styles.checklistItem}>
-						<View style={styles.checklistCheckbox} />
-						<Text style={styles.checklistText}>
-							Store the original in a safe but accessible place.
-						</Text>
-					</View>
-
-					<View style={styles.checklistItem}>
-						<View style={styles.checklistCheckbox} />
-						<Text style={styles.checklistText}>
-							Tell your Executor and at least one trusted person where it's
-							stored and how to access it.
-						</Text>
-					</View>
-
-					<View style={styles.checklistItem}>
-						<View style={styles.checklistCheckbox} />
-						<Text style={styles.checklistText}>
-							Consider registering your Will with a recognised will registry. If
-							you make a new Will, destroy the old one and update the registry
-							immediately.
-						</Text>
+					<View style={styles.checklistList}>
+						<View style={styles.checklistListItem} wrap={false}>
+							<View style={styles.checklistBullet} />
+							<Text style={styles.checklistText}>
+								Store the original in a safe but accessible place.
+							</Text>
+						</View>
+						<View style={styles.checklistListItem} wrap={false}>
+							<View style={styles.checklistBullet} />
+							<Text style={styles.checklistText}>
+								Tell your Executor and at least one trusted person where it's
+								stored and how to access it.
+							</Text>
+						</View>
+						<View style={styles.checklistListItem} wrap={false}>
+							<View style={styles.checklistBullet} />
+							<Text style={styles.checklistText}>
+								Consider registering your Will with a recognised will registry.
+								If you make a new Will, destroy the old one and update the
+								registry immediately.
+							</Text>
+						</View>
 					</View>
 				</View>
 
 				{/* Step 5 - Inspire Others */}
 				<View style={styles.checklistSection}>
-					<View style={styles.checklistItem}>
-						<View style={styles.checklistCheckbox} />
-						<Text style={styles.checklistSectionTitle}>
-							Step 5 - Inspire Others
-						</Text>
+					<View style={styles.checklistStepHeader}>
+						<View style={styles.checklistNumberCircle}>
+							<Text style={styles.checklistNumberText}>5</Text>
+						</View>
+						<Text style={styles.checklistSectionTitle}>Inspire Others</Text>
 					</View>
 
-					<Text style={styles.checklistText}>
-						Completing your Will is one of the most loving legacies you can
-						leave. It spares your loved ones stress, uncertainty, and potential
-						disagreements. Inspire your friends and family to do the same by
-						sharing Legacy In Order with them.
-					</Text>
+					<View style={styles.checklistListFinal}>
+						<View style={styles.checklistListItem} wrap={false}>
+							<View style={styles.checklistBullet} />
+							<Text style={styles.checklistText}>
+								Completing your Will is one of the most loving legacies you can
+								leave. It spares your loved ones stress and uncertainty. Inspire
+								your friends and family to do the same by sharing Legacy In
+								Order (
+								<Text style={{ color: "#239485", fontWeight: "semibold" }}>
+									https://www.legacyinorder.com
+								</Text>
+								) with them.
+							</Text>
+						</View>
+					</View>
 				</View>
 			</Page>
 
 			{/* Main Will Content - Second Page */}
-			<Page size="A4" style={styles.page}>
+			<Page size="A4" style={styles.pageWithHeader}>
+				{renderHeaderFirstPage()}
 				<View style={styles.centeredTitle}>
 					<View style={styles.titleContainer}>
 						<Text style={styles.willTitle}>THE</Text>
@@ -1346,10 +1641,13 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 						not affect the interpretation of this Will.
 					</Text>
 				</View>
+
+				{renderFooter()}
 			</Page>
 
 			{/* Final Declaration Page */}
-			<Page size="A4" style={styles.page} break>
+			<Page size="A4" style={styles.pageWithHeader} break>
+				{renderHeaderFirstPage()}
 				{/* Final Declaration Section */}
 				<View style={styles.finalDeclarationSection}>
 					<Text style={styles.finalDeclarationTitle}>
@@ -1382,15 +1680,18 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 						will and approve it as a true reflection of my wishes.
 					</Text>
 				</View>
+
+				{renderFooter()}
 			</Page>
 
 			{/* Witness Signatures Page */}
-			<Page size="A4" style={styles.page} break>
+			<Page size="A4" style={styles.pageWithHeader} break>
+				{renderHeaderFirstPage()}
 				<View style={styles.witnessSection}>
 					<Text style={styles.witnessTitle}>Signatures and Witnesses</Text>
-					<Text style={styles.witnessText}>
+					{/* <Text style={styles.witnessText}>
 						<Text style={{ fontWeight: "bold" }}>SIGNATURE</Text>
-					</Text>
+					</Text> */}
 					<Text style={styles.witnessText}>
 						<Text style={{ fontWeight: "bold" }}>{sections.witnesses}.1.</Text>{" "}
 						I,{" "}
@@ -1459,16 +1760,19 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 						</>
 					)}
 
-					<Text style={styles.witnessText}>
+					<Text style={styles.witnessText2}>
 						<Text style={{ fontWeight: "bold" }}>{sections.witnesses}.2.</Text>{" "}
 						Signed by the testator in our presence and then by us in the
 						presence of the testator and each other on the date shown above.
 					</Text>
 				</View>
+
+				{renderFooter()}
 			</Page>
 
 			{data.assets && data.assets.length > 0 && (
-				<Page style={styles.appendixPage} break>
+				<Page style={[styles.appendixPage, styles.pageWithHeader]} break>
+					{renderHeaderFirstPage()}
 					<View style={styles.appendixSection}>
 						<Text style={styles.appendixTitle}>Appendix</Text>
 						<Text style={styles.appendixIntro}>
@@ -1511,6 +1815,8 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 							</Text>
 						)}
 					</View>
+
+					{renderFooter()}
 				</Page>
 			)}
 		</Document>

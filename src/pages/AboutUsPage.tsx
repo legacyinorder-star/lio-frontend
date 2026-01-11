@@ -42,14 +42,12 @@ export default function AboutUsPage() {
 							</div>
 
 							<div className="flex flex-col sm:flex-row gap-4 justify-center">
-								<Link to="/will-information">
-									<Button
-										variant="default"
-										className="text-white bg-[#173C37] rounded border border-[#173C37] font-semibold px-8 py-6 hover:bg-[#173C37]/90"
-									>
-										Write My Will
-									</Button>
-								</Link>
+								<Button
+									variant="default"
+									className="text-white bg-[#173C37] rounded border border-[#173C37] font-semibold px-8 py-6 hover:bg-[#173C37]/90"
+								>
+									<Link to="/signup">Write my Will</Link>
+								</Button>
 								{/* <Button
 									variant="outline"
 									className="text-[#173C37] border border-[#173C37] font-semibold rounded hover:bg-[#173C37] hover:text-white px-8 py-6"
