@@ -4,14 +4,57 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useState, useEffect } from "react";
+import { useSEO } from "@/utils/useSEO";
 
 export default function HomePage() {
 	const { user } = useAuth();
 
+	// SEO meta tags and structured data
+	const baseUrl = window.location.origin;
+	useSEO({
+		title: "Online Will Writing Service UK | Legacy In Order",
+		description:
+			"Create a legally valid will online in minutes. Secure, affordable will writing for England and Wales. Start today.",
+		keywords:
+			"online will UK, will writing service UK, make a will online, legally valid will, England and Wales will",
+		ogTitle: "Online Will Writing Service UK | Legacy In Order",
+		ogDescription:
+			"Create a legally valid will online in minutes. Secure, affordable will writing for England and Wales.",
+		ogUrl: `${baseUrl}/`,
+		canonicalUrl: `${baseUrl}/`,
+		schema: {
+			"@context": "https://schema.org",
+			"@type": "LegalService",
+			name: "Legacy In Order",
+			description:
+				"Online will writing service for England and Wales. Create legally valid wills and estate planning documents.",
+			url: baseUrl,
+			serviceType: "Online Will Writing",
+			areaServed: {
+				"@type": "Country",
+				name: "United Kingdom",
+			},
+			provider: {
+				"@type": "Organization",
+				name: "Legacy In Order",
+				url: baseUrl,
+				address: {
+					"@type": "PostalAddress",
+					streetAddress: "128 City Road",
+					addressLocality: "London",
+					postalCode: "EC1V 2NX",
+					addressCountry: "GB",
+				},
+			},
+		},
+	});
+
 	// Carousel images
 	const carouselImages = [
+		"/images/pixs/pix10.jpeg",
 		"/images/header1.jpg",
 		"/images/product_1.jpg",
+		"/images/pixs/pix15.jpeg",
 		"/images/LIO_new_img.jpg",
 		"/images/pixs/pix1.jpeg",
 		"/images/pixs/pix2.jpeg",
@@ -23,7 +66,6 @@ export default function HomePage() {
 		"/images/pixs/pix13.jpeg",
 		"/images/pixs/pix6.jpeg",
 		"/images/pixs/pix9.jpeg",
-		"/images/pixs/pix10.jpeg",
 	];
 
 	const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -54,11 +96,10 @@ export default function HomePage() {
 										Your Will, Made Simple.
 									</h1>
 									<p className="text-[1rem] font-normal leading-relaxed text-[#173C37]">
-										Create your legally valid Will online in minutes.
-										<br />
-										<span className="font-[500]">
-											Secure. Affordable. Reviewed by Experts.
-										</span>
+										Create a legally valid will online in under 15 minutes with
+										our expert-reviewed service. Designed for people in England
+										and Wales seeking an affordable, secure and user-friendly
+										way to protect their legacy.
 									</p>
 								</div>
 
@@ -81,7 +122,13 @@ export default function HomePage() {
 										<img
 											key={index}
 											src={image}
-											alt={`Legacy Planning ${index + 1}`}
+											alt={
+												index === currentImageIndex
+													? "Family creating an online will together"
+													: ""
+											}
+											loading={index === 0 ? "eager" : "lazy"}
+											decoding="async"
 											className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
 												index === currentImageIndex
 													? "opacity-100"
@@ -91,8 +138,9 @@ export default function HomePage() {
 									))}
 									<div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-8 z-10">
 										<p className="text-white text-xl md:text-2xl font-normal leading-relaxed">
-											Let us help you create a legacy. Start the conversation
-											today and take the first step toward peace of mind.
+											Create your legacy with confidence. Start your online Will
+											today and take the first step toward peace of mind for you
+											and your loved ones.
 										</p>
 									</div>
 								</div>
@@ -108,11 +156,11 @@ export default function HomePage() {
 				>
 					<div className="w-full max-w-[2000px] mx-auto px-4 md:px-6 lg:px-8">
 						<div className="mx-auto flex max-w-full flex-col items-center space-y-4 text-center">
-							<h1 className="text-3xl font-semibold tracking-tight sm:text-4xl md:text-5xl mb-2">
-								How it works
-							</h1>
+							<h2 className="text-3xl font-semibold tracking-tight sm:text-4xl md:text-5xl mb-2">
+								How Our Online Will Writing Service Works
+							</h2>
 							<p className="text-lg text-muted-foreground mb-6">
-								Create your legal document in as little as 15 minutes
+								Create your legally valid Will online in as little as 15 minutes
 							</p>
 						</div>
 
@@ -122,8 +170,10 @@ export default function HomePage() {
 								<div className="w-16 h-16 flex items-center justify-center mb-6">
 									<img
 										src="/svgs/answer_1.svg"
-										alt="Answer Questions Icon"
+										alt="Answer questions for online will"
 										className="w-16 h-16"
+										loading="lazy"
+										decoding="async"
 									/>
 								</div>
 								<h3 className="text-xl font-semibold mb-4 text-[#173C37]">
@@ -140,16 +190,18 @@ export default function HomePage() {
 								<div className="w-16 h-16 flex items-center justify-center mb-6">
 									<img
 										src="/svgs/answer_2.svg"
-										alt="Generate Document Icon"
+										alt="Generate legally valid will document"
 										className="w-16 h-16"
+										loading="lazy"
+										decoding="async"
 									/>
 								</div>
 								<h3 className="text-xl font-semibold mb-4 text-[#173C37]">
 									2. Generate your document
 								</h3>
 								<p className="text-gray-600">
-									Based on your answers, we create secure, legally valid
-									documents like Wills or Power of Attorney.
+									Based on your answers, we will create a secure, legally valid
+									Will.
 								</p>
 							</div>
 
@@ -158,16 +210,18 @@ export default function HomePage() {
 								<div className="w-16 h-16 flex items-center justify-center mb-6">
 									<img
 										src="/svgs/answer_3.svg"
-										alt="Review & Verify Icon"
+										alt="Sign and register your will"
 										className="w-16 h-16"
+										loading="lazy"
+										decoding="async"
 									/>
 								</div>
 								<h3 className="text-xl font-semibold mb-4 text-[#173C37]">
-									3. Sign & Register
+									3. Sign & Witness
 								</h3>
 								<p className="text-gray-600">
-									Store your documents in your private vault . Revisit, edit, or
-									share with loved ones anytime.
+									Print your Will and sign it in front of two witnesses to make
+									it legally valid.
 								</p>
 							</div>
 
@@ -176,16 +230,18 @@ export default function HomePage() {
 								<div className="w-16 h-16 flex items-center justify-center mb-6">
 									<img
 										src="/svgs/answer_4.svg"
-										alt="Secure Storage Icon"
+										alt="Secure storage for estate planning documents"
 										className="w-16 h-16"
+										loading="lazy"
+										decoding="async"
 									/>
 								</div>
 								<h3 className="text-xl font-semibold mb-4 text-[#173C37]">
 									4. Store Securely
 								</h3>
 								<p className="text-gray-600">
-									Make changes on your schedule, from any device, whether you're
-									at your desk or on the move.
+									Store your Will securely, with a physical copy and a secure
+									digital version.
 								</p>
 							</div>
 						</div>
@@ -210,7 +266,7 @@ export default function HomePage() {
 				<section className="w-full bg-white pt-12 pb-4">
 					<div className="w-full max-w-[2000px] mx-auto px-4 md:px-6 lg:px-8">
 						<h2 className="text-[3rem] md:text-4xl font-semibold text-center text-[#173C37] pt-4 mb-18">
-							What happens if you die without a Will?
+							What Happens If You Die Without a Will in England and Wales
 						</h2>
 						<div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
 							{/* Card 1 */}
@@ -222,8 +278,10 @@ export default function HomePage() {
 							>
 								<img
 									src="/svgs/without_1.svg"
-									alt="State Decides Icon"
+									alt="The law decides who inherits your assets without a will"
 									className="w-16 h-16 mr-4 flex-shrink-0"
+									loading="lazy"
+									decoding="async"
 								/>
 								<div>
 									<h3 className="text-[1.25rem] font-semibold text-[#173C37] mb-2">
@@ -243,8 +301,10 @@ export default function HomePage() {
 							>
 								<img
 									src="/svgs/without_2.svg"
-									alt="No Guardianship Choice Icon"
+									alt="Unmarried partners have no automatic inheritance rights"
 									className="w-16 h-16 mr-4 flex-shrink-0"
+									loading="lazy"
+									decoding="async"
 								/>
 								<div>
 									<h3 className="text-lg font-semibold text-[#173C37] mb-2">
@@ -264,8 +324,10 @@ export default function HomePage() {
 							>
 								<img
 									src="/svgs/without_3.svg"
-									alt="Delays & Costs Icon"
+									alt="Probate delays and legal costs increase without a will"
 									className="w-16 h-16 mr-4 flex-shrink-0"
+									loading="lazy"
+									decoding="async"
 								/>
 								<div>
 									<h3 className="text-lg font-semibold text-[#173C37] mb-2">
@@ -289,8 +351,10 @@ export default function HomePage() {
 							>
 								<img
 									src="/svgs/without_4.svg"
-									alt="No Executor Control Icon"
+									alt="Minor children may not be fully protected without a will"
 									className="w-16 h-16 mr-4 flex-shrink-0"
+									loading="lazy"
+									decoding="async"
 								/>
 								<div>
 									<h3 className="text-lg font-semibold text-[#173C37] mb-2">
@@ -310,8 +374,10 @@ export default function HomePage() {
 							>
 								<img
 									src="/svgs/without_5.svg"
-									alt="Family Disputes Icon"
+									alt="Family disputes and legal battles can result without a will"
 									className="w-16 h-16 mr-4 flex-shrink-0"
+									loading="lazy"
+									decoding="async"
 								/>
 								<div>
 									<h3 className="text-lg font-semibold text-[#173C37] mb-2">
@@ -342,12 +408,13 @@ export default function HomePage() {
 
 						<div className="mt-4 text-center max-w-4xl mx-auto">
 							<h2 className="text-[1.5rem] md:text-4xl lg:text-5xl font-semibold text-black mb-6">
-								The good news?
+								The Good News
 							</h2>
 							<p className="text-lg md:text-xl text-gray-700 mb-8 leading-relaxed">
-								Creating your Will with Legacy in Order is simple, secure, and
-								takes as little as 15 minutes from the comfort of your home.
-								Start today and give your family peace of mind.
+								Creating your Will with Legacy In Order is simple, secure, and
+								affordable. Our online Will writing service lets you draft, sign
+								and store your Will from home in as little as 15 minutes. Start
+								today and give your family peace of mind.
 							</p>
 							<Button
 								variant="default"
@@ -363,7 +430,7 @@ export default function HomePage() {
 				<section className="w-full bg-[#FAFAF5] py-12">
 					<div className="w-full max-w-[2000px] mx-auto px-4 md:px-6 lg:px-8">
 						<h2 className="text-[3rem] font-semibold text-center text-[#173C37] mb-16">
-							Life is easier with LegacyInOrder
+							Secure, Legally Valid Wills Reviewed by Experts
 						</h2>
 
 						<div className="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-6xl mx-auto">
@@ -371,12 +438,14 @@ export default function HomePage() {
 							<div className="text-left">
 								<img
 									src="/svgs/easier_1.svg"
-									alt="Easy Process Icon"
+									alt="Experienced legal team reviewing online wills"
 									className="w-16 h-16 mb-4"
+									loading="lazy"
+									decoding="async"
 								/>
-								<h5 className="text-[1.5rem] font-semibold text-[#173C37] mb-2">
+								<h3 className="text-[1.5rem] font-semibold text-[#173C37] mb-2">
 									An Experienced Legal Team
-								</h5>
+								</h3>
 								<p className="text-[1rem] text-[#173C37] leading-relaxed">
 									Our trusted legal experts bring decades of experience,
 									ensuring every step of the process is simple, secure, and
@@ -387,12 +456,14 @@ export default function HomePage() {
 							<div className="text-left">
 								<img
 									src="/svgs/easier_2.svg"
-									alt="Secure Storage Icon"
+									alt="Secure digital storage for wills and estate documents"
 									className="w-16 h-16 mb-4"
+									loading="lazy"
+									decoding="async"
 								/>
-								<h5 className="text-[1.5rem] font-semibold text-[#173C37] mb-2">
+								<h3 className="text-[1.5rem] font-semibold text-[#173C37] mb-2">
 									Secure Storage and Accessibility
-								</h5>
+								</h3>
 								<p className="text-[1rem] text-[#173C37] leading-relaxed">
 									Your documents are safeguarded with enterprise-grade
 									encryption, giving you complete peace of mind while ensuring
@@ -404,14 +475,16 @@ export default function HomePage() {
 							<div className="text-left">
 								<img
 									src="/svgs/easier_3.svg"
-									alt="Legal Compliance Icon"
+									alt="Professionally reviewed will documents"
 									className="w-16 h-16 mb-4"
+									loading="lazy"
+									decoding="async"
 								/>
-								<h5 className="text-[1.5rem] font-semibold text-[#173C37] mb-2">
+								<h3 className="text-[1.5rem] font-semibold text-[#173C37] mb-2">
 									Professionally Reviewed Documents
-								</h5>
+								</h3>
 								<p className="text-[1rem] text-[#173C37] leading-relaxed">
-									Every template is designed and checked against best practice
+									Every Will is designed and checked against best practice
 									standards, so you can be confident your documents are
 									accurate, reliable, and legally sound.
 								</p>
@@ -420,12 +493,14 @@ export default function HomePage() {
 							<div className="text-left">
 								<img
 									src="/svgs/easier_4.svg"
-									alt="Peace of Mind Icon"
+									alt="Affordable online will writing service"
 									className="w-16 h-16 mb-4"
+									loading="lazy"
+									decoding="async"
 								/>
-								<h5 className="text-[1.5rem] font-semibold text-[#173C37] mb-2">
+								<h3 className="text-[1.5rem] font-semibold text-[#173C37] mb-2">
 									Clear, Affordable, and Transparent
-								</h5>
+								</h3>
 								<p className="text-[1rem] text-[#173C37] leading-relaxed">
 									No hidden costs. No complicated legal jargon. Just a
 									straightforward, affordable way to protect your future and
@@ -445,7 +520,7 @@ export default function HomePage() {
 							</h2>
 
 							{/* Review Cards */}
-							<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-12">
+							<div className="flex flex-row justify-center gap-8 mt-12">
 								{/* Card 1 */}
 								<div className="bg-white rounded-lg p-6 shadow-lg text-left flex flex-col h-full">
 									<div className="flex gap-1 mb-4">
@@ -468,8 +543,10 @@ export default function HomePage() {
 									<div className="flex items-center gap-3 mt-auto">
 										<img
 											src="/avatars/user1.png"
-											alt="Sarah J."
+											alt="Sarah J. reviewing her online will"
 											className="w-10 h-10 rounded-full"
+											loading="lazy"
+											decoding="async"
 										/>
 										<div>
 											<h4 className="font-semibold text-gray-900 text-sm">
@@ -495,15 +572,17 @@ export default function HomePage() {
 										))}
 									</div>
 									<p className="text-gray-700 text-sm mb-4 leading-relaxed flex-grow">
-										The security features give me peace of mind. I can update my
-										documents anytime and know they're protected with
-										enterprise-grade encryption.
+										No hidden fees or expensive consultations. Just a
+										straightforward, affordable way to protect my family. Highly
+										recommend!
 									</p>
 									<div className="flex items-center gap-3 mt-auto">
 										<img
 											src="/avatars/user2.png"
-											alt="Michael C."
+											alt="Michael C. securing his estate documents"
 											className="w-10 h-10 rounded-full"
+											loading="lazy"
+											decoding="async"
 										/>
 										<div>
 											<h4 className="font-semibold text-gray-900 text-sm">
@@ -535,13 +614,19 @@ export default function HomePage() {
 									</p>
 									<div className="flex items-center gap-3 mt-auto">
 										<img
-											src="/avatars/user3.png"
-											alt="Priyanka R."
+											src="/avatars/user9.png"
+											alt="Ijeoma O. using online will writing service"
 											className="w-10 h-10 rounded-full"
+											style={{
+												objectFit: "cover",
+												objectPosition: "top left",
+											}}
+											loading="lazy"
+											decoding="async"
 										/>
 										<div>
 											<h4 className="font-semibold text-gray-900 text-sm">
-												Priyanka R.
+												Ijeoma O.
 											</h4>
 											<p className="text-gray-600 text-xs">
 												Healthcare Professional
@@ -551,7 +636,7 @@ export default function HomePage() {
 								</div>
 
 								{/* Card 4 */}
-								<div className="bg-white rounded-lg p-6 shadow-lg text-left flex flex-col h-full">
+								{/* <div className="bg-white rounded-lg p-6 shadow-lg text-left flex flex-col h-full">
 									<div className="flex gap-1 mb-4">
 										{[...Array(5)].map((_, i) => (
 											<svg
@@ -572,8 +657,10 @@ export default function HomePage() {
 									<div className="flex items-center gap-3 mt-auto">
 										<img
 											src="/avatars/user4.png"
-											alt="Christina T."
+											alt="Christina T. recommending online will service"
 											className="w-10 h-10 rounded-full"
+											loading="lazy"
+											decoding="async"
 										/>
 										<div>
 											<h4 className="font-semibold text-gray-900 text-sm">
@@ -582,7 +669,7 @@ export default function HomePage() {
 											<p className="text-gray-600 text-xs">Retired Teacher</p>
 										</div>
 									</div>
-								</div>
+								</div> */}
 							</div>
 						</div>
 					</div>
@@ -634,9 +721,17 @@ export default function HomePage() {
 									className="hidden px-[35px] py-[35px] bg-white"
 								>
 									<p className="text-[1rem] font-normal text-[#545454] font-['DM_Sans']">
-										You can create legally binding Wills and letters of wishes.
-										Our platform guides you through each document creation
-										process with clear, step-by-step instructions.
+										Currently, you can create legally binding Wills and letters
+										of wishes with our{" "}
+										<Link
+											to="/will-information"
+											className="text-[#239485] underline hover:text-[#173C37]"
+										>
+											online will writing service
+										</Link>
+										. Our platform guides you through each document creation
+										process with clear, step-by-step instructions, ensuring your
+										documents are suitable for England and Wales.
 									</p>
 								</div>
 							</div>
@@ -683,9 +778,14 @@ export default function HomePage() {
 										We use enterprise-grade encryption to protect your data. All
 										documents are stored securely and can only be accessed by
 										you. We never share your information with third parties
-										without your explicit consent. We never share your
-										information with third parties without your explicit
-										consent.
+										without your explicit consent. Our{" "}
+										<Link
+											to="/privacy-policy"
+											className="text-[#239485] underline hover:text-[#173C37]"
+										>
+											privacy policy
+										</Link>{" "}
+										explains how we handle your data.
 									</p>
 								</div>
 							</div>

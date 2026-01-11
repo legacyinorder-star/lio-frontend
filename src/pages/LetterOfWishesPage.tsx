@@ -3,8 +3,24 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/ui/navbar";
 import Footer from "@/components/ui/footer";
+import { useSEO } from "@/utils/useSEO";
 
 export default function LetterOfWishesPage() {
+	// SEO meta tags
+	const baseUrl = window.location.origin;
+	useSEO({
+		title: "Letter of Wishes UK | Free Add-On with Your Will | Legacy In Order",
+		description:
+			"Get a free Letter of Wishes when you create your will. This complimentary add-on helps guide your loved ones with funeral preferences, personal messages, and digital assets. Available only with will purchase.",
+		keywords:
+			"letter of wishes UK, letter of wishes template, estate planning UK, guide executors wishes, free letter of wishes with will",
+		ogTitle:
+			"Letter of Wishes UK | Free Add-On with Your Will | Legacy In Order",
+		ogDescription:
+			"Get a free Letter of Wishes when you create your will. This complimentary add-on helps guide your loved ones. Available only with will purchase.",
+		ogUrl: `${baseUrl}/letter-of-wishes`,
+		canonicalUrl: `${baseUrl}/letter-of-wishes`,
+	});
 	const features = [
 		"Complimentary for Will creators",
 		"Guided letter creation",
@@ -30,11 +46,14 @@ export default function LetterOfWishesPage() {
 							<div className="space-y-8 flex flex-col justify-center py-12 px-8 md:px-10 lg:px-12">
 								<div className="space-y-4 pt-12">
 									<h1 className="text-[4rem] font-semibold leading-tight text-[#173C37]">
-										Share Your Wishes With Loved Ones
+										Letter of Wishes: Guide Your Loved Ones Clearly
 									</h1>
 									<p className="text-[1rem] font-normal leading-relaxed text-[#173C37]">
-										Create a personal letter to guide your family through your
-										preferences and wishes
+										Complement your Will with a personal letter of wishes.
+										Provide guidance on funeral preferences, personal messages
+										and digital assets so your family knows exactly what you
+										want. Available as a free add-on when you create your Will
+										with us.
 									</p>
 								</div>
 
@@ -43,7 +62,7 @@ export default function LetterOfWishesPage() {
 										variant="default"
 										className="bg-[#173C37] text-white hover:bg-[#173C37]/90 font-semibold rounded px-[0.625rem] py-[1.4375rem] text-lg"
 									>
-										<Link to="/login">Get Started</Link>
+										<Link to="/login">Create Your Will Now</Link>
 									</Button>
 								</div>
 							</div>
@@ -53,8 +72,10 @@ export default function LetterOfWishesPage() {
 								<div className="relative w-full h-full overflow-hidden shadow-2xl flex">
 									<img
 										src="/images/LIO_new_img.jpg"
-										alt="Letter of Wishes Planning"
+										alt="Family creating a letter of wishes together"
 										className="w-full h-full object-cover"
+										loading="eager"
+										decoding="async"
 									/>
 								</div>
 							</div>
@@ -69,16 +90,18 @@ export default function LetterOfWishesPage() {
 				>
 					<div className="w-full max-w-[2000px] mx-auto px-4 md:px-6 lg:px-8">
 						<div className="mx-auto flex max-w-full flex-col items-center space-y-4 text-center">
-							<h1 className="text-3xl font-semibold tracking-tight sm:text-4xl md:text-5xl mb-2">
-								What Is a Letter of Wishes?
-							</h1>
+							<h2 className="text-3xl font-semibold tracking-tight sm:text-4xl md:text-5xl mb-2">
+								What Is a Letter of Wishes in the UK
+							</h2>
 							<p className="text-lg font-[500] text-muted-foreground mb-6 max-w-4xl">
 								A Letter of Wishes is a personal document that accompanies your
 								Will, providing guidance to your executors and loved ones about
 								your personal preferences and wishes.
 							</p>
 							<p className="text-lg font-[500] text-muted-foreground mb-6 max-w-4xl">
-								It is complimentary for anyone who has created a Will with us.
+								It is complimentary and automatically included when you purchase
+								a Will with us. Create your Will first to unlock access to your
+								free Letter of Wishes.
 							</p>
 						</div>
 
@@ -88,8 +111,10 @@ export default function LetterOfWishesPage() {
 								<div className="flex-shrink-0 mr-6">
 									<img
 										src="/svgs/without_4.svg"
-										alt="Family Icon"
+										alt="Personal guidance for letter of wishes"
 										className="w-12 h-12"
+										loading="lazy"
+										decoding="async"
 									/>
 								</div>
 								<div className="flex-1">
@@ -112,8 +137,10 @@ export default function LetterOfWishesPage() {
 								<div className="flex-shrink-0 mr-6">
 									<img
 										src="/svgs/heartbreak.svg"
-										alt="Heart Icon"
+										alt="Emotional support through letter of wishes"
 										className="w-12 h-12"
+										loading="lazy"
+										decoding="async"
 									/>
 								</div>
 								<div className="flex-1">
@@ -136,16 +163,18 @@ export default function LetterOfWishesPage() {
 								<div className="flex-shrink-0 mr-6">
 									<img
 										src="/svgs/without_3.svg"
-										alt="Cash Icon"
+										alt="Digital assets and personal wishes in letter of wishes"
 										className="w-12 h-12"
+										loading="lazy"
+										decoding="async"
 									/>
 								</div>
 								<div className="flex-1">
 									<h3 className="text-[1.25rem] font-semibold mb-4 mt-0 pt-0 text-[#173C37]">
-										Assets List
+										Asset List
 									</h3>
 									<div className="text-secondary text-[1rem]">
-										<p>Maintain an up-to-date list of your assets:</p>
+										<p>Maintain an up-to-date registry of your assets:</p>
 										<ul className="list-disc list-inside">
 											<li>Provide a detailed list of digital assets</li>
 											<li>Instructions on access to digital assets</li>
@@ -173,16 +202,17 @@ export default function LetterOfWishesPage() {
 						<div className="relative z-10 h-full flex items-center px-8 md:px-12 lg:px-16 pt-16 sm:pt-24 md:pt-32 lg:pt-40 xl:pt-48">
 							<div className="max-w-2xl text-left">
 								<h2 className="text-4xl md:text-5xl font-semibold text-white mb-6">
-									Your voice matters, even after you're gone.
+									How a Letter of Wishes Supports Your Will
 								</h2>
 								<p className="text-[1rem] font-medium text-white mb-16 leading-relaxed">
 									Don't leave your family guessing. A Letter of Wishes provides
-									clarity, comfort, and guidance when they need it most.
+									clarity, comfort, and guidance when they need it most. Digital
+									assets and personal wishes are clearly documented.
 								</p>
 								<div className="flex flex-col sm:flex-row gap-4">
 									<Link to="/login">
 										<Button className="w-full bg-white py-[0.75rem] px-[1.5rem] rounded-[0.25rem] text-[#173C37] hover:bg-gray-50 text-sm font-semibold">
-											Get Started
+											Create Your Will to Get Started
 										</Button>
 									</Link>
 								</div>
@@ -195,12 +225,14 @@ export default function LetterOfWishesPage() {
 				<div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-16 bg-[#E2F3ED] mb-24">
 					<div className="text-center mb-12">
 						<h2 className="text-[3rem] text-[#173C37] font-semibold">
-							Complimentary for Will Creators
+							Free Add-On with Every Will Purchase
 						</h2>
 						<p className="text-[1rem] font-medium text-black mb-16 leading-relaxed max-w-4xl mx-auto">
-							If you've created a Will with us, your Letter of Wishes is
-							completely free. It is our way of helping you provide complete
-							guidance to your loved ones.
+							When you purchase a Will with Legacy In Order, your Letter of
+							Wishes is included at no extra cost. Create your Will, and you'll
+							automatically have access to create your complimentary Letter of
+							Wishes. It is our way of helping you provide complete guidance to
+							your loved ones.
 						</p>
 					</div>
 					<div className="grid grid-cols-1 md:grid-cols-1 gap-6 w-full max-w-lg mx-auto">
@@ -216,8 +248,7 @@ export default function LetterOfWishesPage() {
 									</span>
 								</div>
 								<p className="text-sm font-normal text-black mt-1">
-									Complimentary for anyone who has created a Will with Legacy In
-									Order.
+									Included free when you purchase a Will with Legacy In Order.
 								</p>
 							</CardHeader>
 							<CardContent className="space-y-3 flex-1 flex flex-col p-4">
@@ -228,6 +259,8 @@ export default function LetterOfWishesPage() {
 												src="/svgs/wills_page/dot.svg"
 												alt="Feature marker"
 												className="h-4 w-4 mt-0.5 mr-2 flex-shrink-0"
+												loading="lazy"
+												decoding="async"
 											/>
 											<span className="text-[0.75rem] font-normal text-black">
 												{feature}
@@ -237,7 +270,7 @@ export default function LetterOfWishesPage() {
 								</ul>
 								<Link to="/login">
 									<Button className="w-full bg-[#173C37] hover:bg-[#173C37]/90 text-white mt-4 py-2 text-sm">
-										Get Started
+										Create Your Will Now
 									</Button>
 								</Link>
 							</CardContent>
@@ -250,17 +283,19 @@ export default function LetterOfWishesPage() {
 						<div className="w-4/5 mx-auto bg-[#FAFAF5] rounded-[0.5rem] p-16">
 							<div className="flex flex-col items-start justify-center space-y-6 text-left">
 								<h2 className="text-[1.875rem] font-semibold text-[#173C37]">
-									Ready to share your wishes with loved ones?
+									Ready to create your Will and letter of wishes?
 								</h2>
 								<p className="text-[1rem] font-normal text-[#173C37]">
-									Create your complimentary Letter of Wishes today.
+									Start by creating your Will, and you'll automatically receive
+									access to your free Letter of Wishes as a complimentary
+									add-on.
 								</p>
 								<Link to="/login">
 									<Button
 										variant="default"
 										className="bg-[#173C37] text-white hover:bg-[#173C37]/90 rounded px-[0.625rem] py-[1.5rem] text-lg"
 									>
-										Get Started
+										Create Your Will Now
 									</Button>
 								</Link>
 							</div>

@@ -60,9 +60,10 @@ export default function Navbar() {
 					{/* Right Side Buttons */}
 					<div className="hidden md:flex items-center gap-3">
 						<a
-							href="https://calendly.com/legacyinorder/new-meeting"
-							target="_blank"
-							rel="noopener noreferrer"
+							// href="https://calendly.com/legacyinorder/new-meeting"
+							// target="_blank"
+							// rel="noopener noreferrer"
+							href="/contact-us"
 						>
 							<Button
 								variant="outline"
@@ -130,9 +131,11 @@ export default function Navbar() {
 							)
 						)}
 						<a
-							href="https://calendly.com/legacyinorder/new-meeting"
-							target="_blank"
-							rel="noopener noreferrer"
+							//href="https://calendly.com/" // TODO: Replace with actual scheduling link
+							//target="_blank"
+							//rel="noopener noreferrer"
+							href="/contact-us"
+							onClick={() => setMobileOpen(false)}
 						>
 							<Button variant="outline" className="w-full mt-2">
 								Schedule a Call
