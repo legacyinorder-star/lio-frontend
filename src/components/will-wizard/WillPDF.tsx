@@ -1384,7 +1384,9 @@ const WillPDF: React.FC<WillPDFProps> = ({ data }) => {
 										{gift.beneficiaryName}
 									</Text>
 									{gift.relationship
-										? ` (my ${gift.relationship.toLowerCase()})`
+										? gift.relationship.toLowerCase() === "charity"
+											? " (charity)"
+											: ` (my ${gift.relationship.toLowerCase()})`
 										: ""}
 								</Text>
 							);
