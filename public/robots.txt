@@ -1,0 +1,23 @@
+# robots.txt for Legacy In Order
+User-agent: *
+Allow: /
+
+# Disallow private/protected routes
+Disallow: /app/
+Disallow: /admin/
+Disallow: /auth/callback/
+
+# Disallow temporary/auth pages
+Disallow: /request-password-reset
+Disallow: /reset-password
+Disallow: /verify-otp
+Disallow: /logout
+
+# Disallow payment and success pages (no need to index these)
+Disallow: /app/payment/
+Disallow: /app/will-wizard/success
+Disallow: /app/letter-of-wishes/success
+
+# Sitemap location
+Sitemap: https://www.legacyinorder.com/sitemap.xml
+
