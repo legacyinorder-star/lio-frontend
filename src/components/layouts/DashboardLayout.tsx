@@ -1,6 +1,7 @@
 import { Link, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
+	Cookie,
 	LogOut,
 	// Settings,
 	UserCog,
@@ -29,6 +30,7 @@ import { useWill } from "@/context/WillContext";
 import { mapWillDataFromAPI } from "../../utils/dataTransform";
 import { useWillWizard } from "@/context/WillWizardContext";
 import { WillWizardSidebar } from "@/components/ui/will-wizard-sidebar";
+import { useConsent } from "@/context/ConsentContext";
 // import { SessionStatus } from "@/components/ui/session-status";
 
 export function DashboardLayout() {
@@ -40,6 +42,7 @@ export function DashboardLayout() {
 	const { activeWill, setActiveWill } = useWill();
 	const { isInWillWizard, currentStep, getStepInfo, getTotalSteps } =
 		useWillWizard();
+	const { openCookiePreferences } = useConsent();
 
 	useEffect(() => {
 		// Only check auth once loading is complete
@@ -472,6 +475,13 @@ export function DashboardLayout() {
 										<span>Settings</span>
 									</Link> 
 								</DropdownMenuItem> */}
+								<DropdownMenuItem
+									className="cursor-pointer hover:bg-[#F5F5F5]"
+									onSelect={() => openCookiePreferences()}
+								>
+									<Cookie className="mr-2 h-4 w-4" />
+									<span>Cookie preferences</span>
+								</DropdownMenuItem>
 								<DropdownMenuItem
 									asChild
 									className="cursor-pointer hover:bg-[#F5F5F5]"
