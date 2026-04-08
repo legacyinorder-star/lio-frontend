@@ -1,6 +1,7 @@
 import { Link, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
+	Cookie,
 	LogOut,
 	Users,
 	BookText,
@@ -29,10 +30,12 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useConsent } from "@/context/ConsentContext";
 
 export function AdminLayout() {
 	const navigate = useNavigate();
 	const location = useLocation();
+	const { openCookiePreferences } = useConsent();
 	const { user, logout, isLoading } = useAuth();
 	const { setActiveWill } = useWill();
 	const [isAuthLoading, setIsAuthLoading] = useState(true);
@@ -323,6 +326,13 @@ export function AdminLayout() {
 									className="cursor-pointer"
 								>
 									Settings
+								</DropdownMenuItem>
+								<DropdownMenuItem
+									onClick={() => openCookiePreferences()}
+									className="cursor-pointer"
+								>
+									<Cookie className="mr-2 h-4 w-4" />
+									Cookie preferences
 								</DropdownMenuItem>
 								<DropdownMenuSeparator />
 								<DropdownMenuItem

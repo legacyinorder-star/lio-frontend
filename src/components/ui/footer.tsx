@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import ScrollLink from "@/utils/scrollLink";
+import { useConsent } from "@/context/ConsentContext";
 
 interface FooterProps {
 	showCTA?: boolean;
@@ -9,6 +10,7 @@ interface FooterProps {
 
 export default function Footer({ showCTA = true }: FooterProps) {
 	const { user } = useAuth();
+	const { openCookiePreferences } = useConsent();
 
 	return (
 		<>
@@ -197,6 +199,13 @@ export default function Footer({ showCTA = true }: FooterProps) {
 								>
 									Privacy Policy
 								</Link>
+								<button
+									type="button"
+									onClick={openCookiePreferences}
+									className="text-sm text-white/60 hover:text-white text-left"
+								>
+									Cookie settings
+								</button>
 								<Link
 									to="/privacy-policy"
 									className="text-sm text-white/60 hover:text-white"

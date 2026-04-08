@@ -309,10 +309,14 @@ export default function PrivacyPolicyPage() {
 									</li>
 									<li>
 										Performance/analytics — help us understand site usage and
-										improve (e.g., page views, session length).
+										improve. Where you opt in, we may use tools such as Google
+										Analytics and (if enabled) Microsoft Clarity for aggregated
+										or session-based insights.
 									</li>
 									<li>
-										Functionality — remember choices like language and region.
+										Functionality — remember choices like language and region,
+										and (with your consent) load support chat tools such as
+										Tawk.to.
 									</li>
 									<li>
 										Advertising/targeting — help deliver relevant content or

@@ -50,6 +50,9 @@ import DocumentsPage from "@/pages/DocumentsPage";
 import LetterOfWishesPage from "@/pages/LetterOfWishesPage";
 import LetterWizard from "@/components/letter-wizard/LetterWizard";
 import WillStatusGuard from "@/components/will-wizard/WillStatusGuard";
+import { ConsentProvider } from "@/context/ConsentContext";
+import { CookieBanner } from "@/components/consent/CookieBanner";
+import { CookiePreferencesModal } from "@/components/consent/CookiePreferencesModal";
 
 function App() {
 	return (
@@ -60,7 +63,8 @@ function App() {
 						<WillWizardProvider>
 							<LetterOfWishesProvider>
 								<Router>
-									<Routes>
+									<ConsentProvider>
+										<Routes>
 										<Route
 											path="/"
 											element={
@@ -333,7 +337,10 @@ function App() {
 										{/* 404 - This must be the last route to catch all unknown URLs */}
 										<Route path="*" element={<NotFoundPage />} />
 									</Routes>
+									<CookieBanner />
+									<CookiePreferencesModal />
 									<Toaster />
+									</ConsentProvider>
 								</Router>
 							</LetterOfWishesProvider>
 						</WillWizardProvider>
